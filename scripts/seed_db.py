@@ -1,24 +1,24 @@
 """Load the deterministic A0 seed dataset."""
 
-import uuid
 from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 from sqlalchemy import delete
 
+from app.config import get_settings
 from app.db.session import SessionLocal
 from app.models.audit_event import AuditEvent
 from app.models.notification import Notification
 from app.models.task import Task, TaskStatus
 from app.models.user import User
+from scripts.seed_identity import seeded_uuid_value
 
-NAMESPACE = uuid.UUID("1ee280e4-0ae9-463f-840f-637ea5b8c439")
 BASE_TIME = datetime(2026, 1, 1, tzinfo=UTC)
-SEED_ID = "a0-v1"
 
 
-def seeded_uuid(kind: str, index: int) -> uuid.UUID:
+def seeded_uuid(kind: str, index: int) -> UUID:
     """Generate a stable UUID for a seed entity."""
-    return uuid.uuid5(NAMESPACE, f"{SEED_ID}:{kind}:{index}")
+    return seeded_uuid_value(kind, index, get_settings().seed_id)
 
 
 def seed() -> None:
@@ -62,7 +62,7 @@ def seed() -> None:
             )
         session.add_all(tasks)
         session.commit()
-    print(f"Seeded 100 users and 500 tasks ({SEED_ID}).")
+    print(f"Seeded 100 users and 500 tasks ({get_settings().seed_id}).")
 
 
 if __name__ == "__main__":

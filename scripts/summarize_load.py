@@ -25,7 +25,7 @@ def summarize(csv_path: Path, run_id: str, profile: str) -> Path:
     failures = int(numeric("Failure Count"))
     summary: dict[str, Any] = {
         "architecture_state": "A0_MONOLITH",
-        "load_profile": profile,
+        "workload_profile_id": profile,
         "request_count": request_count,
         "failure_count": failures,
         "failure_rate": failures / request_count if request_count else 0.0,

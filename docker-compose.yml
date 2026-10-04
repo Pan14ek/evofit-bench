@@ -25,7 +25,7 @@ services:
       LOG_LEVEL: INFO
       EXPERIMENT_MODE: ${EXPERIMENT_MODE:-false}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
-      SEED_ID: a0-v1
+      SEED_ID: ${SEED_ID:-a0-v1}
     ports:
       - "8000:8000"
     depends_on:

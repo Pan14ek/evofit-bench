@@ -11,11 +11,14 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
 from starlette.middleware.base import RequestResponseEndpoint
+from starlette.routing import Match
 
 from app.api import experiment, health, metrics, notifications, reports, tasks, users
 from app.config import get_settings
 from app.observability.logging import configure_logging
 from app.observability.metrics import (
+    business_operation_failures_total,
+    business_rule_rejections_total,
     http_request_duration_seconds,
     http_requests_total,
     http_responses_total,
@@ -45,6 +48,36 @@ app.include_router(metrics.router)
 app.include_router(experiment.router)
 
 
+def classify_traffic(path: str) -> str:
+    """Classify a route into a small stable set of traffic categories."""
+    if path.startswith("/api/v1/"):
+        return "business"
+    if path.startswith("/health/") or path == "/metrics":
+        return "operational"
+    if path.startswith("/internal/experiment/"):
+        return "experiment"
+    return "unmatched"
+
+
+def operation_for_request(request: Request) -> str:
+    """Resolve a bounded route template even in exception handlers."""
+    route = request.scope.get("route")
+    if route is not None:
+        return _api_path(getattr(route, "path", "unmatched"))
+    for candidate in app.routes:
+        match, _ = candidate.matches(request.scope)
+        if match is Match.FULL:
+            return _api_path(getattr(candidate, "path", "unmatched"))
+    return "unmatched"
+
+
+def _api_path(path: str) -> str:
+    """Add the public API prefix omitted by nested router route objects."""
+    if path.startswith(("/users", "/tasks", "/notifications", "/reports")):
+        return f"/api/v1{path}"
+    return path
+
+
 @app.middleware("http")
 async def observe_request(request: Request, call_next: RequestResponseEndpoint) -> Response:
     """Add request IDs, HTTP metrics, tracing, and structured access logs."""
@@ -53,6 +86,7 @@ async def observe_request(request: Request, call_next: RequestResponseEndpoint) 
     started = time.perf_counter()
     status_code = 500
     route_path = "unmatched"
+    traffic_class = "unmatched"
     request_path = request.url.path
     try:
         with span("http.request"):
@@ -60,16 +94,24 @@ async def observe_request(request: Request, call_next: RequestResponseEndpoint) 
             status_code = response.status_code
             route = request.scope.get("route")
             if route is not None:
-                route_path = getattr(route, "path", route_path)
+                route_path = _api_path(getattr(route, "path", route_path))
+                traffic_class = classify_traffic(route_path)
             response.headers["X-Request-ID"] = request_id
             return response
     finally:
         duration = time.perf_counter() - started
-        http_requests_total.labels(method=request.method, path=route_path).inc()
-        http_responses_total.labels(status_class=f"{status_code // 100}xx").inc()
-        http_request_duration_seconds.labels(method=request.method, path=route_path).observe(
-            duration
-        )
+        http_requests_total.labels(
+            method=request.method, path=route_path, traffic_class=traffic_class
+        ).inc()
+        http_responses_total.labels(
+            method=request.method,
+            path=route_path,
+            status_class=f"{status_code // 100}xx",
+            traffic_class=traffic_class,
+        ).inc()
+        http_request_duration_seconds.labels(
+            method=request.method, path=route_path, traffic_class=traffic_class
+        ).observe(duration)
         logger.info(
             "HTTP request completed",
             extra={
@@ -83,7 +125,7 @@ async def observe_request(request: Request, call_next: RequestResponseEndpoint) 
 
 
 @app.exception_handler(BusinessError)
-async def business_error_handler(_: Request, exc: BusinessError) -> JSONResponse:
+async def business_error_handler(request: Request, exc: BusinessError) -> JSONResponse:
     """Map expected business errors to the stable JSON error envelope."""
     if isinstance(exc, NotFoundError):
         code, status_code = "not_found", 404
@@ -93,6 +135,11 @@ async def business_error_handler(_: Request, exc: BusinessError) -> JSONResponse
         code, status_code = "invalid_request", 400
     else:
         code, status_code = "business_error", 400
+    operation = operation_for_request(request)
+    reason = "invalid_transition" if code == "conflict" and "Transition" in str(exc) else code
+    if reason not in {"not_found", "conflict", "invalid_transition", "validation"}:
+        reason = "validation"
+    business_rule_rejections_total.labels(operation=operation, reason=reason).inc()
     return JSONResponse(
         status_code=status_code, content={"error": {"code": code, "message": str(exc)}}
     )
@@ -110,8 +157,10 @@ async def http_error_handler(_: Request, exc: HTTPException) -> JSONResponse:
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_error_handler(_: Request, exc: RequestValidationError) -> JSONResponse:
+async def validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     """Return validation details without internal stack traces."""
+    operation = operation_for_request(request)
+    business_rule_rejections_total.labels(operation=operation, reason="validation").inc()
     details = [
         {"location": error["loc"], "message": error["msg"], "type": error["type"]}
         for error in exc.errors()
@@ -144,6 +193,8 @@ async def unexpected_error_handler(request: Request, exc: Exception) -> JSONResp
         "Unhandled request failure",
         extra={"request_id": getattr(request.state, "request_id", None)},
     )
+    operation = operation_for_request(request)
+    business_operation_failures_total.labels(operation=operation).inc()
     return JSONResponse(
         status_code=500,
         content={"error": {"code": "internal_error", "message": "Unexpected server error"}},

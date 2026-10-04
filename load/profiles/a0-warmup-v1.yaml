@@ -1,0 +1,10 @@
+id: a0-warmup-v1
+architecture_state: A0_MONOLITH
+users: 20
+spawn_rate_per_second: 5
+duration_seconds: 30
+read_only: true
+request_mix:
+  get_task: 50
+  list_tasks: 30
+  task_summary: 20

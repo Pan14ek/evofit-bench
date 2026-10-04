@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.config import get_settings
 from app.experiment.fault_state import fault_state
 from app.models.audit_event import AuditEvent
+from scripts.prometheus_snapshot import aggregate, parse_snapshot
 
 
 def create_user(client: TestClient, email: str) -> dict[str, Any]:
@@ -27,6 +28,12 @@ def audit_actions(client: TestClient) -> list[str]:
     factory = cast(sessionmaker[Session], test_app.state.test_session_factory)
     with factory() as session:
         return list(session.scalars(select(AuditEvent.action).order_by(AuditEvent.created_at)))
+
+
+def metric(client: TestClient, name: str, labels: dict[str, str]) -> float:
+    """Read a labeled Prometheus sample from the app test client."""
+    snapshot = parse_snapshot(client.get("/metrics").text)
+    return aggregate(snapshot, name, labels) or 0.0
 
 
 def test_task_lifecycle_notification_audit_and_report(client: TestClient) -> None:
@@ -89,10 +96,36 @@ def test_not_found_validation_conflict_and_request_id(client: TestClient) -> Non
     assert response.json()["error"]["code"] == "not_found"
     assert response.headers["X-Request-ID"] == "research-run-1"
     create_user(client, "duplicate@example.com")
+    failures_before = metric(
+        client,
+        "business_operation_failures_total",
+        {"operation": "/api/v1/users"},
+    )
+    rejections_before = metric(
+        client,
+        "business_rule_rejections_total",
+        {"operation": "/api/v1/users", "reason": "conflict"},
+    )
     duplicate = client.post(
         "/api/v1/users", json={"name": "Again", "email": "duplicate@example.com"}
     )
     assert duplicate.status_code == 409
+    assert (
+        metric(
+            client,
+            "business_operation_failures_total",
+            {"operation": "/api/v1/users"},
+        )
+        == failures_before
+    )
+    assert (
+        metric(
+            client,
+            "business_rule_rejections_total",
+            {"operation": "/api/v1/users", "reason": "conflict"},
+        )
+        == rejections_before + 1
+    )
     invalid = client.post("/api/v1/users", json={"name": "   ", "email": "bad"})
     assert invalid.status_code == 422
     assert invalid.json()["error"]["code"] == "validation_error"
@@ -102,10 +135,26 @@ def test_health_metrics_and_experiment_mode_disabled(client: TestClient) -> None
     """Expose operations endpoints and keep fault controls hidden by default."""
     assert client.get("/health/live").status_code == 200
     assert client.get("/health/ready").status_code == 200
+    assert client.get(f"/api/v1/tasks/{UUID(int=0)}").status_code == 404
+    assert client.get("/internal/experiment/faults").status_code == 404
     metrics = client.get("/metrics")
     assert metrics.status_code == 200
     assert "http_request_duration_seconds" in metrics.text
-    assert client.get("/internal/experiment/faults").status_code == 404
+    rows = parse_snapshot(client.get("/metrics").text)["http_requests_total"]
+    assert any(
+        labels.get("path") == "/api/v1/tasks/{task_id}"
+        and labels.get("traffic_class") == "business"
+        for labels, _ in rows
+    )
+    assert any(
+        labels.get("path") == "/health/ready" and labels.get("traffic_class") == "operational"
+        for labels, _ in rows
+    )
+    assert any(
+        labels.get("path") == "/internal/experiment/faults"
+        and labels.get("traffic_class") == "experiment"
+        for labels, _ in rows
+    )
 
 
 def test_enabled_faults_delay_fail_deterministically_and_reset(
@@ -126,6 +175,20 @@ def test_enabled_faults_delay_fail_deterministically_and_reset(
         )
         assert assigned.status_code == 200
         before_failure = audit_actions(client)
+        notifications_before = metric(client, "notifications_created_total", {})
+        failures_before = metric(
+            client,
+            "business_operation_failures_total",
+            {"operation": "/api/v1/tasks/{task_id}/status"},
+        )
+        rejections_before = metric(
+            client,
+            "business_rule_rejections_total",
+            {
+                "operation": "/api/v1/tasks/{task_id}/status",
+                "reason": "invalid_transition",
+            },
+        )
         configured = client.put(
             "/internal/experiment/faults",
             json={"task_delay_ms": 60, "notification_delay_ms": 60, "fail_next_n_notifications": 1},
@@ -144,6 +207,26 @@ def test_enabled_faults_delay_fail_deterministically_and_reset(
             len(client.get("/api/v1/notifications", params={"user_id": assignee["id"]}).json()) == 1
         )
         assert audit_actions(client) == before_failure
+        assert metric(client, "notifications_created_total", {}) == notifications_before
+        assert (
+            metric(
+                client,
+                "business_operation_failures_total",
+                {"operation": "/api/v1/tasks/{task_id}/status"},
+            )
+            == failures_before + 1
+        )
+        assert (
+            metric(
+                client,
+                "business_rule_rejections_total",
+                {
+                    "operation": "/api/v1/tasks/{task_id}/status",
+                    "reason": "invalid_transition",
+                },
+            )
+            == rejections_before
+        )
         reset = client.delete("/internal/experiment/faults")
         assert reset.status_code == 200
         assert reset.json() == {
@@ -156,6 +239,7 @@ def test_enabled_faults_delay_fail_deterministically_and_reset(
             json={"status": "IN_PROGRESS", "actor_user_id": creator["id"]},
         )
         assert succeeded.status_code == 200
+        assert metric(client, "notifications_created_total", {}) == notifications_before + 1
     finally:
         fault_state.reset()
         monkeypatch.delenv("EXPERIMENT_MODE", raising=False)

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.experiment.fault_injector import apply_task_delay
 from app.models.task import Task, TaskStatus
 from app.observability.metrics import (
-    business_operation_failures_total,
+    notifications_created_total,
     task_status_changes_total,
     tasks_assigned_total,
     tasks_created_total,
@@ -40,7 +40,6 @@ def create_task(
     """Create a TODO task after validating its creator."""
     apply_task_delay()
     if get_user(session, creator_id) is None:
-        business_operation_failures_total.labels(operation="create_task").inc()
         raise NotFoundError("Creator user not found")
     with span("task.create"):
         task = Task(title=title.strip(), description=description, created_by=creator_id)
@@ -53,7 +52,6 @@ def create_task(
             session.commit()
         except Exception:
             session.rollback()
-            business_operation_failures_total.labels(operation="create_task").inc()
             raise
     tasks_created_total.inc()
     logger.info(
@@ -103,9 +101,9 @@ def assign_task(
             session.commit()
         except Exception:
             session.rollback()
-            business_operation_failures_total.labels(operation="assign_task").inc()
             raise
     tasks_assigned_total.inc()
+    notifications_created_total.inc()
     logger.info(
         "Business operation completed",
         extra={"operation": "assign_task", "entity_id": task.id, "outcome": "success"},
@@ -122,7 +120,6 @@ def change_task_status(
     if get_user(session, actor_id) is None:
         raise NotFoundError("Actor user not found")
     if status not in ALLOWED_TRANSITIONS[task.status]:
-        business_operation_failures_total.labels(operation="change_task_status").inc()
         raise ConflictError(f"Transition from {task.status.value} to {status.value} is not allowed")
     with span("task.change_status"):
         try:
@@ -146,8 +143,9 @@ def change_task_status(
             session.commit()
         except Exception:
             session.rollback()
-            business_operation_failures_total.labels(operation="change_task_status").inc()
             raise
+    if task.assignee_id is not None:
+        notifications_created_total.inc()
     task_status_changes_total.inc()
     return task
 

@@ -2,15 +2,17 @@
 
 import os
 from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
+from alembic.config import Config
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
+from alembic import command
 from app.db.session import get_session
 from app.main import app
-from app.models import Base
 
 
 @pytest.fixture
@@ -23,7 +25,9 @@ def client() -> Iterator[TestClient]:
     with test_engine.begin() as connection:
         connection.execute(text("DROP SCHEMA public CASCADE"))
         connection.execute(text("CREATE SCHEMA public"))
-    Base.metadata.create_all(test_engine)
+    migration_config = Config(str(Path(__file__).resolve().parents[2] / "alembic.ini"))
+    migration_config.attributes["database_url"] = database_url
+    command.upgrade(migration_config, "head")
     testing_session = sessionmaker(bind=test_engine, expire_on_commit=False)
 
     def override_session() -> Iterator[Session]:
@@ -36,5 +40,7 @@ def client() -> Iterator[TestClient]:
         yield test_client
     app.dependency_overrides.clear()
     del app.state.test_session_factory
-    Base.metadata.drop_all(test_engine)
+    with test_engine.begin() as connection:
+        connection.execute(text("DROP SCHEMA public CASCADE"))
+        connection.execute(text("CREATE SCHEMA public"))
     test_engine.dispose()

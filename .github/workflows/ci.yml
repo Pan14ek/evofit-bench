@@ -33,4 +33,5 @@ jobs:
         with:
           python-version: "3.12"
       - run: uv sync --frozen --extra dev
+      - run: make migration-test
       - run: make quality

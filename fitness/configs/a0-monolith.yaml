@@ -29,7 +29,7 @@ representations:
   - criterion: reliability
     stage: runtime
     evaluator: prometheus
-    metrics: [http_responses_total, business_operation_failures_total]
+    metrics: [business_http_5xx_rate, business_operation_failures_total]
   - criterion: architecture_compliance
     stage: ci
     evaluator: import_linter

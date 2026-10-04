@@ -6,6 +6,7 @@ from typing import Any
 
 from sqlalchemy import func, select
 
+from app.config import get_settings
 from app.db.session import SessionLocal
 from app.models.audit_event import AuditEvent
 from app.models.notification import Notification
@@ -38,6 +39,7 @@ def fingerprint() -> dict[str, int | str]:
         notifications = int(session.scalar(select(func.count(Notification.id))) or 0)
         audit_events = int(session.scalar(select(func.count(AuditEvent.id))) or 0)
     logical_state: dict[str, Any] = {
+        "seed_identifier": get_settings().seed_id,
         "users": [
             tuple(
                 value.isoformat()
@@ -67,6 +69,7 @@ def fingerprint() -> dict[str, int | str]:
     }
     digest = hashlib.sha256(json.dumps(logical_state, sort_keys=True).encode()).hexdigest()
     return {
+        "seed_identifier": get_settings().seed_id,
         "user_count": len(users),
         "task_count": len(tasks),
         "notification_count": notifications,

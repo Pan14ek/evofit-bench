@@ -1,17 +1,19 @@
 """Versioned smoke and repeatable experiment-baseline Locust workload."""
 
-import uuid
+import os
 from itertools import count
 
 from locust import HttpUser, between, task
 
-SEED_NAMESPACE = uuid.UUID("1ee280e4-0ae9-463f-840f-637ea5b8c439")
+from scripts.seed_identity import seeded_uuid_value
+
+SEED_ID = os.environ.get("SEED_ID", "a0-v1")
 _status_task_slots = count()
 
 
 def seeded_uuid(kind: str, index: int) -> str:
     """Match the stable IDs emitted by scripts/seed_db.py."""
-    return str(uuid.uuid5(SEED_NAMESPACE, f"a0-v1:{kind}:{index}"))
+    return str(seeded_uuid_value(kind, index, SEED_ID))
 
 
 class BaselineUser(HttpUser):

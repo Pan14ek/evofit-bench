@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.user import User
-from app.observability.metrics import business_operation_failures_total, users_created_total
+from app.observability.metrics import users_created_total
 from app.repositories.user_repository import add_user, get_by_email, get_user
 from app.services.audit_service import record_event
 from app.services.errors import ConflictError, NotFoundError
@@ -19,7 +19,6 @@ def create_user(session: Session, name: str, email: str) -> User:
     """Create a unique user and its audit event atomically."""
     normalized_email = email.strip().lower()
     if get_by_email(session, normalized_email):
-        business_operation_failures_total.labels(operation="create_user").inc()
         raise ConflictError("Email is already registered")
     try:
         user = add_user(session, name=name.strip(), email=normalized_email)
@@ -27,7 +26,6 @@ def create_user(session: Session, name: str, email: str) -> User:
         session.commit()
     except IntegrityError as exc:
         session.rollback()
-        business_operation_failures_total.labels(operation="create_user").inc()
         raise ConflictError("Email is already registered") from exc
     except Exception:
         session.rollback()
