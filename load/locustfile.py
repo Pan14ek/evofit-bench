@@ -6,7 +6,7 @@ from itertools import count
 from locust import HttpUser, between, task
 
 SEED_NAMESPACE = uuid.UUID("1ee280e4-0ae9-463f-840f-637ea5b8c439")
-_virtual_user_slots = count()
+_status_task_slots = count()
 
 
 def seeded_uuid(kind: str, index: int) -> str:
@@ -20,9 +20,9 @@ class BaselineUser(HttpUser):
     wait_time = between(0.5, 1.5)
 
     def on_start(self) -> None:
-        """Assign each virtual user a disjoint deterministic seed-task lane."""
-        self._status_slot = next(_virtual_user_slots) % 20
+        """Initialize the user's sequential status-transition state."""
         self._status_sequence = 0
+        self._status_task_index: int | None = None
 
     @task(25)
     def get_task(self) -> None:
@@ -57,7 +57,11 @@ class BaselineUser(HttpUser):
     def change_status(self) -> None:
         sequence = self._status_sequence
         self._status_sequence += 1
-        task_index = (self._status_slot + (sequence // 2) * 20) % 200 + 1
+        if sequence % 2 == 0:
+            self._status_task_index = next(_status_task_slots) % 200 + 1
+        task_index = self._status_task_index
+        if task_index is None:
+            return
         status = "IN_PROGRESS" if sequence % 2 == 0 else "DONE"
         self.client.post(
             f"/api/v1/tasks/{seeded_uuid('task', task_index)}/status",
