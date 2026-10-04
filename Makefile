@@ -52,6 +52,7 @@ reset:
 
 load-smoke:
 	mkdir -p experiments/results/$(RUN_ID)/logs
+	$(MAKE) experiment-reset
 	$(MAKE) wait-ready
 	$(UV) run locust -f load/locustfile.py --headless -u 5 -r 1 --run-time 30s --host $(BASE_URL) --csv experiments/results/$(RUN_ID)/locust
 	$(UV) run python -m scripts.summarize_load --csv experiments/results/$(RUN_ID)/locust_stats.csv --run-id $(RUN_ID) --profile smoke
