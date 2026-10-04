@@ -2,7 +2,7 @@ UV ?= uv
 BASE_URL ?= http://localhost:8000
 RUN_ID ?= $(shell date -u +%Y%m%dT%H%M%SZ)
 
-.PHONY: install run test test-unit test-integration lint typecheck security architecture-test quality db-upgrade seed seed-fingerprint reset load-smoke load-baseline experiment-reset export-metrics metadata
+.PHONY: install run test test-unit test-integration lint typecheck security architecture-test quality db-upgrade seed seed-fingerprint reset wait-ready load-smoke load-baseline experiment-reset export-metrics metadata
 
 install:
 	$(UV) sync --extra dev
@@ -44,11 +44,15 @@ seed:
 seed-fingerprint:
 	$(UV) run python -m scripts.seed_fingerprint
 
+wait-ready:
+	$(UV) run python -m scripts.wait_ready --url $(BASE_URL)
+
 reset:
 	$(UV) run python -m scripts.reset_db
 
 load-smoke:
 	mkdir -p experiments/results/$(RUN_ID)/logs
+	$(MAKE) wait-ready
 	$(UV) run locust -f load/locustfile.py --headless -u 5 -r 1 --run-time 30s --host $(BASE_URL) --csv experiments/results/$(RUN_ID)/locust
 	$(UV) run python -m scripts.summarize_load --csv experiments/results/$(RUN_ID)/locust_stats.csv --run-id $(RUN_ID) --profile smoke
 	$(UV) run python -m scripts.export_metrics --url $(BASE_URL) --run-id $(RUN_ID)
@@ -57,6 +61,7 @@ load-smoke:
 
 load-baseline:
 	mkdir -p experiments/results/$(RUN_ID)/logs
+	$(MAKE) wait-ready
 	$(UV) run locust -f load/locustfile.py --headless -u 20 -r 5 --run-time 30s --host $(BASE_URL) --csv experiments/results/$(RUN_ID)/warmup
 	$(MAKE) experiment-reset
 	$(UV) run locust -f load/locustfile.py --headless -u 20 -r 5 --run-time 120s --host $(BASE_URL) --csv experiments/results/$(RUN_ID)/locust
@@ -69,7 +74,7 @@ experiment-reset:
 	docker compose up -d postgres
 	docker compose stop app
 	docker compose run --rm --no-deps app python -m scripts.reset_db
-	docker compose up -d app
+	docker compose up -d --wait app
 
 export-metrics:
 	$(UV) run python -m scripts.export_metrics --url $(BASE_URL) --run-id $(RUN_ID)
