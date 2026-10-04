@@ -61,6 +61,7 @@ load-smoke:
 
 load-baseline:
 	mkdir -p experiments/results/$(RUN_ID)/logs
+	$(MAKE) experiment-reset
 	$(MAKE) wait-ready
 	$(UV) run locust -f load/locustfile.py --headless -u 20 -r 5 --run-time 30s --host $(BASE_URL) --csv experiments/results/$(RUN_ID)/warmup
 	$(MAKE) experiment-reset
