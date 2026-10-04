@@ -1,0 +1,99 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "evofit-bench"
+version = "0.1.0"
+description = "A0 monolith baseline for architecture fitness-function experiments"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "alembic>=1.14,<2",
+  "email-validator>=2.2,<3",
+  "fastapi>=0.115,<1",
+  "opentelemetry-api>=1.29,<2",
+  "opentelemetry-sdk>=1.29,<2",
+  "opentelemetry-exporter-otlp-proto-http>=1.29,<2",
+  "prometheus-client>=0.21,<1",
+  "psycopg[binary]>=3.2,<4",
+  "pydantic-settings>=2.7,<3",
+  "sqlalchemy>=2.0,<3",
+  "uvicorn[standard]>=0.34,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "bandit>=1.8,<2",
+  "httpx>=0.28,<1",
+  "import-linter>=2.3,<3",
+  "locust>=2.32,<3",
+  "mypy>=1.14,<2",
+  "pytest>=8.3,<9",
+  "pytest-cov>=6,<7",
+  "ruff>=0.9,<1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+ignore = ["B008", "S101"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+plugins = ["pydantic.mypy"]
+exclude = ["alembic/versions"]
+
+[[tool.mypy.overrides]]
+module = ["locust.*", "prometheus_client.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["integration: requires PostgreSQL"]
+
+[tool.coverage.run]
+branch = true
+source = ["app"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+
+[tool.bandit]
+exclude_dirs = ["tests", "alembic"]
+skips = ["B101"]
+
+[tool.importlinter]
+root_packages = ["app"]
+include_external_packages = false
+
+[[tool.importlinter.contracts]]
+name = "API depends on services and schemas, never repositories"
+type = "forbidden"
+source_modules = ["app.api"]
+forbidden_modules = ["app.repositories"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Repositories never depend on API"
+type = "forbidden"
+source_modules = ["app.repositories"]
+forbidden_modules = ["app.api"]
+
+[[tool.importlinter.contracts]]
+name = "Models never depend on API or services"
+type = "forbidden"
+source_modules = ["app.models"]
+forbidden_modules = ["app.api", "app.services"]
+
+[[tool.importlinter.contracts]]
+name = "Layered dependency direction"
+type = "layers"
+layers = ["app.api", "app.services", "app.repositories", "app.models"]

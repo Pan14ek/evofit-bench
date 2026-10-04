@@ -1,0 +1,36 @@
+architecture_state: A0_MONOLITH
+configuration_version: 1
+thresholds_are: provisional_configurable_experiment_values
+
+criteria:
+  - id: performance
+    intent: "User-facing task operations should satisfy the defined response-time policy."
+    active: true
+  - id: reliability
+    intent: "Core task operations should complete without unexpected failures and preserve required business behavior."
+    active: true
+  - id: architecture_compliance
+    intent: "The monolith should preserve the defined layered dependency rules."
+    active: true
+
+representations:
+  - criterion: performance
+    stage: test
+    evaluator: locust
+    metrics: [http_p95_ms]
+  - criterion: performance
+    stage: runtime
+    evaluator: prometheus
+    metrics: [http_request_duration_seconds]
+  - criterion: reliability
+    stage: test
+    evaluator: pytest
+    metrics: [integration_test_result]
+  - criterion: reliability
+    stage: runtime
+    evaluator: prometheus
+    metrics: [http_responses_total, business_operation_failures_total]
+  - criterion: architecture_compliance
+    stage: ci
+    evaluator: import_linter
+    metrics: [dependency_rule_violations]
