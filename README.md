@@ -19,13 +19,15 @@ The API listens at `http://localhost:8000`; interactive OpenAPI docs are at `/do
 ## Tests and quality checks
 
 ```bash
+docker compose up -d postgres
+docker compose exec -T postgres createdb -U evofit evofit_test
 make test-unit
 TEST_DATABASE_URL=postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test make test-integration
 make lint
 make typecheck
 make security
 make architecture-test
-make quality
+TEST_DATABASE_URL=postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test make quality
 ```
 
 Integration tests require a disposable PostgreSQL database: their fixture drops and recreates its `public` schema. `make quality` includes all tests and creates terminal and XML coverage reports. CI provisions PostgreSQL and runs the same checks.
