@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 from scripts.prometheus_snapshot import aggregate, delta, parse_snapshot, value
+from scripts.runtime_validation import validate_process_continuity
 
 
 def finalize(run_id: str) -> Path:
@@ -15,6 +16,10 @@ def finalize(run_id: str) -> Path:
     summary = json.loads(summary_path.read_text(encoding="utf-8"))
     before = parse_snapshot((run_dir / "metrics_before.txt").read_text(encoding="utf-8"))
     after = parse_snapshot((run_dir / "metrics_after.txt").read_text(encoding="utf-8"))
+    process_start_time = validate_process_continuity(
+        (run_dir / "metrics_before.txt").read_text(encoding="utf-8"),
+        (run_dir / "metrics_after.txt").read_text(encoding="utf-8"),
+    )
     before_requests = aggregate(before, "http_requests_total", {"traffic_class": "business"})
     after_requests = aggregate(after, "http_requests_total", {"traffic_class": "business"})
     before_5xx = aggregate(
@@ -37,10 +42,13 @@ def finalize(run_id: str) -> Path:
     summary["business_5xx_rate"] = (
         business_5xx / business_count if business_5xx is not None and business_count else None
     )
-    cpu_delta = delta(
-        value(after, "process_cpu_seconds_total"), value(before, "process_cpu_seconds_total")
-    )
+    cpu_after = value(after, "process_cpu_seconds_total")
+    cpu_before = value(before, "process_cpu_seconds_total")
+    if cpu_after is None or cpu_before is None or cpu_after < cpu_before:
+        raise RuntimeError("application process CPU counter is missing or decreased")
+    cpu_delta = cpu_after - cpu_before
     summary["application_cpu_seconds_delta"] = cpu_delta
+    summary["application_process_start_time_seconds"] = process_start_time
     if cpu_delta is None:
         summary["application_cpu_seconds_delta_reason"] = (
             "process CPU counter missing from a metrics snapshot"
