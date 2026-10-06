@@ -2,22 +2,24 @@
 
 ## Decision
 
-**Final decision: FAIL**
+**Final decision: PASS**
 
-**A0 status: NOT READY TO TAG**
+**A0 status: READY TO TAG**
 
-Every completed local validation criterion passed. The hosted CI criterion is not met: no workflow ran for the validation commit because the attempted push was rejected by the automatic approval review. The specification requires CI success for PASS, so the final decision is FAIL pending that gate. No Git tag was created.
+The canonical local validation criteria passed, and the hosted CI gate has now passed. The previous FAIL was caused only by CI not having run yet after the validation branch push was initially blocked; this condition is resolved by the successful GitHub Actions workflow on the merge commit. No Git tag was created.
 
 ## Validation record
 
-- Validation date/time: 2026-10-05 23:50 Europe/Kyiv (EEST)
+- Validation date/time: 2026-10-06 (Europe/Kyiv)
 - Validated source revision: `ce16466d3739ea84fada13f90264de9ed4b5ab12`
 - Working tree during canonical runs: clean; `metadata.git_dirty=false`
-- CI workflow: **BLOCKED / NOT RUN**. The push to `origin` for `codex/a0-final-validation` was rejected by automatic approval review because it would export repository source/history to a GitHub destination that was not verified as trusted or user-owned. No alternate publishing route was used.
+- GitHub Actions workflow: **PASS** — `A0 quality`, commit `a7acbc7b0bec705e7b288d70d401e55ca85ee18b`, run [37422080856](https://github.com/Pan14ek/evofit-bench/actions/runs/37422080856), completed successfully on 2026-10-06.
 - Migration validation: **PASS**, Alembic revision `0001_a0_schema`
-- Quality checks: **PASS** — Ruff, Ruff format, mypy, Bandit, import-linter (4 contracts kept), architecture tests (3 passed), migration test, unit tests, and integration tests
+- Quality checks: **PASS** — Ruff, Ruff format, mypy, Bandit, architecture contracts (4 kept, 0 broken), architecture tests (3 passed), migration test, unit tests, and integration tests
 - Test count: **29 passed**
 - Coverage: **91.17%** (required: at least 80%)
+
+The canonical experiments were executed on `ce16466d3739ea84fada13f90264de9ed4b5ab12`. The subsequent changes through `a7acbc7b0bec705e7b288d70d401e55ca85ee18b` only added or updated this validation report; no application or experimental code changed.
 
 ## Deterministic reset
 
@@ -117,7 +119,7 @@ The run demonstrates only that A0 is measurable and reproducible enough to serve
 
 | Criterion | Result |
 |---|---|
-| CI success | **NOT MET** — hosted workflow not run because branch push was rejected |
+| CI success | **PASS** — GitHub Actions `A0 quality` completed successfully for `a7acbc7b0bec705e7b288d70d401e55ca85ee18b` |
 | Migration, quality, tests, coverage | PASS |
 | Seed reset and warm-up reproducibility | PASS |
 | Application process continuity | PASS |
@@ -129,4 +131,4 @@ The run demonstrates only that A0 is measurable and reproducible enough to serve
 | Required runtime resources valid | PASS |
 | Fault sanity validation | PASS |
 
-Because CI success is a mandatory PASS criterion and remains unavailable, **A0 final validation = FAIL**. Re-run/confirm hosted CI after the validation branch is safely published, then reassess the final decision. Do not tag before all PASS criteria are satisfied.
+All mandatory PASS criteria are satisfied. **A0 final validation = PASS; A0 status = READY TO TAG.** No Git tag was created as part of this validation update.
