@@ -1,5 +1,7 @@
 # Controlled experiments
 
+The [architecture-evolution experimental design specification](design/ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md) defines the controlled architecture-evolution trajectory, ground-truth rules, research questions, and experimental data requirements for DA01–DA14.
+
 `make load-smoke` and `make load-baseline` reset to the configured deterministic `SEED_ID` (default `a0-v1`), wait for readiness, and run the checked-in YAML profile. Baseline sequence: experiment reset, readiness, read-only warm-up, unchanged seed fingerprint check, `metrics_before.txt`, runtime sampler, measured Locust workload, `metrics_after.txt`, and measured-interval summary/provenance. There is no application restart between warm-up and measurement. Run output is under `experiments/results/<run-id>/` and generated results are ignored by Git.
 
 `runtime_metrics.csv` samples application-process CPU seconds, resident memory, and virtual memory from `/metrics` at the configured interval. A run fails unless the sampler exits successfully, collects at least 90% of expected samples, and has valid timestamps, positive RSS, and a non-decreasing CPU counter. `process_start_time_seconds` must match in `metrics_before.txt` and `metrics_after.txt`. `summary.json` derives CPU delta, memory start/end/max, and business 5xx rate from process samples and start/end counter snapshots. Missing required metrics fail the run; no collector-process resource usage is treated as application evidence.
