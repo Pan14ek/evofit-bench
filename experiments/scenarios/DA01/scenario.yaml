@@ -1,0 +1,28 @@
+schema_version: 1
+id: DA01
+delta_id: ΔA1
+architecture_before: A0_MONOLITH
+architecture_after: A0_1_CAPABILITY_MODULES
+change: >-
+  Replace horizontal global packages with capability-oriented modules for users, tasks,
+  notifications, reporting, and audit while preserving the A0 deployment, process,
+  database, communication, transaction, API, workload, and seed contracts.
+invariants:
+  deployment_units: 1
+  application_processes: 1
+  database: one PostgreSQL
+  internal_communication: synchronous Python calls
+  transaction_semantics: unchanged
+  external_rest_api: equivalent
+  workload_profile: equivalent
+  seed_semantics: equivalent
+candidate_modules: [users, tasks, notifications, reporting, audit]
+research_questions: [RQ1, RQ2]
+required_obligations_after: [AC_LAYERING, AC_MODULE_STRUCTURE]
+new_obligations: [AC_MODULE_STRUCTURE]
+seeded_faults: [F_STRUCT_IMPORT]
+runtime_fault_required: false
+ground_truth_path: experiments/scenarios/DA01/ground_truth.yaml
+source_architecture_tag: arch-a0-monolith-v1
+source_architecture_revision: b78b0967be937634b7762baccf5ac6892b279a73
+status: pre_registered

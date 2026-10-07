@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.local/schemas/scenario.schema.json",
+  "title": "EvoFitBench research scenario",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "id", "delta_id", "architecture_before", "architecture_after",
+    "change", "invariants", "research_questions", "required_obligations_after",
+    "new_obligations", "seeded_faults", "ground_truth_path", "source_architecture_tag",
+    "source_architecture_revision", "status"
+  ],
+  "properties": {
+    "schema_version": {"type": "integer", "minimum": 1},
+    "id": {"type": "string", "pattern": "^DA[0-9]{2}$"},
+    "delta_id": {"type": "string", "pattern": "^ΔA[0-9]+$"},
+    "architecture_before": {"type": "string", "minLength": 1},
+    "architecture_after": {"type": "string", "minLength": 1},
+    "change": {"type": "string", "minLength": 1},
+    "candidate_modules": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "invariants": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {"type": ["string", "number", "boolean"]}
+    },
+    "research_questions": {
+      "type": "array",
+      "items": {"enum": ["RQ1", "RQ2", "RQ3", "RQ4"]},
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "required_obligations_after": {
+      "type": "array", "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"},
+      "uniqueItems": true
+    },
+    "new_obligations": {
+      "type": "array", "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"},
+      "uniqueItems": true
+    },
+    "seeded_faults": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "runtime_fault_required": {"type": "boolean"},
+    "ground_truth_path": {"type": "string", "minLength": 1},
+    "source_architecture_tag": {"type": "string", "minLength": 1},
+    "source_architecture_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "status": {"type": "string", "enum": ["pre_registered", "ready", "retired"]}
+  }
+}

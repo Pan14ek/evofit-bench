@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.local/schemas/result.schema.json",
+  "title": "EvoFitBench method result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scenario_id", "method", "source_revision", "predicted_affected", "applied_operations",
+    "coverage_before", "coverage_after", "semantic_violations_before", "semantic_violations_after",
+    "adaptation_time_ms", "fitness_validation_time_ms", "ci_time_ms", "active_signal_count",
+    "runtime_overhead", "fault_runs"
+  ],
+  "properties": {
+    "scenario_id": {"type": "string", "pattern": "^DA[0-9]{2}$"},
+    "method": {"enum": ["B0", "B1", "P"]},
+    "source_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "predicted_affected": {"type": "array", "items": {"$ref": "#/$defs/prediction"}, "uniqueItems": true},
+    "applied_operations": {"type": "array", "items": {"$ref": "#/$defs/operation"}, "uniqueItems": true},
+    "coverage_before": {"type": "number", "minimum": 0, "maximum": 1},
+    "coverage_after": {"type": "number", "minimum": 0, "maximum": 1},
+    "semantic_violations_before": {"type": "integer", "minimum": 0},
+    "semantic_violations_after": {"type": "integer", "minimum": 0},
+    "adaptation_time_ms": {"type": "number", "minimum": 0},
+    "fitness_validation_time_ms": {"type": "number", "minimum": 0},
+    "ci_time_ms": {"type": "number", "minimum": 0},
+    "active_signal_count": {"type": "integer", "minimum": 0},
+    "runtime_overhead": {"type": "object", "additionalProperties": {"type": ["number", "string", "null"]}},
+    "fault_runs": {"type": "array", "items": {"type": "object", "additionalProperties": true}}
+  },
+  "$defs": {
+    "prediction": {
+      "type": "object", "additionalProperties": false,
+      "required": ["target_type", "target_id", "predicted_operation"],
+      "properties": {
+        "target_type": {"enum": ["representation", "obligation"]},
+        "target_id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$"},
+        "predicted_operation": {"enum": ["retain", "replace", "add", "deactivate", "adjust"]}
+      },
+      "allOf": [
+        {"if": {"properties": {"target_type": {"const": "obligation"}}, "required": ["target_type"]},
+         "then": {"properties": {"predicted_operation": {"const": "add"}}}},
+        {"if": {"properties": {"target_type": {"const": "representation"}}, "required": ["target_type"]},
+         "then": {"properties": {"predicted_operation": {"enum": ["retain", "replace", "deactivate", "adjust"]}}}}
+      ]
+    },
+    "operation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["target_type", "target_id", "operation"],
+      "properties": {
+        "target_type": {"enum": ["representation", "obligation"]},
+        "target_id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$"},
+        "operation": {"enum": ["retain", "replace", "add", "deactivate", "adjust"]}
+      },
+      "allOf": [
+        {"if": {"properties": {"target_type": {"const": "obligation"}}, "required": ["target_type"]},
+         "then": {"properties": {"operation": {"const": "add"}}}},
+        {"if": {"properties": {"target_type": {"const": "representation"}}, "required": ["target_type"]},
+         "then": {"properties": {"operation": {"enum": ["retain", "replace", "deactivate", "adjust"]}}}}
+      ]
+    }
+  }
+}

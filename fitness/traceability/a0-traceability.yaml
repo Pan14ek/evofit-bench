@@ -1,0 +1,31 @@
+schema_version: 1
+architecture_state: A0_MONOLITH
+elements:
+  - id: AE_A0_EXTERNAL_BUSINESS_REST_API
+    name: external business REST API
+    obligations: [P_EXT_LATENCY, R_HTTP_5XX]
+    representations:
+      - id: REP_A0_PERF_TEST_HTTP_P95
+        evaluator: locust
+      - id: REP_A0_PERF_RUNTIME_HTTP_DURATION
+        evaluator: prometheus
+      - id: REP_A0_REL_RUNTIME_FAILURES
+        evaluator: prometheus
+  - id: AE_A0_CORE_BUSINESS_OPERATIONS
+    name: core business operations
+    obligations: [R_BUSINESS_FAILURE]
+    representations:
+      - id: REP_A0_REL_RUNTIME_FAILURES
+        evaluator: prometheus
+  - id: AE_A0_LOCAL_TASK_NOTIFICATION_AUDIT_TRANSACTION
+    name: local Task/Notification/Audit transaction
+    obligations: [R_LOCAL_ATOMICITY]
+    representations:
+      - id: REP_A0_REL_TEST_INTEGRATION
+        evaluator: pytest
+  - id: AE_A0_HORIZONTAL_LAYERED_ARCHITECTURE
+    name: horizontal layered architecture
+    obligations: [AC_LAYERING]
+    representations:
+      - id: REP_A0_ARCH_CI_LAYERING
+        evaluator: import_linter

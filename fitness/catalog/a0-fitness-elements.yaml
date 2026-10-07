@@ -1,0 +1,39 @@
+schema_version: 1
+architecture_state: A0_MONOLITH
+provenance:
+  source_configuration: fitness/configs/a0-monolith.yaml
+  source_configuration_version: 1
+  source_configuration_sha256: 5ad60e373463ea459e192bf85d82704ca9aa1c217c4abf4d8caeb66924059ecb
+  frozen_source_tag: arch-a0-monolith-v1
+  frozen_source_revision: b78b0967be937634b7762baccf5ac6892b279a73
+representations:
+  - id: REP_A0_PERF_TEST_HTTP_P95
+    criterion: performance
+    stage: test
+    evaluator: locust
+    metrics: [http_p95_ms]
+    covers: [P_EXT_LATENCY]
+  - id: REP_A0_PERF_RUNTIME_HTTP_DURATION
+    criterion: performance
+    stage: runtime
+    evaluator: prometheus
+    metrics: [http_request_duration_seconds]
+    covers: [P_EXT_LATENCY]
+  - id: REP_A0_REL_TEST_INTEGRATION
+    criterion: reliability
+    stage: test
+    evaluator: pytest
+    metrics: [integration_test_result]
+    covers: [R_LOCAL_ATOMICITY]
+  - id: REP_A0_REL_RUNTIME_FAILURES
+    criterion: reliability
+    stage: runtime
+    evaluator: prometheus
+    metrics: [business_http_5xx_rate, business_operation_failures_total]
+    covers: [R_BUSINESS_FAILURE, R_HTTP_5XX]
+  - id: REP_A0_ARCH_CI_LAYERING
+    criterion: architecture_compliance
+    stage: ci
+    evaluator: import_linter
+    metrics: [dependency_rule_violations]
+    covers: [AC_LAYERING]

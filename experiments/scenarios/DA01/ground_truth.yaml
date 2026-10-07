@@ -1,0 +1,54 @@
+schema_version: 1
+scenario_id: DA01
+frozen_before_implementation: true
+source_architecture_tag: arch-a0-monolith-v1
+source_architecture_revision: b78b0967be937634b7762baccf5ac6892b279a73
+criteria_assessment:
+  performance:
+    affected: false
+  reliability:
+    affected: false
+  architecture_compliance:
+    affected: true
+classification_universe:
+  existing_representations:
+    - REP_A0_PERF_TEST_HTTP_P95
+    - REP_A0_PERF_RUNTIME_HTTP_DURATION
+    - REP_A0_REL_TEST_INTEGRATION
+    - REP_A0_REL_RUNTIME_FAILURES
+    - REP_A0_ARCH_CI_LAYERING
+  new_obligations: [AC_MODULE_STRUCTURE]
+affected_targets:
+  - target_type: representation
+    target_id: REP_A0_ARCH_CI_LAYERING
+    expected_operation: replace
+    rationale: >-
+      The current evaluator assumes the frozen A0 global horizontal package structure. After DA01,
+      AC_LAYERING remains an obligation, but its representation must become module-aware and
+      validate internal layering within the capability-oriented structure.
+  - target_type: obligation
+    target_id: AC_MODULE_STRUCTURE
+    expected_operation: add
+    rationale: >-
+      DA01 introduces a new architectural obligation requiring the declared capability-module
+      structure to exist and remain conformant.
+expected_operations:
+  REP_A0_ARCH_CI_LAYERING: replace
+  AC_MODULE_STRUCTURE: add
+required_obligations_after: [AC_LAYERING, AC_MODULE_STRUCTURE]
+retained_representations:
+  - REP_A0_PERF_TEST_HTTP_P95
+  - REP_A0_PERF_RUNTIME_HTTP_DURATION
+  - REP_A0_REL_TEST_INTEGRATION
+  - REP_A0_REL_RUNTIME_FAILURES
+seeded_faults: [F_STRUCT_IMPORT]
+prohibited_unplanned_changes:
+  - performance representations
+  - reliability representations
+  - database schema
+  - external REST API behavior
+  - workload profile
+  - seed data and seed semantics
+  - deployment topology and application process count
+  - transaction semantics
+  - implementation-specific future representation IDs
