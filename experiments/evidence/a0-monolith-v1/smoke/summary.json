@@ -1,0 +1,20 @@
+{
+  "architecture_state": "A0_MONOLITH",
+  "workload_profile_id": "a0-smoke-v1",
+  "request_count": 141,
+  "failure_count": 0,
+  "failure_rate": 0.0,
+  "p50_ms": 13.0,
+  "p95_ms": 28.0,
+  "p99_ms": 57.0,
+  "throughput_requests_per_second": 4.854092016343718,
+  "runtime_sample_count": 30,
+  "business_5xx_count": 0.0,
+  "business_5xx_rate": 0.0,
+  "application_cpu_seconds_delta": 1.5,
+  "application_process_start_time_seconds": 1791232762.18,
+  "application_resident_memory_start_bytes": 98811904,
+  "application_resident_memory_end_bytes": 99520512,
+  "application_resident_memory_max_bytes": 99520512,
+  "application_virtual_memory_max_bytes": 374902784
+}

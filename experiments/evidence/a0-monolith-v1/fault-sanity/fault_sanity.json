@@ -1,0 +1,20 @@
+{
+  "run_id": "a0-fault-sanity-validation",
+  "experiment_mode": true,
+  "fail_next_n_notifications": 1,
+  "http_status": 500,
+  "task_notification_audit_state_unchanged": true,
+  "logical_seed_fingerprint_unchanged": true,
+  "notifications_created_total_before": 0.0,
+  "notifications_created_total_after": 0.0,
+  "business_operation_failures_total_before": 0.0,
+  "business_operation_failures_total_after": 1.0,
+  "business_rule_rejections_total_before": 0.0,
+  "business_rule_rejections_total_after": 0.0,
+  "fault_reset": {
+    "notification_delay_ms": 0,
+    "task_delay_ms": 0,
+    "fail_next_n_notifications": 0
+  },
+  "result": "PASS"
+}

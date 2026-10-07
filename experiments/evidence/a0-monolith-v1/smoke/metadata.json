@@ -1,0 +1,32 @@
+{
+  "run_id": "a0-smoke-validation",
+  "run_started_at_utc": "2026-10-05T20:39:26.874233+00:00",
+  "run_completed_at_utc": "2026-10-05T20:39:58.487397+00:00",
+  "architecture_state": "A0_MONOLITH",
+  "application_version": "0.1.0",
+  "git_commit_sha": "ce16466d3739ea84fada13f90264de9ed4b5ab12",
+  "git_dirty": false,
+  "fitness_configuration_path": "fitness/configs/a0-monolith.yaml",
+  "fitness_configuration_version": 1,
+  "fitness_configuration_sha256": "5ad60e373463ea459e192bf85d82704ca9aa1c217c4abf4d8caeb66924059ecb",
+  "seed_identifier": "a0-v1",
+  "seed_fingerprint_sha256": "074aba9f614f5cc348729261dbc4ce2588ae5d270a2f8adb54cc01df0dfe89d9",
+  "workload_profile_id": "a0-smoke-v1",
+  "workload_profile_sha256": "658f9977e494ebeab9c49fd05977616afd5005f82e030e46751a1fb1619f0a52",
+  "warmup_profile_id": "a0-warmup-v1",
+  "warmup_profile_sha256": "54bae6cffd29a35b3d5b4bcefe29a32c60bc667342706fab39598782fb42f643",
+  "python_version": "3.12.15",
+  "os_platform": "macOS-26.6.2-arm64-arm-64bit",
+  "cpu_information": "arm",
+  "database_version": "PostgreSQL 16.15 (Debian 16.15-1.pgdg13+2) on aarch64-unknown-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+  "docker_image_id": "sha256:85bc3545b6630a23c039b44ceee8bdd9b0172ede18c7b40df7f4078cad109163",
+  "experiment_mode": false,
+  "experiment_fault_configuration": {
+    "notification_delay_ms": 0,
+    "task_delay_ms": 0,
+    "fail_next_n_notifications": 0
+  },
+  "warmup_duration_seconds": 0.0,
+  "measurement_duration_seconds": 30.0,
+  "runtime_metrics_sampling_interval_seconds": 1.0
+}

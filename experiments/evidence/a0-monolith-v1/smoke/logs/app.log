@@ -1,0 +1,415 @@
+app-1  | INFO:     Started server process [8]
+app-1  | INFO:     Waiting for application startup.
+app-1  | INFO:     Application startup complete.
+app-1  | INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+app-1  | {"timestamp": "2026-10-05T20:39:25.865648+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "f63c6f1b-cfb9-44c1-a10d-4d063d40fcb5", "method": "GET", "path": "/health/ready", "status_code": 200, "duration_ms": 16.734}
+app-1  | INFO:     127.0.0.1:39640 - "GET /health/ready HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:26.376792+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "8a1d8eaf-be27-4dc9-9485-c33b41ef7ac2", "method": "GET", "path": "/health/ready", "status_code": 200, "duration_ms": 2.921}
+app-1  | INFO:     192.168.65.1:54169 - "GET /health/ready HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:59381 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:26.985774+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "952b591a-597e-4547-8f02-8c3c5dc17661", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 2.598}
+app-1  | {"timestamp": "2026-10-05T20:39:27.144725+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "65268251-fc45-481c-a113-9d90b7ff04df", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 2.672}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:27.662117+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:27.663302+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "5224e3a3-287d-4607-8494-3e6ce006e779", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 16.397}
+app-1  | INFO:     192.168.65.1:30634 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:28.156796+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "ac9c7fa9-5acf-4794-9901-5c0897d90d6e", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 1.887}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:28.728017+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:28.728589+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "7a787fab-6698-4fb3-9f69-68d6f6588ec5", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 9.835}
+app-1  | INFO:     192.168.65.1:30634 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:30064 - "POST /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d/status HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:28.738546+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "e8aebefc-a021-4d2f-86b6-ff0f043732a1", "method": "POST", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d/status", "status_code": 200, "duration_ms": 18.766}
+app-1  | {"timestamp": "2026-10-05T20:39:29.171341+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "01292d39-b09a-4b98-81e1-d8a9b0aee320", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 2.741}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:29.666159+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "025700e5-2f76-44d6-9f4a-5b878610ff80", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 12.262}
+app-1  | INFO:     192.168.65.1:50385 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:30.186600+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "6ea9f4a5-9735-4dbe-906e-c53a37ab01c1", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 2.812}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:30064 - "POST /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d/status HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:30.192770+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "6a00d640-4f2e-4298-ab06-e084fbcbb4ea", "method": "POST", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d/status", "status_code": 200, "duration_ms": 12.092}
+app-1  | INFO:     192.168.65.1:30634 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:30.208412+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "9b43d0b9-d524-412a-a628-c7441b4a34d7", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 6.96}
+app-1  | {"timestamp": "2026-10-05T20:39:30.656574+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "37f3d487-19c8-42c4-a280-2f47fb0dd6dc", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:30.658040+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "1fcceefc-1c5a-43e3-b731-535093cdadf0", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 11.678}
+app-1  | INFO:     192.168.65.1:54993 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:30.898037+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "a808d7a7-fa73-4072-a456-341303d263ad", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:30.899432+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "61ff03f2-3a9e-4ca0-b0ea-3b23469848e4", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 12.257}
+app-1  | INFO:     192.168.65.1:30634 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:31.039534+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "df1dc6e4-f024-483d-85f5-b2f45ff98ddd", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:31.040098+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "0548ad1e-5d31-4572-83a0-d484a8a222c1", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 4.597}
+app-1  | INFO:     192.168.65.1:50385 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:31.083387+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "8ac14481-e0e0-4e4f-bfaa-8f47cf4c83e1", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 4.553}
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:31.166425+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "29cb9a4a-2330-427f-8671-8b6ef29a939e", "method": "GET", "path": "/health/ready", "status_code": 200, "duration_ms": 1.934}
+app-1  | INFO:     127.0.0.1:42920 - "GET /health/ready HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:31.202027+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "08f2ebb2-6ab8-4866-8342-31add1b25a87", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 3.007}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:31.667780+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "8b5a1232-72ee-44c2-9a4a-fc91b43517cf", "outcome": "success"}
+app-1  | INFO:     192.168.65.1:48538 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:31.668669+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "b345aa5b-3cf9-4242-8f93-bb1184b875f6", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 16.687}
+app-1  | {"timestamp": "2026-10-05T20:39:31.723355+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "927d0bef-a2c4-4e59-8ad6-57b2a7e1c8b0", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:31.724364+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "03be93d5-3229-457e-9195-417a409065ed", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 8.246}
+app-1  | INFO:     192.168.65.1:54993 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:32.151544+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:32.152326+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "55a0e96f-0660-48b3-8564-3674a3161224", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 10.682}
+app-1  | INFO:     192.168.65.1:30064 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:32.221767+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "95078029-bba2-4f01-8049-cdd28ff8999e", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 4.855}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:32.358610+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "d97d6e5a-6347-4d5b-92f0-fde4132a3bb8", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 6.731}
+app-1  | INFO:     192.168.65.1:30634 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:50385 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/status HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:32.494308+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "b7cd3f24-d73c-4acb-af32-bd00b477b726", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/status", "status_code": 200, "duration_ms": 9.518}
+app-1  | INFO:     192.168.65.1:54993 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:32.586510+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "22d53571-75fe-4426-aa35-eb8721d8cc48", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 2.903}
+app-1  | {"timestamp": "2026-10-05T20:39:32.788696+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "2b78ea25-2b2d-459d-83d3-9287a28535dc", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 4.337}
+app-1  | INFO:     192.168.65.1:48538 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:32.973140+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "350be4fa-39cc-42d6-9f63-2a151765a46a", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 4.598}
+app-1  | {"timestamp": "2026-10-05T20:39:33.142995+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "7e44b2ab-4abc-461c-9b04-cc5033041197", "method": "POST", "path": "/api/v1/tasks/6c080dfe-b2cc-5ca9-9cf2-79bb5ca65246/status", "status_code": 200, "duration_ms": 11.99}
+app-1  | INFO:     192.168.65.1:30634 - "POST /api/v1/tasks/6c080dfe-b2cc-5ca9-9cf2-79bb5ca65246/status HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:33.241851+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "d62b75be-3d82-493e-9539-8f11f671a423", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 6.902}
+app-1  | {"timestamp": "2026-10-05T20:39:33.681028+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:33.681773+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "f977f8ee-ccf4-4a00-8d10-2ea261f99765", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 11.77}
+app-1  | INFO:     192.168.65.1:54993 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:33.700840+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "6f50e773-9c53-450d-a6d9-bff92a8e8882", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:33.701650+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "bb02643b-893e-4327-bd10-c758c33e2ada", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 7.071}
+app-1  | INFO:     192.168.65.1:48538 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:33.718294+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "eec80438-3802-47b8-b4ce-96cc24fa3911", "method": "POST", "path": "/api/v1/tasks/6c080dfe-b2cc-5ca9-9cf2-79bb5ca65246/status", "status_code": 200, "duration_ms": 9.734}
+app-1  | INFO:     192.168.65.1:30634 - "POST /api/v1/tasks/6c080dfe-b2cc-5ca9-9cf2-79bb5ca65246/status HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:50385 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:34.051752+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "a234835d-04eb-4c22-80ef-80324a9b691c", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 49.618}
+app-1  | {"timestamp": "2026-10-05T20:39:34.242949+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "a9ca2e73-b592-40a6-9739-7e6204af3ded", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 3.737}
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:34.253967+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "1f2a4813-5923-4bc0-9832-7242dbc86d5a", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 2.321}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:30634 - "POST /api/v1/tasks/62de7a5b-6fb3-5730-a0ab-a5a986d31a23/status HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:34.333072+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "418566cb-87c8-48e5-8b2e-46a126d02ca5", "method": "POST", "path": "/api/v1/tasks/62de7a5b-6fb3-5730-a0ab-a5a986d31a23/status", "status_code": 200, "duration_ms": 4.955}
+app-1  | {"timestamp": "2026-10-05T20:39:34.605025+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "0187ea48-b75e-439c-ad17-df1de80fe65c", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 6.244}
+app-1  | INFO:     192.168.65.1:54993 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:34.713258+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "30981599-d3a2-4213-8f6c-c98b8dbb611d", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 7.65}
+app-1  | INFO:     192.168.65.1:48538 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:34.884117+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "5ca54215-ad26-44a3-9dc5-03ebc5194d7b", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 5.527}
+app-1  | INFO:     192.168.65.1:50385 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:34.956948+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "22547a1a-2d9d-4d97-85ac-e4fb3a9d2c91", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:34.957798+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "1beb321b-8d70-4504-9baa-6003a96af239", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 6.507}
+app-1  | INFO:     192.168.65.1:30064 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:35.272620+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "987aa088-2b63-4903-a835-58b9d659974e", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 3.633}
+app-1  | {"timestamp": "2026-10-05T20:39:35.631281+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "d42d8124-5419-4240-bbd5-0b6d508c0267", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 4.842}
+app-1  | INFO:     192.168.65.1:30634 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:35.751944+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "43efb993-231b-4eeb-92d2-e007e004665a", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 8.213}
+app-1  | {"timestamp": "2026-10-05T20:39:35.794022+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "a5881825-b68c-4d2f-b94c-5fbe30e00eff", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:35.795048+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "b50dca0e-8fa5-4154-ad25-bdcaabf1d653", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 13.108}
+app-1  | INFO:     192.168.65.1:54993 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:35.812215+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "c5a6a274-f6ad-4c2b-82f7-cd64d67020c1", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 4.426}
+app-1  | INFO:     192.168.65.1:48538 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:36.290125+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "d4a5e844-13e0-4482-b75c-cfe265ec280e", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 2.601}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:36.297988+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "282c459c-1bed-425b-8f89-7f981e9b505c", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 2.628}
+app-1  | INFO:     192.168.65.1:50385 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:36.387915+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "7d43672e-4a8e-49f6-998a-153ca0ff87f5", "method": "POST", "path": "/api/v1/tasks/364a5bee-ce5d-55cd-bce1-8bb4b2326e46/status", "status_code": 200, "duration_ms": 5.254}
+app-1  | INFO:     192.168.65.1:48538 - "POST /api/v1/tasks/364a5bee-ce5d-55cd-bce1-8bb4b2326e46/status HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:36.390451+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "6b9a47d5-e17c-4834-bd2a-b0ef4a320014", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 1.727}
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:36.414336+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "b8ba95f7-649e-40f4-87b5-c0054303a3e7", "method": "GET", "path": "/health/ready", "status_code": 200, "duration_ms": 1.764}
+app-1  | INFO:     127.0.0.1:55716 - "GET /health/ready HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:30634 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:36.939144+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "57401942-b823-47ef-9f49-6a1831c6005c", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 5.218}
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:37.124719+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "d077c131-0183-47a4-b5a7-8a0f74131f96", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 4.938}
+app-1  | {"timestamp": "2026-10-05T20:39:37.206854+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "ec19ee16-063e-42cf-a920-154822571485", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:37.207511+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "d943a8ac-a29b-4ada-9898-057f507b464a", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 7.327}
+app-1  | INFO:     192.168.65.1:48538 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:37.304683+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "8dc74b0e-2d6b-41b8-81c7-39f292355483", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 3.308}
+app-1  | INFO:     192.168.65.1:54993 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:37.307745+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "3fd2baba-c2a3-4389-a4a0-ce914a097ecc", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 7.034}
+app-1  | {"timestamp": "2026-10-05T20:39:37.452026+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "474852c7-9dd8-4f8e-8771-2a4daa2d0035", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 2.846}
+app-1  | INFO:     192.168.65.1:50385 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:37.925542+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "617100d3-ceba-4543-a0c5-386eee2af169", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 6.65}
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:54993 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:38.102074+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "fdd20b44-dac5-4f16-a1bd-5e83bfa26357", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 7.7}
+app-1  | INFO:     192.168.65.1:50385 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:38.108425+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "45658c42-a236-4036-9846-dc06b9442fd0", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 2.817}
+app-1  | INFO:     192.168.65.1:30634 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:38.184098+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "67f21428-e3cc-4009-bea7-0fe610707fd8", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 5.154}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:38.332476+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "844c9407-aeee-4aca-ae00-59cc1431e135", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 6.241}
+app-1  | {"timestamp": "2026-10-05T20:39:38.364525+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "63692a8d-8335-4abe-8022-dbc18f930837", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:38.365576+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "3000f241-cf6e-4c53-bea1-ca659cf11314", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 10.714}
+app-1  | INFO:     192.168.65.1:48538 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:38.842094+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "e4399f28-e520-4d0c-8c03-5c0805b01eb3", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 6.18}
+app-1  | INFO:     192.168.65.1:48538 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:38.899821+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "702b4f2e-5c58-498e-a515-305cdc41b150", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 7.743}
+app-1  | {"timestamp": "2026-10-05T20:39:38.900847+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "dbe80300-9573-46ca-9a2d-966040a389af", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 4.999}
+app-1  | INFO:     192.168.65.1:30634 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:39.070382+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:39.071187+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "e8fda6d0-d4e2-4fd3-9d81-90dc248564cd", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 9.91}
+app-1  | INFO:     192.168.65.1:50385 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:39.355245+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "e1d7c3b5-9eff-42ee-8b6d-7364a4d3fe89", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 5.104}
+app-1  | INFO:     192.168.65.1:54993 - "POST /api/v1/tasks/4433f2bb-3297-59f9-9d4a-79647a1f29d8/status HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:39.411126+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "4bdb995f-3ec1-4d4e-823a-30671fd19b14", "method": "POST", "path": "/api/v1/tasks/4433f2bb-3297-59f9-9d4a-79647a1f29d8/status", "status_code": 200, "duration_ms": 7.286}
+app-1  | {"timestamp": "2026-10-05T20:39:39.608670+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "7dabdc84-dab6-4af9-b5ea-81bfa3d8948b", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 6.199}
+app-1  | INFO:     192.168.65.1:50385 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:39.610440+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "31cd2f77-b293-4649-8d3a-bd0504b514fb", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 6.35}
+app-1  | INFO:     192.168.65.1:48538 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:39.653039+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "50de9477-0cd5-4d25-82cd-84fab8379288", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 6.332}
+app-1  | {"timestamp": "2026-10-05T20:39:40.266617+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "4390ada5-9300-4924-a69f-abc8150533b6", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:40.267670+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "5d44b548-2157-4536-879a-9684ff03675f", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 9.766}
+app-1  | INFO:     192.168.65.1:30634 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:40.319506+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "cc489225-b34c-4a77-be3d-49068a1817c1", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/status", "status_code": 200, "duration_ms": 11.086}
+app-1  | INFO:     192.168.65.1:50385 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/status HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:40.380478+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "34fcc43c-e7d1-41c7-accd-f9908cef41fb", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 2.265}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:40.637621+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "9aa100c1-5ec0-4db3-a490-d3cfcacc9fd8", "method": "POST", "path": "/api/v1/tasks/4433f2bb-3297-59f9-9d4a-79647a1f29d8/status", "status_code": 200, "duration_ms": 9.579}
+app-1  | INFO:     192.168.65.1:54993 - "POST /api/v1/tasks/4433f2bb-3297-59f9-9d4a-79647a1f29d8/status HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:40.762462+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "0c9d1cc1-1c1b-40a5-8eb1-2a0a67ea6de0", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:40.763094+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "a441eaca-ac41-4e3b-b2b8-9a97e1a1268d", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 9.587}
+app-1  | INFO:     192.168.65.1:30064 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | INFO:     192.168.65.1:48538 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:40.786571+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "c71fb653-f72d-481e-8ecd-646ec38b10f7", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 3.741}
+app-1  | INFO:     192.168.65.1:30634 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:40.810147+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "a5a20905-fabf-4fe8-9b27-d93038dfe893", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 6.085}
+app-1  | {"timestamp": "2026-10-05T20:39:40.972093+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "d9384059-11bd-4712-9522-d04850af6c6a", "method": "POST", "path": "/api/v1/tasks/85baf72f-af95-5a4f-9fb2-30639614a49d/status", "status_code": 200, "duration_ms": 8.194}
+app-1  | INFO:     192.168.65.1:50385 - "POST /api/v1/tasks/85baf72f-af95-5a4f-9fb2-30639614a49d/status HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:41.399287+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "f892e9ce-73ca-4e56-a473-2a5252024f62", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 3.217}
+app-1  | {"timestamp": "2026-10-05T20:39:41.567284+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:41.567980+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "fd0ded1b-e208-4f5a-a021-c80870f19c4f", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 7.962}
+app-1  | INFO:     192.168.65.1:50385 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:41.568601+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "9b18f739-ceed-4e71-848a-0e80664041e5", "method": "POST", "path": "/api/v1/tasks/364a5bee-ce5d-55cd-bce1-8bb4b2326e46/status", "status_code": 200, "duration_ms": 8.401}
+app-1  | INFO:     192.168.65.1:48538 - "POST /api/v1/tasks/364a5bee-ce5d-55cd-bce1-8bb4b2326e46/status HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:30634 - "POST /api/v1/tasks/62de7a5b-6fb3-5730-a0ab-a5a986d31a23/status HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:41.602571+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "1fed80c9-e795-4567-9ccf-96f9b1a5fdeb", "method": "POST", "path": "/api/v1/tasks/62de7a5b-6fb3-5730-a0ab-a5a986d31a23/status", "status_code": 200, "duration_ms": 5.026}
+app-1  | INFO:     127.0.0.1:55720 - "GET /health/ready HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:41.664656+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "afb51ed5-13ff-404f-b597-40b6e682af7e", "method": "GET", "path": "/health/ready", "status_code": 200, "duration_ms": 1.746}
+app-1  | {"timestamp": "2026-10-05T20:39:41.673374+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "194b3494-aa35-4a47-940f-b5ac316ddcea", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 2.995}
+app-1  | INFO:     192.168.65.1:54993 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:41.815135+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "808e0e3a-2e8f-44d0-9e0e-77bc70181644", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 4.656}
+app-1  | INFO:     192.168.65.1:54993 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:42.272498+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "9dd479da-e47f-441f-9602-28f09ef360ba", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 5.014}
+app-1  | {"timestamp": "2026-10-05T20:39:42.359276+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:42.360312+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "67aa22bf-62bc-4916-b563-4e67cc778462", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 11.062}
+app-1  | INFO:     192.168.65.1:48538 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:42.422062+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "1a1a54a6-0851-4fc3-a6fe-85343d269244", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 6.612}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:42.763405+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "cac2c278-3445-4968-afc8-eec397310b9e", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:42.764565+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "fbc8101c-d5b8-4d88-8be5-242d32b106da", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 10.619}
+app-1  | INFO:     192.168.65.1:50385 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:42.837229+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:42.838449+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "90bfddda-7b92-4360-bb6c-313931b1394b", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 14.294}
+app-1  | INFO:     192.168.65.1:54993 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:42.931316+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "2553658f-d1a3-4c91-94c0-955d8b61a417", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:42.932408+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "2375c4b9-5b6c-4795-bbf4-78c18ab49077", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 12.367}
+app-1  | INFO:     192.168.65.1:30634 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:43.179639+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:43.180776+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "fcc498b6-a654-4d8f-9f6f-96c2dd338cc5", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 14.841}
+app-1  | INFO:     192.168.65.1:30064 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:43.402330+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "a42fa8ac-08f8-468d-b990-ecceac81c93b", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:43.403075+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "e9df78f0-a78d-4b0f-aee1-4277954fcea0", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 8.448}
+app-1  | INFO:     192.168.65.1:54993 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:43.436193+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "676eb2b8-79eb-4c57-b609-28b8cd448c3e", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:43.436791+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "ba3a4cbf-9ddf-4158-bc62-28f48971161f", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 5.148}
+app-1  | INFO:     192.168.65.1:50385 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:43.441308+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "ddb2170d-eea4-4563-9279-bc900a59acff", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 2.349}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:43.658440+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "2d2d022c-15c6-4aef-927b-db273a7ed6dc", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 8.524}
+app-1  | INFO:     192.168.65.1:48538 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:43.827895+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:43.828535+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "b6579ef2-572c-461b-96ca-def35bcbd840", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 7.717}
+app-1  | INFO:     192.168.65.1:30634 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:44.163656+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "c217c834-36d9-4fcd-9051-a7fc9a4a9afd", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 5.629}
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:44.458392+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "36d48409-a319-46dd-91ef-87a6f5988f48", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 10.835}
+app-1  | INFO:     192.168.65.1:48538 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:44.463472+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "eb2fc032-994d-476e-bd1e-987ea41540d4", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 10.15}
+app-1  | {"timestamp": "2026-10-05T20:39:44.577266+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "04be2be5-6aba-4859-a0d3-e55d2e81ef4d", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 7.892}
+app-1  | INFO:     192.168.65.1:54993 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:44.727797+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "7c836060-989f-41d9-bc85-197670d100a4", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 6.906}
+app-1  | INFO:     192.168.65.1:50385 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:45.022745+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "742d620d-dfb4-4c00-8237-dd0c0ad5e929", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:45.023343+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "46d651d4-1294-4627-b955-50bcb085bc03", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 7.677}
+app-1  | INFO:     192.168.65.1:48538 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:45.066192+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "ea70b473-c19a-41c9-a369-75f679e711a9", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 6.229}
+app-1  | INFO:     192.168.65.1:30634 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:45.382961+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "acae789f-50f6-4e05-a45f-f62d33b1f429", "method": "POST", "path": "/api/v1/tasks/85baf72f-af95-5a4f-9fb2-30639614a49d/status", "status_code": 200, "duration_ms": 15.266}
+app-1  | INFO:     192.168.65.1:50385 - "POST /api/v1/tasks/85baf72f-af95-5a4f-9fb2-30639614a49d/status HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:45.479114+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "1154d853-0035-4d03-a3b8-9ed1ea9b4d7d", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 3.129}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:45.587176+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "19e1f79a-f169-4c5d-bb3e-ed06a11a19ec", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 2.647}
+app-1  | {"timestamp": "2026-10-05T20:39:45.804811+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "194ec056-3541-46d8-8f71-a79ba65f5e0a", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 5.097}
+app-1  | INFO:     192.168.65.1:30634 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:46.049109+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "b203b4bf-40a8-47b0-8c44-f6e5d1735ec1", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:46.049768+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "bf7dd8e2-c123-4450-8b28-d7303e8fb053", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 6.539}
+app-1  | INFO:     192.168.65.1:54993 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:46.174459+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:46.175103+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "0b270e73-53ee-41d8-ab46-563fe7a55f51", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 7.14}
+app-1  | INFO:     192.168.65.1:48538 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:46.210594+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "8006bccd-8025-403b-8298-b1cd6f7e419d", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 5.378}
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:46.341047+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:46.342183+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "d59ad3d9-a0df-401a-92e4-05f2ae94ff70", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 12.679}
+app-1  | INFO:     192.168.65.1:50385 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:46.493051+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "a1df98fc-1dc2-43d4-a1ef-080990061297", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 2.329}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:46.840629+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "cf0abb30-d970-4737-af91-c728e3b659f7", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 4.938}
+app-1  | INFO:     192.168.65.1:54993 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:48538 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:46.842095+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "08fcb3b7-7c4e-43ae-a317-0837687826e3", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 5.903}
+app-1  | {"timestamp": "2026-10-05T20:39:46.928393+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "7f2894bf-7260-4a93-a04e-afc20fc8c467", "method": "GET", "path": "/health/ready", "status_code": 200, "duration_ms": 1.712}
+app-1  | INFO:     127.0.0.1:33218 - "GET /health/ready HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:50385 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:47.066079+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "eb392911-7438-46e2-a478-3b8ed4a417dd", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 4.865}
+app-1  | {"timestamp": "2026-10-05T20:39:47.107063+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "164c19a1-384f-454f-be92-5b18f0eb6666", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 4.058}
+app-1  | INFO:     192.168.65.1:30634 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:47.505170+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:47.506064+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "1e9980b7-3e8a-49f5-a349-83ffd6cd2b5d", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 8.429}
+app-1  | INFO:     192.168.65.1:30064 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:47.510810+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "bde57f7b-a158-47d7-810e-ed2baf15efb9", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 3.565}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:47.863860+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "4b37f3ca-c86e-425f-844b-f21c009ba616", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:47.864758+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "c2cfa53b-d15d-4bea-aab1-e2064184dd0f", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 9.799}
+app-1  | INFO:     192.168.65.1:48538 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | INFO:     192.168.65.1:50385 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:47.933734+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "d566bd82-92be-4ebe-b788-cb21d178c94c", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 5.776}
+app-1  | {"timestamp": "2026-10-05T20:39:48.054116+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "0815d9e8-6255-417f-b16c-fc5b517ae80d", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 4.078}
+app-1  | INFO:     192.168.65.1:54993 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:48.369073+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "a5626ebd-dc01-476c-9617-8431b9244e5e", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 7.4}
+app-1  | INFO:     192.168.65.1:30634 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:48.536445+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "8720700b-4338-48be-acc2-a4cb365263b5", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 5.873}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:48.724630+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "7939c42b-6ea6-44c9-b867-a34f12ef36e7", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 7.155}
+app-1  | {"timestamp": "2026-10-05T20:39:49.147840+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:49.148765+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "7dcdbd1c-2d6a-4725-85bc-36caaf6aa52c", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 13.734}
+app-1  | INFO:     192.168.65.1:54993 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:49.150536+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "2cdbcf04-1bbc-46c8-aedf-73899210d393", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 10.197}
+app-1  | INFO:     192.168.65.1:48538 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:49.394395+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "5f1708cf-7b90-4e90-9ccb-ca87c0c042ff", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:49.395332+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "2fe9b58d-7cb8-4b44-8396-77195a1ee4fe", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 9.647}
+app-1  | INFO:     192.168.65.1:50385 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:49.484525+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "69c4bfa3-c0ae-453d-a289-a36bdc300948", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 5.71}
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:49.552744+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "c063d49b-ddb5-423f-a3d2-edaa139bfb7c", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 2.539}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:49.783558+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "ba83e334-0eaa-41dc-a224-e77c19da5efa", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:49.784314+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "269804cc-9bc6-4071-b1e2-346884cea2de", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 8.56}
+app-1  | INFO:     192.168.65.1:48538 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:49.881374+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "aa97628e-8e63-421b-98ed-cb2ca9e4f0f9", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 6.213}
+app-1  | INFO:     192.168.65.1:30634 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:50385 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:50.074002+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "b88e8f08-e5a2-4bc2-95a6-eca38c7e31f7", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 6.541}
+app-1  | {"timestamp": "2026-10-05T20:39:50.088454+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:50.089075+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "b1c47696-9202-4991-98a1-4fd03bdc7120", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 6.237}
+app-1  | INFO:     192.168.65.1:54993 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:50.574160+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "99672acf-6cb7-4d58-b661-d83a05b59fcc", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 5.821}
+app-1  | {"timestamp": "2026-10-05T20:39:50.581665+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "f1b47776-18f4-4be4-bbd9-995814ad7605", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 4.034}
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:50.736132+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "9425568c-7c4f-442c-86d7-fd2b34edb5ed", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 5.545}
+app-1  | INFO:     192.168.65.1:48538 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:51.031242+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:51.032391+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "29bdf350-5d73-4dd1-9569-8370eb29f1ea", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 12.439}
+app-1  | INFO:     192.168.65.1:30634 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:51.151677+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "69c9001e-060b-4d0d-948f-c1ebe4c8f814", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 8.202}
+app-1  | INFO:     192.168.65.1:54993 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:48538 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:51.455674+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "0206e9cc-66c6-4310-84b2-3f396d0cbb8d", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 3.486}
+app-1  | {"timestamp": "2026-10-05T20:39:51.485467+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "e23f3902-0e6b-42bb-aa08-62db0a732d13", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:51.485985+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "b5b5429b-021a-4334-acf2-14dc26681d34", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 7.619}
+app-1  | INFO:     192.168.65.1:50385 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:51.495759+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "c92c6e5d-0f92-4cfa-b14e-56cd8c84782c", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 3.615}
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:51.596031+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "26c55117-ebdc-48cd-af2b-a3f843000b93", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 4.858}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:51.822277+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "5060a286-d261-4b71-9c6a-5e30f7fc3e26", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 5.603}
+app-1  | INFO:     192.168.65.1:54993 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:50385 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:52.046716+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "78898fe9-cd5f-4227-b73d-8a2277e0d833", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 2.156}
+app-1  | {"timestamp": "2026-10-05T20:39:52.179047+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "80f336a3-80d6-4a71-a7b2-7c16f1d21b1d", "method": "GET", "path": "/health/ready", "status_code": 200, "duration_ms": 1.65}
+app-1  | INFO:     127.0.0.1:33230 - "GET /health/ready HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:30634 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:52.237125+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "e09dfb8a-5f1d-4f2c-b35a-f4681b7205e8", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 2.755}
+app-1  | {"timestamp": "2026-10-05T20:39:52.415753+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "f878fe7d-a437-4236-8394-036545d07a45", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 4.887}
+app-1  | INFO:     192.168.65.1:48538 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:54993 - "POST /api/v1/tasks/34c727ab-9320-5221-9a0c-03c2e59053d0/status HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:52.455538+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "e0a7754e-f198-4d98-b679-d729ff827b2e", "method": "POST", "path": "/api/v1/tasks/34c727ab-9320-5221-9a0c-03c2e59053d0/status", "status_code": 200, "duration_ms": 7.617}
+app-1  | {"timestamp": "2026-10-05T20:39:52.575321+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:52.575924+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "7b29b59e-f61b-40a4-a51a-0ac5f53e2c06", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 6.871}
+app-1  | INFO:     192.168.65.1:50385 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:52.613047+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "d1f2803c-c30c-4e06-9b99-89b60659e58c", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 2.811}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:52.697578+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "28e03cb9-900a-4e1d-b142-82877bcf7810", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 4.246}
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:52.953005+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "b8b4de29-84e5-49dd-ba4b-93edfc5750c2", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:52.953623+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "77f76087-165a-4198-8e82-d3c1290903a2", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 7.365}
+app-1  | INFO:     192.168.65.1:30634 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:53.018856+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "e9cd35e0-3b92-427a-8a4c-6a533c9bfb8e", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:53.019557+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "c5fe6c50-ca39-4677-9f66-3fa83ed5767b", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 7.572}
+app-1  | INFO:     192.168.65.1:48538 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:53.530012+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "9031a649-83c8-4131-9bce-1eeaa2316e4b", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:53.531209+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "56b1b5bb-d0bb-4653-870c-2e6c3a28720f", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 8.709}
+app-1  | INFO:     192.168.65.1:50385 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:53.639180+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "47a1c291-36b8-4770-ae5c-31210eb1362f", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 8.46}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:53.649258+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "9bdd2f5b-7b8a-47c5-8604-a7f5e9a1a378", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 5.972}
+app-1  | INFO:     192.168.65.1:30634 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:53.649665+00:00", "level": "INFO", "message": "Business operation completed", "operation": "create_task", "entity_id": "0e6b4254-e774-4494-bf79-0c8f9969f762", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:53.650937+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "35ab921c-603b-4230-9987-5493349e03e3", "method": "POST", "path": "/api/v1/tasks", "status_code": 201, "duration_ms": 20.869}
+app-1  | INFO:     192.168.65.1:54993 - "POST /api/v1/tasks HTTP/1.1" 201 Created
+app-1  | {"timestamp": "2026-10-05T20:39:54.138692+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:54.139725+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "d0b08964-8671-4908-b301-b9d3add921e2", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 10.747}
+app-1  | INFO:     192.168.65.1:30064 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:54.265049+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "295597f7-c7c2-4057-a592-bf3302c7b347", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 4.843}
+app-1  | INFO:     192.168.65.1:48538 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:30634 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:54.328456+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "40fee694-e198-425a-b533-68b4f91b03f6", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 4.386}
+app-1  | INFO:     192.168.65.1:54993 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:54.595732+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "d0309c3d-7780-4b5e-9d00-1988609c1e1d", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 8.954}
+app-1  | {"timestamp": "2026-10-05T20:39:54.662133+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "d056965a-8118-4afc-ae58-15df76d0e1e4", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 3.322}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:54.952532+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "e2e53ca5-c126-4e50-9142-b1579a2f648a", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 4.14}
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:50385 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:55.003760+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "086b9930-cd0d-4b8f-ba5b-7f9f50395c0b", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 5.881}
+app-1  | {"timestamp": "2026-10-05T20:39:55.286422+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "2644c9a9-71d4-456c-bb86-c8f9d5db9737", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 6.193}
+app-1  | INFO:     192.168.65.1:48538 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:30634 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:55.462005+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "855cda4a-b536-4473-b423-10e6ff301f97", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 8.679}
+app-1  | {"timestamp": "2026-10-05T20:39:55.620625+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "f6279745-8741-405b-a75f-a07b53baf0dd", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 3.261}
+app-1  | INFO:     192.168.65.1:54993 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:55.677632+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "f470bb6c-4976-4902-b860-7a39fd91ad95", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 2.161}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:55.764684+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "24fb95df-3ae1-49b6-97fa-9789c6852c83", "method": "GET", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d", "status_code": 200, "duration_ms": 2.947}
+app-1  | INFO:     192.168.65.1:50385 - "GET /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:55.983671+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "851a1060-b1c5-48f8-bc6c-ad0f5024bd6e", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 5.726}
+app-1  | INFO:     192.168.65.1:30634 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:56.356624+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:56.357699+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "4741432a-fbe0-4b01-af27-81b8f7de2541", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 11.735}
+app-1  | INFO:     192.168.65.1:54993 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:30064 - "GET /api/v1/reports/task-summary HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:56.419546+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "4d4408eb-c702-44cc-b3bb-3033a6b59ca8", "method": "GET", "path": "/api/v1/reports/task-summary", "status_code": 200, "duration_ms": 6.11}
+app-1  | {"timestamp": "2026-10-05T20:39:56.603165+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "3867b8cd-2846-415e-ba29-a9e772f3918a", "method": "GET", "path": "/api/v1/tasks", "status_code": 200, "duration_ms": 6.976}
+app-1  | INFO:     192.168.65.1:50385 - "GET /api/v1/tasks?limit=50 HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:56.671150+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:56.672268+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "157ecc8a-2a6a-4401-af9c-6205c3c7d9c7", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 10.572}
+app-1  | INFO:     192.168.65.1:48538 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:56.699060+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "115b2ec9-d69c-412f-9036-30913046205b", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 4.494}
+app-1  | INFO:     192.168.65.1:17969 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:57.051643+00:00", "level": "INFO", "message": "Business operation completed", "operation": "assign_task", "entity_id": "5bac4226-8588-5be7-849d-579e77357097", "outcome": "success"}
+app-1  | {"timestamp": "2026-10-05T20:39:57.052514+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "a9ca7f07-f57d-4141-9e57-967d28560197", "method": "POST", "path": "/api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign", "status_code": 200, "duration_ms": 9.337}
+app-1  | INFO:     192.168.65.1:30634 - "POST /api/v1/tasks/5bac4226-8588-5be7-849d-579e77357097/assign HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:57.404452+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "19a14319-4b0a-4d7e-9b8d-c3e1bd1de585", "method": "GET", "path": "/health/ready", "status_code": 200, "duration_ms": 1.801}
+app-1  | INFO:     127.0.0.1:38708 - "GET /health/ready HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:39:57.769294+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "eec51a48-f4b3-436c-9588-e697373f4305", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 2.239}
+app-1  | INFO:     192.168.65.1:54389 - "GET /metrics HTTP/1.1" 200 OK

@@ -1,0 +1,283 @@
+{
+  "evidence_package_id": "a0-monolith-v1",
+  "architecture_state": "A0_MONOLITH",
+  "validated_source_revision": "ce16466d3739ea84fada13f90264de9ed4b5ab12",
+  "current_frozen_main_revision": "b78b0967be937634b7762baccf5ac6892b279a73",
+  "current_frozen_main_branch": "main",
+  "validation_report_path": "experiments/A0_FINAL_VALIDATION_REPORT.md",
+  "validation_report_sha256": "d15b83e179372adbb1c5bebf56651d061ec5bf82b306c254766a90678277dcd1",
+  "validation_status": "PASS",
+  "a0_status_in_report": "READY TO TAG",
+  "canonical_run_ids": [
+    "a0-smoke-validation",
+    "a0-baseline-validation"
+  ],
+  "validation_support_run_ids": [
+    "a0-seed-reset-validation",
+    "a0-fault-sanity-validation"
+  ],
+  "workload_profiles": [
+    {
+      "run_id": "a0-smoke-validation",
+      "profile_id": "a0-smoke-v1",
+      "sha256": "658f9977e494ebeab9c49fd05977616afd5005f82e030e46751a1fb1619f0a52"
+    },
+    {
+      "run_id": "a0-baseline-validation",
+      "profile_id": "a0-baseline-v1",
+      "sha256": "98517928987a9cdede42b9c10ef6546ad97cb09f9142984fa5ce29efe8ed013c"
+    }
+  ],
+  "warmup_profile": {
+    "profile_id": "a0-warmup-v1",
+    "sha256": "54bae6cffd29a35b3d5b4bcefe29a32c60bc667342706fab39598782fb42f643"
+  },
+  "fitness_configuration": {
+    "version": 1,
+    "path": "fitness/configs/a0-monolith.yaml",
+    "sha256": "5ad60e373463ea459e192bf85d82704ca9aa1c217c4abf4d8caeb66924059ecb"
+  },
+  "seed": {
+    "id": "a0-v1",
+    "fingerprint_sha256": "074aba9f614f5cc348729261dbc4ce2588ae5d270a2f8adb54cc01df0dfe89d9"
+  },
+  "summary_values": {
+    "a0-smoke-validation": {
+      "request_count": 141,
+      "runtime_sample_count": 30,
+      "failure_count": 0,
+      "business_5xx_count": 0,
+      "p50_ms": 13.0,
+      "p95_ms": 28.0,
+      "p99_ms": 57.0,
+      "throughput_requests_per_second": 4.854092016343718
+    },
+    "a0-baseline-validation": {
+      "request_count": 2332,
+      "runtime_sample_count": 119,
+      "failure_count": 0,
+      "business_5xx_count": 0,
+      "p50_ms": 11.0,
+      "p95_ms": 22.0,
+      "p99_ms": 47.0,
+      "throughput_requests_per_second": 19.511867599000553,
+      "application_cpu_seconds_delta": 15.55,
+      "application_resident_memory_max_bytes": 100995072
+    }
+  },
+  "result_directory_classifications": [
+    {
+      "directory": "a0-smoke-validation",
+      "classification": "CANONICAL",
+      "reason": "Named by final validation report; run ID, A0 state, clean source revision, profile and warmup hashes, fitness config, seed fingerprint, summary and evidence files verified."
+    },
+    {
+      "directory": "a0-baseline-validation",
+      "classification": "CANONICAL",
+      "reason": "Named by final validation report; run ID, A0 state, clean source revision, profile and warmup hashes, fitness config, seed fingerprint, summary and evidence files verified."
+    },
+    {
+      "directory": "a0-fault-sanity-validation",
+      "classification": "VALIDATION_SUPPORT",
+      "reason": "Report identifies this separate validation run; fault_sanity.json and application log are present."
+    },
+    {
+      "directory": "a0-seed-reset-validation",
+      "classification": "VALIDATION_SUPPORT",
+      "reason": "Report identifies two successful resets; both fingerprints are present and match the report."
+    },
+    {
+      "directory": "a0-acceptance-smoke",
+      "classification": "INTERMEDIATE / EXPLORATORY",
+      "reason": "Metadata has null Git revision and no final-validation profile/provenance; not named as canonical in report."
+    },
+    {
+      "directory": "a0-v1-baseline",
+      "classification": "INTERMEDIATE / EXPLORATORY",
+      "reason": "Run records older revision 46d11876ab5e00d25cde5f40244f8d84c0845e80 and legacy profile schema; does not match validated revision."
+    },
+    {
+      "directory": "a0-v1-smoke",
+      "classification": "INTERMEDIATE / EXPLORATORY",
+      "reason": "Run records older revision 46d11876ab5e00d25cde5f40244f8d84c0845e80 and legacy profile schema; does not match validated revision."
+    }
+  ],
+  "existing_tag_observed": "arch-a0-monolith-v1 points to current frozen main revision; this task did not create or move it.",
+  "included_files": [
+    {
+      "path": "baseline/locust_exceptions.csv",
+      "sha256": "3e73e8f665731ee4e45a6a91202a31b06999f2c53240f14aee2532e0e0b42b09",
+      "size_bytes": 31
+    },
+    {
+      "path": "baseline/locust_failures.csv",
+      "sha256": "51ba68968b591276c95496a6a9624797491ce4eb934b1f6392f44b95148fbb93",
+      "size_bytes": 52
+    },
+    {
+      "path": "baseline/locust_stats.csv",
+      "sha256": "b7f1bc9e527325b7219a5ac679132fd4a4af20df8568632a79f836628492d3a4",
+      "size_bytes": 1372
+    },
+    {
+      "path": "baseline/locust_stats_history.csv",
+      "sha256": "35672bf4352d276c0553bf1695cdfc23898cdc77fdedc8e8321b331965abb583",
+      "size_bytes": 19847
+    },
+    {
+      "path": "baseline/logs/app.log",
+      "sha256": "90a8df39f300d343880716d239b90369e7fd4dd5d62c645e9efba58c1b476c2a",
+      "size_bytes": 1102982
+    },
+    {
+      "path": "baseline/metadata.json",
+      "sha256": "5528ba98521165920ec0b3ead665383e513929636bb72467703716508ea5ee2c",
+      "size_bytes": 1573
+    },
+    {
+      "path": "baseline/metrics_after.txt",
+      "sha256": "afff3782bd9556b99613e78a134319dd81cf8b8b738fb50fa7eb2c21962e90b9",
+      "size_bytes": 24917
+    },
+    {
+      "path": "baseline/metrics_before.txt",
+      "sha256": "31b0eeb5a77403ce788dc504fb0af4d7e997e9d139bde9ca5232c84d3cc4b453",
+      "size_bytes": 14318
+    },
+    {
+      "path": "baseline/runtime_metrics.csv",
+      "sha256": "45dc2752bfdd5adf599da658f60bc613697cd268abd670da31bb1af17cebce23",
+      "size_bytes": 7976
+    },
+    {
+      "path": "baseline/seed_fingerprint.json",
+      "sha256": "3b09827528bef1a47548d7e19c2d923e4f95f593fc6a7c6bacafbdeaa527deaf",
+      "size_bytes": 208
+    },
+    {
+      "path": "baseline/seed_fingerprint_after_warmup.json",
+      "sha256": "3b09827528bef1a47548d7e19c2d923e4f95f593fc6a7c6bacafbdeaa527deaf",
+      "size_bytes": 208
+    },
+    {
+      "path": "baseline/seed_fingerprint_before_warmup.json",
+      "sha256": "3b09827528bef1a47548d7e19c2d923e4f95f593fc6a7c6bacafbdeaa527deaf",
+      "size_bytes": 208
+    },
+    {
+      "path": "baseline/summary.json",
+      "sha256": "8f2aacf244735cb1fb865abdb0eabb7cb87bb4413c313079f6beb32426e5394f",
+      "size_bytes": 671
+    },
+    {
+      "path": "baseline/warmup_profile.yaml",
+      "sha256": "54bae6cffd29a35b3d5b4bcefe29a32c60bc667342706fab39598782fb42f643",
+      "size_bytes": 185
+    },
+    {
+      "path": "baseline/workload_profile.yaml",
+      "sha256": "98517928987a9cdede42b9c10ef6546ad97cb09f9142984fa5ce29efe8ed013c",
+      "size_bytes": 323
+    },
+    {
+      "path": "fault-sanity/fault_sanity.json",
+      "sha256": "fa1f98b812a181252fc5e704d8f9bf9671459a17a45bbfd57a7fb69a13a1f47a",
+      "size_bytes": 645
+    },
+    {
+      "path": "fault-sanity/logs/app.log",
+      "sha256": "3ea89ea2d242ea05110a082877742617a9ea3a9b9c3b1f75e09269f09b9fcc25",
+      "size_bytes": 15357
+    },
+    {
+      "path": "seed-reset/fingerprint-1.json",
+      "sha256": "980a3213fda2cba19a0cb5048befa2652072c857e58bce297f921ca9efe2b63f",
+      "size_bytes": 194
+    },
+    {
+      "path": "seed-reset/fingerprint-2.json",
+      "sha256": "980a3213fda2cba19a0cb5048befa2652072c857e58bce297f921ca9efe2b63f",
+      "size_bytes": 194
+    },
+    {
+      "path": "smoke/locust_exceptions.csv",
+      "sha256": "3e73e8f665731ee4e45a6a91202a31b06999f2c53240f14aee2532e0e0b42b09",
+      "size_bytes": 31
+    },
+    {
+      "path": "smoke/locust_failures.csv",
+      "sha256": "51ba68968b591276c95496a6a9624797491ce4eb934b1f6392f44b95148fbb93",
+      "size_bytes": 52
+    },
+    {
+      "path": "smoke/locust_stats.csv",
+      "sha256": "fb0bf22ead9f0bff973e16c83ac39158542c8b336ec37010428aad873a4af5f4",
+      "size_bytes": 1352
+    },
+    {
+      "path": "smoke/locust_stats_history.csv",
+      "sha256": "c250da33a46b361dcf09c6540bbd2fd96c82eca6f8e3432bcb99ad2a93ee7a96",
+      "size_bytes": 5093
+    },
+    {
+      "path": "smoke/logs/app.log",
+      "sha256": "21fa830e1a366490ab04b27b54197e27204a949ce77726864f8311ea078b2238",
+      "size_bytes": 76511
+    },
+    {
+      "path": "smoke/metadata.json",
+      "sha256": "368a924a077b6523d1fcabbf2ea69b8f13c6c1d8fd40ffe0d2a581f61cfbbad1",
+      "size_bytes": 1565
+    },
+    {
+      "path": "smoke/metrics_after.txt",
+      "sha256": "8e2000b3c2efa819bfbe13ddcb4c46404aff798b2e129da8e80f5965fa587403",
+      "size_bytes": 24766
+    },
+    {
+      "path": "smoke/metrics_before.txt",
+      "sha256": "33bc4d55ad085575e212e05c3aacba28d8979913e25a4123c84a918993d67984",
+      "size_bytes": 6418
+    },
+    {
+      "path": "smoke/runtime_metrics.csv",
+      "sha256": "cad212fdf8cd84c8c54ee6f74cce996bc01ac12e4930d7894984aa7becd5b120",
+      "size_bytes": 2085
+    },
+    {
+      "path": "smoke/seed_fingerprint.json",
+      "sha256": "3b09827528bef1a47548d7e19c2d923e4f95f593fc6a7c6bacafbdeaa527deaf",
+      "size_bytes": 208
+    },
+    {
+      "path": "smoke/seed_fingerprint_after_warmup.json",
+      "sha256": "3b09827528bef1a47548d7e19c2d923e4f95f593fc6a7c6bacafbdeaa527deaf",
+      "size_bytes": 208
+    },
+    {
+      "path": "smoke/seed_fingerprint_before_warmup.json",
+      "sha256": "3b09827528bef1a47548d7e19c2d923e4f95f593fc6a7c6bacafbdeaa527deaf",
+      "size_bytes": 208
+    },
+    {
+      "path": "smoke/summary.json",
+      "sha256": "c56fac74c94d48cbf0f490cff97629b3d678f71e96b8ae92c503b8e8e1225700",
+      "size_bytes": 660
+    },
+    {
+      "path": "smoke/warmup_profile.yaml",
+      "sha256": "54bae6cffd29a35b3d5b4bcefe29a32c60bc667342706fab39598782fb42f643",
+      "size_bytes": 185
+    },
+    {
+      "path": "smoke/workload_profile.yaml",
+      "sha256": "658f9977e494ebeab9c49fd05977616afd5005f82e030e46751a1fb1619f0a52",
+      "size_bytes": 317
+    },
+    {
+      "path": "README.md",
+      "sha256": "f615b1c20c951feddbe94166807b919d5b91263bfdefb1ff5650222c2e226957",
+      "size_bytes": 5343
+    }
+  ]
+}

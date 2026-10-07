@@ -1,0 +1,110 @@
+app-1  | {"timestamp": "2026-10-05T20:49:01.241796+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "577fb442-a7b1-48d6-9cd4-7a10e9f6daca", "method": "GET", "path": "/health/ready", "status_code": 200, "duration_ms": 10.588}
+app-1  | INFO:     127.0.0.1:56430 - "GET /health/ready HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:49:06.503259+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "48b827ff-f779-4f99-a05c-75d126aa13a1", "method": "GET", "path": "/health/ready", "status_code": 200, "duration_ms": 1.871}
+app-1  | INFO:     127.0.0.1:52808 - "GET /health/ready HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:49:11.760130+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "e1d0e9a1-9a7a-4789-8ce2-5aa3548dcea9", "method": "GET", "path": "/health/ready", "status_code": 200, "duration_ms": 4.898}
+app-1  | INFO:     127.0.0.1:52810 - "GET /health/ready HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:49:17.009124+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "15409c8f-90c3-4626-a256-4cf95c081586", "method": "GET", "path": "/health/ready", "status_code": 200, "duration_ms": 2.269}
+app-1  | INFO:     127.0.0.1:47546 - "GET /health/ready HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:49:19.680828+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "a2c612fa-ba91-40e7-b1b1-41151ae38bd2", "method": "GET", "path": "/internal/experiment/faults", "status_code": 200, "duration_ms": 6.365}
+app-1  | INFO:     192.168.65.1:48362 - "GET /internal/experiment/faults HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:49:19.757512+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "4230c667-90d5-4e95-9f4b-d681dbe82799", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 2.411}
+app-1  | INFO:     192.168.65.1:43210 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | INFO:     192.168.65.1:39691 - "PUT /internal/experiment/faults HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:49:19.770841+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "2cee2ff1-9165-40e7-8eed-e08f170e5d3a", "method": "PUT", "path": "/internal/experiment/faults", "status_code": 200, "duration_ms": 2.135}
+app-1  | {"timestamp": "2026-10-05T20:49:19.805260+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "b1b6617d-9f58-4aae-b608-a1d35a3ac18b", "method": "POST", "path": "/api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d/status", "status_code": 500, "duration_ms": 25.997}
+app-1  | {"timestamp": "2026-10-05T20:49:19.805483+00:00", "level": "ERROR", "message": "Unhandled request failure", "request_id": "b1b6617d-9f58-4aae-b608-a1d35a3ac18b", "exception": "Traceback (most recent call last):\n  File \"/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py\", line 164, in __call__\n    await self.app(scope, receive, _send)\n  File \"/app/.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py\", line 151, in __call__\n    await self.app(scope, receive, send)\n  File \"/app/.venv/lib/python3.12/site-packages/starlette/middleware/base.py\", line 197, in __call__\n    response = await self.dispatch_func(request, call_next)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/app/main.py\", line 93, in observe_request\n    response = await call_next(request)\n               ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/.venv/lib/python3.12/site-packages/starlette/middleware/base.py\", line 173, in call_next\n    raise app_exc from app_exc.__cause__ or app_exc.__context__\n  File \"/app/.venv/lib/python3.12/site-packages/starlette/middleware/base.py\", line 149, in coro\n    await self.app(scope, receive_or_disconnect, send_no_error)\n  File \"/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py\", line 63, in __call__\n    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)\n  File \"/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py\", line 53, in wrapped_app\n    raise exc\n  File \"/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py\", line 42, in wrapped_app\n    await app(scope, receive, sender)\n  File \"/app/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py\", line 18, in __call__\n    await self.app(scope, receive, send)\n  File \"/app/.venv/lib/python3.12/site-packages/starlette/routing.py\", line 676, in __call__\n    await self.middleware_stack(scope, receive, send)\n  File \"/app/.venv/lib/python3.12/site-packages/fastapi/routing.py\", line 2786, in app\n    await route.handle(scope, receive, send)\n  File \"/app/.venv/lib/python3.12/site-packages/fastapi/routing.py\", line 1817, in handle\n    await self.original_router.handle(scope, receive, send)\n  File \"/app/.venv/lib/python3.12/site-packages/fastapi/routing.py\", line 2869, in handle\n    await included_router._handle_selected(scope, receive, send)\n  File \"/app/.venv/lib/python3.12/site-packages/fastapi/routing.py\", line 1843, in _handle_selected\n    await original_route.handle(scope, receive, send)\n  File \"/app/.venv/lib/python3.12/site-packages/fastapi/routing.py\", line 1308, in handle\n    await effective_context.app(scope, receive, send)\n  File \"/app/.venv/lib/python3.12/site-packages/fastapi/routing.py\", line 165, in app\n    await wrap_app_handling_exceptions(app, request)(scope, receive, send)\n  File \"/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py\", line 53, in wrapped_app\n    raise exc\n  File \"/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py\", line 42, in wrapped_app\n    await app(scope, receive, sender)\n  File \"/app/.venv/lib/python3.12/site-packages/fastapi/routing.py\", line 151, in app\n    response = await f(request)\n               ^^^^^^^^^^^^^^^^\n  File \"/app/.venv/lib/python3.12/site-packages/fastapi/routing.py\", line 727, in app\n    raw_response = await run_endpoint_function(\n                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/.venv/lib/python3.12/site-packages/fastapi/routing.py\", line 362, in run_endpoint_function\n    return await run_in_threadpool(\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/.venv/lib/python3.12/site-packages/starlette/concurrency.py\", line 34, in run_in_threadpool\n    return await anyio.to_thread.run_sync(func)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/.venv/lib/python3.12/site-packages/anyio/to_thread.py\", line 65, in run_sync\n    return await get_async_backend().run_sync_in_worker_thread(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py\", line 2706, in run_sync_in_worker_thread\n    return await future\n           ^^^^^^^^^^^^\n  File \"/app/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py\", line 1100, in run\n    result = context.run(func, *args)\n             ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/.venv/lib/python3.12/site-packages/fastapi/telemetry/_api.py\", line 240, in _run_sync_endpoint\n    return function(**arguments)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/app/app/api/tasks.py\", line 66, in post_status\n    change_task_status(session, task_id, payload.status, payload.actor_user_id)\n  File \"/app/app/services/task_service.py\", line 137, in change_task_status\n    create_notification(\n  File \"/app/app/services/notification_service.py\", line 18, in create_notification\n    apply_notification_faults()\n  File \"/app/app/experiment/fault_injector.py\", line 19, in apply_notification_faults\n    raise RuntimeError(\"Experiment-forced notification failure\")\nRuntimeError: Experiment-forced notification failure"}
+app-1  | INFO:     192.168.65.1:43903 - "POST /api/v1/tasks/a733b872-7cef-57fa-b673-31840bf1ef2d/status HTTP/1.1" 500 Internal Server Error
+app-1  | ERROR:    Exception in ASGI application
+app-1  | Traceback (most recent call last):
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/uvicorn/protocols/http/httptools_impl.py", line 422, in run_asgi
+app-1  |     result = await app(  # type: ignore[func-returns-value]
+app-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/uvicorn/middleware/proxy_headers.py", line 63, in __call__
+app-1  |     return await self.app(scope, receive, send)
+app-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/applications.py", line 1220, in __call__
+app-1  |     await self._native_telemetry(
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py", line 418, in __call__
+app-1  |     await app(
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/applications.py", line 96, in __call__
+app-1  |     await self.middleware_stack(scope, receive, send)
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 186, in __call__
+app-1  |     raise exc
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/errors.py", line 164, in __call__
+app-1  |     await self.app(scope, receive, _send)
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/telemetry/_asgi.py", line 151, in __call__
+app-1  |     await self.app(scope, receive, send)
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/base.py", line 197, in __call__
+app-1  |     response = await self.dispatch_func(request, call_next)
+app-1  |                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1  |   File "/app/app/main.py", line 93, in observe_request
+app-1  |     response = await call_next(request)
+app-1  |                ^^^^^^^^^^^^^^^^^^^^^^^^
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/base.py", line 173, in call_next
+app-1  |     raise app_exc from app_exc.__cause__ or app_exc.__context__
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/base.py", line 149, in coro
+app-1  |     await self.app(scope, receive_or_disconnect, send_no_error)
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+app-1  |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+app-1  |     raise exc
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app-1  |     await app(scope, receive, sender)
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
+app-1  |     await self.app(scope, receive, send)
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/routing.py", line 676, in __call__
+app-1  |     await self.middleware_stack(scope, receive, send)
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 2786, in app
+app-1  |     await route.handle(scope, receive, send)
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 1817, in handle
+app-1  |     await self.original_router.handle(scope, receive, send)
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 2869, in handle
+app-1  |     await included_router._handle_selected(scope, receive, send)
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 1843, in _handle_selected
+app-1  |     await original_route.handle(scope, receive, send)
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 1308, in handle
+app-1  |     await effective_context.app(scope, receive, send)
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 165, in app
+app-1  |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+app-1  |     raise exc
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+app-1  |     await app(scope, receive, sender)
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 151, in app
+app-1  |     response = await f(request)
+app-1  |                ^^^^^^^^^^^^^^^^
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 727, in app
+app-1  |     raw_response = await run_endpoint_function(
+app-1  |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/routing.py", line 362, in run_endpoint_function
+app-1  |     return await run_in_threadpool(
+app-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/starlette/concurrency.py", line 34, in run_in_threadpool
+app-1  |     return await anyio.to_thread.run_sync(func)
+app-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/anyio/to_thread.py", line 65, in run_sync
+app-1  |     return await get_async_backend().run_sync_in_worker_thread(
+app-1  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 2706, in run_sync_in_worker_thread
+app-1  |     return await future
+app-1  |            ^^^^^^^^^^^^
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/anyio/_backends/_asyncio.py", line 1100, in run
+app-1  |     result = context.run(func, *args)
+app-1  |              ^^^^^^^^^^^^^^^^^^^^^^^^
+app-1  |   File "/app/.venv/lib/python3.12/site-packages/fastapi/telemetry/_api.py", line 240, in _run_sync_endpoint
+app-1  |     return function(**arguments)
+app-1  |            ^^^^^^^^^^^^^^^^^^^^^
+app-1  |   File "/app/app/api/tasks.py", line 66, in post_status
+app-1  |     change_task_status(session, task_id, payload.status, payload.actor_user_id)
+app-1  |   File "/app/app/services/task_service.py", line 137, in change_task_status
+app-1  |     create_notification(
+app-1  |   File "/app/app/services/notification_service.py", line 18, in create_notification
+app-1  |     apply_notification_faults()
+app-1  |   File "/app/app/experiment/fault_injector.py", line 19, in apply_notification_faults
+app-1  |     raise RuntimeError("Experiment-forced notification failure")
+app-1  | RuntimeError: Experiment-forced notification failure
+app-1  | INFO:     192.168.65.1:18998 - "GET /metrics HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:49:19.822328+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "299e2f1f-7f38-4cd9-b559-36ecfb58ed62", "method": "GET", "path": "/metrics", "status_code": 200, "duration_ms": 2.293}
+app-1  | INFO:     192.168.65.1:26291 - "DELETE /internal/experiment/faults HTTP/1.1" 200 OK
+app-1  | {"timestamp": "2026-10-05T20:49:19.850575+00:00", "level": "INFO", "message": "HTTP request completed", "request_id": "67fdef43-55ad-4934-8ce3-4b162b6a376b", "method": "DELETE", "path": "/internal/experiment/faults", "status_code": 200, "duration_ms": 1.109}

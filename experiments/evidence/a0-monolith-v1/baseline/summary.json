@@ -1,0 +1,20 @@
+{
+  "architecture_state": "A0_MONOLITH",
+  "workload_profile_id": "a0-baseline-v1",
+  "request_count": 2332,
+  "failure_count": 0,
+  "failure_rate": 0.0,
+  "p50_ms": 11.0,
+  "p95_ms": 22.0,
+  "p99_ms": 47.0,
+  "throughput_requests_per_second": 19.511867599000553,
+  "runtime_sample_count": 119,
+  "business_5xx_count": 0.0,
+  "business_5xx_rate": 0.0,
+  "application_cpu_seconds_delta": 15.55,
+  "application_process_start_time_seconds": 1791232818.39,
+  "application_resident_memory_start_bytes": 100339712,
+  "application_resident_memory_end_bytes": 100995072,
+  "application_resident_memory_max_bytes": 100995072,
+  "application_virtual_memory_max_bytes": 677175296
+}

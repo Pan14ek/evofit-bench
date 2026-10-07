@@ -1,0 +1,170 @@
+# HELP python_gc_objects_collected_total Objects collected during gc
+# TYPE python_gc_objects_collected_total counter
+python_gc_objects_collected_total{generation="0"} 8742.0
+python_gc_objects_collected_total{generation="1"} 22186.0
+python_gc_objects_collected_total{generation="2"} 276.0
+# HELP python_gc_objects_uncollectable_total Uncollectable objects found during GC
+# TYPE python_gc_objects_uncollectable_total counter
+python_gc_objects_uncollectable_total{generation="0"} 0.0
+python_gc_objects_uncollectable_total{generation="1"} 0.0
+python_gc_objects_uncollectable_total{generation="2"} 0.0
+# HELP python_gc_collections_total Number of times this generation was collected
+# TYPE python_gc_collections_total counter
+python_gc_collections_total{generation="0"} 422.0
+python_gc_collections_total{generation="1"} 38.0
+python_gc_collections_total{generation="2"} 2.0
+# HELP python_info Python platform information
+# TYPE python_info gauge
+python_info{implementation="CPython",major="3",minor="12",patchlevel="15",version="3.12.15"} 1.0
+# HELP process_virtual_memory_bytes Virtual memory size in bytes.
+# TYPE process_virtual_memory_bytes gauge
+process_virtual_memory_bytes 6.01563136e+08
+# HELP process_resident_memory_bytes Resident memory size in bytes.
+# TYPE process_resident_memory_bytes gauge
+process_resident_memory_bytes 1.0020864e+08
+# HELP process_start_time_seconds Start time of the process since unix epoch in seconds.
+# TYPE process_start_time_seconds gauge
+process_start_time_seconds 1.79123281839e+09
+# HELP process_cpu_seconds_total Total user and system CPU time spent in seconds.
+# TYPE process_cpu_seconds_total counter
+process_cpu_seconds_total 5.84
+# HELP process_open_fds Number of open file descriptors.
+# TYPE process_open_fds gauge
+process_open_fds 20.0
+# HELP process_max_fds Maximum number of open file descriptors.
+# TYPE process_max_fds gauge
+process_max_fds 1.048576e+06
+# HELP http_requests_total HTTP requests
+# TYPE http_requests_total counter
+http_requests_total{method="GET",path="/health/ready",traffic_class="operational"} 7.0
+http_requests_total{method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 101.0
+http_requests_total{method="GET",path="/api/v1/tasks",traffic_class="business"} 159.0
+http_requests_total{method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 300.0
+# HELP http_requests_created HTTP requests
+# TYPE http_requests_created gauge
+http_requests_created{method="GET",path="/health/ready",traffic_class="operational"} 1.7912328220507994e+09
+http_requests_created{method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 1.7912328236542027e+09
+http_requests_created{method="GET",path="/api/v1/tasks",traffic_class="business"} 1.7912328236681428e+09
+http_requests_created{method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 1.7912328236685147e+09
+# HELP http_responses_total HTTP responses by status class
+# TYPE http_responses_total counter
+http_responses_total{method="GET",path="/health/ready",status_class="2xx",traffic_class="operational"} 7.0
+http_responses_total{method="GET",path="/api/v1/reports/task-summary",status_class="2xx",traffic_class="business"} 101.0
+http_responses_total{method="GET",path="/api/v1/tasks",status_class="2xx",traffic_class="business"} 159.0
+http_responses_total{method="GET",path="/api/v1/tasks/{task_id}",status_class="2xx",traffic_class="business"} 300.0
+# HELP http_responses_created HTTP responses by status class
+# TYPE http_responses_created gauge
+http_responses_created{method="GET",path="/health/ready",status_class="2xx",traffic_class="operational"} 1.791232822050812e+09
+http_responses_created{method="GET",path="/api/v1/reports/task-summary",status_class="2xx",traffic_class="business"} 1.791232823654212e+09
+http_responses_created{method="GET",path="/api/v1/tasks",status_class="2xx",traffic_class="business"} 1.791232823668153e+09
+http_responses_created{method="GET",path="/api/v1/tasks/{task_id}",status_class="2xx",traffic_class="business"} 1.7912328236685212e+09
+# HELP http_request_duration_seconds HTTP request duration
+# TYPE http_request_duration_seconds histogram
+http_request_duration_seconds_bucket{le="0.005",method="GET",path="/health/ready",traffic_class="operational"} 6.0
+http_request_duration_seconds_bucket{le="0.01",method="GET",path="/health/ready",traffic_class="operational"} 6.0
+http_request_duration_seconds_bucket{le="0.025",method="GET",path="/health/ready",traffic_class="operational"} 7.0
+http_request_duration_seconds_bucket{le="0.05",method="GET",path="/health/ready",traffic_class="operational"} 7.0
+http_request_duration_seconds_bucket{le="0.075",method="GET",path="/health/ready",traffic_class="operational"} 7.0
+http_request_duration_seconds_bucket{le="0.1",method="GET",path="/health/ready",traffic_class="operational"} 7.0
+http_request_duration_seconds_bucket{le="0.25",method="GET",path="/health/ready",traffic_class="operational"} 7.0
+http_request_duration_seconds_bucket{le="0.5",method="GET",path="/health/ready",traffic_class="operational"} 7.0
+http_request_duration_seconds_bucket{le="0.75",method="GET",path="/health/ready",traffic_class="operational"} 7.0
+http_request_duration_seconds_bucket{le="1.0",method="GET",path="/health/ready",traffic_class="operational"} 7.0
+http_request_duration_seconds_bucket{le="2.5",method="GET",path="/health/ready",traffic_class="operational"} 7.0
+http_request_duration_seconds_bucket{le="5.0",method="GET",path="/health/ready",traffic_class="operational"} 7.0
+http_request_duration_seconds_bucket{le="7.5",method="GET",path="/health/ready",traffic_class="operational"} 7.0
+http_request_duration_seconds_bucket{le="10.0",method="GET",path="/health/ready",traffic_class="operational"} 7.0
+http_request_duration_seconds_bucket{le="+Inf",method="GET",path="/health/ready",traffic_class="operational"} 7.0
+http_request_duration_seconds_count{method="GET",path="/health/ready",traffic_class="operational"} 7.0
+http_request_duration_seconds_sum{method="GET",path="/health/ready",traffic_class="operational"} 0.0279313740102225
+http_request_duration_seconds_bucket{le="0.005",method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 36.0
+http_request_duration_seconds_bucket{le="0.01",method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 92.0
+http_request_duration_seconds_bucket{le="0.025",method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 101.0
+http_request_duration_seconds_bucket{le="0.05",method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 101.0
+http_request_duration_seconds_bucket{le="0.075",method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 101.0
+http_request_duration_seconds_bucket{le="0.1",method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 101.0
+http_request_duration_seconds_bucket{le="0.25",method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 101.0
+http_request_duration_seconds_bucket{le="0.5",method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 101.0
+http_request_duration_seconds_bucket{le="0.75",method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 101.0
+http_request_duration_seconds_bucket{le="1.0",method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 101.0
+http_request_duration_seconds_bucket{le="2.5",method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 101.0
+http_request_duration_seconds_bucket{le="5.0",method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 101.0
+http_request_duration_seconds_bucket{le="7.5",method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 101.0
+http_request_duration_seconds_bucket{le="10.0",method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 101.0
+http_request_duration_seconds_bucket{le="+Inf",method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 101.0
+http_request_duration_seconds_count{method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 101.0
+http_request_duration_seconds_sum{method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 0.6085189149598591
+http_request_duration_seconds_bucket{le="0.005",method="GET",path="/api/v1/tasks",traffic_class="business"} 50.0
+http_request_duration_seconds_bucket{le="0.01",method="GET",path="/api/v1/tasks",traffic_class="business"} 143.0
+http_request_duration_seconds_bucket{le="0.025",method="GET",path="/api/v1/tasks",traffic_class="business"} 156.0
+http_request_duration_seconds_bucket{le="0.05",method="GET",path="/api/v1/tasks",traffic_class="business"} 158.0
+http_request_duration_seconds_bucket{le="0.075",method="GET",path="/api/v1/tasks",traffic_class="business"} 159.0
+http_request_duration_seconds_bucket{le="0.1",method="GET",path="/api/v1/tasks",traffic_class="business"} 159.0
+http_request_duration_seconds_bucket{le="0.25",method="GET",path="/api/v1/tasks",traffic_class="business"} 159.0
+http_request_duration_seconds_bucket{le="0.5",method="GET",path="/api/v1/tasks",traffic_class="business"} 159.0
+http_request_duration_seconds_bucket{le="0.75",method="GET",path="/api/v1/tasks",traffic_class="business"} 159.0
+http_request_duration_seconds_bucket{le="1.0",method="GET",path="/api/v1/tasks",traffic_class="business"} 159.0
+http_request_duration_seconds_bucket{le="2.5",method="GET",path="/api/v1/tasks",traffic_class="business"} 159.0
+http_request_duration_seconds_bucket{le="5.0",method="GET",path="/api/v1/tasks",traffic_class="business"} 159.0
+http_request_duration_seconds_bucket{le="7.5",method="GET",path="/api/v1/tasks",traffic_class="business"} 159.0
+http_request_duration_seconds_bucket{le="10.0",method="GET",path="/api/v1/tasks",traffic_class="business"} 159.0
+http_request_duration_seconds_bucket{le="+Inf",method="GET",path="/api/v1/tasks",traffic_class="business"} 159.0
+http_request_duration_seconds_count{method="GET",path="/api/v1/tasks",traffic_class="business"} 159.0
+http_request_duration_seconds_sum{method="GET",path="/api/v1/tasks",traffic_class="business"} 1.1301210429955972
+http_request_duration_seconds_bucket{le="0.005",method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 167.0
+http_request_duration_seconds_bucket{le="0.01",method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 284.0
+http_request_duration_seconds_bucket{le="0.025",method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 297.0
+http_request_duration_seconds_bucket{le="0.05",method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 299.0
+http_request_duration_seconds_bucket{le="0.075",method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 300.0
+http_request_duration_seconds_bucket{le="0.1",method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 300.0
+http_request_duration_seconds_bucket{le="0.25",method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 300.0
+http_request_duration_seconds_bucket{le="0.5",method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 300.0
+http_request_duration_seconds_bucket{le="0.75",method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 300.0
+http_request_duration_seconds_bucket{le="1.0",method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 300.0
+http_request_duration_seconds_bucket{le="2.5",method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 300.0
+http_request_duration_seconds_bucket{le="5.0",method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 300.0
+http_request_duration_seconds_bucket{le="7.5",method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 300.0
+http_request_duration_seconds_bucket{le="10.0",method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 300.0
+http_request_duration_seconds_bucket{le="+Inf",method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 300.0
+http_request_duration_seconds_count{method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 300.0
+http_request_duration_seconds_sum{method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 1.6451998689299216
+# HELP http_request_duration_seconds_created HTTP request duration
+# TYPE http_request_duration_seconds_created gauge
+http_request_duration_seconds_created{method="GET",path="/health/ready",traffic_class="operational"} 1.7912328220508273e+09
+http_request_duration_seconds_created{method="GET",path="/api/v1/reports/task-summary",traffic_class="business"} 1.7912328236542273e+09
+http_request_duration_seconds_created{method="GET",path="/api/v1/tasks",traffic_class="business"} 1.791232823668167e+09
+http_request_duration_seconds_created{method="GET",path="/api/v1/tasks/{task_id}",traffic_class="business"} 1.7912328236685305e+09
+# HELP users_created_total Users created
+# TYPE users_created_total counter
+users_created_total 0.0
+# HELP users_created_created Users created
+# TYPE users_created_created gauge
+users_created_created 1.7912328205879502e+09
+# HELP tasks_created_total Tasks created
+# TYPE tasks_created_total counter
+tasks_created_total 0.0
+# HELP tasks_created_created Tasks created
+# TYPE tasks_created_created gauge
+tasks_created_created 1.7912328205879567e+09
+# HELP tasks_assigned_total Tasks assigned
+# TYPE tasks_assigned_total counter
+tasks_assigned_total 0.0
+# HELP tasks_assigned_created Tasks assigned
+# TYPE tasks_assigned_created gauge
+tasks_assigned_created 1.7912328205879614e+09
+# HELP task_status_changes_total Task status changes
+# TYPE task_status_changes_total counter
+task_status_changes_total 0.0
+# HELP task_status_changes_created Task status changes
+# TYPE task_status_changes_created gauge
+task_status_changes_created 1.7912328205879653e+09
+# HELP notifications_created_total Notifications created
+# TYPE notifications_created_total counter
+notifications_created_total 0.0
+# HELP notifications_created_created Notifications created
+# TYPE notifications_created_created gauge
+notifications_created_created 1.7912328205879705e+09
+# HELP business_operation_failures_total Failed business operations
+# TYPE business_operation_failures_total counter
+# HELP business_rule_rejections_total Expected business rule rejections
+# TYPE business_rule_rejections_total counter
