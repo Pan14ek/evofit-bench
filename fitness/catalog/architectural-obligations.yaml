@@ -1,0 +1,76 @@
+schema_version: 1
+obligations:
+  - id: P_EXT_LATENCY
+    criterion: performance
+    intent: User-facing API operations must satisfy the declared end-to-end latency policy.
+    default_weight: 1.0
+  - id: P_REMOTE_LATENCY
+    criterion: performance
+    intent: Synchronous inter-service calls must satisfy the declared dependency latency budget.
+    default_weight: 1.0
+  - id: P_ASYNC_LAG
+    criterion: performance
+    intent: Asynchronous delivery/processing must satisfy the declared lag budget.
+    default_weight: 1.0
+
+  - id: R_BUSINESS_FAILURE
+    criterion: reliability
+    intent: Unexpected business-operation failures must be observable separately from expected rejections.
+    default_weight: 1.0
+  - id: R_HTTP_5XX
+    criterion: reliability
+    intent: External/business HTTP 5xx responses must be monitored.
+    default_weight: 1.0
+  - id: R_LOCAL_ATOMICITY
+    criterion: reliability
+    intent: The local transactional Task/Notification/Audit model must preserve atomic consistency.
+    default_weight: 1.0
+  - id: R_REMOTE_DEPENDENCY
+    criterion: reliability
+    intent: Remote timeout/retry/circuit failures must be observable.
+    default_weight: 1.0
+  - id: R_EVENT_DELIVERY
+    criterion: reliability
+    intent: Event publication/consumption failures, backlog, and DLQ state must be controlled.
+    default_weight: 1.0
+  - id: R_IDEMPOTENCY
+    criterion: reliability
+    intent: Repeated event delivery must not create duplicate side effects.
+    default_weight: 1.0
+  - id: R_READMODEL_CONVERGENCE
+    criterion: reliability
+    intent: Event-driven reporting read model must converge to source state within the declared bound.
+    default_weight: 1.0
+
+  - id: AC_LAYERING
+    criterion: architecture_compliance
+    intent: Internal dependencies must conform to the allowed layering model.
+    default_weight: 1.0
+  - id: AC_MODULE_STRUCTURE
+    criterion: architecture_compliance
+    intent: Capability modules must have declared structure and identity.
+    default_weight: 1.0
+  - id: AC_PUBLIC_API
+    criterion: architecture_compliance
+    intent: Cross-module access is allowed only through public module APIs.
+    default_weight: 1.0
+  - id: AC_MODULE_GRAPH
+    criterion: architecture_compliance
+    intent: The module-dependency graph must be acyclic and conform to allowed dependency directions.
+    default_weight: 1.0
+  - id: AC_DATA_OWNERSHIP
+    criterion: architecture_compliance
+    intent: A module/service must not bypass ownership through foreign repositories/tables.
+    default_weight: 1.0
+  - id: AC_SERVICE_BOUNDARY
+    criterion: architecture_compliance
+    intent: In-process/code-level dependencies between deployment units are forbidden.
+    default_weight: 1.0
+  - id: AC_COMMUNICATION_POLICY
+    criterion: architecture_compliance
+    intent: Communication channels must conform to the corresponding architecture decision.
+    default_weight: 1.0
+  - id: AC_DEPLOYMENT_TOPOLOGY
+    criterion: architecture_compliance
+    intent: Actual deployment units/replicas must conform to the expected architecture state.
+    default_weight: 1.0

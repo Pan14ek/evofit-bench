@@ -13,7 +13,10 @@
   "properties": {
     "schema_version": {"type": "integer", "minimum": 1},
     "scenario_id": {"type": "string", "pattern": "^DA[0-9]{2}$"},
-    "frozen_before_implementation": {"type": "boolean"},
+    "frozen_before_implementation": {
+      "const": true,
+      "description": "Registered ground truth must be frozen before implementation."
+    },
     "source_architecture_tag": {"type": "string", "minLength": 1},
     "source_architecture_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
     "criteria_assessment": {
@@ -33,15 +36,23 @@
       }
     },
     "affected_targets": {
+      "description": "Targets with expected operations other than retain; cross-artifact consistency is validated in tests.",
       "type": "array", "items": {"$ref": "#/$defs/affectedTarget"}, "uniqueItems": true
     },
     "expected_operations": {
+      "description": "Total ground-truth operation mapping over every target in classification_universe.",
       "type": "object", "minProperties": 1,
       "propertyNames": {"type": "string", "minLength": 1},
       "additionalProperties": {"enum": ["retain", "replace", "add", "deactivate", "adjust"]}
     },
-    "required_obligations_after": {"$ref": "#/$defs/stableIds"},
-    "retained_representations": {"$ref": "#/$defs/stableIds"},
+    "required_obligations_after": {
+      "description": "Complete active obligation set Q(A_after), including obligations unaffected by the current delta.",
+      "$ref": "#/$defs/stableIds"
+    },
+    "retained_representations": {
+      "description": "Representation targets whose expected operation is retain.",
+      "$ref": "#/$defs/stableIds"
+    },
     "seeded_faults": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
     "prohibited_unplanned_changes": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
   },

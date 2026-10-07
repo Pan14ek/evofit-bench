@@ -30,10 +30,12 @@
       "minItems": 1
     },
     "required_obligations_after": {
+      "description": "Complete active obligation set Q(A_after), not only obligations affected by this delta.",
       "type": "array", "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"},
       "uniqueItems": true
     },
     "new_obligations": {
+      "description": "Obligations introduced by the current architecture delta; these are a subset of required_obligations_after.",
       "type": "array", "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"},
       "uniqueItems": true
     },

@@ -33,9 +33,19 @@ affected_targets:
       DA01 introduces a new architectural obligation requiring the declared capability-module
       structure to exist and remain conformant.
 expected_operations:
+  REP_A0_PERF_TEST_HTTP_P95: retain
+  REP_A0_PERF_RUNTIME_HTTP_DURATION: retain
+  REP_A0_REL_TEST_INTEGRATION: retain
+  REP_A0_REL_RUNTIME_FAILURES: retain
   REP_A0_ARCH_CI_LAYERING: replace
   AC_MODULE_STRUCTURE: add
-required_obligations_after: [AC_LAYERING, AC_MODULE_STRUCTURE]
+required_obligations_after:
+  - P_EXT_LATENCY
+  - R_BUSINESS_FAILURE
+  - R_HTTP_5XX
+  - R_LOCAL_ATOMICITY
+  - AC_LAYERING
+  - AC_MODULE_STRUCTURE
 retained_representations:
   - REP_A0_PERF_TEST_HTTP_P95
   - REP_A0_PERF_RUNTIME_HTTP_DURATION

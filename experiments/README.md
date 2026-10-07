@@ -2,6 +2,10 @@
 
 The [architecture-evolution experimental design specification](design/ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md) defines the controlled architecture-evolution trajectory, ground-truth rules, research questions, and experimental data requirements for DA01–DA14.
 
+For each scenario, `required_obligations_after` is the complete active obligation set Q(A_after), including obligations unaffected by the current delta. `new_obligations` contains only obligations introduced by that delta and must be a subset of the required set. An unaffected obligation remains required; it is not a removed obligation. An unaffected representation normally receives `retain` unless its semantic validity has changed.
+
+The canonical machine-readable obligation identities, criteria, intents, and default weights are in [architectural-obligations.yaml](../fitness/catalog/architectural-obligations.yaml). The design document remains the human-readable protocol.
+
 ## Research artifact layout
 
 - `design/` defines the experimental protocol.

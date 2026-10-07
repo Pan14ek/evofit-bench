@@ -18,7 +18,13 @@ invariants:
   seed_semantics: equivalent
 candidate_modules: [users, tasks, notifications, reporting, audit]
 research_questions: [RQ1, RQ2]
-required_obligations_after: [AC_LAYERING, AC_MODULE_STRUCTURE]
+required_obligations_after:
+  - P_EXT_LATENCY
+  - R_BUSINESS_FAILURE
+  - R_HTTP_5XX
+  - R_LOCAL_ATOMICITY
+  - AC_LAYERING
+  - AC_MODULE_STRUCTURE
 new_obligations: [AC_MODULE_STRUCTURE]
 seeded_faults: [F_STRUCT_IMPORT]
 runtime_fault_required: false

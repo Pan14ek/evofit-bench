@@ -1,7 +1,7 @@
 """Validate the pre-registered research schema foundation without running experiments."""
 
 import json
-import re
+from collections import Counter
 from pathlib import Path
 from typing import Any, cast
 
@@ -14,7 +14,7 @@ SCENARIO_PATH = ROOT / "experiments/scenarios/DA01/scenario.yaml"
 GROUND_TRUTH_PATH = ROOT / "experiments/scenarios/DA01/ground_truth.yaml"
 REPRESENTATIONS_PATH = ROOT / "fitness/catalog/a0-fitness-elements.yaml"
 TRACEABILITY_PATH = ROOT / "fitness/traceability/a0-traceability.yaml"
-DESIGN_PATH = ROOT / "experiments/design/ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md"
+OBLIGATIONS_PATH = ROOT / "fitness/catalog/architectural-obligations.yaml"
 
 
 def load_yaml(path: Path) -> dict[str, Any]:
@@ -64,6 +64,18 @@ def test_result_schema_supports_future_methods_and_rq1_target_operations() -> No
         result["method"] = method
         validator.validate(result)
 
+    for target_type, target_id, operation in (
+        ("representation", "REP_A0_PERF_TEST_HTTP_P95", "retain"),
+        ("representation", "REP_A0_ARCH_CI_LAYERING", "replace"),
+        ("representation", "REP_A0_PERF_TEST_HTTP_P95", "deactivate"),
+        ("representation", "REP_A0_PERF_TEST_HTTP_P95", "adjust"),
+        ("obligation", "AC_MODULE_STRUCTURE", "add"),
+    ):
+        result["applied_operations"] = [
+            {"target_type": target_type, "target_id": target_id, "operation": operation}
+        ]
+        validator.validate(result)
+
     invalid_obligation_operation = {
         **result,
         "applied_operations": [
@@ -104,12 +116,45 @@ def test_a0_catalog_representation_ids_are_unique_and_match_frozen_configuration
     )
 
 
-def test_traceability_obligations_resolve_to_design_and_covered_representations() -> None:
-    """Ensure each A0 obligation in the graph exists and has current representation coverage."""
+def test_obligation_registry_contains_complete_design_universe() -> None:
+    """Keep every design obligation in the canonical machine-readable registry."""
+    registry = load_yaml(OBLIGATIONS_PATH)
+    entries = registry["obligations"]
+    ids = [item["id"] for item in entries]
+    assert registry["schema_version"] == 1
+    assert len(ids) == len(set(ids))
+    assert set(ids) == {
+        "P_EXT_LATENCY",
+        "P_REMOTE_LATENCY",
+        "P_ASYNC_LAG",
+        "R_BUSINESS_FAILURE",
+        "R_HTTP_5XX",
+        "R_LOCAL_ATOMICITY",
+        "R_REMOTE_DEPENDENCY",
+        "R_EVENT_DELIVERY",
+        "R_IDEMPOTENCY",
+        "R_READMODEL_CONVERGENCE",
+        "AC_LAYERING",
+        "AC_MODULE_STRUCTURE",
+        "AC_PUBLIC_API",
+        "AC_MODULE_GRAPH",
+        "AC_DATA_OWNERSHIP",
+        "AC_SERVICE_BOUNDARY",
+        "AC_COMMUNICATION_POLICY",
+        "AC_DEPLOYMENT_TOPOLOGY",
+    }
+    for item in entries:
+        assert item["criterion"] in {"performance", "reliability", "architecture_compliance"}
+        assert item["intent"].strip()
+        assert item["default_weight"] == 1.0
+
+
+def test_traceability_obligations_resolve_to_registry_and_covered_representations() -> None:
+    """Resolve the A0 graph against stable registry and representation IDs."""
     catalog = load_yaml(REPRESENTATIONS_PATH)
     traceability = load_yaml(TRACEABILITY_PATH)
-    design = DESIGN_PATH.read_text(encoding="utf-8")
-    design_obligations = set(re.findall(r"\| `([A-Z][A-Z0-9_]+)` \|", design))
+    registry = load_yaml(OBLIGATIONS_PATH)
+    obligation_ids = {item["id"] for item in registry["obligations"]}
     representation_ids = {item["id"] for item in catalog["representations"]}
     covered = {obligation for item in catalog["representations"] for obligation in item["covers"]}
     element_ids = [item["id"] for item in traceability["elements"]]
@@ -117,7 +162,7 @@ def test_traceability_obligations_resolve_to_design_and_covered_representations(
     for element in traceability["elements"]:
         assert element["representations"]
         for obligation in element["obligations"]:
-            assert obligation in design_obligations
+            assert obligation in obligation_ids
             assert obligation in covered
         for representation in element["representations"]:
             assert representation["id"] in representation_ids
@@ -125,32 +170,157 @@ def test_traceability_obligations_resolve_to_design_and_covered_representations(
         assert any(obligation in element["obligations"] for element in traceability["elements"])
 
 
-def test_da01_rq1_universe_and_frozen_ground_truth_are_exact() -> None:
-    """Lock the classification unit, positive targets, operations, and criterion context."""
+def test_ground_truth_schema_enforces_preregistration_freeze() -> None:
+    """Reject registered ground truth that is not frozen before implementation."""
+    schema = load_schema("ground_truth.schema.json")
+    assert schema["properties"]["frozen_before_implementation"] == {
+        "const": True,
+        "description": "Registered ground truth must be frozen before implementation.",
+    }
+    ground_truth = load_yaml(GROUND_TRUTH_PATH)
+    ground_truth["frozen_before_implementation"] = False
+    validator = Draft202012Validator(schema)
+    assert not validator.is_valid(ground_truth)
+
+
+def test_da01_cross_artifact_obligations_and_classification_are_consistent() -> None:
+    """Lock DA01's full obligation set and total RQ1 operation mapping."""
+    scenario = load_yaml(SCENARIO_PATH)
     ground_truth = load_yaml(GROUND_TRUTH_PATH)
     catalog = load_yaml(REPRESENTATIONS_PATH)
+    traceability = load_yaml(TRACEABILITY_PATH)
+    registry = load_yaml(OBLIGATIONS_PATH)
     expected_representations = [item["id"] for item in catalog["representations"]]
     universe = ground_truth["classification_universe"]
+
+    expected_after = [
+        "P_EXT_LATENCY",
+        "R_BUSINESS_FAILURE",
+        "R_HTTP_5XX",
+        "R_LOCAL_ATOMICITY",
+        "AC_LAYERING",
+        "AC_MODULE_STRUCTURE",
+    ]
+    assert scenario["required_obligations_after"] == expected_after
+    assert ground_truth["required_obligations_after"] == expected_after
+    assert scenario["required_obligations_after"] == ground_truth["required_obligations_after"]
+    assert scenario["new_obligations"] == ["AC_MODULE_STRUCTURE"]
+    assert set(scenario["new_obligations"]).issubset(set(expected_after))
+    assert set(universe["new_obligations"]).issubset(
+        set(ground_truth["required_obligations_after"])
+    )
+    assert len(expected_after) == 6
+
     assert universe["existing_representations"] == expected_representations
     assert universe["new_obligations"] == ["AC_MODULE_STRUCTURE"]
+    assert len(universe["existing_representations"]) == 5
+    assert len(universe["new_obligations"]) == 1
+    classification_universe = set(universe["existing_representations"]) | set(
+        universe["new_obligations"]
+    )
 
-    target_ids = [item["target_id"] for item in ground_truth["affected_targets"]]
-    assert len(target_ids) == len(set(target_ids))
-    assert set(target_ids) == {"REP_A0_ARCH_CI_LAYERING", "AC_MODULE_STRUCTURE"}
-    operations = {
-        item["target_id"]: item["expected_operation"] for item in ground_truth["affected_targets"]
-    }
-    assert operations == {
+    expected_operations = {
+        "REP_A0_PERF_TEST_HTTP_P95": "retain",
+        "REP_A0_PERF_RUNTIME_HTTP_DURATION": "retain",
+        "REP_A0_REL_TEST_INTEGRATION": "retain",
+        "REP_A0_REL_RUNTIME_FAILURES": "retain",
         "REP_A0_ARCH_CI_LAYERING": "replace",
         "AC_MODULE_STRUCTURE": "add",
     }
-    assert ground_truth["expected_operations"] == operations
+    operations = ground_truth["expected_operations"]
+    assert len(classification_universe) == 6
+    assert set(operations) == classification_universe
+    assert operations == expected_operations
+    assert Counter(operations.values()) == Counter(
+        {
+            "retain": 4,
+            "replace": 1,
+            "add": 1,
+        }
+    )
+    assert "deactivate" not in operations.values()
+    assert "adjust" not in operations.values()
+
+    target_ids = [item["target_id"] for item in ground_truth["affected_targets"]]
+    assert len(target_ids) == len(set(target_ids))
+    non_retain = {target_id for target_id, operation in operations.items() if operation != "retain"}
+    assert (
+        set(target_ids)
+        == non_retain
+        == {
+            "REP_A0_ARCH_CI_LAYERING",
+            "AC_MODULE_STRUCTURE",
+        }
+    )
+    assert {
+        item["target_id"]: item["expected_operation"] for item in ground_truth["affected_targets"]
+    } == {target_id: operations[target_id] for target_id in non_retain}
+    assert all(operations[target_id] != "retain" for target_id in target_ids)
+
+    retained_representations = [
+        representation_id
+        for representation_id in universe["existing_representations"]
+        if operations[representation_id] == "retain"
+    ]
+    assert ground_truth["retained_representations"] == retained_representations
+
     assert ground_truth["criteria_assessment"] == {
         "performance": {"affected": False},
         "reliability": {"affected": False},
         "architecture_compliance": {"affected": True},
     }
     assert ground_truth["frozen_before_implementation"] is True
-    assert set(ground_truth["retained_representations"]) == set(expected_representations) - {
-        "REP_A0_ARCH_CI_LAYERING"
+
+    obligation_ids = {item["id"] for item in registry["obligations"]}
+    referenced_obligations = set(scenario["required_obligations_after"])
+    referenced_obligations.update(scenario["new_obligations"])
+    referenced_obligations.update(ground_truth["required_obligations_after"])
+    referenced_obligations.update(universe["new_obligations"])
+    referenced_obligations.update(
+        item["target_id"]
+        for item in ground_truth["affected_targets"]
+        if item["target_type"] == "obligation"
+    )
+    referenced_obligations.update(
+        obligation
+        for representation in catalog["representations"]
+        for obligation in representation["covers"]
+    )
+    referenced_obligations.update(
+        obligation for element in traceability["elements"] for obligation in element["obligations"]
+    )
+    assert referenced_obligations <= obligation_ids
+
+    representation_ids = {item["id"] for item in catalog["representations"]}
+    assert set(universe["existing_representations"]) <= representation_ids
+    assert all(
+        item["target_id"] in representation_ids
+        for item in ground_truth["affected_targets"]
+        if item["target_type"] == "representation"
+    )
+
+    frozen_a0_obligations = set(expected_after) - set(scenario["new_obligations"])
+    assert frozen_a0_obligations == {
+        "P_EXT_LATENCY",
+        "R_BUSINESS_FAILURE",
+        "R_HTTP_5XX",
+        "R_LOCAL_ATOMICITY",
+        "AC_LAYERING",
+    }
+    coverage_by_obligation = {
+        obligation: {
+            item["id"] for item in catalog["representations"] if obligation in item["covers"]
+        }
+        for obligation in frozen_a0_obligations
+    }
+    assert all(coverage_by_obligation.values())
+    assert coverage_by_obligation == {
+        "P_EXT_LATENCY": {
+            "REP_A0_PERF_TEST_HTTP_P95",
+            "REP_A0_PERF_RUNTIME_HTTP_DURATION",
+        },
+        "R_BUSINESS_FAILURE": {"REP_A0_REL_RUNTIME_FAILURES"},
+        "R_HTTP_5XX": {"REP_A0_REL_RUNTIME_FAILURES"},
+        "R_LOCAL_ATOMICITY": {"REP_A0_REL_TEST_INTEGRATION"},
+        "AC_LAYERING": {"REP_A0_ARCH_CI_LAYERING"},
     }
