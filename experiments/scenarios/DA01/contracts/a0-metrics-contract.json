@@ -1,0 +1,118 @@
+{
+  "contract_version": 1,
+  "metrics": [
+    {
+      "exposed_names": [],
+      "family_name": "http_request_duration_seconds",
+      "help": "HTTP request duration",
+      "label_names": [
+        "method",
+        "path",
+        "traffic_class"
+      ],
+      "symbol": "http_request_duration_seconds",
+      "type": "histogram"
+    },
+    {
+      "exposed_names": [],
+      "family_name": "http_requests",
+      "help": "HTTP requests",
+      "label_names": [
+        "method",
+        "path",
+        "traffic_class"
+      ],
+      "symbol": "http_requests_total",
+      "type": "counter"
+    },
+    {
+      "exposed_names": [],
+      "family_name": "http_responses",
+      "help": "HTTP responses by status class",
+      "label_names": [
+        "method",
+        "path",
+        "status_class",
+        "traffic_class"
+      ],
+      "symbol": "http_responses_total",
+      "type": "counter"
+    },
+    {
+      "exposed_names": [
+        "users_created_created",
+        "users_created_total"
+      ],
+      "family_name": "users_created",
+      "help": "Users created",
+      "label_names": [],
+      "symbol": "users_created_total",
+      "type": "counter"
+    },
+    {
+      "exposed_names": [
+        "tasks_created_created",
+        "tasks_created_total"
+      ],
+      "family_name": "tasks_created",
+      "help": "Tasks created",
+      "label_names": [],
+      "symbol": "tasks_created_total",
+      "type": "counter"
+    },
+    {
+      "exposed_names": [
+        "tasks_assigned_created",
+        "tasks_assigned_total"
+      ],
+      "family_name": "tasks_assigned",
+      "help": "Tasks assigned",
+      "label_names": [],
+      "symbol": "tasks_assigned_total",
+      "type": "counter"
+    },
+    {
+      "exposed_names": [
+        "task_status_changes_created",
+        "task_status_changes_total"
+      ],
+      "family_name": "task_status_changes",
+      "help": "Task status changes",
+      "label_names": [],
+      "symbol": "task_status_changes_total",
+      "type": "counter"
+    },
+    {
+      "exposed_names": [
+        "notifications_created_created",
+        "notifications_created_total"
+      ],
+      "family_name": "notifications_created",
+      "help": "Notifications created",
+      "label_names": [],
+      "symbol": "notifications_created_total",
+      "type": "counter"
+    },
+    {
+      "exposed_names": [],
+      "family_name": "business_operation_failures",
+      "help": "Failed business operations",
+      "label_names": [
+        "operation"
+      ],
+      "symbol": "business_operation_failures_total",
+      "type": "counter"
+    },
+    {
+      "exposed_names": [],
+      "family_name": "business_rule_rejections",
+      "help": "Expected business rule rejections",
+      "label_names": [
+        "operation",
+        "reason"
+      ],
+      "symbol": "business_rule_rejections_total",
+      "type": "counter"
+    }
+  ]
+}

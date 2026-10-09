@@ -33,7 +33,7 @@ security:
 	$(UV) run bandit -q -r app scripts
 
 architecture-test:
-	$(UV) run lint-imports
+	$(UV) run lint-imports --config architecture/acceptance/importlinter.toml
 	$(UV) run python -m pytest --no-cov tests/architecture
 
 quality: lint typecheck security architecture-test migration-test test

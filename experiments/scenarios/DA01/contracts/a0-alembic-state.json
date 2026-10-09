@@ -1,0 +1,12 @@
+{
+  "contract_version": 1,
+  "head_revisions": [
+    "0001_a0_schema"
+  ],
+  "revision_files": [
+    {
+      "path": "alembic/versions/0001_a0_schema.py",
+      "sha256": "b537aa8c86237f798d18fa74ecc5579eb7906812638c7685037838759da8773a"
+    }
+  ]
+}

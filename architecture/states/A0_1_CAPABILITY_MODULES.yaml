@@ -1,0 +1,64 @@
+schema_version: 1
+architecture_state: A0_1_CAPABILITY_MODULES
+source_state: A0_MONOLITH
+scenario_id: DA01
+
+deployment:
+  deployment_units: 1
+  application_processes: 1
+  database_instances: 1
+  database_product: PostgreSQL
+  internal_communication: synchronous_python_calls
+  message_broker: none
+
+shared_infrastructure:
+  - app.config
+  - app.db
+  - app.experiment
+  - app.observability
+  - app.api.dependencies
+  - app.api.health
+  - app.api.metrics
+  - app.api.experiment
+  - app.models.base
+  - app.services.errors
+
+modules:
+  users:
+    package: app.modules.users
+    required_files: [__init__.py, api.py, schemas.py, service.py, repository.py, model.py]
+  tasks:
+    package: app.modules.tasks
+    required_files: [__init__.py, api.py, schemas.py, service.py, repository.py, model.py]
+  notifications:
+    package: app.modules.notifications
+    required_files: [__init__.py, api.py, schemas.py, service.py, repository.py, model.py]
+  reporting:
+    package: app.modules.reporting
+    required_files: [__init__.py, api.py, schemas.py, service.py]
+  audit:
+    package: app.modules.audit
+    required_files: [__init__.py, service.py, repository.py, model.py]
+
+preserved_cross_module_dependencies:
+  - from: app.modules.tasks.service
+    to: app.modules.users.repository
+    rationale: Preserved from A0; public module APIs belong to DA02.
+  - from: app.modules.tasks.service
+    to: app.modules.notifications.service
+    rationale: Preserved from A0; communication abstraction changes later.
+  - from: app.modules.tasks.service
+    to: app.modules.audit.service
+    rationale: Preserved from A0.
+  - from: app.modules.users.service
+    to: app.modules.audit.service
+    rationale: Preserved from A0.
+  - from: app.modules.reporting.service
+    to: app.modules.tasks.service
+    rationale: Preserved from A0; Task query port belongs to DA04.
+
+governance:
+  cross_module_public_api_enforcement: false
+  module_dependency_graph_governance: false
+  module_data_ownership_enforcement: false
+  domain_event_communication: false
