@@ -6,7 +6,7 @@ from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 from app.config import get_settings
-from app.models import Base
+from app.db.model_registry import Base
 
 config = context.config
 config.set_main_option(

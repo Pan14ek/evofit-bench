@@ -2,8 +2,8 @@
 
 import pytest
 
-from app.models.task import TaskStatus
-from app.services.task_service import ALLOWED_TRANSITIONS
+from app.modules.tasks.model import TaskStatus
+from app.modules.tasks.service import ALLOWED_TRANSITIONS
 
 
 @pytest.mark.parametrize(

@@ -5,7 +5,7 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.user import User
+from app.modules.users.model import User
 
 
 def get_user(session: Session, user_id: uuid.UUID) -> User | None:

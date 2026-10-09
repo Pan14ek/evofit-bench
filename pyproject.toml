@@ -71,31 +71,3 @@ show_missing = true
 [tool.bandit]
 exclude_dirs = ["tests", "alembic"]
 skips = ["B101"]
-
-[tool.importlinter]
-root_packages = ["app"]
-include_external_packages = false
-
-[[tool.importlinter.contracts]]
-name = "API depends on services and schemas, never repositories"
-type = "forbidden"
-source_modules = ["app.api"]
-forbidden_modules = ["app.repositories"]
-allow_indirect_imports = true
-
-[[tool.importlinter.contracts]]
-name = "Repositories never depend on API"
-type = "forbidden"
-source_modules = ["app.repositories"]
-forbidden_modules = ["app.api"]
-
-[[tool.importlinter.contracts]]
-name = "Models never depend on API or services"
-type = "forbidden"
-source_modules = ["app.models"]
-forbidden_modules = ["app.api", "app.services"]
-
-[[tool.importlinter.contracts]]
-name = "Layered dependency direction"
-type = "layers"
-layers = ["app.api", "app.services", "app.repositories", "app.models"]

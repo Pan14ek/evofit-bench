@@ -3,25 +3,45 @@ root_packages = ["app"]
 include_external_packages = false
 
 [[tool.importlinter.contracts]]
-name = "API depends on services and schemas, never repositories"
-type = "forbidden"
-source_modules = ["app.api"]
-forbidden_modules = ["app.repositories"]
-allow_indirect_imports = true
-
-[[tool.importlinter.contracts]]
-name = "Repositories never depend on API"
-type = "forbidden"
-source_modules = ["app.repositories"]
-forbidden_modules = ["app.api"]
-
-[[tool.importlinter.contracts]]
-name = "Models never depend on API or services"
-type = "forbidden"
-source_modules = ["app.models"]
-forbidden_modules = ["app.api", "app.services"]
-
-[[tool.importlinter.contracts]]
-name = "Layered dependency direction"
+name = "Users module internal layering"
 type = "layers"
-layers = ["app.api", "app.services", "app.repositories", "app.models"]
+layers = [
+  "app.modules.users.api",
+  "app.modules.users.service",
+  "app.modules.users.repository",
+  "app.modules.users.model",
+]
+
+[[tool.importlinter.contracts]]
+name = "Tasks module internal layering"
+type = "layers"
+layers = [
+  "app.modules.tasks.api",
+  "app.modules.tasks.service",
+  "app.modules.tasks.repository",
+  "app.modules.tasks.model",
+]
+
+[[tool.importlinter.contracts]]
+name = "Notifications module internal layering"
+type = "layers"
+layers = [
+  "app.modules.notifications.api",
+  "app.modules.notifications.service",
+  "app.modules.notifications.repository",
+  "app.modules.notifications.model",
+]
+
+[[tool.importlinter.contracts]]
+name = "Reporting module internal layering"
+type = "layers"
+layers = ["app.modules.reporting.api", "app.modules.reporting.service"]
+
+[[tool.importlinter.contracts]]
+name = "Audit module internal layering"
+type = "layers"
+layers = [
+  "app.modules.audit.service",
+  "app.modules.audit.repository",
+  "app.modules.audit.model",
+]

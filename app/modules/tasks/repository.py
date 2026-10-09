@@ -5,7 +5,7 @@ import uuid
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models.task import Task, TaskStatus
+from app.modules.tasks.model import Task, TaskStatus
 
 
 def get_task(session: Session, task_id: uuid.UUID) -> Task | None:

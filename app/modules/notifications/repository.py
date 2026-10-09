@@ -5,7 +5,7 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.notification import Notification
+from app.modules.notifications.model import Notification
 
 
 def add_notification(session: Session, user_id: uuid.UUID, kind: str, message: str) -> Notification:

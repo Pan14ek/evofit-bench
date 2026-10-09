@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_session
-from app.schemas.reports import TaskSummary
-from app.services.report_service import get_task_summary
+from app.modules.reporting.schemas import TaskSummary
+from app.modules.reporting.service import get_task_summary
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 

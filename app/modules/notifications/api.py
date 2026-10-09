@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_session
-from app.schemas.notifications import NotificationRead
-from app.services.notification_service import get_notifications
+from app.modules.notifications.schemas import NotificationRead
+from app.modules.notifications.service import get_notifications
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 

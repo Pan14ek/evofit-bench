@@ -5,7 +5,7 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.models.audit_event import AuditEvent
+from app.modules.audit.model import AuditEvent
 
 
 def add_audit_event(

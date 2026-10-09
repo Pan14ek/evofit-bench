@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import get_settings
 from app.experiment.fault_state import fault_state
-from app.models.audit_event import AuditEvent
+from app.modules.audit.model import AuditEvent
 from scripts.prometheus_snapshot import aggregate, parse_snapshot
 
 

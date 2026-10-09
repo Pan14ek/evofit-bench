@@ -13,8 +13,12 @@ from sqlalchemy.exc import IntegrityError
 from starlette.middleware.base import RequestResponseEndpoint
 from starlette.routing import Match
 
-from app.api import experiment, health, metrics, notifications, reports, tasks, users
+from app.api import experiment, health, metrics
 from app.config import get_settings
+from app.modules.notifications.api import router as notifications_router
+from app.modules.reporting.api import router as reports_router
+from app.modules.tasks.api import router as tasks_router
+from app.modules.users.api import router as users_router
 from app.observability.logging import configure_logging
 from app.observability.metrics import (
     business_operation_failures_total,
@@ -39,10 +43,10 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="EvoFitBench A0", version=get_settings().app_version, lifespan=lifespan)
-app.include_router(users.router, prefix="/api/v1")
-app.include_router(tasks.router, prefix="/api/v1")
-app.include_router(notifications.router, prefix="/api/v1")
-app.include_router(reports.router, prefix="/api/v1")
+app.include_router(users_router, prefix="/api/v1")
+app.include_router(tasks_router, prefix="/api/v1")
+app.include_router(notifications_router, prefix="/api/v1")
+app.include_router(reports_router, prefix="/api/v1")
 app.include_router(health.router)
 app.include_router(metrics.router)
 app.include_router(experiment.router)

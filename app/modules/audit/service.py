@@ -5,9 +5,9 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.models.audit_event import AuditEvent
+from app.modules.audit.model import AuditEvent
+from app.modules.audit.repository import add_audit_event
 from app.observability.tracing import span
-from app.repositories.audit_repository import add_audit_event
 
 
 def record_event(

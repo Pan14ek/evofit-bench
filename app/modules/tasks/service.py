@@ -6,7 +6,16 @@ import uuid
 from sqlalchemy.orm import Session
 
 from app.experiment.fault_injector import apply_task_delay
-from app.models.task import Task, TaskStatus
+from app.modules.audit.service import record_event
+from app.modules.notifications.service import create_notification
+from app.modules.tasks.model import Task, TaskStatus
+from app.modules.tasks.repository import (
+    count_by_status,
+    get_task,
+    list_tasks,
+    task_assignment_counts,
+)
+from app.modules.users.repository import get_user
 from app.observability.metrics import (
     notifications_created_total,
     task_status_changes_total,
@@ -14,16 +23,7 @@ from app.observability.metrics import (
     tasks_created_total,
 )
 from app.observability.tracing import span
-from app.repositories.task_repository import (
-    count_by_status,
-    get_task,
-    list_tasks,
-    task_assignment_counts,
-)
-from app.repositories.user_repository import get_user
-from app.services.audit_service import record_event
 from app.services.errors import ConflictError, NotFoundError
-from app.services.notification_service import create_notification
 
 logger = logging.getLogger(__name__)
 ALLOWED_TRANSITIONS = {

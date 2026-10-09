@@ -5,9 +5,9 @@ import uuid
 from sqlalchemy.orm import Session
 
 from app.experiment.fault_injector import apply_notification_faults
-from app.models.notification import Notification
+from app.modules.notifications.model import Notification
+from app.modules.notifications.repository import add_notification, list_notifications
 from app.observability.tracing import span
-from app.repositories.notification_repository import add_notification, list_notifications
 
 
 def create_notification(

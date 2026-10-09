@@ -7,10 +7,10 @@ from sqlalchemy import delete
 
 from app.config import get_settings
 from app.db.session import SessionLocal
-from app.models.audit_event import AuditEvent
-from app.models.notification import Notification
-from app.models.task import Task, TaskStatus
-from app.models.user import User
+from app.modules.audit.model import AuditEvent
+from app.modules.notifications.model import Notification
+from app.modules.tasks.model import Task, TaskStatus
+from app.modules.users.model import User
 from scripts.seed_identity import seeded_uuid_value
 
 BASE_TIME = datetime(2026, 1, 1, tzinfo=UTC)

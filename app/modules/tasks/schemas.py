@@ -5,7 +5,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.models.task import TaskStatus
+from app.modules.tasks.model import TaskStatus
 
 __all__ = ["TaskAssign", "TaskCreate", "TaskRead", "TaskStatus", "TaskStatusChange"]
 

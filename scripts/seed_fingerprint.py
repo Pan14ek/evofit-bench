@@ -8,10 +8,10 @@ from sqlalchemy import func, select
 
 from app.config import get_settings
 from app.db.session import SessionLocal
-from app.models.audit_event import AuditEvent
-from app.models.notification import Notification
-from app.models.task import Task
-from app.models.user import User
+from app.modules.audit.model import AuditEvent
+from app.modules.notifications.model import Notification
+from app.modules.tasks.model import Task
+from app.modules.users.model import User
 
 
 def fingerprint() -> dict[str, int | str]:

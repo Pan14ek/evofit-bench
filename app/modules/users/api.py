@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_session
-from app.schemas.users import UserCreate, UserRead
-from app.services.user_service import create_user, retrieve_user
+from app.modules.users.schemas import UserCreate, UserRead
+from app.modules.users.service import create_user, retrieve_user
 
 router = APIRouter(prefix="/users", tags=["users"])
 

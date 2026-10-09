@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_session
-from app.schemas.tasks import TaskAssign, TaskCreate, TaskRead, TaskStatus, TaskStatusChange
-from app.services.task_service import (
+from app.modules.tasks.schemas import TaskAssign, TaskCreate, TaskRead, TaskStatus, TaskStatusChange
+from app.modules.tasks.service import (
     assign_task,
     change_task_status,
     create_task,
