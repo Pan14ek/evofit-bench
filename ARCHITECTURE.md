@@ -1,32 +1,25 @@
-# A0 architecture
+# A0.1 capability-module architecture
 
-| Property | A0 value |
+| Property | Current value |
 | --- | --- |
-| Architecture State | A0_MONOLITH |
+| Architecture State | `A0_1_CAPABILITY_MODULES` |
 | Deployment Units | 1 |
-| Application Processes | 1 |
-| Database | 1 PostgreSQL |
+| Application Processes | 1 FastAPI/Uvicorn process |
+| Database | 1 PostgreSQL database |
 | Internal Communication | synchronous Python calls |
-| External API | REST |
+| External API | the A0 REST contract |
 | Message Broker | none |
 
-```text
-HTTP / API
-    |
-    v
-Services
-    |
-    v
-Repositories
-    |
-    v
-SQLAlchemy Models / PostgreSQL
-```
+The code is organized into five capability packages: `app.modules.users`, `app.modules.tasks`, `app.modules.notifications`, `app.modules.reporting`, and `app.modules.audit`. `app.main` composes their routers into one FastAPI application. The packages are not separately deployed services.
 
-The application is organized by horizontal technical layers. All capabilities run in one FastAPI/Uvicorn process, backed by one PostgreSQL database. Notifications and audit records are created with ordinary synchronous Python calls; there are no internal HTTP clients, separate services, broker, module databases, or distributed transactions.
+Each capability keeps its own internal dependency direction. Direct calls between capabilities remain allowed and are listed in `architecture/states/A0_1_CAPABILITY_MODULES.yaml`: Tasks calls Users, Notifications, and Audit; Users calls Audit; Reporting calls Tasks. DA01 does not add public module APIs or enforce a dependency graph.
 
-For task assignment and status changes, the service loads and updates the task, creates any notification, and records the audit event in one SQLAlchemy session transaction. The service commits only after all synchronous side effects succeed. If a side effect fails, it rolls the transaction back so task state, notification, and audit remain consistent. User and task creation likewise commit the entity and its audit event together. This local transaction boundary is specific to A0.
+Shared infrastructure remains in `app.config`, `app.db`, `app.experiment`, `app.observability`, `app.api`, `app.models.base`, and `app.services.errors`. `app.db.model_registry` imports the capability models so Alembic and the application use the same declarative `Base` and metadata.
 
-The API layer depends on services and request/response schemas. Services call repositories and persistence models. Repositories do not depend on the API; models do not depend on API or service code. `tests/architecture` checks these prohibitions and CI runs the check.
+The public business routes remain `/api/v1/users`, `/api/v1/users/{user_id}`, `/api/v1/tasks`, `/api/v1/tasks/{task_id}`, `/api/v1/tasks/{task_id}/assign`, `/api/v1/tasks/{task_id}/status`, `/api/v1/notifications`, and `/api/v1/reports/task-summary`. Health, metrics, and experiment-control routes remain in the shared API package.
 
-The experiment controls do not alter this topology. Warm-up is read-only and uses the same application process as measurement. Runtime CPU and memory samples are scraped from that process through Prometheus; before/after snapshots isolate counter deltas to measured traffic. Expected business rejections and unexpected operation failures have separate bounded metrics. Notifications are counted only after their caller transaction commits. Integration schemas are built with Alembic migrations, not ORM `create_all`.
+Task assignment and status changes still mutate the task, create notification and audit rows, and commit once through the same SQLAlchemy session. A notification failure rolls the operation back as a unit. Database tables, columns, constraints, foreign keys, indexes, enum values, and Alembic revision are unchanged.
+
+The `architecture/acceptance/importlinter.toml` configuration checks internal layering within each capability. `tests/architecture/test_module_structure.py` checks the exact DA01 manifest, shared infrastructure, and removal of horizontal business files. The frozen A0 evaluator remains at `fitness/evaluators/a0/importlinter.toml`; it is an experimental artifact and is not the current engineering acceptance configuration.
+
+DA01 changes package organization only. It adds no deployment unit, process, database, broker, internal HTTP call, event mechanism, distributed transaction, retry policy, or independent module deployment. Experiment controls and metric names and semantics remain unchanged.

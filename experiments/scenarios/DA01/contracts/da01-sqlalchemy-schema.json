@@ -1,0 +1,483 @@
+{
+  "contract_version": 1,
+  "tables": [
+    {
+      "columns": [
+        {
+          "autoincrement": "auto",
+          "default": {
+            "kind": "callable",
+            "name": "uuid.uuid4"
+          },
+          "name": "id",
+          "nullable": false,
+          "primary_key": true,
+          "server_default": null,
+          "type": {
+            "name": "UUID",
+            "postgresql": "UUID"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": null,
+          "name": "entity_type",
+          "nullable": false,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "String",
+            "postgresql": "VARCHAR(80)"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": null,
+          "name": "entity_id",
+          "nullable": false,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "UUID",
+            "postgresql": "UUID"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": null,
+          "name": "action",
+          "nullable": false,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "String",
+            "postgresql": "VARCHAR(80)"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": null,
+          "name": "actor_id",
+          "nullable": true,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "UUID",
+            "postgresql": "UUID"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": {
+            "kind": "callable",
+            "name": "builtins.dict"
+          },
+          "name": "metadata_json",
+          "nullable": false,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "JSON",
+            "postgresql": "JSON"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": {
+            "kind": "callable",
+            "name": "app.models.base.utc_now"
+          },
+          "name": "created_at",
+          "nullable": false,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "DateTime",
+            "postgresql": "TIMESTAMP WITH TIME ZONE"
+          }
+        }
+      ],
+      "constraints": [
+        {
+          "columns": [
+            "id"
+          ],
+          "kind": "PrimaryKeyConstraint",
+          "name": null
+        }
+      ],
+      "indexes": [
+        {
+          "columns": [
+            "entity_id"
+          ],
+          "name": "ix_audit_events_entity_id",
+          "unique": false
+        },
+        {
+          "columns": [
+            "entity_type"
+          ],
+          "name": "ix_audit_events_entity_type",
+          "unique": false
+        }
+      ],
+      "name": "audit_events"
+    },
+    {
+      "columns": [
+        {
+          "autoincrement": "auto",
+          "default": {
+            "kind": "callable",
+            "name": "uuid.uuid4"
+          },
+          "name": "id",
+          "nullable": false,
+          "primary_key": true,
+          "server_default": null,
+          "type": {
+            "name": "UUID",
+            "postgresql": "UUID"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": null,
+          "name": "user_id",
+          "nullable": false,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "UUID",
+            "postgresql": "UUID"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": null,
+          "name": "type",
+          "nullable": false,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "String",
+            "postgresql": "VARCHAR(80)"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": null,
+          "name": "message",
+          "nullable": false,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "Text",
+            "postgresql": "TEXT"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": {
+            "kind": "callable",
+            "name": "app.models.base.utc_now"
+          },
+          "name": "created_at",
+          "nullable": false,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "DateTime",
+            "postgresql": "TIMESTAMP WITH TIME ZONE"
+          }
+        }
+      ],
+      "constraints": [
+        {
+          "columns": [
+            "id"
+          ],
+          "kind": "PrimaryKeyConstraint",
+          "name": null
+        },
+        {
+          "columns": [
+            "user_id"
+          ],
+          "deferrable": null,
+          "elements": [
+            {
+              "column": "user_id",
+              "ondelete": null,
+              "onupdate": null,
+              "target": "users.id"
+            }
+          ],
+          "initially": null,
+          "kind": "ForeignKeyConstraint",
+          "name": null
+        }
+      ],
+      "indexes": [
+        {
+          "columns": [
+            "created_at"
+          ],
+          "name": "ix_notifications_created_at",
+          "unique": false
+        },
+        {
+          "columns": [
+            "user_id"
+          ],
+          "name": "ix_notifications_user_id",
+          "unique": false
+        }
+      ],
+      "name": "notifications"
+    },
+    {
+      "columns": [
+        {
+          "autoincrement": "auto",
+          "default": {
+            "kind": "callable",
+            "name": "uuid.uuid4"
+          },
+          "name": "id",
+          "nullable": false,
+          "primary_key": true,
+          "server_default": null,
+          "type": {
+            "name": "UUID",
+            "postgresql": "UUID"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": null,
+          "name": "title",
+          "nullable": false,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "String",
+            "postgresql": "VARCHAR(300)"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": null,
+          "name": "description",
+          "nullable": true,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "Text",
+            "postgresql": "TEXT"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": {
+            "kind": "scalar",
+            "value": "TODO"
+          },
+          "name": "status",
+          "nullable": false,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "enum_name": "task_status",
+            "enum_values": [
+              "TODO",
+              "IN_PROGRESS",
+              "DONE",
+              "CANCELLED"
+            ],
+            "name": "Enum",
+            "native_enum": true,
+            "postgresql": "task_status"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": null,
+          "name": "created_by",
+          "nullable": false,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "UUID",
+            "postgresql": "UUID"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": null,
+          "name": "assignee_id",
+          "nullable": true,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "UUID",
+            "postgresql": "UUID"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": {
+            "kind": "callable",
+            "name": "app.models.base.utc_now"
+          },
+          "name": "created_at",
+          "nullable": false,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "DateTime",
+            "postgresql": "TIMESTAMP WITH TIME ZONE"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": {
+            "kind": "callable",
+            "name": "app.models.base.utc_now"
+          },
+          "name": "updated_at",
+          "nullable": false,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "DateTime",
+            "postgresql": "TIMESTAMP WITH TIME ZONE"
+          }
+        }
+      ],
+      "constraints": [
+        {
+          "columns": [
+            "assignee_id"
+          ],
+          "deferrable": null,
+          "elements": [
+            {
+              "column": "assignee_id",
+              "ondelete": null,
+              "onupdate": null,
+              "target": "users.id"
+            }
+          ],
+          "initially": null,
+          "kind": "ForeignKeyConstraint",
+          "name": null
+        },
+        {
+          "columns": [
+            "created_by"
+          ],
+          "deferrable": null,
+          "elements": [
+            {
+              "column": "created_by",
+              "ondelete": null,
+              "onupdate": null,
+              "target": "users.id"
+            }
+          ],
+          "initially": null,
+          "kind": "ForeignKeyConstraint",
+          "name": null
+        },
+        {
+          "columns": [
+            "id"
+          ],
+          "kind": "PrimaryKeyConstraint",
+          "name": null
+        }
+      ],
+      "indexes": [],
+      "name": "tasks"
+    },
+    {
+      "columns": [
+        {
+          "autoincrement": "auto",
+          "default": {
+            "kind": "callable",
+            "name": "uuid.uuid4"
+          },
+          "name": "id",
+          "nullable": false,
+          "primary_key": true,
+          "server_default": null,
+          "type": {
+            "name": "UUID",
+            "postgresql": "UUID"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": null,
+          "name": "name",
+          "nullable": false,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "String",
+            "postgresql": "VARCHAR(200)"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": null,
+          "name": "email",
+          "nullable": false,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "String",
+            "postgresql": "VARCHAR(320)"
+          }
+        },
+        {
+          "autoincrement": "auto",
+          "default": {
+            "kind": "callable",
+            "name": "app.models.base.utc_now"
+          },
+          "name": "created_at",
+          "nullable": false,
+          "primary_key": false,
+          "server_default": null,
+          "type": {
+            "name": "DateTime",
+            "postgresql": "TIMESTAMP WITH TIME ZONE"
+          }
+        }
+      ],
+      "constraints": [
+        {
+          "columns": [
+            "id"
+          ],
+          "kind": "PrimaryKeyConstraint",
+          "name": null
+        }
+      ],
+      "indexes": [
+        {
+          "columns": [
+            "email"
+          ],
+          "name": "ix_users_email",
+          "unique": true
+        }
+      ],
+      "name": "users"
+    }
+  ]
+}
