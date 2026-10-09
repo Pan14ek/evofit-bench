@@ -108,7 +108,9 @@ def export_method_inputs(
         observations = _architecture_observations(
             root,
             architecture_source_sha,
+            destination / "architecture/before",
             before_source,
+            destination / "architecture/after",
             after_source,
         )
         observation_path = destination / "architecture/observations.json"
@@ -321,7 +323,9 @@ def _export_app_tree(repository: Path, revision: str, bundle_directory: Path) ->
 def _architecture_observations(
     repository: Path,
     revision: str,
+    before_root: Path,
     before_files: list[Path],
+    after_root: Path,
     after_files: list[Path],
 ) -> dict[str, Any]:
     manifest_bytes = _git_blob(
@@ -341,8 +345,10 @@ def _architecture_observations(
         "preserved_cross_module_dependencies",
     )
     structural_manifest = {key: raw_manifest[key] for key in structural_keys if key in raw_manifest}
-    before_modules = sorted(_module_names(before_files))
-    after_modules = sorted(_module_names(after_files))
+    before_modules = sorted(_module_names(before_root, before_files))
+    after_modules = sorted(_module_names(after_root, after_files))
+    if not before_modules or not after_modules:
+        raise ProtocolError("Architecture module inventories must both be non-empty")
     return {
         "schema_version": 1,
         "before_module_names": before_modules,
@@ -353,19 +359,45 @@ def _architecture_observations(
     }
 
 
-def _module_names(files: list[Path]) -> set[str]:
+def _module_names(export_root: Path, files: list[Path]) -> set[str]:
+    """Return Python module identities relative to one committed app export root."""
+    if export_root.is_symlink():
+        raise ProtocolError("Architecture export root must not be a symlink")
+    try:
+        root = export_root.resolve(strict=True)
+    except OSError as error:
+        raise ProtocolError(f"Architecture export root does not exist: {export_root}") from error
+    if not root.is_dir():
+        raise ProtocolError(f"Architecture export root is not a directory: {export_root}")
+    if not files:
+        raise ProtocolError("Committed architecture source inventory is empty")
+
     result: set[str] = set()
+    seen_paths: set[Path] = set()
     for path in files:
-        relative = path.parts
-        if "app" not in relative:
-            continue
-        app_index = max(index for index, part in enumerate(relative) if part == "app")
-        module_parts = list(relative[app_index:])
-        module_parts[-1] = module_parts[-1][:-3]
+        if path.is_symlink():
+            raise ProtocolError(f"Architecture source inventory contains a symlink: {path}")
+        try:
+            resolved = path.resolve(strict=True)
+            relative = resolved.relative_to(root)
+        except (OSError, ValueError) as error:
+            raise ProtocolError(
+                f"Architecture source path is missing or escapes its export root: {path}"
+            ) from error
+        if resolved in seen_paths:
+            raise ProtocolError(f"Architecture source inventory contains a duplicate path: {path}")
+        seen_paths.add(resolved)
+        if not resolved.is_file() or relative.suffix != ".py" or not relative.parts:
+            raise ProtocolError(f"Malformed Python source path in architecture inventory: {path}")
+        if ".." in relative.parts:
+            raise ProtocolError(f"Architecture source path escapes its export root: {path}")
+
+        module_parts = [*relative.parts[:-1], relative.stem]
         if module_parts[-1] == "__init__":
             module_parts.pop()
-        if module_parts:
-            result.add(".".join(module_parts))
+        result.add("app" if not module_parts else f"app.{'.'.join(module_parts)}")
+    if not result:
+        raise ProtocolError("Committed architecture source inventory contains no Python modules")
     return result
 
 

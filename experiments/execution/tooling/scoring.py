@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import shutil
+import subprocess  # nosec B404 - fixed Git executable and validated argv, never a shell
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping, Sequence, Set
 from pathlib import Path
 from typing import Any, Literal, cast
 
@@ -26,7 +29,7 @@ EMITTED_OPERATIONS = {"retain", "replace", "add", "deactivate", "adjust"}
 def score_rq1(
     prediction: dict[str, Any],
     ground_truth: Mapping[str, Any],
-    known_targets: set[TargetKey] | None = None,
+    known_targets: Set[TargetKey] | None = None,
 ) -> dict[str, Any]:
     """Score sealed prediction decisions against a separate oracle mapping.
 
@@ -36,7 +39,13 @@ def score_rq1(
     """
     validate_prediction(prediction)
     universe, expected = _oracle_universe(ground_truth)
-    known = known_targets if known_targets is not None else set(universe)
+    if known_targets is None:
+        raise ProtocolError("RQ1 requires a trusted known-target registry")
+    known = _validated_known_targets(known_targets)
+    if not set(universe).issubset(known):
+        raise ProtocolError(
+            "Trusted target registries do not cover the oracle classification universe"
+        )
     predicted_affected = cast(list[dict[str, Any]], prediction["predicted_affected"])
     proposed_operations = cast(list[dict[str, Any]], prediction["proposed_operations"])
     positive_predictions: set[TargetKey] = set()
@@ -158,6 +167,8 @@ def score_rq2(
     verdicts_before: Mapping[str, dict[str, Any]],
     configuration_after: Sequence[dict[str, Any]],
     verdicts_after: Mapping[str, dict[str, Any]],
+    obligation_verdicts_before: Sequence[dict[str, Any]] = (),
+    obligation_verdicts_after: Sequence[dict[str, Any]] = (),
 ) -> dict[str, Any]:
     """Score the complete oracle obligation set before and after on one target."""
     oracle_obligations = ground_truth.get("required_obligations_after")
@@ -173,12 +184,14 @@ def score_rq2(
         architecture_source_sha,
         configuration_before,
         verdicts_before,
+        obligation_verdicts_before,
     )
     after = _coverage_assessment(
         required,
         architecture_source_sha,
         configuration_after,
         verdicts_after,
+        obligation_verdicts_after,
     )
     return {
         "coverage_before": before["coverage"],
@@ -205,6 +218,13 @@ def build_scored_result(
     failure_statuses: Sequence[str] = (),
 ) -> dict[str, Any]:
     """Assemble a versioned scorer envelope without changing prediction bytes."""
+    statuses = set(failure_statuses)
+    if any(
+        item.get("code") == "UNKNOWN_TARGET"
+        for source in (rq1.get("diagnostics", ()), diagnostics)
+        for item in source
+    ):
+        statuses.add("PROTOCOL_VIOLATION")
     result = {
         "schema_version": 1,
         "method_id": prediction["method_id"],
@@ -213,7 +233,7 @@ def build_scored_result(
         "rq1": rq1,
         "rq2": rq2,
         "diagnostics": [dict(item) for item in diagnostics],
-        "failure_statuses": sorted(set(failure_statuses)),
+        "failure_statuses": sorted(statuses),
     }
     validate_payload("scored_result.schema.json", result)
     return result
@@ -229,13 +249,16 @@ def score_sealed_prediction(
     verdicts_after: Mapping[str, dict[str, Any]],
     diagnostics: Sequence[Mapping[str, Any]] = (),
     failure_statuses: Sequence[str] = (),
+    obligation_verdicts_before: Sequence[dict[str, Any]] = (),
+    obligation_verdicts_after: Sequence[dict[str, Any]] = (),
 ) -> dict[str, Any]:
     """Verify a sealed prediction, load the private oracle, and return a scorer envelope."""
     sealed = load_verified_prediction(prediction_directory)
     if sealed.payload["architecture_source_sha"] != architecture_source_sha:
         raise ProtocolError("Sealed prediction architecture SHA does not match the scorer run")
     ground_truth = load_private_ground_truth(str(ground_truth_path))
-    rq1 = score_rq1(sealed.payload, ground_truth)
+    known_targets = load_trusted_known_targets(architecture_source_sha)
+    rq1 = score_rq1(sealed.payload, ground_truth, known_targets)
     rq2 = score_rq2(
         ground_truth,
         architecture_source_sha,
@@ -243,6 +266,8 @@ def score_sealed_prediction(
         verdicts_before,
         configuration_after,
         verdicts_after,
+        obligation_verdicts_before,
+        obligation_verdicts_after,
     )
     return build_scored_result(
         sealed.payload,
@@ -252,6 +277,122 @@ def score_sealed_prediction(
         diagnostics,
         failure_statuses,
     )
+
+
+def load_trusted_known_targets(
+    architecture_source_sha: str,
+    repository: Path | None = None,
+) -> set[TargetKey]:
+    """Load general representation and obligation IDs from the pinned Git revision."""
+    if re.fullmatch(r"[a-f0-9]{40}", architecture_source_sha) is None:
+        raise ProtocolError("Known-target registry revision must be a full lowercase Git SHA")
+    root = (repository or Path(__file__).resolve().parents[3]).resolve(strict=True)
+    git = shutil.which("git")
+    if git is None:
+        raise ProtocolError("Git is required to load the trusted known-target registries")
+    try:
+        top_level = subprocess.run(  # noqa: S603  # nosec B603 - fixed Git argv
+            [git, "-C", str(root), "rev-parse", "--show-toplevel"],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        ).stdout.strip()
+    except subprocess.CalledProcessError as error:
+        raise ProtocolError("Could not resolve the trusted registry Git repository") from error
+    if Path(top_level).resolve() != root:
+        raise ProtocolError("Trusted target registries must be loaded from the Git root")
+
+    representation_catalog = _load_pinned_yaml(
+        git,
+        root,
+        architecture_source_sha,
+        "fitness/catalog/a0-fitness-elements.yaml",
+    )
+    obligation_registry = _load_pinned_yaml(
+        git,
+        root,
+        architecture_source_sha,
+        "fitness/catalog/architectural-obligations.yaml",
+    )
+    representations = representation_catalog.get("representations")
+    obligations = obligation_registry.get("obligations")
+    if representation_catalog.get("schema_version") != 1 or not isinstance(representations, list):
+        raise ProtocolError("Pinned representation catalog has an unsupported or malformed schema")
+    if obligation_registry.get("schema_version") != 1 or not isinstance(obligations, list):
+        raise ProtocolError("Pinned obligation registry has an unsupported or malformed schema")
+
+    targets: set[TargetKey] = set()
+    for target_type, entries in (("representation", representations), ("obligation", obligations)):
+        if not entries:
+            raise ProtocolError(f"Pinned {target_type} registry must be non-empty")
+        identifiers: set[str] = set()
+        for entry in entries:
+            key = "id"
+            identifier = entry.get(key) if isinstance(entry, Mapping) else None
+            if (
+                not isinstance(identifier, str)
+                or re.fullmatch(r"[A-Za-z][A-Za-z0-9_]*", identifier) is None
+            ):
+                raise ProtocolError(f"Pinned {target_type} registry contains an invalid identifier")
+            if identifier in identifiers:
+                raise ProtocolError(f"Pinned {target_type} registry contains duplicate IDs")
+            identifiers.add(identifier)
+            targets.add((cast(TargetType, target_type), identifier))
+    return targets
+
+
+def _load_pinned_yaml(
+    git: str,
+    repository: Path,
+    revision: str,
+    relative_path: str,
+) -> dict[str, Any]:
+    try:
+        entry = subprocess.run(  # noqa: S603  # nosec B603 - validated revision/path Git argv
+            [git, "-C", str(repository), "ls-tree", revision, "--", relative_path],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        ).stdout.strip()
+        if not entry.startswith(("100644 blob ", "100755 blob ")):
+            raise ProtocolError(
+                f"Pinned trusted registry is missing or not a regular file: {relative_path}"
+            )
+        content = subprocess.run(  # noqa: S603  # nosec B603 - validated revision/path Git argv
+            [git, "-C", str(repository), "show", f"{revision}:{relative_path}"],
+            check=True,
+            capture_output=True,
+        ).stdout
+    except subprocess.CalledProcessError as error:
+        raise ProtocolError(f"Could not read pinned trusted registry: {relative_path}") from error
+    try:
+        payload = yaml.safe_load(content)
+    except yaml.YAMLError as error:
+        raise ProtocolError(
+            f"Pinned trusted registry is not valid YAML: {relative_path}"
+        ) from error
+    if not isinstance(payload, dict):
+        raise ProtocolError(f"Pinned trusted registry must contain a YAML mapping: {relative_path}")
+    return cast(dict[str, Any], payload)
+
+
+def _validated_known_targets(known_targets: Set[TargetKey]) -> set[TargetKey]:
+    result: set[TargetKey] = set()
+    for target in known_targets:
+        if (
+            not isinstance(target, tuple)
+            or len(target) != 2
+            or target[0] not in {"representation", "obligation"}
+            or not isinstance(target[1], str)
+            or not target[1]
+        ):
+            raise ProtocolError("Trusted known-target set contains a malformed typed identity")
+        result.add(target)
+    if not result:
+        raise ProtocolError("Trusted known-target set must be non-empty")
+    return result
 
 
 def load_private_ground_truth(path: str) -> dict[str, Any]:
@@ -364,16 +505,44 @@ def _coverage_assessment(
     architecture_source_sha: str,
     representations: Sequence[dict[str, Any]],
     verdicts: Mapping[str, dict[str, Any]],
+    obligation_verdicts: Sequence[dict[str, Any]],
 ) -> dict[str, Any]:
     ids = [str(item["id"]) for item in representations]
     if len(ids) != len(set(ids)):
         raise ProtocolError("Coverage configuration contains duplicate representation IDs")
+    representation_by_id = {str(item["id"]): item for item in representations}
+    unexpected_verdicts = set(verdicts) - set(ids)
+    if unexpected_verdicts:
+        raise ProtocolError(
+            f"Representation verdicts reference unknown candidates: {sorted(unexpected_verdicts)}"
+        )
+    for representation_verdict in verdicts.values():
+        validate_payload("semantic_verdict.schema.json", representation_verdict)
+
+    pair_verdicts: dict[tuple[str, str], dict[str, Any]] = {}
+    for pair_verdict in obligation_verdicts:
+        validate_payload("obligation_verdict.schema.json", pair_verdict)
+        pair_key = (pair_verdict["representation_id"], pair_verdict["obligation_id"])
+        representation = representation_by_id.get(pair_key[0])
+        if representation is None:
+            raise ProtocolError("Obligation verdict references an unknown representation")
+        covers = representation.get("covers", [])
+        if not isinstance(covers, list) or pair_key[1] not in covers:
+            raise ProtocolError("Obligation verdict pair is not declared by its representation")
+        previous = pair_verdicts.get(pair_key)
+        if previous is not None and previous != pair_verdict:
+            raise ProtocolError(
+                "Conflicting duplicate verdicts for one representation-obligation pair"
+            )
+        pair_verdicts[pair_key] = pair_verdict
+
     covered: list[str] = []
     uncovered: list[str] = []
     invalid: set[str] = set()
     stale: set[str] = set()
     violations: Counter[str] = Counter()
     assessed_count = 0
+    execution_statuses: dict[str, str] = {}
     for representation in representations:
         representation_id = str(representation["id"])
         if not representation.get("active", False):
@@ -381,6 +550,7 @@ def _coverage_assessment(
         assessed_count += 1
         verdict = verdicts.get(representation_id)
         if verdict is None:
+            execution_statuses[representation_id] = "MISSING_EVIDENCE"
             invalid.add(representation_id)
             violations["MISSING_EVIDENCE"] += 1
             continue
@@ -404,27 +574,88 @@ def _coverage_assessment(
             violations[status] += 1
         if status == "STALE_ARCHITECTURE_SCOPE":
             stale.add(representation_id)
+        execution_statuses[representation_id] = status
         for reason in verdict.get("reason_codes", []):
             if reason:
                 violations[str(reason)] += 1
 
+    pair_assessments: list[dict[str, Any]] = []
+    valid_cover_pairs: list[dict[str, Any]] = []
+    valid_obligations: set[str] = set()
     for obligation in required:
-        if any(
-            valid_cover(
-                verdicts.get(str(representation["id"]), {}),
+        for representation in representations:
+            representation_id = str(representation["id"])
+            if not representation.get("active", False):
+                continue
+            covers = representation.get("covers", [])
+            if not isinstance(covers, list):
+                raise ProtocolError(f"Representation {representation_id} has malformed covers")
+            if not all(isinstance(item, str) and item for item in covers):
+                raise ProtocolError(f"Representation {representation_id} has malformed covers")
+            if obligation not in covers:
+                continue
+
+            execution_status = execution_statuses.get(representation_id, "MISSING_EVIDENCE")
+            selected_pair_verdict = pair_verdicts.get((representation_id, obligation))
+            pair_status: str
+            reason_codes: list[str]
+            evidence_refs: list[str]
+            if execution_status != "VALID_APPLICABLE":
+                pair_status = execution_status
+                reason_codes = ["REPRESENTATION_EXECUTION_INVALID"]
+                if selected_pair_verdict is not None:
+                    reason_codes.extend(selected_pair_verdict["reason_codes"])
+            elif selected_pair_verdict is None:
+                pair_status = "MISSING_EVIDENCE"
+                reason_codes = ["OBLIGATION_VERDICT_MISSING"]
+            elif selected_pair_verdict["architecture_source_sha"] != architecture_source_sha:
+                pair_status = "STALE_ARCHITECTURE_SCOPE"
+                reason_codes = ["ARCHITECTURE_SOURCE_MISMATCH"]
+                reason_codes.extend(selected_pair_verdict["reason_codes"])
+            else:
+                pair_status = str(selected_pair_verdict["status"])
+                reason_codes = list(selected_pair_verdict["reason_codes"])
+            evidence_refs = (
+                list(selected_pair_verdict["evidence_refs"]) if selected_pair_verdict else []
+            )
+            pair_assessment = {
+                "representation_id": representation_id,
+                "obligation_id": obligation,
+                "architecture_source_sha": (
+                    selected_pair_verdict["architecture_source_sha"]
+                    if selected_pair_verdict
+                    else architecture_source_sha
+                ),
+                "status": pair_status,
+                "reason_codes": sorted(set(reason_codes)),
+                "evidence_refs": evidence_refs,
+            }
+            pair_assessments.append(pair_assessment)
+            representation_verdict = verdicts.get(representation_id, {})
+            if selected_pair_verdict is not None and valid_cover(
+                representation_verdict,
+                selected_pair_verdict,
                 representation,
                 obligation,
                 architecture_source_sha,
-            )
-            for representation in representations
-        ):
+            ):
+                valid_obligations.add(obligation)
+                valid_cover_pairs.append(
+                    {
+                        "representation_id": representation_id,
+                        "obligation_id": obligation,
+                        "architecture_source_sha": architecture_source_sha,
+                        "evidence_refs": evidence_refs,
+                    }
+                )
+        if obligation in valid_obligations:
             covered.append(obligation)
         else:
             uncovered.append(obligation)
 
     coverage = len(covered) / len(required)
     result = {
-        "schema_version": 1,
+        "schema_version": 2,
         "architecture_source_sha": architecture_source_sha,
         "required_obligations": required,
         "denominator": len(required),
@@ -437,6 +668,8 @@ def _coverage_assessment(
         "violation_counts": dict(sorted(violations.items())),
         "violation_denominator": assessed_count,
         "violation_rate": len(invalid) / assessed_count if assessed_count else 0.0,
+        "pair_assessments": pair_assessments,
+        "valid_cover_pairs": valid_cover_pairs,
     }
     validate_payload("coverage_assessment.schema.json", result)
     return result
@@ -480,6 +713,7 @@ __all__ = [
     "TargetKey",
     "TargetType",
     "build_scored_result",
+    "load_trusted_known_targets",
     "load_private_ground_truth",
     "record_private_ground_truth_hash",
     "score_rq1",

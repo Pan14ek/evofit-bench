@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import tomllib
+from collections.abc import Sequence
 from pathlib import Path, PurePosixPath
 from typing import Any, Literal, cast
 
@@ -123,26 +124,95 @@ def assess_representation(
 
 
 def valid_cover(
-    verdict: dict[str, Any],
+    representation_verdict: dict[str, Any],
+    obligation_verdict: dict[str, Any],
     representation: dict[str, Any],
     obligation_id: str,
     architecture_source_sha: str,
 ) -> bool:
-    """Return whether an independently assessed active representation covers one obligation."""
+    """Return whether both execution and the exact representation-obligation pair are valid."""
     return (
-        verdict.get("status") == "VALID_APPLICABLE"
-        and verdict.get("representation_id") == representation.get("id")
-        and verdict.get("architecture_source_sha") == architecture_source_sha
-        and verdict.get("active") is True
+        representation_verdict.get("status") == "VALID_APPLICABLE"
+        and representation_verdict.get("representation_id") == representation.get("id")
+        and representation_verdict.get("architecture_source_sha") == architecture_source_sha
+        and representation_verdict.get("active") is True
         and bool(representation.get("active"))
         and obligation_id in representation.get("covers", [])
-        and verdict.get("mapping_resolved") is True
-        and verdict.get("stage_applicable") is True
-        and verdict.get("semantic_compatible") is True
-        and verdict.get("executable_nonvacuous") is True
-        and verdict.get("evidence_contract_satisfied") is True
-        and bool(verdict.get("evidence_refs"))
+        and representation_verdict.get("mapping_resolved") is True
+        and representation_verdict.get("stage_applicable") is True
+        and representation_verdict.get("semantic_compatible") is True
+        and representation_verdict.get("executable_nonvacuous") is True
+        and representation_verdict.get("evidence_contract_satisfied") is True
+        and bool(representation_verdict.get("evidence_refs"))
+        and obligation_verdict.get("schema_version") == 1
+        and obligation_verdict.get("representation_id") == representation.get("id")
+        and obligation_verdict.get("obligation_id") == obligation_id
+        and obligation_verdict.get("architecture_source_sha") == architecture_source_sha
+        and obligation_verdict.get("status") == "VALID_APPLICABLE"
+        and obligation_verdict.get("semantic_match") is True
+        and obligation_verdict.get("evidence_contract_adequate") is True
+        and bool(obligation_verdict.get("evidence_refs"))
     )
+
+
+def assess_obligation(
+    representation: dict[str, Any],
+    representation_verdict: dict[str, Any],
+    obligation_id: str,
+    required_architecture_sha: str,
+    semantic_match: bool | None,
+    evidence_contract_adequate: bool,
+    evidence_refs: Sequence[str],
+) -> dict[str, Any]:
+    """Assess semantic and evidence validity for one explicit representation-obligation pair."""
+    validate_payload("semantic_verdict.schema.json", representation_verdict)
+    if isinstance(evidence_refs, (str, bytes)) or any(
+        not isinstance(reference, str) or not reference for reference in evidence_refs
+    ):
+        raise ProtocolError("Obligation evidence references must be non-empty strings")
+    representation_id = str(representation["id"])
+    if representation_verdict["representation_id"] != representation_id:
+        raise ProtocolError("Representation verdict identity does not match its candidate")
+
+    status: SemanticStatus
+    reason_codes: list[str] = []
+    if representation_verdict["architecture_source_sha"] != required_architecture_sha:
+        status = "STALE_ARCHITECTURE_SCOPE"
+        reason_codes.append("ARCHITECTURE_SOURCE_MISMATCH")
+    elif representation_verdict["status"] != "VALID_APPLICABLE":
+        status = cast(SemanticStatus, representation_verdict["status"])
+        reason_codes.append("REPRESENTATION_EXECUTION_INVALID")
+    elif not representation.get("active", False):
+        status = "INACTIVE"
+        reason_codes.append("REPRESENTATION_INACTIVE")
+    elif obligation_id not in representation.get("covers", []):
+        status = "OBLIGATION_MAPPING_MISMATCH"
+        reason_codes.append("OBLIGATION_NOT_DECLARED_BY_REPRESENTATION")
+    elif semantic_match is False:
+        status = "SEMANTIC_MISMATCH"
+        reason_codes.append("OBLIGATION_SEMANTIC_NOT_PRESERVED")
+    elif semantic_match is None:
+        status = "MISSING_EVIDENCE"
+        reason_codes.append("OBLIGATION_SEMANTIC_NOT_ASSESSED")
+    elif not evidence_contract_adequate or not evidence_refs:
+        status = "MISSING_EVIDENCE"
+        reason_codes.append("OBLIGATION_EVIDENCE_INADEQUATE")
+    else:
+        status = "VALID_APPLICABLE"
+
+    verdict = {
+        "schema_version": 1,
+        "representation_id": representation_id,
+        "obligation_id": obligation_id,
+        "architecture_source_sha": required_architecture_sha,
+        "semantic_match": semantic_match,
+        "evidence_contract_adequate": evidence_contract_adequate,
+        "evidence_refs": list(evidence_refs),
+        "status": status,
+        "reason_codes": reason_codes,
+    }
+    validate_payload("obligation_verdict.schema.json", verdict)
+    return verdict
 
 
 def inspect_import_linter_scope(
@@ -296,6 +366,7 @@ def _matching_layer(module: str, layers: list[str]) -> str | None:
 
 __all__ = [
     "SemanticStatus",
+    "assess_obligation",
     "assess_representation",
     "inspect_import_linter_scope",
     "valid_cover",

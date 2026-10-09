@@ -13,10 +13,12 @@ import pytest
 from experiments.execution.tooling.errors import IsolationError, ProtocolError
 from experiments.execution.tooling.hashing import bundle_sha256, sha256_bytes
 from experiments.execution.tooling.inputs import (
+    _module_names,
     export_method_inputs,
     verify_method_bundle,
 )
 from experiments.execution.tooling.isolation import build_docker_command, run_isolated_method
+from experiments.execution.tooling.scoring import load_trusted_known_targets
 
 
 def _git(repository: Path, *arguments: str) -> str:
@@ -71,8 +73,17 @@ def _synthetic_repository(root: Path) -> tuple[Path, str, str]:
         "fitness/configs/a0-monolith.yaml": (
             "architecture_state: A0_MONOLITH\nrepresentations: []\n"
         ),
-        "fitness/catalog/a0-fitness-elements.yaml": "schema_version: 1\nrepresentations: []\n",
-        "fitness/catalog/architectural-obligations.yaml": "schema_version: 1\nobligations: []\n",
+        "fitness/catalog/a0-fitness-elements.yaml": (
+            "schema_version: 1\nrepresentations:\n"
+            "  - id: REP_PINNED\n    criterion: architecture_compliance\n"
+            "    stage: ci\n    evaluator: import_linter\n"
+            "    metrics: [violations]\n    covers: [Q_PINNED]\n"
+        ),
+        "fitness/catalog/architectural-obligations.yaml": (
+            "schema_version: 1\nobligations:\n"
+            "  - id: Q_PINNED\n    criterion: architecture_compliance\n"
+            "    intent: Synthetic pinned obligation.\n    default_weight: 1.0\n"
+        ),
         "fitness/evaluators/a0/importlinter.toml": "[tool.importlinter]\nroot_packages = ['app']\n",
         "fitness/traceability/a0-traceability.yaml": "schema_version: 1\nelements: []\n",
         "experiments/scenarios/DA99/ground_truth.yaml": "GT_SENTINEL_EXPECTED_OPERATION: replace\n",
@@ -119,25 +130,92 @@ def test_method_export_is_allowlisted_versioned_and_separate(
     synthetic_repository: tuple[Path, str, str], tmp_path: Path
 ) -> None:
     repository, before_sha, after_sha = synthetic_repository
-    b1_root = tmp_path / "bundles" / "B1"
-    p_root = tmp_path / "bundles" / "P"
+    # Include an absolute path component named ``app`` to prove module names
+    # come from each export root, not a coincidental parent directory.
+    bundle_parent = tmp_path / "app" / "bundles"
+    b0_root = bundle_parent / "B0"
+    b1_root = bundle_parent / "B1"
+    p_root = bundle_parent / "P"
+    b0 = export_method_inputs(repository, b0_root, "B0", before_sha, after_sha)
     b1 = export_method_inputs(repository, b1_root, "B1", before_sha, after_sha)
     p = export_method_inputs(repository, p_root, "P", before_sha, after_sha)
 
+    expected_before = [
+        "app",
+        "app.api",
+        "app.api.entry",
+        "app.models",
+        "app.models.entity",
+        "app.repositories",
+        "app.repositories.store",
+        "app.services",
+        "app.services.logic",
+    ]
+    expected_after = [
+        "app",
+        "app.modules",
+        "app.modules.billing",
+        "app.modules.billing.api",
+        "app.modules.billing.repository",
+        "app.modules.billing.service",
+    ]
+    expected_added = sorted(set(expected_after) - set(expected_before))
+    expected_removed = sorted(set(expected_before) - set(expected_after))
     assert b1["method_id"] == "B1"
     assert b1["architecture_source_sha"] == after_sha
     assert "fitness/a0-traceability.yaml" not in {item["path"] for item in b1["files"]}
     assert "fitness/a0-traceability.yaml" in {item["path"] for item in p["files"]}
     assert "fitness/evaluator-capabilities.json" in {item["path"] for item in b1["files"]}
     assert "fitness/evaluator-capabilities.json" in {item["path"] for item in p["files"]}
-    for bundle in (b1_root, p_root):
+    for bundle, manifest in ((b0_root, b0), (b1_root, b1), (p_root, p)):
         verified = verify_method_bundle(bundle)
         assert verified["bundle_sha256"] == bundle_sha256(verified["files"])
+        observations = json.loads(
+            (bundle / "architecture/observations.json").read_text(encoding="utf-8")
+        )
+        assert observations["before_module_names"] == expected_before
+        assert observations["after_module_names"] == expected_after
+        assert observations["added_module_names"] == expected_added
+        assert observations["removed_module_names"] == expected_removed
+        manifest_records = {record["path"]: record for record in manifest["files"]}
+        for source_path in (
+            "architecture/before/__init__.py",
+            "architecture/after/__init__.py",
+            "architecture/observations.json",
+        ):
+            record = manifest_records[source_path]
+            assert record["size_bytes"] == (bundle / source_path).stat().st_size
+            assert record["sha256"] == sha256_bytes((bundle / source_path).read_bytes())
         content = b"\n".join(path.read_bytes() for path in bundle.rglob("*") if path.is_file())
         assert b"GT_SENTINEL" not in content
         assert b"new_obligations" not in content
         assert not any(".git" in path.parts for path in bundle.rglob("*"))
         assert str(repository).encode() not in content
+
+
+def test_module_inventory_rejects_empty_missing_and_escaping_sources(tmp_path: Path) -> None:
+    export_root = tmp_path / "export"
+    export_root.mkdir()
+    source = export_root / "service.py"
+    source.write_text("def run() -> None: ...\n", encoding="utf-8")
+
+    with pytest.raises(ProtocolError, match="inventory is empty"):
+        _module_names(export_root, [])
+    with pytest.raises(ProtocolError, match="does not exist"):
+        _module_names(tmp_path / "missing", [source])
+    with pytest.raises(ProtocolError, match="escapes its export root"):
+        _module_names(export_root, [tmp_path / "outside.py"])
+    assert _module_names(export_root, [source]) == {"app.service"}
+
+
+def test_rq1_known_target_registry_is_loaded_from_the_pinned_git_revision(
+    synthetic_repository: tuple[Path, str, str],
+) -> None:
+    repository, _, target_sha = synthetic_repository
+    assert load_trusted_known_targets(target_sha, repository) == {
+        ("representation", "REP_PINNED"),
+        ("obligation", "Q_PINNED"),
+    }
 
 
 def test_exporter_omits_forbidden_sentinel_and_rejects_in_repo_output(

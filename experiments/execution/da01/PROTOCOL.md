@@ -9,8 +9,9 @@
 ## Research scope
 
 RQ1 scores affected-target identification and operation selection. RQ2 scores
-valid coverage of the complete post-change obligation set and semantic validity
-of evaluator representations. One architecture delta is one research unit;
+valid coverage of the complete post-change obligation set using independent
+representation-obligation verdicts as well as evaluator execution validity.
+One architecture delta is one research unit;
 its targets, requests, or log rows are not independent architecture samples.
 DA01 cannot support runtime-performance, reliability-improvement, or population
 significance claims.
@@ -77,8 +78,14 @@ representation IDs and new-obligation IDs. Target identity is the pair
 `(target_type, target_id)`. Positive means an oracle operation other than
 `retain`. `TP`, `FP_in`, `FP_extra`, `FN`, and `TN` are reported separately;
 `FP_total = FP_in + FP_extra` enters precision and F1. `TN` covers only in-universe
-negative targets. Unknown IDs remain protocol violations and visible extra
-decisions.
+negative targets. Known targets outside the scenario universe remain visible
+`FP_extra` decisions without an automatic protocol failure. The scorer resolves
+IDs against the representation catalog and general obligation registry pinned
+by the target architecture SHA. Unknown IDs remain visible `FP_extra` decisions
+with `UNKNOWN_TARGET`; the sealed result always adds `PROTOCOL_VIOLATION`, even
+if the caller supplies no failure-status list. Missing or unverifiable pinned
+registries are a scoring error. Typed target identity remains
+`(target_type, target_id)`.
 
 Operation accuracy uses scorer-normalized operations over the complete oracle
 universe. Omitted existing representations become `implicit_retain`; omitted
@@ -91,18 +98,25 @@ are `null` and correct-empty-set detection is reported separately.
 ## RQ2 scoring
 
 For each required obligation `q`, coverage is one if at least one active
-representation has an independently resolvable mapping to `q`, applies to the
-target architecture and stage, is semantically compatible, executes
-non-vacuously, and satisfies its evidence contract. Otherwise it is zero.
-Coverage is the sum divided by the full active obligation count; the initial
-weight is one for every obligation. An obligation is counted once, regardless
-of duplicate representations. A representation can support multiple
-obligations, each assessed independently.
+representation has valid evaluator-execution evidence and a valid version 1
+`obligation_verdict.schema.json` for its exact `(representation_id, q)` pair.
+That record must establish pair-specific semantic match and evidence-contract
+adequacy, cite evidence, and match the target architecture SHA. A general
+representation verdict or `q in representation.covers` alone never grants
+coverage. Missing pairs remain uncovered. Coverage is the sum divided by the
+full private required-obligation set; the initial weight is one for every
+obligation. An obligation is counted once, regardless of duplicate
+representations. A representation can support multiple obligations only when
+each pair is independently valid.
 
 `Coverage_before` evaluates the unchanged A0 configuration against the target
 architecture. `Coverage_after` evaluates a materialized candidate against that
-same target. Missing evidence conservatively means not demonstrated as covered,
-while the method's failure reason remains separately recorded.
+same target SHA and complete private obligation set. Version 2 coverage
+assessments include pair statuses and evidence references. Representation-wide
+`invalid_representations` and pair-specific coverage failures are reported
+separately; the existing semantic-violation denominator remains active assessed
+representations. Missing pair evidence conservatively means not demonstrated as
+covered, while its reason remains separately recorded.
 
 ## Prediction sealing and immutability
 

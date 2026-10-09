@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import pytest
 
+import experiments.execution.tooling.scoring as scoring
 from experiments.execution.tooling.b0 import (
     build_b0_candidate,
     build_b0_prediction,
@@ -39,6 +40,7 @@ from experiments.execution.tooling.scoring import (
 )
 from experiments.execution.tooling.sealing import load_verified_prediction, seal_prediction
 from experiments.execution.tooling.validity import (
+    assess_obligation,
     assess_representation,
     inspect_import_linter_scope,
     validate_layer_edges,
@@ -172,6 +174,43 @@ def _verdict(representation_id: str, status: str = "VALID_APPLICABLE") -> dict[s
         "executable_nonvacuous": status == "VALID_APPLICABLE",
         "evidence_contract_satisfied": status == "VALID_APPLICABLE",
         "evidence_refs": ["logs/synthetic.txt"] if status == "VALID_APPLICABLE" else [],
+    }
+
+
+def _synthetic_known_targets(
+    *extra_targets: tuple[Literal["representation", "obligation"], str],
+) -> set[tuple[Literal["representation", "obligation"], str]]:
+    oracle = _synthetic_oracle()
+    universe = oracle["classification_universe"]
+    return {
+        *(("representation", item) for item in universe["existing_representations"]),
+        *(("obligation", item) for item in universe["new_obligations"]),
+        *extra_targets,
+    }
+
+
+def _obligation_verdict(
+    representation_id: str,
+    obligation_id: str,
+    *,
+    status: str = "VALID_APPLICABLE",
+    architecture_sha: str = ARCH_SHA,
+    semantic_match: bool | None = True,
+    evidence_contract_adequate: bool = True,
+    evidence_refs: list[str] | None = None,
+) -> dict[str, Any]:
+    if evidence_refs is None:
+        evidence_refs = [f"evidence/{representation_id}-{obligation_id}.json"]
+    return {
+        "schema_version": 1,
+        "representation_id": representation_id,
+        "obligation_id": obligation_id,
+        "architecture_source_sha": architecture_sha,
+        "semantic_match": semantic_match,
+        "evidence_contract_adequate": evidence_contract_adequate,
+        "evidence_refs": evidence_refs,
+        "status": status,
+        "reason_codes": [] if status == "VALID_APPLICABLE" else [status],
     }
 
 
@@ -364,7 +403,11 @@ def test_rq1_scores_all_operations_implicit_retain_and_missing_add() -> None:
         {"target_type": "representation", "target_id": "REP_ADJUST", "operation": "adjust"},
         {"target_type": "obligation", "target_id": "AC_NEW", "operation": "add"},
     ]
-    result = score_rq1(_prediction(affected=affected, operations=operations), _synthetic_oracle())
+    result = score_rq1(
+        _prediction(affected=affected, operations=operations),
+        _synthetic_oracle(),
+        _synthetic_known_targets(),
+    )
     assert (result["tp"], result["fp_in"], result["fn"], result["tn"]) == (4, 0, 0, 1)
     assert result["precision"] == result["recall"] == result["f1"] == 1.0
     assert result["operation_accuracy"] == 1.0
@@ -373,7 +416,7 @@ def test_rq1_scores_all_operations_implicit_retain_and_missing_add() -> None:
 
 
 def test_rq1_b0_missed_add_and_empty_prediction_conventions() -> None:
-    result = score_rq1(_prediction(method_id="B0"), _synthetic_oracle())
+    result = score_rq1(_prediction(method_id="B0"), _synthetic_oracle(), _synthetic_known_targets())
     assert (result["tp"], result["fp_total"], result["fn"], result["tn"]) == (0, 0, 4, 1)
     assert result["precision"] == result["recall"] == result["f1"] == 0.0
     assert result["implicit_retain_count"] == 4
@@ -389,11 +432,14 @@ def test_rq1_b0_missed_add_and_empty_prediction_conventions() -> None:
         },
         "expected_operations": {"REP_ONLY": "retain"},
     }
-    empty_result = score_rq1(_prediction(), empty_oracle)
+    empty_result = score_rq1(_prediction(), empty_oracle, {("representation", "REP_ONLY")})
     assert empty_result["precision"] is None
     assert empty_result["recall"] is None
     assert empty_result["f1"] is None
     assert empty_result["correct_empty_set_detection"] is True
+
+    with pytest.raises(ProtocolError, match="trusted known-target registry"):
+        score_rq1(_prediction(method_id="B0"), _synthetic_oracle())
 
 
 def test_rq1_counts_extra_false_positives_and_reports_unknown_ids() -> None:
@@ -409,9 +455,7 @@ def test_rq1_counts_extra_false_positives_and_reports_unknown_ids() -> None:
         {"target_type": "obligation", "target_id": "AC_EXTERNAL", "operation": "add"},
         {"target_type": "representation", "target_id": "REP_UNKNOWN", "operation": "adjust"},
     ]
-    known: set[tuple[Literal["representation", "obligation"], str]] = {
-        ("obligation", "AC_EXTERNAL")
-    }
+    known = _synthetic_known_targets(("obligation", "AC_EXTERNAL"))
     result = score_rq1(
         _prediction(affected=affected, operations=operations), _synthetic_oracle(), known
     )
@@ -422,13 +466,133 @@ def test_rq1_counts_extra_false_positives_and_reports_unknown_ids() -> None:
         "UNKNOWN_TARGET",
     }
     assert any(item["target_id"] == "REP_UNKNOWN" for item in result["extra_predicted_targets"])
+    extra_by_id = {
+        item["target_id"]: item["known_target"] for item in result["extra_predicted_targets"]
+    }
+    assert extra_by_id == {"AC_EXTERNAL": True, "REP_UNKNOWN": False}
+    unknown_ids = {
+        item["target_id"] for item in result["diagnostics"] if item["code"] == "UNKNOWN_TARGET"
+    }
+    assert unknown_ids == {"REP_UNKNOWN"}
+
+
+@pytest.mark.parametrize(
+    ("target_type", "target_id", "operation"),
+    [
+        ("representation", "REP_EXTERNAL", "adjust"),
+        ("obligation", "Q_EXTERNAL", "add"),
+    ],
+)
+def test_rq1_known_out_of_universe_targets_are_false_positives_not_violations(
+    target_type: str,
+    target_id: str,
+    operation: str,
+) -> None:
+    target = {"target_type": target_type, "target_id": target_id}
+    prediction = _prediction(
+        affected=[{**target, "predicted_operation": operation}],
+        operations=[{**target, "operation": operation}],
+    )
+    known = _synthetic_known_targets(
+        (cast(Literal["representation", "obligation"], target_type), target_id)
+    )
+    result = score_rq1(prediction, _synthetic_oracle(), known)
+    assert result["fp_extra"] == 1
+    assert result["extra_predicted_targets"] == [
+        {**target, "operation": operation, "known_target": True}
+    ]
+    assert not any(item["code"] == "UNKNOWN_TARGET" for item in result["diagnostics"])
+    scored = build_scored_result(
+        prediction,
+        EVIDENCE_SHA,
+        result,
+        score_rq2(_synthetic_oracle(), ARCH_SHA, [], {}, [], {}),
+    )
+    assert "PROTOCOL_VIOLATION" not in scored["failure_statuses"]
+
+
+@pytest.mark.parametrize(
+    ("target_type", "target_id", "operation"),
+    [
+        ("representation", "REP_UNREGISTERED", "adjust"),
+        ("obligation", "Q_UNREGISTERED", "add"),
+    ],
+)
+def test_unknown_rq1_target_propagates_protocol_violation_to_sealed_result(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    target_type: str,
+    target_id: str,
+    operation: str,
+) -> None:
+    monkeypatch.setattr(scoring, "load_trusted_known_targets", lambda _: _synthetic_known_targets())
+    target = {"target_type": target_type, "target_id": target_id}
+    prediction = _prediction(
+        affected=[{**target, "predicted_operation": operation}],
+        operations=[{**target, "operation": operation}],
+    )
+    sealed_directory = tmp_path / f"sealed-{target_type}"
+    seal_prediction(prediction, sealed_directory, "2026-10-09T12:00:00Z")
+    ground_truth_path = tmp_path / "ground_truth.yaml"
+    ground_truth_path.write_text(json.dumps(_synthetic_oracle()), encoding="utf-8")
+
+    result = score_sealed_prediction(
+        sealed_directory,
+        ground_truth_path,
+        ARCH_SHA,
+        [],
+        {},
+        [],
+        {},
+        failure_statuses=(),
+    )
+
+    assert result["rq1"]["fp_extra"] == 1
+    assert any(
+        item["code"] == "UNKNOWN_TARGET" and item["target_id"] == target_id
+        for item in result["rq1"]["diagnostics"]
+    )
+    assert result["failure_statuses"] == ["PROTOCOL_VIOLATION"]
+
+
+def test_rq1_known_and_unknown_extra_targets_keep_separate_classifications() -> None:
+    affected = [
+        {
+            "target_type": "representation",
+            "target_id": "REP_EXTERNAL",
+            "predicted_operation": "adjust",
+        },
+        {"target_type": "obligation", "target_id": "Q_UNKNOWN", "predicted_operation": "add"},
+    ]
+    operations = [
+        {"target_type": "representation", "target_id": "REP_EXTERNAL", "operation": "adjust"},
+        {"target_type": "obligation", "target_id": "Q_UNKNOWN", "operation": "add"},
+    ]
+    known = _synthetic_known_targets(("representation", "REP_EXTERNAL"))
+    result = score_rq1(
+        _prediction(affected=affected, operations=operations), _synthetic_oracle(), known
+    )
+    assert result["fp_extra"] == 2
+    assert {
+        item["target_id"] for item in result["diagnostics"] if item["code"] == "UNKNOWN_TARGET"
+    } == {"Q_UNKNOWN"}
+    assert {
+        item["target_id"]: item["known_target"] for item in result["extra_predicted_targets"]
+    } == {
+        "REP_EXTERNAL": True,
+        "Q_UNKNOWN": False,
+    }
 
 
 def test_scored_result_envelope_is_schema_valid_and_read_only(tmp_path: Path) -> None:
     prediction = _prediction(method_id="B0")
     sealed = seal_prediction(prediction, tmp_path / "sealed", "2026-10-09T12:00:00Z")
     before = sealed.path.read_bytes()
-    rq1 = score_rq1(load_verified_prediction(tmp_path / "sealed").payload, _synthetic_oracle())
+    rq1 = score_rq1(
+        load_verified_prediction(tmp_path / "sealed").payload,
+        _synthetic_oracle(),
+        _synthetic_known_targets(),
+    )
     rq2 = score_rq2(
         _synthetic_oracle(),
         ARCH_SHA,
@@ -460,6 +624,14 @@ def test_rq2_counts_each_obligation_once_and_reports_invalid_evidence() -> None:
             "REP_DUP": _verdict("REP_DUP"),
             "REP_BAD": _verdict("REP_BAD", "SEMANTIC_MISMATCH"),
         },
+        obligation_verdicts_before=[
+            _obligation_verdict("REP_BEFORE", "Q_ONE"),
+        ],
+        obligation_verdicts_after=[
+            _obligation_verdict("REP_MAIN", "Q_ONE"),
+            _obligation_verdict("REP_MAIN", "Q_TWO"),
+            _obligation_verdict("REP_DUP", "Q_ONE"),
+        ],
     )
     assert result["coverage_before"] == pytest.approx(1 / 3)
     assert result["coverage_after"] == pytest.approx(2 / 3)
@@ -467,6 +639,259 @@ def test_rq2_counts_each_obligation_once_and_reports_invalid_evidence() -> None:
     assert result["uncovered_obligations"] == ["Q_THREE"]
     assert result["invalid_representations"] == ["REP_BAD"]
     assert result["semantic_violation_denominator"] == 3
+    assert len(result["coverage_after_assessment"]["valid_cover_pairs"]) == 3
+
+
+@pytest.mark.parametrize(
+    ("first_pair", "second_pair", "expected_coverage"),
+    [
+        ("valid", "missing", 0.5),
+        ("missing", "valid", 0.5),
+        ("valid", "valid", 1.0),
+        ("missing", "missing", 0.0),
+        ("valid", "absent", 0.5),
+    ],
+)
+def test_rq2_requires_independent_verdicts_for_each_obligation(
+    first_pair: str,
+    second_pair: str,
+    expected_coverage: float,
+) -> None:
+    obligations = ["Q_FAILURE", "Q_5XX"]
+    oracle = {**_synthetic_oracle(), "required_obligations_after": obligations}
+    representation = {
+        "id": "REP_RUNTIME",
+        "active": True,
+        "covers": obligations,
+    }
+    pair_verdicts: list[dict[str, Any]] = []
+    for obligation, state in zip(obligations, (first_pair, second_pair), strict=True):
+        if state == "absent":
+            continue
+        if state == "valid":
+            pair_verdicts.append(_obligation_verdict("REP_RUNTIME", obligation))
+        else:
+            pair_verdicts.append(
+                _obligation_verdict(
+                    "REP_RUNTIME",
+                    obligation,
+                    status="MISSING_EVIDENCE",
+                    evidence_contract_adequate=False,
+                    evidence_refs=[],
+                )
+            )
+
+    result = score_rq2(
+        oracle,
+        ARCH_SHA,
+        [],
+        {},
+        [representation],
+        {"REP_RUNTIME": _verdict("REP_RUNTIME")},
+        obligation_verdicts_after=pair_verdicts,
+    )
+
+    assert result["coverage_before"] == 0.0
+    assert result["coverage_after"] == pytest.approx(expected_coverage)
+    assert result["coverage_delta"] == pytest.approx(expected_coverage)
+    assessment = result["coverage_after_assessment"]
+    assert assessment["denominator"] == 2
+    assert assessment["required_obligations"] == obligations
+    assert assessment["architecture_source_sha"] == ARCH_SHA
+    if expected_coverage == 0.5:
+        assert assessment["covered_count"] == 1
+        assert len(assessment["valid_cover_pairs"]) == 1
+        assert assessment["valid_cover_pairs"][0]["evidence_refs"]
+        assert assessment["invalid_representations"] == []
+        assert result["semantic_violation_denominator"] == 1
+
+
+def test_rq2_general_execution_success_does_not_infer_obligation_validity() -> None:
+    representation = {
+        "id": "REP_RUNTIME",
+        "active": True,
+        "covers": ["Q_FAILURE"],
+    }
+    execution_verdict = assess_representation(
+        representation,
+        _valid_evidence("REP_RUNTIME"),
+        ARCH_SHA,
+    )
+    assert execution_verdict["status"] == "VALID_APPLICABLE"
+
+    result = score_rq2(
+        {**_synthetic_oracle(), "required_obligations_after": ["Q_FAILURE"]},
+        ARCH_SHA,
+        [],
+        {},
+        [representation],
+        {"REP_RUNTIME": execution_verdict},
+    )
+    assert result["coverage_after"] == 0.0
+    assert (
+        result["coverage_after_assessment"]["pair_assessments"][0]["status"] == "MISSING_EVIDENCE"
+    )
+
+
+def test_rq2_da01_runtime_representation_partial_obligation_coverage_is_one_half() -> None:
+    obligations = ["Q_FAILURE", "Q_5XX"]
+    oracle = {**_synthetic_oracle(), "required_obligations_after": obligations}
+    representation = {
+        "id": "REP_RUNTIME",
+        "active": True,
+        "covers": obligations,
+    }
+    result = score_rq2(
+        oracle,
+        ARCH_SHA,
+        [],
+        {},
+        [representation],
+        {"REP_RUNTIME": _verdict("REP_RUNTIME")},
+        obligation_verdicts_after=[
+            _obligation_verdict(
+                "REP_RUNTIME",
+                "Q_FAILURE",
+                evidence_refs=["evidence/business-failures.json"],
+            ),
+            _obligation_verdict(
+                "REP_RUNTIME",
+                "Q_5XX",
+                status="MISSING_EVIDENCE",
+                evidence_contract_adequate=False,
+                evidence_refs=[],
+            ),
+        ],
+    )
+
+    assessment = result["coverage_after_assessment"]
+    pair_statuses = {
+        (item["representation_id"], item["obligation_id"]): item["status"]
+        for item in assessment["pair_assessments"]
+    }
+    assert result["coverage_after"] == 0.5
+    assert assessment["required_obligations"] == obligations
+    assert pair_statuses == {
+        ("REP_RUNTIME", "Q_FAILURE"): "VALID_APPLICABLE",
+        ("REP_RUNTIME", "Q_5XX"): "MISSING_EVIDENCE",
+    }
+    assert assessment["valid_cover_pairs"] == [
+        {
+            "representation_id": "REP_RUNTIME",
+            "obligation_id": "Q_FAILURE",
+            "architecture_source_sha": ARCH_SHA,
+            "evidence_refs": ["evidence/business-failures.json"],
+        }
+    ]
+    assert assessment["invalid_representations"] == []
+    assert result["semantic_violation_denominator"] == 1
+
+
+def test_rq2_obligation_assessor_requires_specific_evidence_even_after_exit_zero() -> None:
+    representation = {
+        "id": "REP_RUNTIME",
+        "active": True,
+        "covers": ["Q_FAILURE", "Q_5XX"],
+    }
+    execution_verdict = assess_representation(
+        representation,
+        _valid_evidence("REP_RUNTIME"),
+        ARCH_SHA,
+    )
+    failure = assess_obligation(
+        representation,
+        execution_verdict,
+        "Q_FAILURE",
+        ARCH_SHA,
+        semantic_match=True,
+        evidence_contract_adequate=True,
+        evidence_refs=["evidence/business-failures.json"],
+    )
+    http_5xx = assess_obligation(
+        representation,
+        execution_verdict,
+        "Q_5XX",
+        ARCH_SHA,
+        semantic_match=True,
+        evidence_contract_adequate=False,
+        evidence_refs=[],
+    )
+    assert failure["status"] == "VALID_APPLICABLE"
+    assert http_5xx["status"] == "MISSING_EVIDENCE"
+    assert http_5xx["reason_codes"] == ["OBLIGATION_EVIDENCE_INADEQUATE"]
+    assert "obligation_id" in http_5xx
+    assert http_5xx["representation_id"] == failure["representation_id"]
+
+
+def test_rq2_union_semantics_count_duplicate_valid_representations_once() -> None:
+    oracle = {**_synthetic_oracle(), "required_obligations_after": ["Q_ONE", "Q_TWO"]}
+    configuration = [
+        {"id": "REP_A", "active": True, "covers": ["Q_ONE"]},
+        {"id": "REP_B", "active": True, "covers": ["Q_ONE"]},
+    ]
+    result = score_rq2(
+        oracle,
+        ARCH_SHA,
+        [],
+        {},
+        configuration,
+        {"REP_A": _verdict("REP_A"), "REP_B": _verdict("REP_B")},
+        obligation_verdicts_after=[
+            _obligation_verdict("REP_A", "Q_ONE"),
+            _obligation_verdict("REP_B", "Q_ONE"),
+        ],
+    )
+    assessment = result["coverage_after_assessment"]
+    assert result["coverage_after"] == 0.5
+    assert assessment["covered_count"] == 1
+    assert assessment["valid_cover_pairs"] == [
+        {
+            "representation_id": "REP_A",
+            "obligation_id": "Q_ONE",
+            "architecture_source_sha": ARCH_SHA,
+            "evidence_refs": ["evidence/REP_A-Q_ONE.json"],
+        },
+        {
+            "representation_id": "REP_B",
+            "obligation_id": "Q_ONE",
+            "architecture_source_sha": ARCH_SHA,
+            "evidence_refs": ["evidence/REP_B-Q_ONE.json"],
+        },
+    ]
+
+
+def test_rq2_pair_architecture_mismatch_and_conflicting_duplicates_fail_closed() -> None:
+    oracle = {**_synthetic_oracle(), "required_obligations_after": ["Q_ONE"]}
+    representation = {"id": "REP_A", "active": True, "covers": ["Q_ONE"]}
+    mismatch = score_rq2(
+        oracle,
+        ARCH_SHA,
+        [],
+        {},
+        [representation],
+        {"REP_A": _verdict("REP_A")},
+        obligation_verdicts_after=[
+            _obligation_verdict("REP_A", "Q_ONE", architecture_sha=OTHER_ARCH_SHA),
+        ],
+    )
+    pair = mismatch["coverage_after_assessment"]["pair_assessments"][0]
+    assert mismatch["coverage_after"] == 0.0
+    assert pair["status"] == "STALE_ARCHITECTURE_SCOPE"
+
+    valid_pair = _obligation_verdict("REP_A", "Q_ONE")
+    conflicting_pair = _obligation_verdict(
+        "REP_A", "Q_ONE", status="SEMANTIC_MISMATCH", semantic_match=False
+    )
+    with pytest.raises(ProtocolError, match="Conflicting duplicate"):
+        score_rq2(
+            oracle,
+            ARCH_SHA,
+            [],
+            {},
+            [representation],
+            {"REP_A": _verdict("REP_A")},
+            obligation_verdicts_after=[valid_pair, conflicting_pair],
+        )
 
 
 def test_rq2_rejects_duplicate_obligations_and_reports_stale_scope() -> None:
@@ -490,7 +915,9 @@ def test_rq2_rejects_duplicate_obligations_and_reports_stale_scope() -> None:
 
 def test_private_scorer_verifies_seal_derives_full_oracle_and_leaves_prediction_unchanged(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setattr(scoring, "load_trusted_known_targets", lambda _: _synthetic_known_targets())
     oracle = _synthetic_oracle()
     ground_truth_path = tmp_path / "ground_truth.yaml"
     ground_truth_path.write_text(json.dumps(oracle), encoding="utf-8")
@@ -511,7 +938,12 @@ def test_private_scorer_verifies_seal_derives_full_oracle_and_leaves_prediction_
 
     assert result["prediction_sha256"] == sealed.sha256
     assert result["rq1"]["fn"] == 4
+    assert any(
+        item["normalized_operation"] == "missing_add"
+        for item in result["rq1"]["normalized_operations"]
+    )
     assert result["rq2"]["required_obligations"] == oracle["required_obligations_after"]
+    assert "PROTOCOL_VIOLATION" not in result["failure_statuses"]
     assert sealed.path.read_bytes() == prediction_bytes
 
 
