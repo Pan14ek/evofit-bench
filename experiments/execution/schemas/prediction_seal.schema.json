@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.local/execution/prediction_seal.schema.json",
+  "title": "Write-once prediction seal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "filename", "sha256", "sealed_at_utc", "method_id", "architecture_source_sha", "input_bundle_sha256"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "filename": {"const": "prediction.json"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "sealed_at_utc": {"type": "string", "format": "date-time"},
+    "method_id": {"enum": ["B0", "B1", "P"]},
+    "architecture_source_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "input_bundle_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

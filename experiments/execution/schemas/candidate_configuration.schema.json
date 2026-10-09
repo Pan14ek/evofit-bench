@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.local/execution/candidate_configuration.schema.json",
+  "title": "Materialized fitness candidate configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "method_id", "architecture_source_sha", "configuration_version",
+    "parent_configuration", "representations", "changes", "candidate_validation"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "method_id": {"enum": ["B0", "B1", "P"]},
+    "architecture_source_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "configuration_version": {"type": "string", "minLength": 1},
+    "parent_configuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "representations": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/representation"}
+    },
+    "changes": {"type": "array", "items": {"type": "object"}},
+    "candidate_validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reason_codes"],
+      "properties": {
+        "status": {"enum": ["not_run", "valid", "invalid", "failed"]},
+        "reason_codes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "evidence_refs": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    }
+  },
+  "$defs": {
+    "representation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "active", "criterion", "stage", "evaluator", "covers",
+        "applicability_scope", "evidence_contract"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$"},
+        "active": {"type": "boolean"},
+        "criterion": {"type": "string", "minLength": 1},
+        "stage": {"type": "string", "minLength": 1},
+        "evaluator": {"type": "string", "minLength": 1},
+        "evaluator_artifact": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": ["path", "sha256"],
+          "properties": {
+            "path": {"type": "string", "minLength": 1},
+            "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+          }
+        },
+        "covers": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+        "applicability_scope": {"type": "object"},
+        "evidence_contract": {"type": "object"}
+      }
+    }
+  }
+}

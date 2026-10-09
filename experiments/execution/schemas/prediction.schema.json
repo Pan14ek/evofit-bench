@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.local/execution/prediction.schema.json",
+  "title": "Versioned impact prediction and proposed operations",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "method_id", "architecture_source_sha", "method_version",
+    "input_bundle_sha256", "predicted_affected", "proposed_operations", "explanations", "artifact_hashes"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "method_id": {"enum": ["B0", "B1", "P"]},
+    "architecture_source_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "method_version": {"type": "string", "minLength": 1},
+    "input_bundle_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "predicted_affected": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/prediction"}
+    },
+    "proposed_operations": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/operation"}
+    },
+    "explanations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["target_type", "target_id", "rationale", "evidence_refs"],
+        "properties": {
+          "target_type": {"enum": ["representation", "obligation"]},
+          "target_id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$"},
+          "rationale": {"type": "string"},
+          "evidence_refs": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+          "uncertainty": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "artifact_hashes": {
+      "type": "object",
+      "propertyNames": {"type": "string", "minLength": 1},
+      "additionalProperties": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+    }
+  },
+  "$defs": {
+    "target": {
+      "type": "object",
+      "required": ["target_type", "target_id"],
+      "properties": {
+        "target_type": {"enum": ["representation", "obligation"]},
+        "target_id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$"}
+      }
+    },
+    "prediction": {
+      "allOf": [
+        {"$ref": "#/$defs/target"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target_type", "target_id", "predicted_operation"],
+          "properties": {
+            "target_type": {"enum": ["representation", "obligation"]},
+            "target_id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$"},
+            "predicted_operation": {"enum": ["retain", "replace", "add", "deactivate", "adjust"]}
+          },
+          "allOf": [
+            {
+              "if": {"properties": {"target_type": {"const": "obligation"}}, "required": ["target_type"]},
+              "then": {"properties": {"predicted_operation": {"const": "add"}}}
+            },
+            {
+              "if": {"properties": {"target_type": {"const": "representation"}}, "required": ["target_type"]},
+              "then": {"properties": {"predicted_operation": {"enum": ["retain", "replace", "deactivate", "adjust"]}}}
+            }
+          ]
+        }
+      ]
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_type", "target_id", "operation"],
+      "properties": {
+        "target_type": {"enum": ["representation", "obligation"]},
+        "target_id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$"},
+        "operation": {"enum": ["retain", "replace", "add", "deactivate", "adjust"]}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"target_type": {"const": "obligation"}}, "required": ["target_type"]},
+          "then": {"properties": {"operation": {"const": "add"}}}
+        },
+        {
+          "if": {"properties": {"target_type": {"const": "representation"}}, "required": ["target_type"]},
+          "then": {"properties": {"operation": {"enum": ["retain", "replace", "deactivate", "adjust"]}}}
+        }
+      ]
+    }
+  }
+}

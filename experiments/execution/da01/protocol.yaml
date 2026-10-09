@@ -1,0 +1,53 @@
+schema_version: 1
+protocol_id: DA01_EXECUTION_PROTOCOL
+protocol_version: 1.0.0
+protocol_status: prepared_for_methodological_review
+phase: A
+measured_runs_authorized: false
+architecture:
+  source_state: A0_MONOLITH
+  source_tag: arch-a0-monolith-v1
+  source_sha: b78b0967be937634b7762baccf5ac6892b279a73
+  target_state: A0_1_CAPABILITY_MODULES
+  target_candidate_sha: 5231a637d1489f83d4c17649c235a6ce2a2f40ac
+  target_tag_created_by_protocol: false
+method_ids: [B0, B1, P]
+operation_model:
+  target_identity: [target_type, target_id]
+  representation_operations: [retain, replace, deactivate, adjust]
+  obligation_operations: [add]
+  omitted_existing_representation: implicit_retain
+  omitted_new_obligation: missing_add
+  missing_add_is_emittable: false
+rq1:
+  positive_definition: oracle_operation_is_not_retain
+  precision_denominator: tp_plus_fp_total
+  fp_total: fp_in_plus_fp_extra
+  tn_scope: in_universe_negative_targets_only
+  both_positive_sets_empty: precision_recall_f1_null
+  oracle_positive_but_method_predicts_none: precision_recall_f1_zero
+  inference: descriptive_per_architecture_delta_only
+rq2:
+  denominator_source: private_ground_truth_required_obligations_after
+  weighting: equal
+  count_unit: obligation
+  missing_evidence: not_demonstrated_as_covered
+  before_candidate_architecture: target_state
+  after_candidate_architecture: target_state
+prediction_sealing:
+  canonical_json: true
+  exact_byte_sha256: true
+  write_once: true
+  score_only_after_seal: true
+failure_statuses:
+  - METHOD_FAILURE
+  - EVALUATOR_INVALID
+  - MISSING_EVIDENCE
+  - INFRASTRUCTURE_FAILURE
+  - PROTOCOL_VIOLATION
+  - REFERENCE_CHECKER_ERROR
+readiness:
+  p_algorithm: NOT_READY
+  independent_b1_operator: NOT_RECORDED
+  independent_methodological_review: NOT_COMPLETED
+  g4_measured_run_authorization: NOT_GRANTED

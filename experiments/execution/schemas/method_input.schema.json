@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.local/execution/method_input.schema.json",
+  "title": "Allowlisted method input manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "allowlist_version", "method_id", "architecture_before_sha",
+    "architecture_source_sha", "before_tree_sha", "after_tree_sha", "files", "bundle_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "allowlist_version": {"type": "string", "minLength": 1},
+    "method_id": {"enum": ["B0", "B1", "P"]},
+    "architecture_before_sha": {"$ref": "#/$defs/sha1"},
+    "architecture_source_sha": {"$ref": "#/$defs/sha1"},
+    "before_tree_sha": {"$ref": "#/$defs/sha1"},
+    "after_tree_sha": {"$ref": "#/$defs/sha1"},
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/file"}
+    },
+    "bundle_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "role", "size_bytes", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1, "pattern": "^(?!/).+$"},
+        "role": {
+          "enum": [
+            "architecture_before_source", "architecture_after_source", "architecture_observations",
+            "fitness_configuration", "representation_catalog", "obligation_registry",
+            "legacy_evaluator", "evaluator_capabilities", "traceability"
+          ]
+        },
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  }
+}

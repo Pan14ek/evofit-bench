@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.local/execution/evaluator_evidence.schema.json",
+  "title": "Raw evaluator execution evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "representation_id", "architecture_source_sha", "evaluator_id",
+    "infrastructure_status", "process_exit_code", "configured_targets", "resolved_targets",
+    "inspected_subjects", "missing_targets", "inspected_edge_count", "stage_applicable",
+    "semantic_compatible", "mapping_resolved", "evidence_contract_satisfied",
+    "adequacy_proven", "evidence_artifacts", "stdout_sha256", "stderr_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "representation_id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$"},
+    "architecture_source_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "evaluator_id": {"type": "string", "minLength": 1},
+    "infrastructure_status": {"enum": ["completed", "infrastructure_failure", "not_run"]},
+    "process_exit_code": {"type": ["integer", "null"]},
+    "configured_targets": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "resolved_targets": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "inspected_subjects": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "missing_targets": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "inspected_edge_count": {"type": "integer", "minimum": 0},
+    "stage_applicable": {"type": "boolean"},
+    "semantic_compatible": {"type": ["boolean", "null"]},
+    "mapping_resolved": {"type": "boolean"},
+    "evidence_contract_satisfied": {"type": "boolean"},
+    "adequacy_proven": {"type": "boolean"},
+    "clean_probe": {"enum": ["pass", "fail", "not_run", null]},
+    "fault_probe": {"enum": ["detected", "missed", "not_run", null]},
+    "evidence_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    },
+    "stdout_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+    "stderr_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+    "started_at_utc": {"type": ["string", "null"], "format": "date-time"},
+    "ended_at_utc": {"type": ["string", "null"], "format": "date-time"},
+    "failure_reason_code": {"type": ["string", "null"]}
+  }
+}
