@@ -30,7 +30,7 @@ typecheck:
 	$(UV) run mypy app scripts tests
 
 security:
-	$(UV) run bandit -q -r app scripts
+	$(UV) run bandit -q -r app scripts experiments/execution/tooling
 
 architecture-test:
 	$(UV) run lint-imports --config architecture/acceptance/importlinter.toml
