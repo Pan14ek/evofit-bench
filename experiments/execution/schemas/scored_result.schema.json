@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.local/execution/scored_result.schema.json",
+  "title": "Scorer output envelope; never supplied to a method",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "method_id", "architecture_source_sha", "prediction_sha256",
+    "rq1", "rq2", "diagnostics", "failure_statuses"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "method_id": {"enum": ["B0", "B1", "P"]},
+    "architecture_source_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "prediction_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "rq1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tp", "fp_in", "fp_extra", "fp_total", "fn", "tn", "precision", "recall", "f1", "operation_accuracy", "universe_size", "diagnostics"],
+      "properties": {
+        "tp": {"type": "integer", "minimum": 0},
+        "fp_in": {"type": "integer", "minimum": 0},
+        "fp_extra": {"type": "integer", "minimum": 0},
+        "fp_total": {"type": "integer", "minimum": 0},
+        "fn": {"type": "integer", "minimum": 0},
+        "tn": {"type": "integer", "minimum": 0},
+        "precision": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "recall": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "f1": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "operation_accuracy": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "universe_size": {"type": "integer", "minimum": 0},
+        "implicit_retain_count": {"type": "integer", "minimum": 0},
+        "explicit_retain_count": {"type": "integer", "minimum": 0},
+        "correct_empty_set_detection": {"type": ["boolean", "null"]},
+        "operation_confusion": {"type": "object"},
+        "normalized_operations": {"type": "array", "items": {"type": "object"}},
+        "extra_predicted_targets": {"type": "array", "items": {"type": "object"}},
+        "diagnostics": {"type": "array", "items": {"type": "object"}}
+      }
+    },
+    "rq2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["coverage_before", "coverage_after", "coverage_delta", "required_obligations", "uncovered_obligations", "stale_representations", "invalid_representations", "semantic_violation_counts", "semantic_violation_denominator"],
+      "properties": {
+        "coverage_before": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "coverage_after": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "coverage_delta": {"type": ["number", "null"], "minimum": -1, "maximum": 1},
+        "required_obligations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "coverage_before_assessment": {"type": "object"},
+        "coverage_after_assessment": {"type": "object"},
+        "uncovered_obligations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "stale_representations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "invalid_representations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "semantic_violation_counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}},
+        "semantic_violation_denominator": {"type": "integer", "minimum": 0},
+        "semantic_violation_rate": {"type": ["number", "null"], "minimum": 0, "maximum": 1}
+      }
+    },
+    "diagnostics": {"type": "array", "items": {"type": "object"}},
+    "failure_statuses": {
+      "type": "array",
+      "items": {"enum": ["METHOD_FAILURE", "EVALUATOR_INVALID", "MISSING_EVIDENCE", "INFRASTRUCTURE_FAILURE", "PROTOCOL_VIOLATION", "REFERENCE_CHECKER_ERROR"]},
+      "uniqueItems": true
+    },
+    "legacy_result": {"type": "object"}
+  }
+}

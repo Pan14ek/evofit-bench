@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.local/execution/provenance.schema.json",
+  "title": "DA01 execution provenance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "execution_id", "architecture_state", "architecture_source_sha",
+    "infrastructure_revision", "method_id", "method_version", "fitness_configuration_version",
+    "fitness_configuration_sha256", "input_bundle_sha256", "prediction_sha256",
+    "workload_profile_identity", "workload_profile_sha256", "dependency_lock_sha256",
+    "python_version", "operating_system", "container_image_digest", "started_at_utc", "ended_at_utc",
+    "timings_ms", "failure_statuses", "evaluator_runs"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "execution_id": {"type": "string", "minLength": 1},
+    "architecture_state": {"type": "string", "minLength": 1},
+    "architecture_source_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "architecture_tree_sha": {"type": ["string", "null"], "pattern": "^[a-f0-9]{40}$"},
+    "infrastructure_revision": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "method_id": {"enum": ["B0", "B1", "P"]},
+    "method_version": {"type": "string", "minLength": 1},
+    "method_source_revision": {"type": ["string", "null"], "pattern": "^[a-f0-9]{40}$"},
+    "fitness_configuration_version": {"type": "string", "minLength": 1},
+    "fitness_configuration_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "input_bundle_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "prediction_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "prediction_sealed_at_utc": {"type": ["string", "null"], "format": "date-time"},
+    "workload_profile_identity": {"type": ["string", "null"]},
+    "workload_profile_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+    "dependency_lock_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "python_version": {"type": "string", "minLength": 1},
+    "evaluator_version": {"type": ["string", "null"]},
+    "container_image_digest": {"type": ["string", "null"], "pattern": "^(?:[a-zA-Z0-9./:_-]+@)?sha256:[a-f0-9]{64}$"},
+    "operating_system": {"type": "string", "minLength": 1},
+    "started_at_utc": {"type": "string", "format": "date-time"},
+    "ended_at_utc": {"type": "string", "format": "date-time"},
+    "timings_ms": {
+      "type": "object",
+      "additionalProperties": {"type": ["number", "null"], "minimum": 0}
+    },
+    "failure_statuses": {
+      "type": "array",
+      "items": {"enum": ["METHOD_FAILURE", "EVALUATOR_INVALID", "MISSING_EVIDENCE", "INFRASTRUCTURE_FAILURE", "PROTOCOL_VIOLATION", "REFERENCE_CHECKER_ERROR"]},
+      "uniqueItems": true
+    },
+    "evaluator_runs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["evaluator_id", "exit_code", "stdout_sha256", "stderr_sha256", "diagnostic_count"],
+        "properties": {
+          "evaluator_id": {"type": "string", "minLength": 1},
+          "exit_code": {"type": ["integer", "null"]},
+          "stdout_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+          "stderr_sha256": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+          "diagnostic_count": {"type": "integer", "minimum": 0},
+          "reason_code": {"type": ["string", "null"]}
+        }
+      }
+    }
+  }
+}

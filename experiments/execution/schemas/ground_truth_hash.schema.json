@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.local/execution/ground_truth_hash.schema.json",
+  "title": "Scorer-only frozen ground-truth hash record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "artifact_name", "sha256", "recorded_at_utc", "scope"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "artifact_name": {"const": "ground_truth.yaml"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "recorded_at_utc": {"type": "string", "format": "date-time"},
+    "scope": {"const": "scorer_only"}
+  }
+}

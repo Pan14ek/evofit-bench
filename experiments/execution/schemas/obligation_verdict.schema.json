@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.local/execution/obligation_verdict.schema.json",
+  "title": "Versioned semantic validity verdict for one representation-obligation pair",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "representation_id",
+    "obligation_id",
+    "architecture_source_sha",
+    "semantic_match",
+    "evidence_contract_adequate",
+    "evidence_refs",
+    "status",
+    "reason_codes"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "representation_id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$"},
+    "obligation_id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$"},
+    "architecture_source_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "semantic_match": {"type": ["boolean", "null"]},
+    "evidence_contract_adequate": {"type": "boolean"},
+    "evidence_refs": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "status": {
+      "enum": [
+        "VALID_APPLICABLE",
+        "SEMANTIC_MISMATCH",
+        "STALE_ARCHITECTURE_SCOPE",
+        "MISSING_ARCHITECTURE_TARGET",
+        "VACUOUS_SUCCESS",
+        "MISSING_EVIDENCE",
+        "EXECUTION_FAILURE",
+        "INFRASTRUCTURE_FAILURE",
+        "STAGE_OR_CONTEXT_MISMATCH",
+        "OBLIGATION_MAPPING_MISMATCH",
+        "INACTIVE",
+        "REFERENCE_CHECKER_ERROR",
+        "PROTOCOL_VIOLATION"
+      ]
+    },
+    "reason_codes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "VALID_APPLICABLE"}}, "required": ["status"]},
+      "then": {
+        "properties": {
+          "semantic_match": {"const": true},
+          "evidence_contract_adequate": {"const": true},
+          "evidence_refs": {"minItems": 1}
+        }
+      }
+    }
+  ]
+}
