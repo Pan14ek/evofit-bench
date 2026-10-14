@@ -1,0 +1,20 @@
+{
+  "charter_id": "CONTROLLED_POLICY_PILOT_CHARTER_DRAFT",
+  "effective_from": "2026-10-14T00:00:00Z",
+  "effective_until": null,
+  "evidence_source_ids": ["PILOT_AUTHORITY_DESIGN"],
+  "precedence": [],
+  "role_permissions": {
+    "research_policy_author": ["DRAFT_POLICY"]
+  },
+  "schema_version": "1.1",
+  "scope_hierarchy": [],
+  "source_allowlist": [
+    {"kind": "ARCHITECTURE_SOURCE", "path_prefix": "architecture/"},
+    {"kind": "STRUCTURAL_OBSERVATION", "path_prefix": "architecture/structural-observations.json"},
+    {"kind": "POLICY_REGISTRY", "path_prefix": "fitness/policy/registry.json"},
+    {"kind": "APPROVAL", "path_prefix": "fitness/policy/approvals/"},
+    {"kind": "EVIDENCE", "path_prefix": "fitness/policy/evidence/"}
+  ],
+  "version": "controlled-policy-pilot-v1-draft"
+}

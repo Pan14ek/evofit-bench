@@ -1,0 +1,363 @@
+{
+  "as_of": "2026-10-14T00:00:00Z",
+  "authority_charter_source_id": "CHARTER",
+  "closure": "OPEN",
+  "closure_claim_id": null,
+  "policies": [
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_AC_COMMUNICATION_POLICY",
+      "issuer_role": "research_policy_author",
+      "kind": "UNCONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "AC_COMMUNICATION_POLICY"
+      ],
+      "proposition": "Candidate communication policy; declared channels do not establish a complete runtime inventory.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    },
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "condition_ref": "COND_DATA_OWNERSHIP_FACT",
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_AC_DATA_OWNERSHIP",
+      "issuer_role": "research_policy_author",
+      "kind": "CONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "AC_DATA_OWNERSHIP"
+      ],
+      "proposition": "Candidate data ownership policy; ownership relation fact source is missing.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    },
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "condition_ref": "COND_RUNTIME_TOPOLOGY_VERIFIED",
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_AC_DEPLOYMENT_TOPOLOGY",
+      "issuer_role": "research_policy_author",
+      "kind": "CONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "AC_DEPLOYMENT_TOPOLOGY"
+      ],
+      "proposition": "Candidate actual topology policy; runtime topology fact source is missing.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    },
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_AC_LAYERING",
+      "issuer_role": "research_policy_author",
+      "kind": "UNCONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "AC_LAYERING"
+      ],
+      "proposition": "Candidate layering constraint; conformance is evaluated separately from applicability.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    },
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_AC_MODULE_GRAPH",
+      "issuer_role": "research_policy_author",
+      "kind": "UNCONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "AC_MODULE_GRAPH"
+      ],
+      "proposition": "Candidate dependency graph constraint; full import graph evidence is not in FV_CORE_V1.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    },
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "condition_ref": "COND_HAS_CAPABILITY_MODULE",
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_AC_MODULE_STRUCTURE",
+      "issuer_role": "research_policy_author",
+      "kind": "CONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "AC_MODULE_STRUCTURE"
+      ],
+      "proposition": "Candidate condition over declared capability-module structure only.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    },
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_AC_PUBLIC_API",
+      "issuer_role": "research_policy_author",
+      "kind": "UNCONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "AC_PUBLIC_API"
+      ],
+      "proposition": "Candidate public module API policy; declared enforcement does not establish compliance.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    },
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "condition_ref": "COND_DECLARED_MULTI_UNIT",
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_AC_SERVICE_BOUNDARY",
+      "issuer_role": "research_policy_author",
+      "kind": "CONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "AC_SERVICE_BOUNDARY"
+      ],
+      "proposition": "Candidate declared deployment-unit rule; it does not establish actual service separation.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    },
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "condition_ref": "COND_ASYNC_CHANNEL_PRESENT",
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_P_ASYNC_LAG",
+      "issuer_role": "research_policy_author",
+      "kind": "CONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "P_ASYNC_LAG"
+      ],
+      "proposition": "Candidate asynchronous delivery lag policy; runtime channel fact source is missing.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    },
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_P_EXT_LATENCY",
+      "issuer_role": "research_policy_author",
+      "kind": "UNCONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "P_EXT_LATENCY"
+      ],
+      "proposition": "Candidate user-facing API latency policy for a declared controlled scope.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    },
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "condition_ref": "COND_REMOTE_SYNCHRONOUS_DEPENDENCY",
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_P_REMOTE_LATENCY",
+      "issuer_role": "research_policy_author",
+      "kind": "CONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "P_REMOTE_LATENCY"
+      ],
+      "proposition": "Candidate synchronous remote dependency latency policy; runtime fact source is missing.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    },
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_R_BUSINESS_FAILURE",
+      "issuer_role": "research_policy_author",
+      "kind": "UNCONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "R_BUSINESS_FAILURE"
+      ],
+      "proposition": "Candidate observability rule for unexpected business-operation failures.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    },
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "condition_ref": "COND_ASYNC_CHANNEL_PRESENT",
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_R_EVENT_DELIVERY",
+      "issuer_role": "research_policy_author",
+      "kind": "CONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "R_EVENT_DELIVERY"
+      ],
+      "proposition": "Candidate event delivery reliability policy; runtime channel fact source is missing.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    },
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_R_HTTP_5XX",
+      "issuer_role": "research_policy_author",
+      "kind": "UNCONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "R_HTTP_5XX"
+      ],
+      "proposition": "Candidate policy for external or business HTTP 5xx observability.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    },
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "condition_ref": "COND_ASYNC_CHANNEL_PRESENT",
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_R_IDEMPOTENCY",
+      "issuer_role": "research_policy_author",
+      "kind": "CONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "R_IDEMPOTENCY"
+      ],
+      "proposition": "Candidate duplicate-delivery idempotency policy; runtime channel fact source is missing.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    },
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_R_LOCAL_ATOMICITY",
+      "issuer_role": "research_policy_author",
+      "kind": "UNCONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "R_LOCAL_ATOMICITY"
+      ],
+      "proposition": "Candidate local transaction atomicity policy; transaction facts require a future vocabulary extension.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    },
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "condition_ref": "COND_EVENT_DRIVEN_READ_MODEL_PRESENT",
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_R_READMODEL_CONVERGENCE",
+      "issuer_role": "research_policy_author",
+      "kind": "CONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "R_READMODEL_CONVERGENCE"
+      ],
+      "proposition": "Candidate event-driven read model convergence policy; runtime fact source is missing.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    },
+    {
+      "applies_to_states": [
+        "after"
+      ],
+      "approval_source_id": null,
+      "condition_ref": "COND_REMOTE_SYNCHRONOUS_DEPENDENCY",
+      "effective_from": "2026-10-14T00:00:00Z",
+      "effective_until": null,
+      "id": "POLICY_CANDIDATE_R_REMOTE_DEPENDENCY",
+      "issuer_role": "research_policy_author",
+      "kind": "CONDITIONAL_MANDATE",
+      "normative_status": "DRAFT",
+      "obligation_ids": [
+        "R_REMOTE_DEPENDENCY"
+      ],
+      "proposition": "Candidate remote dependency timeout and retry policy; runtime fact source is missing.",
+      "scope": "application",
+      "source_id": "REGISTRY",
+      "target_policy_ids": []
+    }
+  ],
+  "registry_version": "controlled-policy-pilot-candidates-v1",
+  "schema_version": "1.1",
+  "scope": "application"
+}
