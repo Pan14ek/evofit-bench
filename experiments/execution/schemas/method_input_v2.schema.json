@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:method-input:v2-candidate",
+  "title": "Development-only V2 method input manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "allowlist_version",
+    "profile_status",
+    "method_id",
+    "architecture_before_sha",
+    "architecture_source_sha",
+    "before_tree_sha",
+    "after_tree_sha",
+    "common_snapshot_sha256",
+    "files",
+    "bundle_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "allowlist_version": {"const": "DA01_METHOD_INPUTS_V2_CANDIDATE"},
+    "profile_status": {"const": "DEVELOPMENT_UNFROZEN"},
+    "method_id": {"enum": ["B1", "P"]},
+    "architecture_before_sha": {"$ref": "#/$defs/sha1"},
+    "architecture_source_sha": {"$ref": "#/$defs/sha1"},
+    "before_tree_sha": {"$ref": "#/$defs/sha1"},
+    "after_tree_sha": {"$ref": "#/$defs/sha1"},
+    "common_snapshot_sha256": {"$ref": "#/$defs/sha256"},
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/file"}
+    },
+    "bundle_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "role", "size_bytes", "sha256"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_./-]+$"
+        },
+        "role": {
+          "enum": [
+            "architecture_before_source",
+            "architecture_after_source",
+            "architecture_inventory",
+            "structural_observations",
+            "architecture_policy_snapshot",
+            "fitness_configuration",
+            "representation_catalog",
+            "obligation_registry",
+            "legacy_evaluator",
+            "evaluator_capabilities",
+            "traceability",
+            "policy_charter",
+            "policy_registry",
+            "approval_evidence",
+            "completeness_evidence"
+          ]
+        },
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  }
+}

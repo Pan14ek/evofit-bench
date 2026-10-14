@@ -1,0 +1,136 @@
+{
+  "schema_version": "1.1",
+  "vocabulary_version": "FV_CORE_V1",
+  "predicates": [
+    {
+      "id": "FV01",
+      "name": "component.python_module_identity",
+      "value_type": "string_set",
+      "allowed_epistemic_kinds": ["EXTRACTED", "UNKNOWN"],
+      "allowed_source_kinds": ["ARCHITECTURE_SOURCE", "STRUCTURAL_OBSERVATION"],
+      "allowed_scopes": ["source:app"],
+      "source_states": ["fact_state"],
+      "method_id": "git_tree_py_module_inventory_v1"
+    },
+    {
+      "id": "FV02",
+      "name": "component.module_added",
+      "value_type": "string_set",
+      "allowed_epistemic_kinds": ["EXTRACTED", "UNKNOWN"],
+      "allowed_source_kinds": ["ARCHITECTURE_SOURCE", "STRUCTURAL_OBSERVATION"],
+      "allowed_scopes": ["source:app"],
+      "source_states": ["before", "after"],
+      "method_id": "git_tree_py_module_inventory_v1"
+    },
+    {
+      "id": "FV03",
+      "name": "component.module_removed",
+      "value_type": "string_set",
+      "allowed_epistemic_kinds": ["EXTRACTED", "UNKNOWN"],
+      "allowed_source_kinds": ["ARCHITECTURE_SOURCE", "STRUCTURAL_OBSERVATION"],
+      "allowed_scopes": ["source:app"],
+      "source_states": ["before", "after"],
+      "method_id": "git_tree_py_module_inventory_v1"
+    },
+    {
+      "id": "FV04",
+      "name": "component.capability_module",
+      "value_type": "capability_module",
+      "allowed_epistemic_kinds": ["DECLARED", "UNKNOWN"],
+      "allowed_source_kinds": ["STRUCTURAL_OBSERVATION"],
+      "allowed_scopes": ["application"],
+      "source_states": ["fact_state"],
+      "method_id": null
+    },
+    {
+      "id": "FV05",
+      "name": "component.declared_cross_module_dependency",
+      "value_type": "module_dependency",
+      "allowed_epistemic_kinds": ["DECLARED", "UNKNOWN"],
+      "allowed_source_kinds": ["STRUCTURAL_OBSERVATION"],
+      "allowed_scopes": ["application"],
+      "source_states": ["fact_state"],
+      "method_id": null
+    },
+    {
+      "id": "FV06",
+      "name": "component.shared_infrastructure",
+      "value_type": "string_set",
+      "allowed_epistemic_kinds": ["DECLARED", "UNKNOWN"],
+      "allowed_source_kinds": ["STRUCTURAL_OBSERVATION"],
+      "allowed_scopes": ["application"],
+      "source_states": ["fact_state"],
+      "method_id": null
+    },
+    {
+      "id": "FV07",
+      "name": "deployment.unit_count_declared",
+      "value_type": "nonnegative_integer",
+      "allowed_epistemic_kinds": ["DECLARED", "UNKNOWN"],
+      "allowed_source_kinds": ["STRUCTURAL_OBSERVATION"],
+      "allowed_scopes": ["application"],
+      "source_states": ["fact_state"],
+      "method_id": null
+    },
+    {
+      "id": "FV08",
+      "name": "deployment.process_count_declared",
+      "value_type": "nonnegative_integer",
+      "allowed_epistemic_kinds": ["DECLARED", "UNKNOWN"],
+      "allowed_source_kinds": ["STRUCTURAL_OBSERVATION"],
+      "allowed_scopes": ["application"],
+      "source_states": ["fact_state"],
+      "method_id": null
+    },
+    {
+      "id": "FV09",
+      "name": "deployment.database_instance_count_declared",
+      "value_type": "nonnegative_integer",
+      "allowed_epistemic_kinds": ["DECLARED", "UNKNOWN"],
+      "allowed_source_kinds": ["STRUCTURAL_OBSERVATION"],
+      "allowed_scopes": ["application"],
+      "source_states": ["fact_state"],
+      "method_id": null
+    },
+    {
+      "id": "FV10",
+      "name": "deployment.database_product_declared",
+      "value_type": "string",
+      "allowed_epistemic_kinds": ["DECLARED", "UNKNOWN"],
+      "allowed_source_kinds": ["STRUCTURAL_OBSERVATION"],
+      "allowed_scopes": ["application"],
+      "source_states": ["fact_state"],
+      "method_id": null
+    },
+    {
+      "id": "FV11",
+      "name": "communication.internal_mode_declared",
+      "value_type": "string",
+      "allowed_epistemic_kinds": ["DECLARED", "UNKNOWN"],
+      "allowed_source_kinds": ["STRUCTURAL_OBSERVATION"],
+      "allowed_scopes": ["application"],
+      "source_states": ["fact_state"],
+      "method_id": null
+    },
+    {
+      "id": "FV12",
+      "name": "communication.broker_declared",
+      "value_type": "string",
+      "allowed_epistemic_kinds": ["DECLARED", "UNKNOWN"],
+      "allowed_source_kinds": ["STRUCTURAL_OBSERVATION"],
+      "allowed_scopes": ["application"],
+      "source_states": ["fact_state"],
+      "method_id": null
+    }
+  ],
+  "provenance_labels": ["architecture.state_id", "architecture.source_state_id"],
+  "reserved_predicates": [
+    "component.static_import_edge",
+    "communication.remote_synchronous_call",
+    "communication.async_channel",
+    "data.transaction_boundary",
+    "data.ownership",
+    "runtime.endpoint_observed",
+    "runtime.telemetry_window"
+  ]
+}

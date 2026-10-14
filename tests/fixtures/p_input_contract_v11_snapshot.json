@@ -1,0 +1,116 @@
+{
+  "schema_version": "1.1",
+  "contract_id": "VERSIONED_ARCH_POLICY_SNAPSHOT_V1_1",
+  "fact_vocabulary_version": "FV_CORE_V1",
+  "architecture": {
+    "before_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "after_commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "before_tree": "cccccccccccccccccccccccccccccccccccccccc",
+    "after_tree": "dddddddddddddddddddddddddddddddddddddddd",
+    "evaluation_as_of": "2026-10-13T00:00:00Z"
+  },
+  "sources": [
+    {
+      "id": "ARCH_OBS",
+      "path": "architecture/observations.json",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "kind": "STRUCTURAL_OBSERVATION",
+      "producer": "allowlisted_extractor_v1"
+    },
+    {
+      "id": "CHARTER",
+      "path": "policies/authority-charter.json",
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "kind": "POLICY_CHARTER",
+      "producer": "independent_policy_authority"
+    },
+    {
+      "id": "REGISTRY",
+      "path": "policies/registry.json",
+      "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "kind": "POLICY_REGISTRY",
+      "producer": "policy_curator"
+    },
+    {
+      "id": "APPROVAL",
+      "path": "policies/approval.json",
+      "sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+      "kind": "APPROVAL",
+      "producer": "authorized_approver"
+    }
+  ],
+  "facts": [
+    {
+      "id": "F_DEPLOYMENT",
+      "state": "after",
+      "predicate": "deployment.unit_count_declared",
+      "subject": "application",
+      "scope": "application",
+      "value": 1,
+      "epistemic_kind": "DECLARED",
+      "source_ids": [
+        "ARCH_OBS"
+      ]
+    },
+    {
+      "id": "F_MODULES",
+      "state": "after",
+      "predicate": "component.python_module_identity",
+      "subject": "app",
+      "scope": "source:app",
+      "value": [
+        "app.alpha",
+        "app.beta"
+      ],
+      "epistemic_kind": "EXTRACTED",
+      "source_ids": [
+        "ARCH_OBS"
+      ],
+      "method_id": "git_tree_py_module_inventory_v1"
+    },
+    {
+      "id": "F_BROKER",
+      "state": "after",
+      "predicate": "communication.broker_declared",
+      "subject": "application",
+      "scope": "application",
+      "value": null,
+      "epistemic_kind": "UNKNOWN",
+      "source_ids": [
+        "ARCH_OBS"
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "id": "POL_PUBLIC_API",
+      "kind": "UNCONDITIONAL_MANDATE",
+      "normative_status": "APPROVED",
+      "obligation_ids": [
+        "AC_PUBLIC_API"
+      ],
+      "proposition": "Cross-module access must use approved public APIs",
+      "scope": "application",
+      "issuer_role": "architecture_authority",
+      "approval_source_id": "APPROVAL",
+      "source_id": "REGISTRY",
+      "effective_from": "2026-10-01T00:00:00Z",
+      "effective_until": null,
+      "applies_to_states": [
+        "after"
+      ],
+      "target_policy_ids": [],
+      "proposition_polarity": "REQUIRED"
+    }
+  ],
+  "policy_registry": {
+    "scope": "application",
+    "source_id": "REGISTRY",
+    "authority_charter_source_id": "CHARTER",
+    "registry_version": "synthetic-registry-v1",
+    "as_of": "2026-10-13T00:00:00Z",
+    "closure": "OPEN",
+    "closure_claim_id": null
+  },
+  "completeness_claims": []
+}
