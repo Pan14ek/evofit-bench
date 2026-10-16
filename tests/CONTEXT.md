@@ -5,11 +5,17 @@
 
 ## Responsibility
 
-Python unit, architecture and PostgreSQL integration suites.
+Python unit, architecture and PostgreSQL integration suites, including independent synthetic SPEC03 impact, exact-pair, operation, materialization, governance, provenance and rollback tests.
 
 ## Local landmarks
 
 - `__init__.py`
+- `fixtures/p_method/`
+- `unit/test_p_impact_v1.py`
+- `unit/test_p_semantic_pairs_v1.py`
+- `unit/test_p_operations_v1.py`
+- `unit/test_p_candidate_governance_v1.py`
+- `integration/test_p_governed_adaptation_v1.py`
 
 ## Established conventions
 
@@ -17,7 +23,7 @@ Synthetic tests and quality gates must be distinguished from scientific measured
 
 ## Constraints and known gaps
 
-Never use oracle to manufacture P predictions or call skips passes.
+SPEC03 fixtures are independently authored TEST_ONLY inputs. Never use oracle to manufacture P predictions or call skips passes; the SPEC03 synthetic pipeline is not measured validation.
 
 ## Verification and further reading
 

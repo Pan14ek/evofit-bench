@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:p-pair-assessment:v1",
+  "title": "Development-only exact representation-obligation assessment v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "representation_id", "obligation_id", "architecture_source_sha", "criterion_id", "stage", "status", "compliance_status", "evaluator_evidence_sha256", "evaluator_artifact_sha256", "semantic_proof_status", "semantic_verifier_id", "reason_codes", "evidence_refs", "evidence_artifacts", "assessment_sha256"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "representation_id": {"$ref": "#/$defs/id"},
+    "obligation_id": {"$ref": "#/$defs/id"},
+    "architecture_source_sha": {"$ref": "#/$defs/sha1"},
+    "criterion_id": {"type": "string", "minLength": 1},
+    "stage": {"type": ["string", "null"]},
+    "status": {"enum": ["VALID", "INVALID", "UNKNOWN"]},
+    "compliance_status": {"enum": ["COMPLIANT", "NON_COMPLIANT", "UNKNOWN"]},
+    "evaluator_evidence_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+    "evaluator_artifact_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+    "semantic_proof_status": {"enum": ["VALID", "INVALID", "UNDETERMINED"]},
+    "semantic_verifier_id": {"type": ["string", "null"], "minLength": 1},
+    "reason_codes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,63}$"}},
+    "evidence_refs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "evidence_artifacts": {"type": "array", "items": {"$ref": "#/$defs/artifact"}},
+    "assessment_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$"},
+    "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "artifact": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"$ref": "#/$defs/sha256"}}}
+  }
+}

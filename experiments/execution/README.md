@@ -60,9 +60,13 @@ flowchart TD
   G -->|reject or rollback| P
 ```
 
-The diagram describes interfaces, not an implemented P algorithm. The definition
-of `Impact`, general obligation activation, candidate generation, and acceptance
-or rollback remains unresolved. P is therefore **NOT READY** for measured use.
+The generic development pipeline now implements these boundaries in
+`tooling/p_impact.py`, `p_semantic.py`, `p_operations.py`, `p_candidate.py`,
+`p_governance.py`, and `p_adaptation.py`. It reuses SPEC 02 applicability and
+uses additive DEVELOPMENT contracts. This implementation does not resolve the
+open scientific decisions in SPEC 03 and is **NOT READY** for measured use;
+see [`P_GOVERNED_ADAPTATION_V1.md`](P_GOVERNED_ADAPTATION_V1.md) and
+[`da01/P_ALGORITHM_STATUS.md`](da01/P_ALGORITHM_STATUS.md).
 
 ## Tooling
 

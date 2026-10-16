@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:p-coverage-assessment:v1",
+  "title": "Development-only mandatory representation coverage assessment v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "architecture_source_sha", "applicability_assessment_sha256", "policy_source_revision", "policy_bundle_sha256", "ruleset_sha256", "status", "mandatory_total", "mandatory_covered", "obligations", "reason_codes", "assessment_sha256"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "architecture_source_sha": {"$ref": "#/$defs/sha1"},
+    "applicability_assessment_sha256": {"$ref": "#/$defs/sha256"},
+    "policy_source_revision": {"type": "string", "minLength": 1, "maxLength": 128},
+    "policy_bundle_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+    "ruleset_sha256": {"$ref": "#/$defs/sha256"},
+    "status": {"enum": ["COMPLETE", "INCOMPLETE", "UNKNOWN"]},
+    "mandatory_total": {"type": "integer", "minimum": 0},
+    "mandatory_covered": {"type": "integer", "minimum": 0},
+    "obligations": {"type": "array", "items": {"$ref": "#/$defs/obligation"}},
+    "reason_codes": {"$ref": "#/$defs/codes"},
+    "assessment_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$"},
+    "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "codes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,63}$"}},
+    "obligation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["obligation_id", "applicability_status", "mandatory", "status", "required_stages", "covered_stages", "valid_pair_ids", "reason_codes"],
+      "properties": {
+        "obligation_id": {"$ref": "#/$defs/id"},
+        "applicability_status": {"enum": ["ACTIVE", "INACTIVE", "UNKNOWN"]},
+        "mandatory": {"type": ["boolean", "null"]},
+        "status": {"enum": ["COVERED", "NOT_REQUIRED", "NOT_DEMONSTRATED", "UNKNOWN"]},
+        "required_stages": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "covered_stages": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "valid_pair_ids": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+        "reason_codes": {"$ref": "#/$defs/codes"}
+      }
+    }
+  }
+}

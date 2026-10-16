@@ -7,6 +7,54 @@
 
 Python tooling for export, validation, sealing and independent assessment.
 
+## SPEC 03 governed-adaptation implementation
+
+The additive `p_*` modules implement a development pipeline for adapting the
+fitness configuration after architecture evolution. They do not change the
+application architecture or the frozen V1 contracts. The intended entry flow
+is `verify_v3_p_bundle()` followed by `run_adaptation()` in `p_adaptation.py`;
+the first binds allowlisted V3 files and SPEC 01 validation, and the second
+reuses SPEC 02 applicability before composing impact, pair evidence, coverage,
+operations, candidate materialization and governance.
+
+Module responsibilities:
+
+- `p_impact.py` diffs typed fact and policy changes, validates traceability,
+  and reports proven, possible and unresolved impacts conservatively.
+- `p_semantic.py` evaluates exact `(representation, obligation)` pairs and
+  mandatory coverage; compliance observations remain separate from semantic
+  validity.
+- `p_operations.py` selects deterministic retain, replace, add, deactivate and
+  adjust operations. It requires real hash-bound templates and known authorized
+  costs; unresolved prerequisites produce HOLD.
+- `p_candidate.py` materializes a parent-bound candidate, derives its version,
+  and adapts it to the existing V1 candidate schema. A candidate may be
+  materialized before governance; the V1 prediction adapter is only returned
+  after ACCEPT, and neither adapter publishes a configuration.
+- `p_governance.py` applies ACCEPT/REJECT/HOLD precedence, records an
+  append-only event chain, and checks conditional publish and rollback.
+
+Review safeguards recognize only bundle objects returned by the V3 verifier,
+bind their identity to every input digest, and recheck their content before
+adaptation. Candidate materialization verifies that the
+configuration mapping is the projection of the exact parent bytes whose hash
+is recorded. Coverage excludes stale pair revisions and holds on conflicting
+or digest-invalid assessments. Governance decisions expose isolated payload
+copies; conditional publication rechecks the signed decision payload, and
+rollback requires the exact configuration hash that was revalidated.
+
+Method-side sidecars are schema-checked, content-hashed, bound to exact source
+digests and verified through an explicitly configured verifier registry in
+`p_adaptation_evidence.py`. A missing trust anchor leaves evidence unresolved.
+
+The pipeline must preserve `UNKNOWN` as unresolved, never infer `INACTIVE` from
+missing evidence, and never use scorer/oracle output as P input. The JSON
+schemas are additive DEVELOPMENT contracts. Synthetic test builders and
+fixtures live under `tests/unit/test_p_*`, `tests/unit/p_spec03_support.py`,
+`tests/integration/test_p_governed_adaptation_v1.py` and
+`tests/fixtures/p_method/`; requirement-level status and known blockers are
+tracked in `docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`.
+
 ## Local landmarks
 
 - `__init__.py`
@@ -16,6 +64,13 @@ Python tooling for export, validation, sealing and independent assessment.
 - `errors.py`
 - `hashing.py`
 - `inputs.py`
+- `p_adaptation.py`
+- `p_adaptation_evidence.py`
+- `p_impact.py`
+- `p_semantic.py`
+- `p_operations.py`
+- `p_candidate.py`
+- `p_governance.py`
 
 This is a selected list (17 direct tracked files), not a complete source inventory.
 
@@ -25,7 +80,7 @@ Use deterministic source hashes and method-input isolation; keep scorer oracle-s
 
 ## Constraints and known gaps
 
-SPEC03 cannot consult scenario ground truth; P impact/candidate/governance not yet done.
+SPEC03 is a DEVELOPMENT implementation only. It uses SPEC02 applicability, exact-pair evidence, conservative impact, materialized templates, bounded deterministic operations, governance, provenance and conditional rollback. Do not use oracle/scorer inputs or claim G1/G4 readiness; unresolved authority, mandatory classifications, templates, costs, multi-stage contracts and method review produce HOLD or remain blockers.
 
 ## Verification and further reading
 

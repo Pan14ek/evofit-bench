@@ -1,6 +1,6 @@
 # Verification and validation strategy (SPEC 01–03)
 
-**Purpose:** give coding agents an explicit, auditable test plan. The table is a documentation-level **traceability seed**: it is not a claim that every row has a passing test. Tests for future SPEC 03 remain planned until the associated functionality is implemented.
+**Purpose:** give coding agents an explicit, auditable test plan. The SPEC 01/02 table below remains the regression map. The complete SPEC 03 requirement and test status, exact test names, fixture provenance, hashes, commands and blockers are recorded in [`SPEC_03_IMPLEMENTATION_TRACEABILITY.md`](SPEC_03_IMPLEMENTATION_TRACEABILITY.md).
 
 ## Local context integrity
 
@@ -33,15 +33,15 @@ A test described in a specification must have a stable requirement ID, fixture p
 | A05 | V3 source is separately pinned; B1/P common policy and Snapshot are identical | `tests/integration/test_p_applicability_v3.py` | Existing synthetic tests |
 | A06 | Export → SPEC01 verification → proof ledger → SPEC02 assessment runs deterministically | `tests/integration/test_p_applicability_v3.py` | Added in PR #5 follow-up |
 | S01 | Oracle/scorer/source-history/network and other-method output cannot enter method input | `tests/unit/test_da01_inputs_and_isolation.py`, `tests/integration/test_p_applicability_v3.py` | Existing; inspect Docker SKIP separately |
-| P03-01 | Generic architecture diff / impact graph, including negative/unaffected delta | SPEC 03 test matrix and implementation | **Planned** |
-| P03-02 | `retain/add/replace/deactivate/adjust` selection is generic, minimal and correct under evidence | SPEC 03 test matrix and implementation | **Planned** |
-| P03-03 | UNKNOWN, stale, conflicting/invalid evidence leads to documented HOLD/blocked decision | SPEC 03 test matrix and implementation | **Planned** |
-| P03-04 | Candidate materialization and evaluator-to-obligation coverage are independently validated | SPEC 03 integration / contract tests | **Planned** |
-| P03-05 | Determinism under input reorder/replay, version mismatch, tamper and changed policy revision | SPEC 03 metamorphic/adversarial tests | **Planned** |
-| P03-06 | V1/V2/V3 compatibility, B1/P fairness and frozen DA01 invariants | SPEC 03 regression/integration tests | **Planned** |
+| P03-01 | Generic architecture/policy/obligation diff and conservative impact graph | `p_impact.py`, `test_p_impact_v1.py` | See complete status matrix |
+| P03-02 | `retain/add/replace/deactivate/adjust` selection is generic and evidence-gated | `p_operations.py`, `test_p_operations_v1.py` | See complete status matrix |
+| P03-03 | Exact-pair validity, mandatory coverage and ACCEPT/REJECT/HOLD | `p_semantic.py`, `p_governance.py` and their unit tests | See complete status matrix |
+| P03-04 | Candidate materialization, deterministic versioning and V1 adapters | `p_candidate.py`, `test_p_candidate_governance_v1.py` | See complete status matrix |
+| P03-05 | Deterministic replay, version binding, event log and conditional rollback | `p_governance.py`, impact and governance tests | See complete status matrix |
+| P03-06 | SPEC 02 reuse, V3 preflight and end-to-end method isolation | `p_adaptation.py`, `test_p_governed_adaptation_v1.py` | See complete status matrix |
 | E01 | Sealed measured B0/B1/P comparison meets G1/G4 and independent oracle boundary | Later authorized protocol-run record | **Not authorized** |
 
-The exact assertions and PASS/SKIP counts must come from running the suites, never this table. SPEC 03 must **expand** P03-01…P03-06 into a complete finite matrix of positive, negative, boundary, property and end-to-end cases, with file/test names and results.
+The exact assertions and PASS/SKIP counts come from running the suites, never this table. The SPEC 03 report expands its 14 requirements into all 48 required rows and records which rows are blocked by absent approved positive-path inputs.
 
 ## Pre-merge Definition of Done for implementation SPECs
 

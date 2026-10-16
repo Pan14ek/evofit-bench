@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:p-candidate-configuration:v1",
+  "title": "Development-only materialized P candidate v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "method_id", "method_version", "architecture_source_sha", "policy_source_revision", "policy_bundle_sha256", "policy_ruleset_sha256", "input_bundle_sha256", "impact_assessment_sha256", "configuration_version", "parent_configuration", "representations", "soft_parameter_overrides", "changes", "candidate_validation"],
+  "properties": {
+    "schema_version": {"const": 1}, "method_id": {"const": "P"},
+    "method_version": {"type": "string", "minLength": 1},
+    "architecture_source_sha": {"$ref": "#/$defs/sha1"},
+    "policy_source_revision": {"type": "string", "minLength": 1, "maxLength": 128},
+    "policy_bundle_sha256": {"$ref": "#/$defs/sha256"},
+    "policy_ruleset_sha256": {"$ref": "#/$defs/sha256"},
+    "input_bundle_sha256": {"$ref": "#/$defs/sha256"},
+    "impact_assessment_sha256": {"$ref": "#/$defs/sha256"},
+    "configuration_version": {"type": "string", "minLength": 1, "maxLength": 128},
+    "parent_configuration": {"$ref": "#/$defs/parent"},
+    "representations": {"type": "array", "items": {"$ref": "#/$defs/representation"}},
+    "soft_parameter_overrides": {"type": "array", "items": {"$ref": "#/$defs/adjustment"}},
+    "changes": {"type": "array", "items": {"type": "object"}},
+    "candidate_validation": {"type": "object", "additionalProperties": false, "required": ["status", "reason_codes"], "properties": {"status": {"enum": ["not_run", "valid", "invalid", "failed"]}, "reason_codes": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}, "evidence_refs": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}}}
+  },
+  "$defs": {
+    "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "parent": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"$ref": "#/$defs/sha256"}}},
+    "representation": {"type": "object", "additionalProperties": false, "required": ["id", "active", "criterion", "stage", "evaluator", "evaluator_artifact", "covers", "applicability_scope", "evidence_contract"], "properties": {"id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_]*$"}, "active": {"type": "boolean"}, "criterion": {"type": "string", "minLength": 1}, "stage": {"type": "string", "minLength": 1}, "evaluator": {"type": "string", "minLength": 1}, "evaluator_artifact": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/artifact"}]}, "covers": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}, "applicability_scope": {"type": "object"}, "evidence_contract": {"type": "object"}, "soft_parameters": {"type": "object"}}},
+    "artifact": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"$ref": "#/$defs/sha256"}}},
+    "adjustment": {"type": "object", "additionalProperties": false, "required": ["target_id", "parameter", "old_value", "new_value", "rule_id", "rule_sha256", "evidence_refs"], "properties": {"target_id": {"type": "string", "minLength": 1}, "parameter": {"type": "string", "minLength": 1}, "old_value": {}, "new_value": {}, "rule_id": {"type": "string", "minLength": 1}, "rule_sha256": {"$ref": "#/$defs/sha256"}, "evidence_refs": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}}}
+  }
+}

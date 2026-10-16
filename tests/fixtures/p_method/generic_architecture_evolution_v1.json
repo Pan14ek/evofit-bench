@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "provenance": "independently-authored generic synthetic contract fixture; TEST_ONLY",
+  "architecture_before_sha": "1111111111111111111111111111111111111111",
+  "architecture_after_sha": "2222222222222222222222222222222222222222",
+  "snapshot_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+  "policy_source_revision": "SYN_POLICY_REV_1",
+  "policy_bundle_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+  "ruleset_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+  "source_sha256": "6666666666666666666666666666666666666666666666666666666666666666",
+  "fact": {
+    "id": "SYN_FACT_CAPABILITY_BOUNDARY",
+    "entity_kind": "fact",
+    "predicate": "component.capability_module",
+    "subject": "component_synth_alpha",
+    "scope": "service:synth",
+    "before_value": false,
+    "after_value": true
+  },
+  "policy_before": {
+    "id": "SYN_POLICY_REQUIRE_TRACE",
+    "kind": "UNCONDITIONAL_MANDATE",
+    "normative_status": "APPROVED",
+    "source_id": "SYN_SOURCE_POLICY",
+    "obligation_ids": ["SYN_OBL_TRACE"],
+    "proposition": "The declared synthetic component has an auditable trace control.",
+    "scope": "service:synth"
+  },
+  "policy_after": {
+    "id": "SYN_POLICY_REQUIRE_TRACE",
+    "kind": "UNCONDITIONAL_MANDATE",
+    "normative_status": "APPROVED",
+    "source_id": "SYN_SOURCE_POLICY",
+    "obligation_ids": ["SYN_OBL_TRACE"],
+    "proposition": "The declared synthetic component has a versioned auditable trace control.",
+    "scope": "service:synth"
+  },
+  "obligations": [
+    {"id": "SYN_OBL_TRACE", "criterion": "SYN_CRIT_AUDIT", "mandatory": true},
+    {"id": "SYN_OBL_LATENCY", "criterion": "SYN_CRIT_LATENCY", "mandatory": true},
+    {"id": "SYN_OBL_OPTIONAL", "criterion": "SYN_CRIT_OPTIONAL", "mandatory": false}
+  ],
+  "representation": {
+    "id": "REP_SYNTH_TRACE",
+    "active": true,
+    "criterion": "SYN_CRIT_AUDIT",
+    "stage": "ci",
+    "evaluator": "synthetic_checker",
+    "evaluator_artifact": {
+      "path": "evaluators/synthetic_checker.py",
+      "sha256": "7777777777777777777777777777777777777777777777777777777777777777"
+    },
+    "covers": ["SYN_OBL_TRACE"],
+    "applicability_scope": {"service": "synth"},
+    "evidence_contract": {"required_artifacts": ["trace.json"], "nonvacuous": true},
+    "soft_parameters": {"sample_window": 5}
+  },
+  "trace_graph": {
+    "schema_version": 1,
+    "inventory_complete": true,
+    "nodes": [
+      {"id": "SYN_FACT_CAPABILITY_BOUNDARY", "kind": "fact", "scope": "service:synth", "version": "fixture:1", "source_refs": ["SYN_SOURCE_FACT"]},
+      {"id": "SYN_POLICY_REQUIRE_TRACE", "kind": "policy", "scope": "service:synth", "version": "fixture:1", "source_refs": ["SYN_SOURCE_POLICY"]},
+      {"id": "SYN_OBL_TRACE", "kind": "obligation", "scope": "service:synth", "version": "catalog:1", "source_refs": ["SYN_SOURCE_CATALOG"]},
+      {"id": "SYN_CRIT_AUDIT", "kind": "criterion", "scope": "service:synth", "version": "criterion:1", "source_refs": ["SYN_SOURCE_CATALOG"]},
+      {"id": "REP_SYNTH_TRACE", "kind": "representation", "scope": "service:synth", "version": "configuration:1", "source_refs": ["SYN_SOURCE_CONFIG"]},
+      {"id": "SYN_EVALUATOR_TRACE", "kind": "evaluator", "scope": "service:synth", "version": "artifact:1", "source_refs": ["SYN_SOURCE_ARTIFACT"]}
+    ],
+    "edges": [
+      {"source_id": "SYN_FACT_CAPABILITY_BOUNDARY", "target_id": "SYN_OBL_TRACE", "kind": "fact_to_obligation", "source_refs": ["SYN_SOURCE_FACT"]},
+      {"source_id": "SYN_POLICY_REQUIRE_TRACE", "target_id": "SYN_OBL_TRACE", "kind": "policy_to_obligation", "source_refs": ["SYN_SOURCE_POLICY"]},
+      {"source_id": "SYN_OBL_TRACE", "target_id": "SYN_CRIT_AUDIT", "kind": "obligation_to_criterion", "source_refs": ["SYN_SOURCE_CATALOG"]},
+      {"source_id": "SYN_CRIT_AUDIT", "target_id": "REP_SYNTH_TRACE", "kind": "criterion_to_representation", "source_refs": ["SYN_SOURCE_CONFIG"]},
+      {"source_id": "REP_SYNTH_TRACE", "target_id": "SYN_EVALUATOR_TRACE", "kind": "representation_to_evaluator", "source_refs": ["SYN_SOURCE_ARTIFACT"]}
+    ]
+  }
+}

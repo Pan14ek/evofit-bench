@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:p-governance-decision:v1",
+  "title": "Development-only governed adaptation decision v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "method_version", "algorithm_version", "result", "architecture_before_sha", "architecture_after_sha", "policy_source_revision", "policy_ruleset_sha256", "input_bundle_sha256", "parent_configuration_sha256", "candidate_configuration_sha256", "impact_assessment_sha256", "coverage_assessment_sha256", "operations", "blocking_obligations", "blocking_pairs", "invariant_verdicts", "cost_verdict", "evidence_refs", "reason_codes", "decision_sha256"],
+  "properties": {
+    "schema_version": {"const": 1}, "method_version": {"type": "string", "minLength": 1}, "algorithm_version": {"const": "P_GOVERNED_ADAPTATION_V1"},
+    "result": {"enum": ["INPUT_REJECTED", "ACCEPT", "REJECT", "HOLD"]},
+    "architecture_before_sha": {"$ref": "#/$defs/sha1"}, "architecture_after_sha": {"$ref": "#/$defs/sha1"},
+    "policy_source_revision": {"type": "string", "minLength": 1}, "policy_ruleset_sha256": {"$ref": "#/$defs/sha256"}, "input_bundle_sha256": {"$ref": "#/$defs/sha256"},
+    "parent_configuration_sha256": {"$ref": "#/$defs/sha256"}, "candidate_configuration_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+    "impact_assessment_sha256": {"$ref": "#/$defs/sha256"}, "coverage_assessment_sha256": {"$ref": "#/$defs/sha256"},
+    "operations": {"type": "array", "items": {"type": "object"}}, "blocking_obligations": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "blocking_pairs": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["representation_id", "obligation_id"], "properties": {"representation_id": {"$ref": "#/$defs/id"}, "obligation_id": {"$ref": "#/$defs/id"}}}},
+    "invariant_verdicts": {"type": "object", "propertyNames": {"pattern": "^INV-[0-9]{2}$"}, "additionalProperties": {"enum": ["PASS", "FAIL", "UNKNOWN"]}},
+    "cost_verdict": {"enum": ["PASS", "FAIL", "UNKNOWN"]}, "evidence_refs": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+    "reason_codes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,63}$"}}, "decision_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {"id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$"}, "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}
+}
