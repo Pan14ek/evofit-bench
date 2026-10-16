@@ -1,6 +1,6 @@
 # Controlled experiment: questions, controls, provenance and gates
 
-This document summarizes existing protocols; it **does not authorize measured execution**. Scientific source: `../experiments/design/ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md`. DA01 procedure and status: `../experiments/execution/da01/PROTOCOL.md` and `READINESS.md`.
+This document summarizes existing protocols; it **does not authorize measured execution**. For the research rationale and formal adaptation model extracted from the working monograph, see [RESEARCH_CONTEXT.md](RESEARCH_CONTEXT.md). The monograph and executable protocol contain open discrepancies in B1 cadence and RQ labels; those are registered in that document, **not** resolved here. Scientific source: `../experiments/design/ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md`. DA01 procedure and status: `../experiments/execution/da01/PROTOCOL.md` and `READINESS.md`.
 
 ## Experimental subject and research questions
 

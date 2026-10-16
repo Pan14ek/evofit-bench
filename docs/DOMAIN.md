@@ -2,6 +2,8 @@
 
 EvoFitBench is a **controlled research platform** whose task-management application supplies architectural changes, executable representations, metrics and degradations. The application is not the research contribution itself.
 
+For the dissertation's **scientific problem, conceptual fitness-configuration model, method P, hypotheses and methodological limits**, see [RESEARCH_CONTEXT.md](RESEARCH_CONTEXT.md). This document focuses on domain entities and implemented invariants.
+
 ## 1. Benchmark application's domain (implemented)
 
 | Capability package | Main responsibility | Concrete contract |

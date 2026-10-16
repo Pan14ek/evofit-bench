@@ -4,6 +4,7 @@ These are **maintained navigation documents**, not replacements for the versione
 
 | Document | What it answers |
 | --- | --- |
+| [RESEARCH_CONTEXT.md](RESEARCH_CONTEXT.md) | **Why** the dissertation study exists, the core mathematical model, what P should prove, and open methodology decisions. |
 | [DOMAIN.md](DOMAIN.md) | What are the application's business domain and the separate research domain? |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | What architecture is actually implemented, and what is still only planned? |
 | [EXPERIMENT.md](EXPERIMENT.md) | What is being compared, how are observations and oracle isolated, and which approval gates apply? |
@@ -19,6 +20,8 @@ Prepared against `main` after merged PR #5, commit `32172d7acd31a7a0210bdb64f847
 - Implemented research infrastructure: Phase A preparation, SPEC 01 and SPEC 02 development candidates.
 - Not implemented: full P Impact Analysis, governed adaptation and measured B0/B1/P comparisons.
 - Experimental Authority Charter/Registry under `policy-pilot/v1`: design-stage, DRAFT/OPEN; production authority and completeness verification remain missing.
+
+Research rationale comes from the author's working monograph, summarized in [RESEARCH_CONTEXT.md](RESEARCH_CONTEXT.md). It is **proposed science**, not the source of authority for frozen protocol details or verified results.
 
 ## Sources of truth and precedence
 

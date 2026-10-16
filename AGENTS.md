@@ -1,15 +1,16 @@
 # Agent instructions — EvoFitBench
 
-This file governs automated contributors working in this repository. Read it before editing. The repository is a **research instrument**, not a production task-management product. Prefer verifiable, reproducible behavior to feature breadth.
+This file governs automated contributors working in this repository. Read it before editing. The repository is a **research instrument**, not a production task-management product. Read `docs/RESEARCH_CONTEXT.md` to understand the scientific purpose and limits of the proposed method. Prefer verifiable, reproducible behavior to feature breadth.
 
 ## Read-first map
 
-1. [Research and document index](docs/README.md).
-2. [Two domains and terminology](docs/DOMAIN.md).
-3. [Implemented architecture and boundaries](docs/ARCHITECTURE.md).
-4. [Experiment, protocols, freeze and isolation](docs/EXPERIMENT.md).
-5. [Actual technology stack and commands](docs/TECHNOLOGY.md).
-6. [Verification and test traceability](docs/TESTING.md).
+1. [Research rationale, model and scientific purpose](docs/RESEARCH_CONTEXT.md).
+2. [Research and document index](docs/README.md).
+3. [Two domains and terminology](docs/DOMAIN.md).
+4. [Implemented architecture and boundaries](docs/ARCHITECTURE.md).
+5. [Experiment, protocols, freeze and isolation](docs/EXPERIMENT.md).
+6. [Actual technology stack and commands](docs/TECHNOLOGY.md).
+7. [Verification and test traceability](docs/TESTING.md).
 
 For normative experimental details, prefer the **versioned source files** over narrative summaries: `experiments/design/ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md`; `experiments/execution/da01/PROTOCOL.md`, `INPUT_ISOLATION.md`, `READINESS.md`, `SCORE_RULES.md`, `VALIDITY_RULES.md`; `fitness/catalog/architectural-obligations.yaml`; and the corresponding JSON Schemas. If narrative documents disagree, identify the discrepancy in the PR; do not silently reconcile or rewrite scientific rules.
 
