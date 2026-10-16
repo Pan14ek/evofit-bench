@@ -14,8 +14,9 @@ def test_context_files_cover_all_tracked_directories_except_docs() -> None:
     if not git_root.exists():
         pytest.skip("Git metadata unavailable; cannot audit tracked-directory coverage")
 
-    result = subprocess.run(
-        ["git", "-C", str(ROOT), "ls-files", "-z"],
+    # Fixed, argument-vector command; never takes untrusted shell input.
+    result = subprocess.run(  # noqa: S603
+        ["git", "-C", str(ROOT), "ls-files", "-z"],  # noqa: S607
         capture_output=True,
         check=True,
     )
