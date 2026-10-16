@@ -54,7 +54,7 @@ def _assess(snapshot: dict[str, Any], **ledger_options: Any) -> ApplicabilityAss
         _rules(),
         evidence_ledger(snapshot, **ledger_options),
         "after",
-        validation_result(),
+        validation_result(snapshot),
     )
 
 
@@ -225,6 +225,105 @@ def test_known_true_mandate_dominates_unknown_independent_mandates() -> None:
     assert "CONDITION_UNKNOWN" in result.reason_codes
 
 
+def test_known_mandate_remains_active_with_unverified_same_polarity_mandate() -> None:
+    snapshot = snapshot_fixture()
+    _closed(snapshot, "AC_PUBLIC_API")
+    known = add_policy(snapshot, policy_id="POL_KNOWN_REQUIRED", polarity="REQUIRED")
+    add_policy(snapshot, policy_id="POL_UNVERIFIED_REQUIRED", polarity="REQUIRED")
+
+    result = _row(
+        _assess(
+            snapshot,
+            policy_statuses={"POL_UNVERIFIED_REQUIRED": ProofStatus.UNDETERMINED},
+        ),
+        "AC_PUBLIC_API",
+    )
+
+    assert result.status is ApplicabilityStatus.ACTIVE
+    assert result.contributing_policy_ids == (known["id"],)
+    assert "POLICY_APPROVAL_UNVERIFIED" in result.reason_codes
+    assert "POLICY_CONFLICT_UNVERIFIED" not in result.reason_codes
+
+
+def test_unverified_opposite_polarity_mandate_blocks_active_result() -> None:
+    snapshot = snapshot_fixture()
+    _closed(snapshot, "AC_PUBLIC_API")
+    add_policy(snapshot, policy_id="POL_VERIFIED_REQUIRED", polarity="REQUIRED")
+    add_policy(snapshot, policy_id="POL_UNVERIFIED_FORBIDDEN", polarity="FORBIDDEN")
+
+    result = _row(
+        _assess(
+            snapshot,
+            policy_statuses={"POL_UNVERIFIED_FORBIDDEN": ProofStatus.UNDETERMINED},
+        ),
+        "AC_PUBLIC_API",
+    )
+
+    assert result.status is ApplicabilityStatus.UNKNOWN
+    assert "POLICY_APPROVAL_UNVERIFIED" in result.reason_codes
+    assert "POLICY_CONFLICT_UNVERIFIED" in result.reason_codes
+    assert "policy:POL_UNVERIFIED_FORBIDDEN" in result.unresolved_refs
+
+
+def test_unverified_opposite_mandate_for_other_state_does_not_block_active() -> None:
+    snapshot = snapshot_fixture()
+    _closed(snapshot, "AC_PUBLIC_API")
+    known = add_policy(snapshot, policy_id="POL_VERIFIED_REQUIRED", polarity="REQUIRED")
+    add_policy(
+        snapshot,
+        policy_id="POL_BEFORE_ONLY_FORBIDDEN",
+        polarity="FORBIDDEN",
+        applies_to_states=["before"],
+    )
+
+    result = _row(
+        _assess(
+            snapshot,
+            policy_statuses={"POL_BEFORE_ONLY_FORBIDDEN": ProofStatus.UNDETERMINED},
+        ),
+        "AC_PUBLIC_API",
+    )
+
+    assert result.status is ApplicabilityStatus.ACTIVE
+    assert result.contributing_policy_ids == (known["id"],)
+    assert "POLICY_CONFLICT_UNVERIFIED" not in result.reason_codes
+
+
+def test_precedence_proof_can_resolve_an_unverified_opposite_candidate() -> None:
+    snapshot = snapshot_fixture()
+    _closed(snapshot, "AC_PUBLIC_API")
+    known = add_policy(snapshot, policy_id="POL_VERIFIED_REQUIRED", polarity="REQUIRED")
+    candidate = add_policy(
+        snapshot,
+        policy_id="POL_UNVERIFIED_FORBIDDEN",
+        polarity="FORBIDDEN",
+    )
+    subject = {
+        "higher_policy_id": str(known["id"]),
+        "lower_policy_id": str(candidate["id"]),
+    }
+    bindings = _combined_policy_bindings(snapshot, known, candidate)
+    precedence = proof_for(
+        ProofStatus.VALID,
+        subject,
+        snapshot,
+        [source_id for source_id, _digest in bindings],
+    )
+
+    result = _row(
+        _assess(
+            snapshot,
+            policy_statuses={"POL_UNVERIFIED_FORBIDDEN": ProofStatus.UNDETERMINED},
+            precedence_proofs={(str(known["id"]), str(candidate["id"])): precedence},
+        ),
+        "AC_PUBLIC_API",
+    )
+
+    assert result.status is ApplicabilityStatus.ACTIVE
+    assert result.contributing_policy_ids == (known["id"],)
+    assert "POLICY_CONFLICT_UNVERIFIED" not in result.reason_codes
+
+
 def test_unresolved_override_on_one_mandate_does_not_hide_another_true_mandate() -> None:
     snapshot = snapshot_fixture()
     _closed(snapshot, "AC_PUBLIC_API")
@@ -342,7 +441,7 @@ def test_closure_proof_scope_revision_and_authority_are_required() -> None:
 
     no_charter = replace(ledger, charter_proof=None)
     report = evaluate_obligations(
-        authority_missing, _rules(), no_charter, "after", validation_result()
+        authority_missing, _rules(), no_charter, "after", validation_result(authority_missing)
     )
     assert _row(report, "AC_PUBLIC_API").status is ApplicabilityStatus.UNKNOWN
 
@@ -352,7 +451,7 @@ def test_invalid_spec01_semantic_gate_rejects_applicability_evaluation() -> None
 
     snapshot = snapshot_fixture()
     _closed(snapshot, "AC_PUBLIC_API")
-    rejected = replace(validation_result(), authority_status=ValidationStatus.INVALID)
+    rejected = replace(validation_result(snapshot), authority_status=ValidationStatus.INVALID)
 
     with pytest.raises(ContractValidationError, match="semantic gates: authority"):
         evaluate_obligations(
@@ -361,6 +460,23 @@ def test_invalid_spec01_semantic_gate_rejects_applicability_evaluation() -> None
             evidence_ledger(snapshot),
             "after",
             rejected,
+        )
+
+
+def test_successful_validation_cannot_be_reused_for_another_snapshot() -> None:
+    snapshot_a = snapshot_fixture()
+    _closed(snapshot_a, "AC_PUBLIC_API")
+    snapshot_b = dict(snapshot_a)
+    snapshot_b["policy_registry"] = dict(snapshot_a["policy_registry"])
+    snapshot_b["policy_registry"]["registry_version"] = "different-snapshot-v1"
+
+    with pytest.raises(ContractValidationError, match="SNAPSHOT_VALIDATION_MISMATCH"):
+        evaluate_obligations(
+            snapshot_b,
+            _rules(),
+            evidence_ledger(snapshot_a),
+            "after",
+            validation_result(snapshot_a),
         )
 
 

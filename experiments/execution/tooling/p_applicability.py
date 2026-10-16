@@ -17,7 +17,11 @@ from jsonschema import Draft202012Validator  # type: ignore[import-untyped]
 
 from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError
-from experiments.execution.tooling.hashing import canonical_json_bytes, sha256_bytes
+from experiments.execution.tooling.hashing import (
+    canonical_json_bytes,
+    pretty_json_bytes,
+    sha256_bytes,
+)
 from experiments.execution.tooling.p_input_validation import (
     SnapshotValidationResult,
     ValidationStatus,
@@ -852,6 +856,18 @@ def evaluate_obligations(
     never self-asserts verifier status.
     """
     validate_snapshot_schema(snapshot)
+    # SPEC 01 records the digest of the exact, normalized Snapshot bytes. Its
+    # exporters serialize this projection with pretty_json_bytes; the semantic
+    # digest reported below is a separate, order-normalized identity.
+    snapshot_byte_digest = sha256_bytes(pretty_json_bytes(dict(snapshot)))
+    if (
+        input_validation.snapshot_digest is None
+        or _SHA256_PATTERN.fullmatch(input_validation.snapshot_digest) is None
+        or input_validation.snapshot_digest != snapshot_byte_digest
+    ):
+        raise ContractValidationError(
+            "SNAPSHOT_VALIDATION_MISMATCH: SPEC 01 validation is not bound to this Snapshot"
+        )
     if input_validation.schema_status is ValidationStatus.INVALID:
         raise ContractValidationError("INVALID_INPUT: SPEC 01 rejected Snapshot schema")
     if input_validation.integrity_status is ValidationStatus.INVALID:
@@ -1035,6 +1051,7 @@ def _evaluate_one_obligation(
 
     mandates: list[tuple[Mapping[str, Any], TruthValue]] = []
     unresolved_mandate = False
+    unresolved_mandate_candidates: list[Mapping[str, Any]] = []
     for policy_id, policy in sorted(policy_rows.items()):
         if q not in _string_set(policy.get("obligation_ids")):
             continue
@@ -1044,12 +1061,12 @@ def _evaluate_one_obligation(
             continue
         if status == "DRAFT":
             continue
+        if target_state not in _string_set(policy.get("applies_to_states")):
+            continue
         if status not in {"APPROVED", "REVOKED", "SUPERSEDED"}:
             reasons.add("POLICY_APPROVAL_UNVERIFIED")
             unresolved.add(f"policy:{policy_id}")
             unresolved_mandate = True
-            continue
-        if target_state not in _string_set(policy.get("applies_to_states")):
             continue
         proof_status, proof_reasons, proof_refs = _policy_proof_status(
             snapshot, registry, ledger, policy, str(charter_id), str(registry_id)
@@ -1059,6 +1076,12 @@ def _evaluate_one_obligation(
         if proof_status is not ProofStatus.VALID:
             unresolved.add(f"policy:{policy_id}")
             unresolved_mandate = True
+            if (
+                proof_status is ProofStatus.UNDETERMINED
+                and policy.get("scope") == target_scope
+                and _policy_effective_at(policy, evaluation_as_of)
+            ):
+                unresolved_mandate_candidates.append(policy)
             continue
         if status in {"REVOKED", "SUPERSEDED"}:
             continue
@@ -1231,6 +1254,22 @@ def _evaluate_one_obligation(
     )
     if unknown_condition:
         reasons.add("CONDITION_UNKNOWN")
+    unresolved_conflicts = _unresolved_policy_conflicts(
+        unresolved_mandate_candidates, effective, snapshot, ledger, target_scope
+    )
+    if unresolved_conflicts:
+        reasons.add("POLICY_CONFLICT_UNVERIFIED")
+        unresolved.update(f"policy:{policy_id}" for policy_id in unresolved_conflicts)
+        unresolved.update(f"policy:{policy.get('id')}" for policy in effective)
+        return _obligation_result(
+            q,
+            ApplicabilityStatus.UNKNOWN,
+            reasons,
+            policies_used,
+            condition_ids,
+            evidence_refs,
+            unresolved,
+        )
     if effective:
         policies_used.update(str(policy.get("id")) for policy in effective)
         reasons.add("APPLICABILITY_ACTIVE_PROVEN")
@@ -1511,6 +1550,47 @@ def _resolve_policy_conflicts(
         reasons,
         refs,
     )
+
+
+def _unresolved_policy_conflicts(
+    unresolved_candidates: Sequence[Mapping[str, Any]],
+    effective_policies: Sequence[Mapping[str, Any]],
+    snapshot: Mapping[str, Any],
+    ledger: EvidenceLedger,
+    scope: str,
+) -> set[str]:
+    """Find unverified opposite-polarity policies that could change a result.
+
+    Same-polarity mandates are independent support: a known effective mandate
+    still proves ACTIVE when another mandate's approval is undetermined. A
+    valid precedence proof from a known mandate over an unresolved candidate
+    also rules out a result-changing conflict.
+    """
+    conflicting_ids: set[str] = set()
+    for candidate in unresolved_candidates:
+        if candidate.get("scope") != scope:
+            continue
+        candidate_polarity = candidate.get("proposition_polarity", "REQUIRED")
+        candidate_id = str(candidate.get("id"))
+        for effective in effective_policies:
+            if effective.get("scope") != scope:
+                continue
+            if effective.get("proposition_polarity", "REQUIRED") == candidate_polarity:
+                continue
+            effective_over_candidate = _precedence_proof(snapshot, ledger, effective, candidate)
+            candidate_over_effective = _precedence_proof(snapshot, ledger, candidate, effective)
+            if (
+                effective_over_candidate is not None
+                and effective_over_candidate.status is ProofStatus.VALID
+                and not (
+                    candidate_over_effective is not None
+                    and candidate_over_effective.status is ProofStatus.VALID
+                )
+            ):
+                continue
+            conflicting_ids.add(candidate_id)
+            break
+    return conflicting_ids
 
 
 def _precedence_proof(

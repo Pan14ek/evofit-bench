@@ -273,13 +273,13 @@ def test_assessment_digest_ignores_fact_order_and_paths_are_not_emitted() -> Non
     snapshot = snapshot_fixture()
     rules = _compiled()
     report_a = evaluate_obligations(
-        snapshot, rules, evidence_ledger(snapshot), "after", validation_result()
+        snapshot, rules, evidence_ledger(snapshot), "after", validation_result(snapshot)
     )
     reordered = copy.deepcopy(snapshot)
     reordered["facts"].reverse()
     reordered["sources"].reverse()
     report_b = evaluate_obligations(
-        reordered, rules, evidence_ledger(reordered), "after", validation_result()
+        reordered, rules, evidence_ledger(reordered), "after", validation_result(reordered)
     )
     assert report_a.common_input_sha256 == report_b.common_input_sha256
     assert canonical_assessment_bytes(report_a) == canonical_assessment_bytes(report_b)

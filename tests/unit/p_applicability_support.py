@@ -7,7 +7,11 @@ import json
 from pathlib import Path
 from typing import Any
 
-from experiments.execution.tooling.hashing import canonical_json_bytes, sha256_bytes
+from experiments.execution.tooling.hashing import (
+    canonical_json_bytes,
+    pretty_json_bytes,
+    sha256_bytes,
+)
 from experiments.execution.tooling.p_applicability import (
     EvidenceLedger,
     EvidenceProof,
@@ -26,7 +30,7 @@ def snapshot_fixture() -> dict[str, Any]:
     return copy.deepcopy(json.loads(SNAPSHOT_FIXTURE.read_text(encoding="utf-8")))
 
 
-def validation_result() -> SnapshotValidationResult:
+def validation_result(snapshot: dict[str, Any]) -> SnapshotValidationResult:
     """Return a synthetic SPEC 01 summary for isolated engine tests."""
     return SnapshotValidationResult(
         schema_status=ValidationStatus.VALID,
@@ -36,7 +40,7 @@ def validation_result() -> SnapshotValidationResult:
         completeness_status=ValidationStatus.UNDETERMINED,
         reason_codes=("SYNTHETIC_TEST_EVIDENCE",),
         evidence_refs=(),
-        snapshot_digest=None,
+        snapshot_digest=sha256_bytes(pretty_json_bytes(snapshot)),
     )
 
 
