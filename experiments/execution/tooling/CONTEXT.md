@@ -7,6 +7,41 @@
 
 Python tooling for export, validation, sealing and independent assessment.
 
+## SPEC 03 governed-adaptation implementation
+
+The additive `p_*` modules implement a development pipeline for adapting the
+fitness configuration after architecture evolution. They do not change the
+application architecture or the frozen V1 contracts. The intended entry flow
+is `verify_v3_p_bundle()` followed by `run_adaptation()` in `p_adaptation.py`;
+the first binds allowlisted V3 files and SPEC 01 validation, and the second
+reuses SPEC 02 applicability before composing impact, pair evidence, coverage,
+operations, candidate materialization and governance.
+
+Module responsibilities:
+
+- `p_impact.py` diffs typed fact and policy changes, validates traceability,
+  and reports proven, possible and unresolved impacts conservatively.
+- `p_semantic.py` evaluates exact `(representation, obligation)` pairs and
+  mandatory coverage; compliance observations remain separate from semantic
+  validity.
+- `p_operations.py` selects deterministic retain, replace, add, deactivate and
+  adjust operations. It requires real hash-bound templates and known authorized
+  costs; unresolved prerequisites produce HOLD.
+- `p_candidate.py` materializes a parent-bound candidate, derives its version,
+  and adapts it to the existing V1 candidate schema. A candidate may be
+  materialized before governance; the V1 prediction adapter is only returned
+  after ACCEPT, and neither adapter publishes a configuration.
+- `p_governance.py` applies ACCEPT/REJECT/HOLD precedence, records an
+  append-only event chain, and checks conditional publish and rollback.
+
+The pipeline must preserve `UNKNOWN` as unresolved, never infer `INACTIVE` from
+missing evidence, and never use scorer/oracle output as P input. The JSON
+schemas are additive DEVELOPMENT contracts. Synthetic test builders and
+fixtures live under `tests/unit/test_p_*`, `tests/unit/p_spec03_support.py`,
+`tests/integration/test_p_governed_adaptation_v1.py` and
+`tests/fixtures/p_method/`; requirement-level status and known blockers are
+tracked in `docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`.
+
 ## Local landmarks
 
 - `__init__.py`
