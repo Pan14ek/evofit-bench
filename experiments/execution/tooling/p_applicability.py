@@ -1019,7 +1019,7 @@ def _evaluate_one_obligation(
     if not authority_ok:
         unresolved.update({f"registry:{registry_id}", f"charter:{charter_id}"})
 
-    closure_ok, closure_reasons, closure_refs, closure_claim_id = _registry_closed_for(
+    closure_ok, closure_reasons, closure_refs, closure_claim_ids = _registry_closed_for(
         q,
         obligation.criterion,
         obligation_catalog_sha256,
@@ -1033,8 +1033,7 @@ def _evaluate_one_obligation(
     evidence_refs.update(closure_refs)
     if not closure_ok:
         unresolved.add(f"registry:{registry_id}")
-        if closure_claim_id:
-            unresolved.add(f"claim:{closure_claim_id}")
+        unresolved.update(f"claim:{claim_id}" for claim_id in closure_claim_ids)
 
     if q in duplicate_policy_obligations:
         reasons.add("INPUT_CONFLICT")
@@ -1358,30 +1357,56 @@ def _registry_closed_for(
     snapshot: Mapping[str, Any],
     registry: Mapping[str, Any],
     ledger: EvidenceLedger,
-) -> tuple[bool, set[str], set[str], str | None]:
+) -> tuple[bool, set[str], set[str], set[str]]:
     reasons: set[str] = set()
     refs: set[str] = set()
     if registry.get("closure") == "OPEN":
-        return False, {"POLICY_REGISTRY_OPEN"}, refs, None
+        return False, {"POLICY_REGISTRY_OPEN"}, refs, set()
     if registry.get("closure") != "CLAIMED_CLOSED":
-        return False, {"POLICY_CLOSURE_UNVERIFIED"}, refs, None
-    claim_id = registry.get("closure_claim_id")
-    if not isinstance(claim_id, str):
-        return False, {"POLICY_CLOSURE_UNVERIFIED"}, refs, None
+        return False, {"POLICY_CLOSURE_UNVERIFIED"}, refs, set()
+    if snapshot.get("schema_version") == "1.1":
+        claim_id = registry.get("closure_claim_id")
+        claim_ids = [claim_id] if isinstance(claim_id, str) else []
+    elif snapshot.get("schema_version") == "1.2":
+        value = registry.get("closure_claim_ids")
+        claim_ids = (
+            [claim_id for claim_id in value if isinstance(claim_id, str)]
+            if isinstance(value, list)
+            else []
+        )
+        if not isinstance(value, list) or len(claim_ids) != len(value):
+            claim_ids = []
+    else:
+        claim_ids = []
+    if not claim_ids or len(set(claim_ids)) != len(claim_ids):
+        return False, {"POLICY_CLOSURE_UNVERIFIED"}, refs, set(claim_ids)
+    unresolved_claim_ids = set(claim_ids)
     claims = snapshot.get("completeness_claims", [])
     architecture = snapshot.get("architecture", {})
     if not isinstance(claims, list) or not isinstance(architecture, Mapping):
-        return False, {"POLICY_CLOSURE_UNVERIFIED"}, refs, claim_id
+        return False, {"POLICY_CLOSURE_UNVERIFIED"}, refs, unresolved_claim_ids
     expected_revision = architecture.get(
         "before_commit" if target_state == "before" else "after_commit"
     )
     expected_as_of = registry.get("as_of")
-    matching = [
-        claim for claim in claims if isinstance(claim, Mapping) and claim.get("id") == claim_id
-    ]
+    claims_by_id: dict[str, list[Mapping[str, Any]]] = {}
+    for row in claims:
+        if isinstance(row, Mapping) and isinstance(row.get("id"), str):
+            claims_by_id.setdefault(str(row["id"]), []).append(row)
+    referenced_claims: list[Mapping[str, Any]] = []
+    for claim_id in claim_ids:
+        matching_claims = claims_by_id.get(claim_id, [])
+        if (
+            len(matching_claims) != 1
+            or matching_claims[0].get("kind") != "AUTHORITATIVE_POLICY_REGISTRY"
+        ):
+            return False, {"POLICY_CLOSURE_UNVERIFIED"}, refs, unresolved_claim_ids
+        referenced_claims.append(matching_claims[0])
+    matching = [claim for claim in referenced_claims if claim.get("state") == target_state]
     if len(matching) != 1:
-        return False, {"POLICY_CLOSURE_UNVERIFIED"}, refs, claim_id
+        return False, {"POLICY_CLOSURE_UNVERIFIED"}, refs, unresolved_claim_ids
     claim = matching[0]
+    claim_id = str(claim["id"])
     expected_scope = target_scope
     assumptions = claim.get("assumptions", [])
     universal_marker = f"obligation_catalog_sha256:{obligation_catalog_sha256}"
@@ -1404,7 +1429,7 @@ def _registry_closed_for(
         or expected_as_of != snapshot.get("architecture", {}).get("evaluation_as_of")
         or registry.get("scope") != target_scope
     ):
-        return False, {"POLICY_CLOSURE_UNVERIFIED"}, refs, claim_id
+        return False, {"POLICY_CLOSURE_UNVERIFIED"}, refs, unresolved_claim_ids
     proof = ledger.completeness_proofs.get(claim_id)
     expected_sources = _source_bindings(snapshot, claim.get("evidence_source_ids"))
     expected_source_ids = claim.get("evidence_source_ids")
@@ -1415,16 +1440,16 @@ def _registry_closed_for(
         or proof is None
         or not _proof_matches(proof, claim, expected_sources)
     ):
-        return False, {"POLICY_CLOSURE_UNVERIFIED"}, refs, claim_id
+        return False, {"POLICY_CLOSURE_UNVERIFIED"}, refs, unresolved_claim_ids
     if proof.status is not ProofStatus.VALID:
         reasons.add("POLICY_CLOSURE_UNVERIFIED")
         if proof.status is ProofStatus.INVALID:
             reasons.add("INPUT_CONFLICT")
-        return False, reasons, refs, claim_id
+        return False, reasons, refs, unresolved_claim_ids
     refs.update(proof.evidence_refs)
     refs.update(_stable_refs(claim.get("evidence_source_ids", [])))
     refs.add(claim_id)
-    return True, reasons, refs, claim_id
+    return True, reasons, refs, set()
 
 
 def _policy_proof_status(

@@ -7,6 +7,12 @@ still identifies itself as a draft/proposed development specification.
 `248e09621b2c8efd7c1db8f24cb1b79cedced69c` (2026-10-16). **This report does
 not claim measured readiness or scientific validation.**
 
+The implementation and PR #9 review sections below are historical evidence
+from that delivery. The prepared-branch S03R follow-up, based on merged PR #9
+commit `197bcf9b12e4723d47b34be2da4bbc6c6c4805ba`, is recorded in the final
+section of this document; its results supersede historical blocker descriptions
+where stated.
+
 ## Initial implementation plan and module mapping
 
 | SPEC 03 area | Existing contract/module reused | New implementation |
@@ -58,14 +64,15 @@ exercised. `E01` is not authorized by SPEC 03.
 | C01–C03 | PASS | SPEC 01 schema, trust, V2 isolation and legacy adapter tests; see TT-C rows. |
 | A01–A06 | PASS | SPEC 02 DSL, authority, three-state, stale-validation and V3 parity/pipeline tests; see TT-A rows. |
 | S01 | PASS | Synthetic method-input isolation suite, including the digest-pinned Docker negative probe. |
-| P03-01 | BLOCKED | Caller-constructed V3 claims are rejected, verifier-returned object identities bind all bundle content, and TEST_ONLY remains HOLD. The positive production verifier path is still not exercised with approved V3 authority. |
+| P03-01 | PASS | The positive V3 regression exercises strict bundle verification and exact revision/source/policy binding through SPEC 01 using synthetic TEST_ONLY authority. Approved production authority remains unavailable and is not implied. |
 | P03-02–P03-12 | PASS | Typed diffs, graph, exact-pair semantics, coverage, operations, materialization, governance, provenance and rollback tests. |
 | P03-13 | BLOCKED | V1/V2/V3 compatibility and B1/P parity tests pass; no frozen experimental output was re-exported or byte-compared. The branch changes no protected artifact paths. |
-| P03-14 | BLOCKED | Synthetic end-to-end OPEN-authority path correctly returns HOLD. A fully approved positive V3 P run is unavailable and was not fabricated. |
+| P03-14 | PASS | Positive synthetic no-op and descriptor-authorized ADD traverse the verified V3 → SPEC 01 → SPEC 02 → impact → operations → candidate → governance path; the separate OPEN-authority case still HOLDs. Production authority and measured P remain out of scope. |
 | E01 | BLOCKED / NOT AUTHORIZED | No G1/G4 approval, measured B0/B1/P run, human B1 result or independent study evidence. |
 
-The 60 TTM rows resolve to **56 PASS and 4 BLOCKED**. The 25-item requirement
-registry has 21 engineering requirements PASS, P03-01/P03-13/P03-14 BLOCKED,
+The original pre-review-fix baseline was **56 PASS and 4 BLOCKED** across 60
+TTM rows. With the review fix, 59 rows pass and TT-P03-43 remains BLOCKED.
+The 25-item registry now has 23 engineering requirements PASS, P03-13 BLOCKED,
 and E01 BLOCKED/NOT AUTHORIZED.
 
 ## Test Traceability Matrix — SPEC 01/02 regression rows
@@ -89,8 +96,8 @@ and E01 BLOCKED/NOT AUTHORIZED.
 
 | Test ID | Requirement | Test entry point | Outcome |
 | --- | --- | --- | --- |
-| TT-P03-01 | P03-01 | `test_p_governed_adaptation_v1.py::test_synthetic_pipeline_runs_spec02_and_holds_open_authority_unknown` | BLOCKED — direct test bundle, not a fully verified V3 P export |
-| TT-P03-02 | P03-01 | `test_preflight_rejects_snapshot_validation_from_another_exact_revision`, `test_preflight_rejects_policy_and_ruleset_digest_substitution`, `test_caller_cannot_claim_verified_v3_without_verifier_identity`, `test_p_applicability_v3.py::test_v3_verifier_binds_nested_bundle_content_before_adaptation` | PASS — direct claims rejected and nested mutation detected after strict verification; no positive authorized V3 path |
+| TT-P03-01 | P03-01 | `test_v3_synthetic_noop_accepts_with_independent_before_after_closure_claims`, `test_v3_synthetic_add_uses_authorized_descriptor_and_accepts_with_scoped_closure_claims` | PASS — strict V3 verification and exact source/revision binding through SPEC 01; TEST_ONLY only |
+| TT-P03-02 | P03-01 | `test_preflight_rejects_snapshot_validation_from_another_exact_revision`, `test_preflight_rejects_policy_and_ruleset_digest_substitution`, `test_caller_cannot_claim_verified_v3_without_verifier_identity`, `test_p_applicability_v3.py::test_v3_verifier_binds_nested_bundle_content_before_adaptation` | PASS — direct claims rejected and nested mutation detected after strict verification |
 | TT-P03-03 | P03-01,S01 | `test_p_applicability_v3.py::test_policy_source_rejects_answer_markers_and_unallowlisted_files`; V2 path/symlink and method isolation tests | PASS |
 | TT-P03-04 | P03-02 | `test_p_impact_v1.py::test_typed_fact_diff_preserves_values_scope_and_source_versions`, `test_fact_scope_shift_is_not_reported_as_removal_plus_addition` | PASS |
 | TT-P03-05 | P03-02 | `test_policy_only_change_is_detected_with_identical_architecture_revision` | PASS |
@@ -133,10 +140,10 @@ and E01 BLOCKED/NOT AUTHORIZED.
 | TT-P03-42 | P03-12 | `test_irrelevant_isolated_component_does_not_change_existing_impact` | PASS |
 | TT-P03-43 | P03-13 | V1/V2 synthetic adapter tests and `test_b1_and_p_receive_identical_policy_and_common_snapshot` | BLOCKED — no pinned frozen method output re-export or byte comparison |
 | TT-P03-44 | P03-13,S01 | `test_container_negative_probes_cannot_reach_oracle_history_network_or_other_output` | PASS — synthetic repository and local digest-pinned image |
-| TT-P03-45 | P03-14 | `test_synthetic_pipeline_runs_spec02_and_holds_open_authority_unknown` | BLOCKED — positive authorized V3 authority/evaluator/cost path unavailable |
+| TT-P03-45 | P03-14 | `test_v3_synthetic_noop_accepts_with_independent_before_after_closure_claims` | PASS — independently verified before/after closures, all 12 invariants PASS, governance ACCEPT, exact V1 outputs, and deterministic replay under TEST_ONLY trust |
 | TT-P03-46 | P03-14 | `test_synthetic_pipeline_runs_spec02_and_holds_open_authority_unknown`, `test_missing_or_untrusted_template_is_hold_not_a_fictional_add` | PASS — OPEN authority/missing template stays HOLD |
-| TT-P03-47 | P03-14 | `test_high_score_or_covers_declaration_cannot_replace_exact_pair_evidence`, end-to-end OPEN-authority HOLD test | BLOCKED — negative half passes; no-op ACCEPT positive path is unavailable |
-| TT-P03-48 | P03-14 | Link, exact-pair, stage/context, digest, fact-scope and absence-proof mutation tests listed above | PASS |
+| TT-P03-47 | P03-14 | `test_v3_synthetic_noop_holds_when_legacy_registry_has_one_closure_claim_id`, `test_v3_synthetic_add_uses_authorized_descriptor_and_accepts_with_scoped_closure_claims` | PASS — legacy single-claim remains UNKNOWN/HOLD; separate v1.2 evidence authorizes the scoped TEST_ONLY ADD and accepted V1 adapters |
+| TT-P03-48 | P03-14 | Link, exact-pair, stage/context, digest, fact-scope and absence-proof mutation tests; new descriptor-field and sidecar replay tests | PASS — descriptor changes and revision/scope replay are rejected |
 
 ## Initial implementation commands and local results
 
@@ -278,3 +285,211 @@ status --short` and `git diff --name-only origin/main` show this change is
 limited to additive code, schemas, tests and descriptive documentation. No
 ground-truth/scorer/result blob contents or hashes were read to perform that
 check.
+
+## SPEC 03 completion and readiness follow-up
+
+This follow-up implements the DEVELOPMENT scope of
+[`SPEC_03_COMPLETION_AND_READINESS.md`](SPEC_03_COMPLETION_AND_READINESS.md)
+on branch `docs/spec03-completion-readiness`, based on merged PR #9 commit
+`197bcf9b12e4723d47b34be2da4bbc6c6c4805ba`. It preserves the 60 existing
+TT-C/TT-A/TT-S/TT-P03 rows. TT-P03-45 and TT-P03-47 now record the verified
+synthetic no-op and ADD rehearsals and their single-closure-claim blocker;
+TT-P03-48 records semantic-descriptor and signed-sidecar replay regressions.
+TT-P03-43 remains BLOCKED pending separately authorized frozen-output byte
+parity. No protected output or oracle blob was inspected to establish this
+changed-path boundary.
+
+### S03R requirement-to-test matrix
+
+The matrix in this earlier follow-up records the pre-PR-#10-review-fix state;
+the current S03R and TT outcomes are in the final review-fix section below.
+
+The focused command below ran after the follow-up changes. The broader unit and
+architecture command ran with the two protected test modules explicitly
+excluded. `BLOCKED` means the required positive behavior is unavailable under
+the current contract; it does not mean a test failed.
+
+| Requirement | Outcome | Exact regression evidence and limitation |
+| --- | --- | --- |
+| S03R-01 | PASS | `test_template_authorization_binds_each_semantics_bearing_descriptor_field`; `test_same_artifact_bytes_do_not_authorize_a_different_template_descriptor`. The digest covers a versioned canonical projection of the full template. |
+| S03R-02 | PASS | The two descriptor tests above; `test_v3_synthetic_add_uses_authorized_descriptor_but_holds_before_state`; `test_v1_artifact_hash_sidecar_does_not_authorize_template_descriptor`; `test_v2_sidecar_rejects_cross_revision_or_scope_replay`. |
+| S03R-03 | PASS | `test_v2_sidecar_uses_hmac_signature_and_explicit_descriptor_authority`; `test_v2_sidecar_rejects_signature_tampering`; `test_v2_sidecar_rejects_cross_revision_or_scope_replay`; V1 schema and no-authority integration checks. |
+| S03R-04 | BLOCKED | `test_v3_synthetic_noop_holds_when_registry_has_one_closure_claim_id`: all verified inputs and candidate validation pass, but the singular `closure_claim_id` cannot establish applicability at both revisions. Before-state applicability stays `UNKNOWN`; governance returns `HOLD`, with no V1 outputs. |
+| S03R-05 | BLOCKED | `test_v3_synthetic_add_uses_authorized_descriptor_but_holds_before_state`: the real pinned evaluator, authorized descriptor, candidate exact pair, candidate validation, and candidate coverage pass; the same unresolved before-state applicability forces `HOLD`. No V1 outputs are exposed. |
+| S03R-06 | PASS | `test_missing_scoped_adaptation_proof_holds_without_legacy_outputs` (policy inventory, pair semantics, cost model, required stage; four parameter cases); `test_synthetic_pipeline_runs_spec02_and_holds_open_authority_unknown`; V2 signature-tampering regression. |
+| S03R-07 | PASS | `test_zero_exit_without_resolved_inspected_subjects_is_vacuous`; stale/conflicting exact-pair tests in `test_p_semantic_pairs_v1.py`; `test_unknown_mandatory_applicability_never_authorizes_deactivation`; full-denominator TEST_ONLY coverage in the synthetic no-op/ADD rehearsals. |
+| S03R-08 | PASS | `test_policy_revision_changes_without_changing_pinned_architecture`; policy-only and incomplete-graph regressions in `test_p_impact_v1.py`; shared-representation and multi-obligation operation tests in `test_p_operations_v1.py`. |
+| S03R-09 | PASS | `test_publish_rejects_mutated_or_unsealed_governance_decisions`; `test_publication_stays_disabled_without_an_atomic_compare_and_swap_writer`; `test_rollback_requires_positive_fresh_current_context_validation`; candidate adapter HOLD tests. |
+| S03R-10 | PASS | V1/V2/V3 input and adapter compatibility regressions; `test_container_negative_probes_cannot_reach_oracle_history_network_or_other_output` passed with local image ID `sha256:5a2dc0c42e8ef06560a3d61c077b66c8ee66f0f3fba7252fec1a5af34e234f27`. No skip was reported. TT-P03-43 remains BLOCKED for independent frozen-output byte parity. |
+| S03R-11 | PASS | `test_input_permutations_preserve_graph_and_impact_digests`; `test_bounded_set_cover_prefers_fewer_operations_then_cost_then_ids`; deterministic event-chain replay test. |
+| S03R-12 | PASS | `test_g1_register_lists_every_open_decision_and_discrepancy`; `test_g1_register_preserves_pending_status_and_gate_boundaries`; context-document validation in the unit suite. |
+
+### Synthetic fixture provenance and hashes
+
+`SYN-NOOP-01` and `SYN-ADD-01` use inline, independently authored generic
+fixtures from `tests/integration/test_p_applicability_v3.py`. Synthetic Git
+commits use fixed author/committer timestamps. The HMAC verifier is registered
+only on a `TEST_ONLY` trust context; its test key is not in production
+authority. The sidecar signature covers the canonical sidecar digest, which
+binds the method bundle, before/after revisions, policy revision/digest,
+scope, source bindings, and payload. The ADD descriptor is also bound to the
+pinned `P_CAPABILITIES` source. TEST_ONLY values establish code behavior only.
+
+| Fixture | Before / after architecture commit SHA | Method bundle SHA-256 | Policy bundle SHA-256 | Evaluator artifact SHA-256 | Template descriptor SHA-256 | Evaluator stdout SHA-256 | Signed sidecar SHA-256 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| SYN-NOOP-01 | `a230d9ed2ad8aa7de713f489a5777376a88ade7c` / `de15f83d896713c6f7affb3bee9b5d8a1db7e9b5` | `fbe964534859795ec2fe2fcf83b9cc879ef882e46fe96b22cdfbe1e016ca0eb7` | `714855a5b27a069ff927a5bb605dc98a4298f8466df51252218d693e9c5ec688` | `da3136d259ddca02c173c5c428bea6edc9f19bd7c02ac4664c28afa9ea2cc290` | None (no ADD/REPLACE template) | `503421b8322b7a7ee21a223c46ec783a9e1918f3feb1e5d8efb146728dc61c43` | `4aaeea7be4c4d3fe73caf6073c5c9ee79ccaecb1ed5523d0a4d6b9684863522f` |
+| SYN-ADD-01 | `a230d9ed2ad8aa7de713f489a5777376a88ade7c` / `f7e537184dd2a9a4df48c4a079ef12497f0bd037` | `b84cf5fc30e22b4169d9aafbc6244049836b7e514d3a76b69fb16d1c753ac96b` | `04d3bd22007b9319f7359bd9067eb71f5d413f3e4eeaf0a139d0a4badb73a9ef` | `da3136d259ddca02c173c5c428bea6edc9f19bd7c02ac4664c28afa9ea2cc290` | `f215334a21cce81afab38926e21d68d1fdb207e8069208fb7d0fd5b8a34281ec` | `503421b8322b7a7ee21a223c46ec783a9e1918f3feb1e5d8efb146728dc61c43` | `fb1d3487d1f060cd672e5f4eb43c4da653ad5c37d4e5ac271739d9a90d83f694` |
+
+The source file itself is the fixture-builder provenance record; its SHA-256
+is `e1cc22b901105fdbf682db7073557643b530473487d72a458006c5b23a27002f`.
+The regression-source SHA-256 values are:
+
+| Source | SHA-256 |
+| --- | --- |
+| `tests/integration/test_p_applicability_v3.py` (fixture builder and V3 E2E assertions) | `e1cc22b901105fdbf682db7073557643b530473487d72a458006c5b23a27002f` |
+| `tests/unit/test_p_operations_v1.py` (descriptor identity and authorization) | `ae51f5671b91f8584e837522e95feb41fbd955ca30a7df99b44cfa866cfc4d08` |
+| `tests/unit/test_p_adaptation_evidence_v1.py` (V1/V2 signature and replay) | `08dda8fbc6928dce948fbd580d8b12088af54adb30a00ae488f3a95662f76483` |
+| `tests/unit/test_g1_method_decision_register.py` (register and gate checks) | `4d60ec75fa81e085ffef7d2639e62edf530b62adb3ad95c5fb022b6dd5f1e1c2` |
+| `docs/G1_METHOD_DECISION_REGISTER.md` (unapproved decision register) | `78873a99ae42ec5aca4670c91939d76e1906b7ee01d0493fcaf837ba0fa96cf2` |
+
+No accepted V1 output identity exists: both full V3 rehearsals return `HOLD`, so
+`candidate_v1` and `prediction_v1` are `None`. A unit-level governance ACCEPT
+test does not satisfy this V3 positive-path requirement.
+
+### Validation run and unresolved boundaries
+
+Focused SPEC 03 command:
+
+```bash
+PYTHONPATH='.venv/lib/python3.12/site-packages' /Users/oleksii_makieiev/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_p_operations_v1.py tests/unit/test_p_adaptation_evidence_v1.py tests/unit/test_g1_method_decision_register.py tests/integration/test_p_applicability_v3.py tests/integration/test_p_governed_adaptation_v1.py
+```
+
+Broader safe unit/architecture command:
+
+```bash
+PYTHONPATH='.venv/lib/python3.12/site-packages' /Users/oleksii_makieiev/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m pytest -q --no-cov -p no:cacheprovider --ignore=tests/unit/test_da01_execution.py --ignore=tests/unit/test_research_schema_foundation.py tests/unit tests/architecture
+```
+
+The two protected modules were not opened or run locally. They remain
+explicitly BLOCKED by the user's boundary. The full local `make quality` target
+was not run because it invokes those modules. Migration validation used a
+disposable PostgreSQL 16 database named `evofit_spec03_test`; the temporary
+container was stopped after validation. Push and pull-request Actions runs
+38914050510 and 38914100028 were cancelled after their `make quality` steps
+started; that workflow invokes the protected modules. Their logs were not
+inspected, so whether protected tests began is unknown and no hosted pass is
+claimed.
+Both run URLs and the base/head commits are in the [draft PR description](https://github.com/Pan14ek/evofit-bench/pull/10).
+No measured B0/B1/P run occurred; G1 is **INCOMPLETE**, G4 is **NOT
+AUTHORIZED**, and `p_interface.py` remains `NOT_READY`.
+
+| Check | Current branch result |
+| --- | --- |
+| Focused SPEC 03 regressions | PASS — 42 passed, 1 existing Starlette/httpx warning, 0 skipped |
+| Safe unit + architecture suites | PASS — 213 passed, 1 existing Locust monkey-patch warning, 0 skipped |
+| Ruff check / format | PASS — all checks passed; 220 files already formatted |
+| Mypy | PASS — 96 source files, no issues |
+| Bandit | PASS — existing comment-parser and `nosec` warnings only |
+| Digest-pinned Docker isolation probe | PASS — local image ID above, no skip |
+| Disposable PostgreSQL migration validation | PASS — PostgreSQL 16, `0001_a0_schema` |
+| Full local `make quality` | BLOCKED / intentionally not run — invokes two protected test modules |
+| Frozen output byte parity (TT-P03-43) | BLOCKED — changed-path audit only; independent byte-parity verification not authorized/performed |
+| Hosted CI | CANCELLED / unverified — [push run 38914050510](https://github.com/Pan14ek/evofit-bench/actions/runs/38914050510), [PR run 38914100028](https://github.com/Pan14ek/evofit-bench/actions/runs/38914100028). Both cancelled due to the protected-module boundary; logs were not inspected. |
+
+## PR #10 review-fix outcome — 2026-10-16
+
+This section supersedes the pre-fix S03R-04/S03R-05 outcomes, fixture hashes,
+and cancelled Actions statuses above. Those entries preserve the earlier
+review baseline and are not the current result.
+
+### Findings and corrections
+
+| Finding | Root cause | Fix and evidence |
+| --- | --- | --- |
+| P1 — verified synthetic no-op and ADD returned HOLD | Snapshot v1.1 has one `closure_claim_id`, so one claim cannot bind both architecture revisions. The signed sidecar also lacked source-bound absence proofs for the provably empty module-delta facts in the no-op case. | Added the additive, unfrozen V3 DEVELOPMENT Snapshot v1.2 contract with `closure_claim_ids`. SPEC 01 verifies each claim's provenance and exact scope/version/time; SPEC 02 chooses exactly one verified claim for the requested state and revision. The no-op sidecar signs exact-enumeration absence proofs derived from identical synthetic trees. The v1.1 and mismatched/incomplete cases remain UNKNOWN/HOLD or reject. |
+| P1 — no completed safe CI on the current PR head | The workflow ran `make quality`, whose general test target includes two protected DA01 modules. | The push/PR workflow now runs `make development-quality`: explicit SPEC 01/02/03 regressions, only the synthetic Docker isolation test from the DA01 input-isolation module, static/security/architecture checks, and disposable-PostgreSQL migrations. The two protected modules are excluded from pytest, Ruff, formatting, and Mypy discovery. |
+| P2 — S03R-04 had two meanings | A compatibility constraint and the positive synthetic no-op were both numbered S03R-04. | Compatibility behavior is now an unnumbered constraint; S03R-04 identifies only the positive no-op E2E requirement. |
+
+### Current S03R and TTM outcomes
+
+| Requirement | Outcome | Regression evidence |
+| --- | --- | --- |
+| S03R-01 | PASS | Full canonical template descriptor authorization tests. |
+| S03R-02 | PASS | Same artifact bytes with unauthorized descriptor do not authorize ADD/REPLACE. |
+| S03R-03 | PASS | Signature tampering, cross-context replay, and V1 backward-compatibility checks. |
+| S03R-04 | PASS | `test_v3_synthetic_noop_accepts_with_independent_before_after_closure_claims`. |
+| S03R-05 | PASS | `test_v3_synthetic_add_uses_authorized_descriptor_and_accepts_with_scoped_closure_claims`. |
+| S03R-06 | PASS | Missing normative, semantic, cost, or stage proof and invalid proof regressions remain HOLD/reject. |
+| S03R-07 | PASS | Nonvacuity, stale exact-pair, UNKNOWN, and mandatory denominator regressions. |
+| S03R-08 | PASS | Partial graph, policy-only revision, shared obligations, and no-unjustified-deactivate regressions. |
+| S03R-09 | PASS | Mutated governance, rollback binding, and disabled-publication regressions. |
+| S03R-10 | PASS | V1/V2/V3 compatibility and digest-pinned synthetic Docker isolation probe. |
+| S03R-11 | PASS | Deterministic operation plan, canonical hashes, and replay assertions. |
+| S03R-12 | PASS | G1 decision-register content and pending-gate checks. |
+
+TT-P03-01, TT-P03-45, and TT-P03-47 now PASS for the verified synthetic
+DEVELOPMENT chain. The 60 existing TT rows resolve to **59 PASS and 1
+BLOCKED**. TT-P03-43 remains **BLOCKED / not independently verified** because
+frozen-output byte parity was not authorized or performed. The changed-path
+review does not establish byte parity.
+
+Required negative evidence also passed in the safe regression target:
+
+- Wrong before/after revision, wrong scope, and stale Registry version:
+  `test_v3_export_rejects_mismatched_state_scoped_closure_bindings`.
+- Stale policy/ruleset identity and completeness revision/version:
+  `test_preflight_rejects_policy_and_ruleset_digest_substitution` and
+  `test_completeness_claim_revision_or_registry_version_mismatch_is_invalid`.
+- Incomplete v1.1 closure and OPEN authority: `test_v3_synthetic_noop_holds_when_legacy_registry_has_one_closure_claim_id` and `test_synthetic_pipeline_runs_spec02_and_holds_open_authority_unknown`.
+- Signature tampering and cross-revision/scope replay:
+  `test_v2_sidecar_rejects_signature_tampering` and
+  `test_v2_sidecar_rejects_cross_revision_or_scope_replay`.
+- Same evaluator bytes with an unauthorized descriptor:
+  `test_same_artifact_bytes_do_not_authorize_a_different_template_descriptor`.
+- Missing mandatory pair evidence: `test_missing_evidence_or_artifact_bytes_is_unknown_not_covered`.
+- Invalid candidate/input status cannot authorize ACCEPT or V1 output:
+  `test_input_rejection_has_precedence_over_candidate_fitness_decisions` and
+  `test_v1_candidate_adapter_rejects_a_candidate_without_governed_acceptance`.
+- Candidate/governance mutation and deterministic replay:
+  `test_candidate_rejects_duplicate_operation_targets_and_tampered_plan_digest`,
+  `test_publish_rejects_mutated_or_unsealed_governance_decisions`,
+  `test_input_permutations_preserve_graph_and_impact_digests`, and the no-op
+  E2E replay assertions.
+
+### Local verification
+
+The exact local safe-target result was **201 passed, 1 existing
+Starlette/httpx deprecation warning, 0 skipped**. Ruff check passed; Ruff
+format checked 219 files; Mypy passed on 94 source files; Bandit passed with
+existing comment-parser and `nosec` warnings; 5 architecture import contracts
+were kept with 0 broken; 6 architecture tests passed; and migration validation
+passed at `0001_a0_schema` on a temporary PostgreSQL 16 database. The selected
+synthetic Docker isolation probe passed. `git diff --check` passed. No protected
+test module was opened, run, modified, linted, formatted, or type-checked.
+
+The host did not have `uv`; a temporary wrapper delegated the target's `uv
+run` commands to the repository's Python 3.12 environment. The CI job uses
+normal `uv` and the same Make target.
+
+### Synthetic fixture hashes
+
+These values were regenerated from the independently authored temporary Git
+fixtures and TEST_ONLY sidecar builder in
+`tests/integration/test_p_applicability_v3.py`:
+
+| Fixture | Before / after architecture commit SHA | Method bundle SHA-256 | Policy bundle SHA-256 | Evaluator artifact SHA-256 | Descriptor SHA-256 | Evaluator stdout SHA-256 | Signed sidecar SHA-256 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| SYN-NOOP-01 | `de15f83d896713c6f7affb3bee9b5d8a1db7e9b5` / `c1d591f5f4a30eb970d67531e91e16a37d18c0a2` | `fcfae74c6d1495d20399e92893eaf29b0e981f2cac0a1cf196cb3f449c550e70` | `2aa7c5125b62479de83b8db8984e19f9f12aae14c002eef6d47522f6d75dd376` | `da3136d259ddca02c173c5c428bea6edc9f19bd7c02ac4664c28afa9ea2cc290` | None | `503421b8322b7a7ee21a223c46ec783a9e1918f3feb1e5d8efb146728dc61c43` | `2b26404b9aeca805676af92b002d8bd384a8d59db67790e78a2c8d990d93d0e2` |
+| SYN-ADD-01 | `a230d9ed2ad8aa7de713f489a5777376a88ade7c` / `f7e537184dd2a9a4df48c4a079ef12497f0bd037` | `d99ad8fedced8501ea12e239738af897963a0f499cd6777ff34c800706b8493f` | `8b5bfcef790a03f508c605e0d6e564deeeee1b76860e5fae9c58f1fbd13a2ff6` | `da3136d259ddca02c173c5c428bea6edc9f19bd7c02ac4664c28afa9ea2cc290` | `f215334a21cce81afab38926e21d68d1fdb207e8069208fb7d0fd5b8a34281ec` | `503421b8322b7a7ee21a223c46ec783a9e1918f3feb1e5d8efb146728dc61c43` | `4ea5d323ecb0112a0b151a7eb54138d95df9e353b5c1ac51e13eff8839dfd6d5` |
+
+The regression source SHA-256 is
+`f1e92f9d7788fc20f30a26e4cab04cfc8296cbbfdde638a8c3d5c557fae6d59b`.
+
+### Readiness and hosted CI boundary
+
+The exact current-head push and pull-request Actions run URLs and conclusions
+are recorded in the [PR #10 description](https://github.com/Pan14ek/evofit-bench/pull/10)
+after both workflows complete. The cancelled runs above are historical and
+are not a pass. G1 remains **INCOMPLETE**, G4 remains **NOT AUTHORIZED**,
+`p_interface.py` remains **NOT_READY**, and no measured DA01 experiment or tag
+is authorized by these synthetic engineering results.

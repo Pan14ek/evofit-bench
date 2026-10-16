@@ -18,17 +18,25 @@ supporting modules are `p_impact.py`, `p_semantic.py`, `p_operations.py`,
 
 Synthetic tests use independent generic identifiers and explicit `TEST_ONLY`
 provenance. They are code-verification evidence, not authority, measured
-outcomes, a B1 result, or evidence of scientific advantage. `p_interface.py`
-continues to report `NOT_READY`; the measured-method gate has not been opened.
+outcomes, a B1 result, or evidence of scientific advantage. Adaptation sidecar
+V2 binds ADD/REPLACE authority to a canonical full-template descriptor and its
+pinned capability source; V1 artifact digests do not grant that authority.
+TEST_ONLY V3 no-op and full-descriptor ADD regressions now reach governance
+`ACCEPT` and the V1 adapters through the additive Snapshot v1.2 DEVELOPMENT
+contract, which binds separate exact-revision closure claims. The legacy v1.1
+single-claim and mismatched/incomplete evidence cases remain UNKNOWN/HOLD or
+reject. This synthetic acceptance proves software behavior only; it is not
+production authority or a measured result. `p_interface.py` continues to
+report `NOT_READY`; the measured-method gate has not been opened.
 
 ## Current operational limits
 
-The current V3 input/catalog path has no approved mandatory classifications,
-generic evaluator templates, or authorized cost model. Missing or unresolved
-proof remains `UNKNOWN` and produces `HOLD`; the pipeline must not infer
-`INACTIVE`. The code does not create or execute evaluator programs. The
-candidate path can only bind actual pinned artifact bytes and caller-supplied
-method-side evidence.
+The current V3 input/catalog path has no production-approved mandatory
+classifications, generic evaluator templates, or authorized cost model. Missing
+or unresolved proof remains `UNKNOWN` and produces `HOLD`; the pipeline must not
+infer `INACTIVE`. Runtime code does not create evaluator programs. Integration
+tests execute an independently authored TEST_ONLY evaluator and bind its bytes
+to a full descriptor; this verifies code paths only.
 
 The following independent questions in SPEC 03 remain open: B1 timing and RQ
 crosswalk (OPEN-01/02), multi-stage controls (OPEN-03), real policy authority
@@ -38,7 +46,10 @@ versus monitor-validity reporting (OPEN-07), multi-obligation V1 ADD encoding
 threshold research (OPEN-10). The DEVELOPMENT implementation does not resolve
 them.
 
-G1 and G4 remain separate approval requirements. No measured DA01 run was
-conducted, and no human B1 result or oracle-derived expectation was created.
+G1 and G4 remain separate approval requirements. TEST_ONLY positive V3
+rehearsals now pass with separate before/after closure evidence; production
+authority and the measured-method gates remain unavailable. No measured DA01
+run was conducted, and no human B1 result or oracle-derived expectation was
+created.
 See [`docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`](../../../docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md)
 for requirement-level coverage, blocked rows and actual verification results.

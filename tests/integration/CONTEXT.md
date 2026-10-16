@@ -20,7 +20,15 @@ Use disposable DB and genuine interfaces instead of only mocked modules.
 
 ## Constraints and known gaps
 
-Do not report integration success as G1/G4 or sample-level significance. The SPEC03 orchestration fixture is TEST_ONLY and intentionally HOLDs under OPEN authority.
+Do not report integration success as G1/G4 or sample-level significance. The
+SPEC03 orchestration fixtures use TEST_ONLY keys and do not grant production
+trust. V3 no-op and ADD regressions verify a real synthetic evaluator, typed
+impact, exact-pair evidence, candidate materialization, and (for ADD)
+full-descriptor authorization. Snapshot v1.2 binds the before and after
+registry closure claims independently; those two synthetic cases return
+ACCEPT with V1 adapters only under TEST_ONLY trust. The separate v1.1
+single-claim, incomplete-closure, and mismatched-binding cases remain
+UNKNOWN/HOLD or reject before adaptation.
 The integration tests also reject caller-claimed VERIFIED_V3 provenance and
 detect nested input mutation after the strict V3 verifier returns a bundle;
 these checks do not replace a positive approved V3 production-input path.
@@ -30,4 +38,4 @@ unchanged decision digest and rollback to the exact revalidated configuration.
 
 ## Verification and further reading
 
-Consult the original source files and nearest relevant tests, then `docs/README.md` for repository-wide architecture, experiment, stack and verification references. Implementation work uses `make quality` with a **disposable** PostgreSQL database. When a context summary conflicts with source code, a reviewed manifest or a frozen scientific protocol, **report the conflict**; do not silently reinterpret research rules.
+Consult the original source files and nearest relevant tests, then `docs/README.md` for repository-wide architecture, experiment, stack and verification references. DEVELOPMENT validation uses `make development-quality` with a **disposable** PostgreSQL database; it excludes the two protected DA01 test modules. When a context summary conflicts with source code, a reviewed manifest or a frozen scientific protocol, **report the conflict**; do not silently reinterpret research rules.

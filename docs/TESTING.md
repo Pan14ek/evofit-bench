@@ -67,3 +67,91 @@ The exact assertions and PASS/SKIP counts come from running the suites, never th
 
 See `../experiments/execution/da01/PROTOCOL.md`, `SCORE_RULES.md`, `VALIDITY_RULES.md`, `READINESS.md` for the measured-run rules. Do not run the private scorer inside method test suites.
 
+## SPEC 03 completion/readiness follow-up
+
+The current S03R-01…12 test mapping, exact synthetic fixture hashes, per-row
+PASS/BLOCKED outcomes, Docker image ID, and the explanation for the unchanged
+G1/G4 gates are recorded in
+[`SPEC_03_IMPLEMENTATION_TRACEABILITY.md`](SPEC_03_IMPLEMENTATION_TRACEABILITY.md).
+The exact descriptor-authority, sidecar-replay, four missing-proof HOLD,
+synthetic V3 no-op/ADD, and G1-register test cases are in that matrix.
+
+Use these safe local commands for the DEVELOPMENT regressions. The interpreter
+and `PYTHONPATH` below are specific to the managed macOS workspace; adapt them
+to the installed project environment when reproducing elsewhere.
+
+```bash
+PYTHONPATH='.venv/lib/python3.12/site-packages' /Users/oleksii_makieiev/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_p_operations_v1.py tests/unit/test_p_adaptation_evidence_v1.py tests/unit/test_g1_method_decision_register.py tests/integration/test_p_applicability_v3.py tests/integration/test_p_governed_adaptation_v1.py
+PYTHONPATH='.venv/lib/python3.12/site-packages' /Users/oleksii_makieiev/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m pytest -q --no-cov -p no:cacheprovider --ignore=tests/unit/test_da01_execution.py --ignore=tests/unit/test_research_schema_foundation.py tests/unit tests/architecture
+.venv/bin/ruff check .
+.venv/bin/ruff format --check .
+PYTHONPATH='.venv/lib/python3.12/site-packages' MYPY_CACHE_DIR=/private/tmp/evofit-spec03-mypy-cache /Users/oleksii_makieiev/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m mypy app scripts tests
+PYTHONPATH='.venv/lib/python3.12/site-packages' /Users/oleksii_makieiev/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m bandit -q -r app scripts experiments/execution/tooling
+# Set TEST_DATABASE_URL to a disposable PostgreSQL database whose name contains "evofit".
+PYTHONPATH='.venv/lib/python3.12/site-packages' /Users/oleksii_makieiev/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m scripts.validate_migrations
+git diff --check
+```
+
+The following earlier results describe the pre-review-fix PR #10 implementation.
+The current review-fix outcome is recorded below. Earlier outcomes remain in
+place as historical evidence.
+
+Pre-review-fix local results: focused SPEC 03 regressions **42
+passed** (one existing Starlette/httpx deprecation warning); unit and
+architecture suites **213 passed** (one existing Locust monkey-patch warning,
+zero skips); Ruff check and format **PASS** (220 files formatted); Mypy **PASS**
+(96 files); Bandit **PASS** (existing comment-parser and `nosec` warnings); and
+`git diff --check` **PASS**. The Docker probe ran against local image ID
+`sha256:5a2dc0c42e8ef06560a3d61c077b66c8ee66f0f3fba7252fec1a5af34e234f27` and
+passed without a skip. Migration validation passed on a temporary PostgreSQL
+16 database named `evofit_spec03_test`; the container was stopped and removed
+afterward.
+
+For SPEC 03 DEVELOPMENT changes, use `make development-quality` with a
+**disposable** PostgreSQL database. The target runs explicit SPEC 01/02/03 and
+S03R regressions, the synthetic Docker isolation probe, static/security/
+architecture checks, and migrations. It excludes
+`tests/unit/test_da01_execution.py` and
+`tests/unit/test_research_schema_foundation.py` from Ruff check/format, Mypy,
+and pytest discovery. The default `make quality` still includes the broader
+test suite and must not be used for this protected work. These engineering
+checks do not change G1/G4 readiness, and no measured DA01 run is part of this
+DEVELOPMENT scope.
+
+The reproducible safe command is:
+
+```bash
+TEST_DATABASE_URL=postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test make development-quality
+```
+
+The database must be disposable and its database name must contain `evofit`.
+GitHub Actions supplies a temporary PostgreSQL 16 service and runs this same
+Make target on push and pull request events.
+
+### PR #10 review-fix verification
+
+On 2026-10-16, the full safe target passed locally with a temporary PostgreSQL
+16 container and the synthetic Docker isolation probe enabled. The host had no
+`uv` executable, so a temporary wrapper delegated the Make target's `uv run`
+commands to the project's installed Python 3.12 tool environment. The wrapper
+and database container were removed/stopped after the run.
+
+| Check | Result |
+| --- | --- |
+| Ruff check | PASS — all checks passed; protected test modules excluded |
+| Ruff format | PASS — 219 Python files checked; protected modules excluded |
+| Mypy | PASS — 94 source files; protected modules excluded |
+| Bandit | PASS — existing comment-parser and `nosec` warnings only |
+| Architecture import rules | PASS — 5 contracts kept, 0 broken |
+| Architecture tests | PASS — 6 passed |
+| Disposable PostgreSQL migration validation | PASS — PostgreSQL 16, `0001_a0_schema` |
+| Safe SPEC 01/02/03 and S03R regressions, including Docker isolation probe | PASS — 201 passed, one existing Starlette/httpx deprecation warning, 0 skipped |
+| `git diff --check` | PASS |
+
+The target explicitly excludes `tests/unit/test_da01_execution.py` and
+`tests/unit/test_research_schema_foundation.py` from test, lint, formatting,
+and type-check discovery. Neither protected module was opened, executed,
+modified, linted, formatted, or type-checked in this run.
+The exact current-head GitHub Actions URLs and conclusions are recorded in the
+existing [PR #10 description](https://github.com/Pan14ek/evofit-bench/pull/10).
+

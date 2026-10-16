@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from typing import Any
 
 from experiments.execution.tooling.hashing import canonical_json_bytes, sha256_bytes
@@ -11,6 +12,7 @@ from experiments.execution.tooling.p_operations import (
     OperationKind,
     OperationPlan,
     choose_candidate_plan,
+    template_descriptor_sha256,
     validate_materializable_template,
 )
 from experiments.execution.tooling.p_operations import (
@@ -160,6 +162,7 @@ def test_invalid_representation_replacement_covers_all_its_live_mandatory_links(
     invalid = pair_with_status(pair, PairStatus.INVALID)
     successor = template("REP_SYNTH_TRACE_V2", [obligation["id"]])
     digest = successor["representation"]["evaluator_artifact"]["sha256"]
+    descriptor_digest = template_descriptor_sha256(successor)
     plan = build_operation_plan(
         representations=[rep],
         obligations=[obligation],
@@ -168,7 +171,7 @@ def test_invalid_representation_replacement_covers_all_its_live_mandatory_links(
         coverage=make_coverage([obligation], pairs=[invalid]),
         templates=[successor],
         artifact_bytes={**artifacts, "evaluators/REP_SYNTH_TRACE_V2.py": SYN_ARTIFACT},
-        authorized_artifact_digests=frozenset({digest}),
+        authorized_template_descriptor_digests=frozenset({descriptor_digest}),
         cost_model=cost_model(digest),
         cost_model_authorized=True,
     )
@@ -184,6 +187,7 @@ def test_active_uncovered_obligation_adds_only_a_real_hash_bound_test_template()
     addition = template("REP_SYNTH_ADDED", [obligation["id"]])
     artifact_path = addition["representation"]["evaluator_artifact"]["path"]
     digest = addition["representation"]["evaluator_artifact"]["sha256"]
+    descriptor_digest = template_descriptor_sha256(addition)
     plan = build_operation_plan(
         representations=[],
         obligations=[obligation],
@@ -192,7 +196,7 @@ def test_active_uncovered_obligation_adds_only_a_real_hash_bound_test_template()
         coverage=make_coverage([obligation]),
         templates=[addition],
         artifact_bytes={artifact_path: SYN_ARTIFACT},
-        authorized_artifact_digests=frozenset({digest}),
+        authorized_template_descriptor_digests=frozenset({descriptor_digest}),
         cost_model=cost_model(digest),
         cost_model_authorized=True,
     )
@@ -201,6 +205,83 @@ def test_active_uncovered_obligation_adds_only_a_real_hash_bound_test_template()
     assert plan.operations[0].target_id == obligation["id"]
     assert plan.operations[0].operation is OperationKind.ADD
     assert plan.operations[0].artifact_sha256 == digest
+
+
+def test_same_artifact_bytes_do_not_authorize_a_different_template_descriptor() -> None:
+    q1 = make_obligation(id="SYN_OBL_AUTHORIZED", criterion="SYN_CRIT_TRACE")
+    q2 = make_obligation(id="SYN_OBL_UNAUTHORIZED", criterion="SYN_CRIT_TRACE", mandatory=False)
+    authorized = template("REP_SYN_AUTHORIZED", [q1["id"]])
+    changed = template("REP_SYN_CHANGED", [q2["id"]])
+    authorized["representation"]["criterion"] = q1["criterion"]
+    changed["representation"]["criterion"] = q2["criterion"]
+    assert (
+        authorized["representation"]["evaluator_artifact"]["sha256"]
+        == changed["representation"]["evaluator_artifact"]["sha256"]
+    )
+    approved_descriptor = template_descriptor_sha256(authorized)
+    assert approved_descriptor != template_descriptor_sha256(changed)
+    assert (
+        validate_materializable_template(
+            changed,
+            artifact_bytes={"evaluators/REP_SYN_CHANGED.py": SYN_ARTIFACT},
+            authorized_template_descriptor_digests=frozenset({approved_descriptor}),
+        )[2]
+        == "TEMPLATE_AUTHORITY_UNVERIFIED"
+    )
+    plan = build_operation_plan(
+        representations=[],
+        obligations=[q1, q2],
+        applicability={q1["id"]: "ACTIVE", q2["id"]: "ACTIVE"},
+        pair_assessments=[],
+        coverage=make_coverage([q1, q2]),
+        templates=[authorized, changed],
+        artifact_bytes={
+            "evaluators/REP_SYN_AUTHORIZED.py": SYN_ARTIFACT,
+            "evaluators/REP_SYN_CHANGED.py": SYN_ARTIFACT,
+        },
+        authorized_template_descriptor_digests=frozenset({approved_descriptor}),
+        cost_model=cost_model(sha256_bytes(SYN_ARTIFACT)),
+        cost_model_authorized=True,
+    )
+    assert [(operation.operation, operation.target_id) for operation in plan.operations] == [
+        (OperationKind.ADD, q1["id"])
+    ]
+
+
+def test_template_authorization_binds_each_semantics_bearing_descriptor_field() -> None:
+    obligation = make_obligation(id="SYN_OBL_DESCRIPTOR", criterion="SYN_CRIT_DESCRIPTOR")
+    approved = template("REP_SYN_DESCRIPTOR", [obligation["id"]])
+    approved["representation"]["criterion"] = obligation["criterion"]
+    artifact_path = approved["representation"]["evaluator_artifact"]["path"]
+    artifact_digest = approved["representation"]["evaluator_artifact"]["sha256"]
+    approved_digest = template_descriptor_sha256(approved)
+    mutations = (
+        ("id", "REP_SYN_DIFFERENT"),
+        ("criterion", "SYN_CRIT_DIFFERENT"),
+        ("covers", ["SYN_OBL_DIFFERENT"]),
+        ("stage", "test"),
+        ("evaluator", "synthetic_other_evaluator"),
+        ("applicability_scope", {"scope": "service:other"}),
+        ("evidence_contract", {"contract_id": "SYN_OTHER_CONTRACT"}),
+        (
+            "evaluator_artifact",
+            {"path": "evaluators/REP_SYN_OTHER.py", "sha256": artifact_digest},
+        ),
+    )
+
+    for field, value in mutations:
+        changed = copy.deepcopy(approved)
+        changed["representation"][field] = value
+        assert template_descriptor_sha256(changed) != approved_digest
+        artifact_bytes = {artifact_path: SYN_ARTIFACT, "evaluators/REP_SYN_OTHER.py": SYN_ARTIFACT}
+        normalized, digest, issue = validate_materializable_template(
+            changed,
+            artifact_bytes=artifact_bytes,
+            authorized_template_descriptor_digests=frozenset({approved_digest}),
+        )
+        assert normalized is None
+        assert digest is None
+        assert issue == "TEMPLATE_AUTHORITY_UNVERIFIED"
 
 
 def test_missing_or_untrusted_template_is_hold_not_a_fictional_add() -> None:
@@ -240,7 +321,7 @@ def test_template_wrong_digest_or_path_traversal_is_never_materialized() -> None
         validate_materializable_template(
             wrong,
             artifact_bytes={"evaluators/bad.py": SYN_ARTIFACT},
-            authorized_artifact_digests=frozenset({"0" * 64}),
+            authorized_template_descriptor_digests=frozenset({template_descriptor_sha256(wrong)}),
         )[2]
         == "TEMPLATE_ARTIFACT_DIGEST_MISMATCH"
     )
@@ -248,7 +329,7 @@ def test_template_wrong_digest_or_path_traversal_is_never_materialized() -> None
         validate_materializable_template(
             escaped,
             artifact_bytes={"../secret.py": SYN_ARTIFACT},
-            authorized_artifact_digests=frozenset({sha256_bytes(SYN_ARTIFACT)}),
+            authorized_template_descriptor_digests=frozenset({template_descriptor_sha256(escaped)}),
         )[2]
         == "TEMPLATE_ARTIFACT_PATH_INVALID"
     )
@@ -381,7 +462,9 @@ def test_bounded_set_cover_prefers_fewer_operations_then_cost_then_ids() -> None
             f"evaluators/{name}.py": SYN_ARTIFACT
             for name in ("REP_SYNTH_BOTH", "REP_SYNTH_ONE", "REP_SYNTH_TWO")
         },
-        authorized_artifact_digests=frozenset({sha256_bytes(SYN_ARTIFACT)}),
+        authorized_template_descriptor_digests=frozenset(
+            {template_descriptor_sha256(item) for item in (both, template_one, template_two)}
+        ),
         cost_model=model,
         cost_model_authorized=True,
     )
@@ -409,7 +492,9 @@ def test_search_budget_exhaustion_and_missing_cost_return_hold() -> None:
         coverage=make_coverage([q1, q2]),
         templates=[first, second],
         artifact_bytes=artifacts,
-        authorized_artifact_digests=frozenset({digest}),
+        authorized_template_descriptor_digests=frozenset(
+            {template_descriptor_sha256(first), template_descriptor_sha256(second)}
+        ),
         cost_model=cost_model(digest, search_nodes=1),
         cost_model_authorized=True,
     )
@@ -421,7 +506,7 @@ def test_search_budget_exhaustion_and_missing_cost_return_hold() -> None:
         coverage=make_coverage([q1]),
         templates=[first],
         artifact_bytes=artifacts,
-        authorized_artifact_digests=frozenset({digest}),
+        authorized_template_descriptor_digests=frozenset({template_descriptor_sha256(first)}),
         cost_model=cost_model(),
         cost_model_authorized=True,
     )

@@ -17,8 +17,15 @@ Keep actions aligned with Makefile and pyproject.toml.
 
 ## Constraints and known gaps
 
-Do not skip tests to get a green run; skipped Docker isolation probes remain unresolved.
+The default push and pull-request workflow runs `make development-quality`.
+That target runs the explicit SPEC 01/02/03 regression set, one synthetic
+Docker isolation probe, static/security/architecture checks, and migration
+validation against the disposable PostgreSQL service. It excludes
+`tests/unit/test_da01_execution.py` and
+`tests/unit/test_research_schema_foundation.py` from lint, formatting, type
+checking, and pytest discovery. Do not skip other tests to get a green run;
+unavailable Docker isolation probes remain unresolved.
 
 ## Verification and further reading
 
-Consult the original source files and nearest relevant tests, then `docs/README.md` for repository-wide architecture, experiment, stack and verification references. Implementation work uses `make quality` with a **disposable** PostgreSQL database. When a context summary conflicts with source code, a reviewed manifest or a frozen scientific protocol, **report the conflict**; do not silently reinterpret research rules.
+Consult the original source files and nearest relevant tests, then `docs/README.md` for repository-wide architecture, experiment, stack and verification references. Reproduce the safe CI job with `make development-quality` and a **disposable** PostgreSQL database. When a context summary conflicts with source code, a reviewed manifest or a frozen scientific protocol, **report the conflict**; do not silently reinterpret research rules.

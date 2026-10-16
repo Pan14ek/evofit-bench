@@ -1,0 +1,650 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:versioned-architecture-policy-snapshot:v1.2",
+  "title": "Versioned Architecture & Policy Snapshot — development extension v1.2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_id",
+    "architecture",
+    "sources",
+    "facts",
+    "policies",
+    "policy_registry",
+    "completeness_claims",
+    "fact_vocabulary_version"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.2"
+    },
+    "contract_id": {
+      "const": "VERSIONED_ARCH_POLICY_SNAPSHOT_V1_2"
+    },
+    "architecture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "before_commit",
+        "after_commit",
+        "before_tree",
+        "after_tree",
+        "evaluation_as_of"
+      ],
+      "properties": {
+        "before_commit": {
+          "$ref": "#/$defs/sha1"
+        },
+        "after_commit": {
+          "$ref": "#/$defs/sha1"
+        },
+        "before_tree": {
+          "$ref": "#/$defs/sha1"
+        },
+        "after_tree": {
+          "$ref": "#/$defs/sha1"
+        },
+        "evaluation_as_of": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/fact"
+      }
+    },
+    "policies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/policy"
+      }
+    },
+    "policy_registry": {
+      "$ref": "#/$defs/policyRegistry"
+    },
+    "completeness_claims": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/completenessClaim"
+      }
+    },
+    "fact_vocabulary_version": {
+      "const": "FV_CORE_V1"
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$"
+    },
+    "sha1": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "sourceIds": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/id"
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "path",
+        "sha256",
+        "kind",
+        "producer"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_./-]+$"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "kind": {
+          "enum": [
+            "ARCHITECTURE_SOURCE",
+            "STRUCTURAL_OBSERVATION",
+            "POLICY_CHARTER",
+            "POLICY_REGISTRY",
+            "EVIDENCE",
+            "APPROVAL"
+          ]
+        },
+        "producer": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "fact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "state",
+        "predicate",
+        "subject",
+        "scope",
+        "value",
+        "epistemic_kind",
+        "source_ids"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "state": {
+          "enum": [
+            "before",
+            "after"
+          ]
+        },
+        "predicate": {
+          "enum": [
+            "component.python_module_identity",
+            "component.module_added",
+            "component.module_removed",
+            "component.capability_module",
+            "component.declared_cross_module_dependency",
+            "component.shared_infrastructure",
+            "deployment.unit_count_declared",
+            "deployment.process_count_declared",
+            "deployment.database_instance_count_declared",
+            "deployment.database_product_declared",
+            "communication.internal_mode_declared",
+            "communication.broker_declared"
+          ]
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "value": {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "array",
+            "object",
+            "null"
+          ]
+        },
+        "epistemic_kind": {
+          "enum": [
+            "DECLARED",
+            "EXTRACTED",
+            "OBSERVED",
+            "UNKNOWN"
+          ]
+        },
+        "source_ids": {
+          "$ref": "#/$defs/sourceIds"
+        },
+        "method_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observation_window": {
+          "$ref": "#/$defs/interval"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "epistemic_kind": {
+                "const": "UNKNOWN"
+              }
+            },
+            "required": [
+              "epistemic_kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {
+                "not": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "epistemic_kind": {
+                "const": "EXTRACTED"
+              }
+            },
+            "required": [
+              "epistemic_kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "method_id"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "epistemic_kind": {
+                "const": "OBSERVED"
+              }
+            },
+            "required": [
+              "epistemic_kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "observation_window"
+            ]
+          }
+        }
+      ]
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "normative_status",
+        "obligation_ids",
+        "proposition",
+        "scope",
+        "issuer_role",
+        "approval_source_id",
+        "source_id",
+        "effective_from",
+        "effective_until",
+        "applies_to_states",
+        "target_policy_ids"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "kind": {
+          "enum": [
+            "UNCONDITIONAL_MANDATE",
+            "CONDITIONAL_MANDATE",
+            "EXCEPTION",
+            "RETIREMENT"
+          ]
+        },
+        "normative_status": {
+          "enum": [
+            "DRAFT",
+            "APPROVED",
+            "REVOKED",
+            "SUPERSEDED"
+          ]
+        },
+        "obligation_ids": {
+          "$ref": "#/$defs/sourceIds"
+        },
+        "proposition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "issuer_role": {
+          "type": "string",
+          "minLength": 1
+        },
+        "approval_source_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_id": {
+          "$ref": "#/$defs/id"
+        },
+        "effective_from": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "effective_until": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "applies_to_states": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "before",
+              "after"
+            ]
+          }
+        },
+        "target_policy_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "condition_ref": {
+          "$ref": "#/$defs/id"
+        },
+        "proposition_polarity": {
+          "enum": [
+            "REQUIRED",
+            "FORBIDDEN"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "normative_status": {
+                "const": "DRAFT"
+              }
+            },
+            "required": [
+              "normative_status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "approval_source_id": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "approval_source_id": {
+                "$ref": "#/$defs/id"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "CONDITIONAL_MANDATE"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "condition_ref"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "EXCEPTION",
+                  "RETIREMENT"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "target_policy_ids": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "policyRegistry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "source_id",
+        "closure",
+        "closure_claim_ids",
+        "authority_charter_source_id",
+        "registry_version",
+        "as_of"
+      ],
+      "properties": {
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "source_id": {
+          "$ref": "#/$defs/id"
+        },
+        "closure": {
+          "enum": [
+            "OPEN",
+            "CLAIMED_CLOSED"
+          ]
+        },
+        "closure_claim_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "authority_charter_source_id": {
+          "$ref": "#/$defs/id"
+        },
+        "registry_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "as_of": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "closure": {
+                "const": "OPEN"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "closure_claim_ids": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "closure": {
+                "const": "CLAIMED_CLOSED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "closure_claim_ids": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "completenessClaim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "state",
+        "fact_type",
+        "scope",
+        "architecture_revision",
+        "method_id",
+        "evidence_source_ids",
+        "assumptions",
+        "procedure_ref"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "kind": {
+          "enum": [
+            "EXACT_ENUMERATION",
+            "SOUND_OVERAPPROXIMATION",
+            "AUTHORITATIVE_POLICY_REGISTRY"
+          ]
+        },
+        "state": {
+          "enum": [
+            "before",
+            "after"
+          ]
+        },
+        "fact_type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "architecture_revision": {
+          "$ref": "#/$defs/sha1"
+        },
+        "method_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_source_ids": {
+          "$ref": "#/$defs/sourceIds"
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "procedure_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "policy_registry_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "as_of": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "AUTHORITATIVE_POLICY_REGISTRY"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "required": [
+              "policy_registry_version",
+              "as_of"
+            ]
+          }
+        }
+      ]
+    },
+    "interval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "until"
+      ],
+      "properties": {
+        "from": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "until": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}
