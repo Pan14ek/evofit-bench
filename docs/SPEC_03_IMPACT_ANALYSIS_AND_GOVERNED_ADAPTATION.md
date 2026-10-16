@@ -194,3 +194,112 @@ This is proposed research pseudocode, not an assertion that the remaining tie/co
 Recommended single-purpose modules under experiments/execution/tooling/: p_impact.py (typed diff/graph), p_semantic.py (method-side exact-pair assessment), p_operations.py (finite operation choice), p_candidate.py (actual candidate/version/compatibility), p_governance.py (invariants/decisions/rollback), p_adaptation.py (orchestration). Integrate p_interface.py only once the DEVELOPMENT method passes documented tests; a readiness flag must **not** suggest G1/G4 cleared.
 
 New output schemas should be additive, strict, and covered by semantic validators (not just JSON Schema). Preserve original V1/V2/V3 input allowlists, scorer, prediction/candidate schemas, archived A0 evaluator, and B1/P common fact/policy bytes. Do not add files to the restricted pilot-policy source path. Keep relevant CONTEXT.md and docs accurate.
+
+## 4. Verification & Validation Test Plan — SPEC 01–03
+
+### 4.1 Three distinct types of evidence
+
+**Code verification** demonstrates implementation correctness against contracts and invariants: unit, schema/contract, negative, boundary, integration, adversarial, property-based/metamorphic, isolation and regression tests.
+
+**Development method validation** uses independently designed synthetic/falsification scenarios to test whether the general P algorithm can detect unsafe false deactivation, stale or vacuous control, unsupported evaluator and incomplete traceability. Synthetic signed/approved test fixtures are explicitly **not** real normative authority.
+
+**Scientific experimental validation** requires a pre-frozen generic algorithm/protocol, independent withheld oracle, authentic human B1, approved trust/evidence, verified isolation and a measured DA01 authorization (G1/G4). DA01 addresses executable RQ1/RQ2 *only* and is **one architecture transition**, not a population. Synthetic PASS must never be called a measured advantage.
+
+### 4.2 Every test must declare
+
+- Stable test ID, requirement ID(s), test category and implementation location.
+- Fixture provenance (synthetically authored independently of oracle), source digests, assumed trust status, architecture/config/ruleset revisions.
+- Setup, allowed input, mutation/fault stimulus, expected result and stable reason codes; positive, negative, boundary and integration paths.
+- Independent test derivation; no copying scenario ground truth or private scorer outputs.
+- Actual PASS / FAIL / SKIP / BLOCKED, exact command/CI URL, and whether the check can run without Docker, DB or external policy authority.
+- Mapping from test to requirement and to invariants; report **requirement coverage** separately from Python statement/branch coverage and scientific power.
+
+Never mark a skipped Docker negative probe as PASS. The current application-line coverage gate in make quality is **not** a P method coverage measure.
+
+### 4.3 Requirement registry and proof obligations
+
+| ID | Component | Required behavior |
+| --- | --- | --- |
+| C01 | SPEC 01 | Strict architecture-policy Snapshot/FV/source/hash/schema/version contract; fail closed on tamper. |
+| C02 | SPEC 01 | External APA authority/approval and scoped completeness evidence; missing or forged proof remains undetermined. |
+| C03 | SPEC 01 | V1 compatibility, strict V2 source projection and method bundle isolation. |
+| A01 | SPEC 02 | Closed typed AR-DSL, Strong Kleene truth tables, evidence trace and deterministic evaluation. |
+| A02 | SPEC 02 | Exact 18-obligation coverage in results, including UNKNOWN rather than absent row. |
+| A03 | SPEC 02 | Mandates, conflict, exception/retirement and registry closure with proof and time/scope. |
+| A04 | SPEC 02 | Prevent stale SnapshotValidationResult and evidence-ledger replay/rebinding. |
+| A05 | SPEC 02 | Independently pinned V3 policy bundle; identical B1/P normative facts/policies; P-only trace allowed. |
+| A06 | SPEC 02 | Synthetic export → SPEC 01 verify → ledger → SPEC 02 end-to-end determinism. |
+| S01 | Cross-cutting | Deny oracle, scorer, Git history, forbidden methods' outputs and network access. |
+| P03-01 | SPEC 03 | Verified, exact revision/provenance-bound P preflight. |
+| P03-02 | SPEC 03 | Typed architecture, policy and obligation state differences. |
+| P03-03 | SPEC 03 | Typed criterion-centric trace graph; detect missing, dangling and unproven links. |
+| P03-04 | SPEC 03 | Conservative but discriminating impact detection and negative controls. |
+| P03-05 | SPEC 03 | Exact-pair stage/context/semantic/nonvacuity and evidence assessment, separate compliance. |
+| P03-06 | SPEC 03 | Full mandatory control coverage and UNKNOWN handling without scalar compensation. |
+| P03-07 | SPEC 03 | General and deterministic retain/replace/add/deactivate/adjust, including shared representation constraints. |
+| P03-08 | SPEC 03 | Materialized, real hashed evaluator artifact or explicit blocked status. |
+| P03-09 | SPEC 03 | Parent/hash/ID-bound candidate, v1 prediction/candidate adapters and schema validation. |
+| P03-10 | SPEC 03 | Input error vs ACCEPT/REJECT/HOLD precedence and no unsafe publish. |
+| P03-11 | SPEC 03 | Immutable provenance, conditional rollback and stale-context concurrency safety. |
+| P03-12 | SPEC 03 | Deterministic canonical semantics, bounded search and known cost rules. |
+| P03-13 | SPEC 03 | Regression of V1/V2/V3, B1/P parity and exact frozen artifact bytes. |
+| P03-14 | SPEC 03 | Full synthetic P path without oracle leakage. |
+| E01 | Measured study | Separate G1/G4 approval, actual B0/B1/P evidence, independent scoring and research statistics — NOT part of SPEC 03 engineering PR. |
+
+### 4.4 Test Traceability Matrix — SPEC 01 and SPEC 02 regression
+
+These rows map **required observations** to current test entry points, but they are not claims that every row has already passed. The agent must inspect/update coverage and report exact local results.
+
+| Test ID | Req | Types | Input / expected behavior | Existing test entry point |
+| --- | --- | --- | --- | --- |
+| TT-C01-01 | C01 | positive, negative, boundary | Correct v1.1 Snapshot passes; malformed version, predicate, fact type/state/scope or required field rejected. | tests/unit/test_p_input_contract_v11.py |
+| TT-C01-02 | C01,C03 | negative, boundary | Source/manifest hash or size mismatch, symlink, forbidden file, extra role rejected; legacy export unchanged. | tests/unit/test_p_input_v2_isolation.py |
+| TT-C02-01 | C02 | positive, negative | Approved policy verified only via admissible independent trust; unsigned, DRAFT, revoked or forged approval never accepted. | tests/unit/test_p_input_authority_validation.py |
+| TT-C02-02 | C02 | boundary, negative | Exact scoped completeness with matching source can support absence; wrong predicate/scope/revision/time, verifier errors stay undetermined. | tests/unit/test_p_input_authority_validation.py |
+| TT-A01-01 | A01 | property, table | Strong Kleene NOT/AND/OR across T/F/U, consistent evaluation reasons for reordered independent children. | tests/unit/test_p_applicability_ruleset_v1.py |
+| TT-A01-02 | A01 | negative, boundary | Disallowed expression/selector, type confusion, bool-as-int, oversize AST/depth/conditions, duplicate unsorted IDs rejected. | tests/unit/test_p_applicability_ruleset_v1.py |
+| TT-A02-01 | A02 | positive, property | Every catalog q has exactly one ACTIVE/INACTIVE/UNKNOWN result, stable order and evidence reasons, no dropped UNKNOWN. | tests/unit/test_p_applicability_policies_v1.py |
+| TT-A03-01 | A03 | negative, boundary | OPEN Registry, conflicting mandates/overrides, wrong precedence evidence, expiry half-open boundary cannot infer unsupported ACTIVE/INACTIVE. | tests/unit/test_p_applicability_policies_v1.py |
+| TT-A04-01 | A04 | negative, replay | Correct-looking SnapshotValidationResult from another hash/revision/policy is rejected, not rebound. | tests/unit/test_p_applicability_policies_v1.py; tests/integration/test_p_applicability_v3.py |
+| TT-A05-01 | A05,C03 | integration, metamorphic | Policy-only V3 revision changes policy digest but not pinned architecture; B1/P common policy bytes equal. | tests/integration/test_p_applicability_v3.py |
+| TT-A06-01 | A06 | integration, negative | Export→validate→external test ledger→three-state assessment deterministically, tampered intermediate refuses proof. | tests/integration/test_p_applicability_v3.py |
+| TT-S01-01 | S01 | adversarial, integration | Method input cannot access oracle/scorer/.git/network/other output; forbidden fields/paths denied. Docker probe unavailable = SKIP/BLOCKED, not PASS. | tests/unit/test_da01_inputs_and_isolation.py; existing isolation probes |
+
+### 4.5 Test Traceability Matrix — SPEC 03 (new required cases)
+
+**Fixture independence:** use fresh generic predicate/criterion/obligation and representation IDs, synthetic source revisions and synthetic test-only verifiers. Do not derive a test answer from DA01 ground truth or target-specific expected operations.
+
+| Test ID | Req | Category | Test stimulus | Required observable outcome |
+| --- | --- | --- | --- | --- |
+| TT-P03-01 | P03-01 | positive/integration | Fully well-formed, consistent, synthetic verified Snapshot + applicability and correct hashes. | P preflight records bound source/policy/ruleset/context identity. |
+| TT-P03-02 | P03-01 | negative | Swap policy SHA, as-of, architecture SHA or applicability source after verification. | Fail closed (INPUT_REJECTED) or HOLD for genuine undecidable proof; no ACCEPT. |
+| TT-P03-03 | P03-01,S01 | adversarial | Extra input role, path traversal, symlink or oracle marker in bundle. | Reject before P method logic; no leaked read. |
+| TT-P03-04 | P03-02 | positive | Typed added/removed/changed fact with matched before/after complete sources. | Exact change kind, scope and provenance. |
+| TT-P03-05 | P03-02 | boundary | Same architecture SHA, valid change to separate policy authority/condition. | Policy-only difference and relevant obligation reassessment. |
+| TT-P03-06 | P03-02 | negative | Missing before-state evidence or contradictory fact identities. | INDETERMINATE; no invented REMOVED/UNCHANGED. |
+| TT-P03-07 | P03-02,P03-12 | metamorphic | Permute facts and independently labeled input record order. | Same canonical diff/decision/digest. |
+| TT-P03-08 | P03-03 | positive | Typed graph has two paths and one independent unrelated criterion. | Valid typed reach with source paths and excluded unrelated path. |
+| TT-P03-09 | P03-03 | negative | Dangling/duplicate/obsolete edge and incomplete link inventory. | Unresolved link diagnostic; never silently NOT_AFFECTED_WITH_PROOF. |
+| TT-P03-10 | P03-04 | positive | One changed fact affects one control, another control independent. | Affected only where justified; unrelated check not auto-replaced. |
+| TT-P03-11 | P03-04 | boundary | New ACTIVE q absent from original trace graph. | Mandatory missing-coverage discovery despite missing edge. |
+| TT-P03-12 | P03-04 | metamorphic | Add unrelated graph nodes and reorder edges. | Pre-existing independent impact classifications unchanged. |
+| TT-P03-13 | P03-05 | positive | Exact pair with right scope/stage, actual test-only executable, resolved nonvacuous inspected subjects and proof. | P-side VALID with exact pair refs; synthetic status explicit. |
+| TT-P03-14 | P03-05 | negative | Evaluator exit zero but no resolved target or no inspected subjects. | VACUOUS / not valid coverage. |
+| TT-P03-15 | P03-05 | negative | Same metric, wrong stage/subject/scope/context or swapped obligation ID. | Pair invalid/unknown as proven; no cross-pair reuse. |
+| TT-P03-16 | P03-05 | boundary | Cleanly executed evaluator detects actual architectural violation vs evaluator infrastructure crash. | Separate compliance violation from evaluator monitoring adequacy / crash; no false PASS. |
+| TT-P03-17 | P03-05 | metamorphic | Same raw bytes cited for q1 and q2 with different semantics. | Pair judgments independent even with shared source evidence. |
+| TT-P03-18 | P03-06 | positive | Two valid pair-backed representations cover same mandatory q. | q counted **once**, not twice. |
+| TT-P03-19 | P03-06 | negative | High aggregate score plus covers declaration but mandatory exact-pair evidence absent. | Not demonstrated covered; no ACCEPT. |
+| TT-P03-20 | P03-06 | boundary | ACTIVE/INACTIVE/UNKNOWN mix and an unapproved multistage requirement. | UNKNOWN intact; no fabricated stage or altered frozen denominator. |
+| TT-P03-21 | P03-07 | positive | An unchanged valid representation survives unrelated change. | RETAIN only; no false non-retain target. |
+| TT-P03-22 | P03-07,P03-08 | positive | Proven-invalid old r and a valid, hash-pinned, real replacement for all still-active q. | REPLACE materialized, no lost mandatory links. |
+| TT-P03-23 | P03-07,P03-08 | positive | New ACTIVE uncovered q, valid generic template/capability. | ADD on obligation target; real new r in candidate with exact proof. |
+| TT-P03-24 | P03-07 | negative | One r serves two q; q1 becomes INACTIVE, q2 remains ACTIVE. | Cannot deactivate whole r. |
+| TT-P03-25 | P03-07 | negative | UNKNOWN mandatory q or missing absence/completeness claim. | No deactivate, HOLD/unresolved. |
+| TT-P03-26 | P03-07,P03-09 | boundary | Duplicate/contradictory operations on same typed target. | Reject candidate/prediction with stable validation reason. |
+| TT-P03-27 | P03-07 | negative | Unauthorized adjustment of weight, soft threshold or hard requirement. | No accepted adjustment; proven hard relaxation REJECT. |
+| TT-P03-28 | P03-08 | negative | Only evaluator name, empty generic_candidate_templates, no artifact bytes. | HOLD/NEEDS_IMPLEMENTATION; no fictional ADD. |
+| TT-P03-29 | P03-08 | adversarial | Wrong template hash, nonallowlisted checker path, mutable external reference. | Materialization forbidden; fail closed. |
+| TT-P03-30 | P03-09 | positive | Unique IDs, complete candidate, parent digest, actual artifact and exact revision. | Pass candidate v1 and extra semantic checks. |
+| TT-P03-31 | P03-09 | negative | New representation ID collision, orphaned q, stale parent hash or missing evaluator. | Candidate validation failure with audit. |
+| TT-P03-32 | P03-09,P03-13 | regression | Output adapter projects non-retain and proposed operations to old v1 prediction schema. | validate_prediction passes without changing frozen schema. |
