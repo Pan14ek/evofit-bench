@@ -30,7 +30,9 @@ def test_context_files_cover_all_tracked_directories_except_docs() -> None:
                 continue
             if directory == "docs" or directory.startswith("docs/"):
                 continue
-            if directory == STRICT_POLICY_SOURCE or directory.startswith(f"{STRICT_POLICY_SOURCE}/"):
+            if directory == STRICT_POLICY_SOURCE:
+                continue
+            if directory.startswith(f"{STRICT_POLICY_SOURCE}/"):
                 continue
             expected.add(f"{directory}/CONTEXT.md")
     missing = sorted(expected - paths)
