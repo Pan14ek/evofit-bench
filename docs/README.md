@@ -4,12 +4,14 @@ These are **maintained navigation documents**, not replacements for the versione
 
 | Document | What it answers |
 | --- | --- |
-| [RESEARCH_CONTEXT.md](RESEARCH_CONTEXT.md) | **Why** the dissertation study exists, the core mathematical model, what P should prove, and open methodology decisions. |
+| [RESEARCH_CONTEXT.md](RESEARCH_CONTEXT.md) | **Why** the dissertation study exists; mathematical model, scientific hypotheses, method P, manuscript–protocol RQ crosswalk, validity threats, contribution limits and open decisions. |
 | [DOMAIN.md](DOMAIN.md) | What are the application's business domain and the separate research domain? |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | What architecture is actually implemented, and what is still only planned? |
 | [EXPERIMENT.md](EXPERIMENT.md) | What is being compared, how are observations and oracle isolated, and which approval gates apply? |
 | [TECHNOLOGY.md](TECHNOLOGY.md) | Which tools are *actually used*, how is the environment run, and which tools are merely future options? |
 | [TESTING.md](TESTING.md) | What test categories, requirement-to-test traceability and pre-merge checks are expected? |
+
+**Research reading order for AI agents:** read [`RESEARCH_CONTEXT.md`](RESEARCH_CONTEXT.md) before making scientific claims or beginning SPEC 03, then consult [`EXPERIMENT.md`](EXPERIMENT.md) and the exact DA01 protocol for operational definitions. The manuscript's RQ3/RQ4 and the executable protocol's RQ3/RQ4 are **not interchangeable**; the discrepancy is documented, not resolved by this documentation change.
 
 ## Local context guide
 

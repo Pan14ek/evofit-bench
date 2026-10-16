@@ -28,6 +28,17 @@ This distinction is the core of the dissertation contribution: methods for **end
 
 *Manuscript: Goal and tasks; §1.3; §3; §5.2.*
 
+### Manuscript-derived research tasks and hypotheses (scientific intent, not an approved protocol)
+
+The manuscript explicitly sets **five tasks**: (1) review evolutionary fitness functions, continuous/adaptive architecture evaluation and unchanged-configuration limitations; (2) formalize the adaptable and invariant components of `Φ`; (3) develop a versioned, validated and rollback-capable governed method; (4) implement an experimental CI/CD and runtime representation prototype; and (5) compare frozen and governed configurations for degradation detection, coverage/consistency and operating cost. These are tasks of **this one dissertation result**, not a claim to solve the entire dissertation.
+
+Its working **H0** is no statistically significant improvement in predefined architectural-control outcomes against unchanged B0 and heuristic B1. Its working **H1** is an empirically supported improvement in at least one predefined detection, coverage or consistency outcome **without unacceptable overhead**. These global hypotheses are **not yet operational null/alternative pairs**: before G1, register primary endpoints, independent units, effect thresholds, treatment of multiple comparisons, acceptable-overhead bounds and analysis procedure. Passing unit tests or observing one favourable DA01 score cannot establish H1.
+
+### Why the research gap is conditional
+
+Evolutionary fitness tests and periodic review already exist (Ford et al.); formal fitness-guided architectural refactoring exists (Chondamrongkul and Sun); continuous development/runtime evaluation exists (Antonino et al.); and model/performance synchronization exists (CIPM/Mazkatli et al.). The **proposed residual gap**, requiring literature review and experimental support, is an explicit, versioned **criterion–obligation–representation–evidence** model plus a general decision procedure to adapt fitness-control *configuration* across architecture changes with accountable activation, semantic coverage, and governed acceptance. Do **not** claim that architecture evaluation, lifecycle feedback, traceability or adaptive verification were invented here. See manuscript §1.1–1.3 and its bibliography for the cited related work.
+
+
 ## 3. Conceptual model: keep these entities separate
 
 | Entity | Meaning | Engineering anchor |
@@ -121,6 +132,18 @@ If a necessary evaluator artifact cannot be materialized, return `BLOCKED / NEED
 
 *Manuscript: §2.4; §3.1–3.3.1; §4.1.1.*
 
+### Why all four scientific mechanisms are needed
+
+| Mechanism | Question it answers | Failure if omitted | Current proof status |
+| --- | --- | --- | --- |
+| **Obligation Activation** | Which *normative* requirements apply, based on facts, authority and bounded completeness? | An obligation is removed merely because no matching fact or evaluator was observed. | SPEC 02 has a general synthetic/development interpreter; actual authority/evidence is not established. |
+| **Architecture Change Impact Analysis** | Which criteria, obligation links, scopes and representations *may* be affected by `ΔA`? | Every check is replaced, or an affected check is incorrectly retained because a trace edge is missing. | Not implemented in P; planned SPEC 03. |
+| **Semantic Validity & Evidence Adequacy** | For a particular `(representation, obligation)`, does the evaluator still measure the required property in the correct scope/stage? | A vacuous or stale evaluator reports success while mandatory coverage is lost. | Independent pair-verdict **scoring contract exists**; automatic P pair selection/revalidation is not implemented. |
+| **Governed Adaptation** | Is the proposed `Φ'` actually admissible, versioned, justified, and safe to accept or conditionally roll back? | Unverifiable edits, missing mandatory controls, or an unsafe rollback become silently accepted. | Interfaces/protocol exist; P ACCEPT/REJECT/HOLD, materialization, and rollback remain planned. |
+
+**Dependency:** activation determines *what must be controlled*; impact identifies *what must be rechecked*; semantic validity demonstrates *what is genuinely controlled*; governance decides *whether an adaptation is permissible*. Neither a positive applicability decision nor evaluator exit code establishes compliance or coverage. The eventual implementation must include a full SPEC 01–03 verification/validation plan and requirement-to-test matrix (see `docs/TESTING.md`), not just happy-path DA01 fixtures.
+
+
 ## 6. Governance and rollback are substantive, not decorators
 
 ```text
@@ -163,6 +186,31 @@ Proposed contrasts with the older static fitness configuration and heuristic B1 
 
 *Manuscript: §5.1–5.8; protocol: `experiments/execution/da01/PROTOCOL.md`.*
 
+### RQ identity crosswalk: manuscript vs executable experiment
+
+**Do not use the two RQ numberings interchangeably.** This table records the discrepancy without redefining either source. `docs/EXPERIMENT.md` and the frozen research design remain authoritative for current executable measurements; the manuscript remains the source of the wider scientific questions.
+
+| Label | Manuscript §5.1 (scientific question, abridged translation) | Existing executable design (operational question) | Reconciliation needed |
+| --- | --- | --- | --- |
+| **RQ1** | Does governed adaptation improve architectural-control quality versus frozen and periodic heuristic baselines? | Accuracy/F1 of affected-target and operation identification. | Treat impact accuracy as **one outcome** supporting the broader question, not as a full answer. |
+| **RQ2** | Does adapting representations, metrics, execution policies, weights and soft thresholds improve coverage and consistency? | Valid post-change obligation coverage and pair-specific semantic evidence. | Weights, soft-threshold adaptation and lifecycle-wide stage obligations are **not yet experimentally evaluated**. |
+| **RQ3** | What additional operational costs does governed adaptation introduce? | Controlled-degradation detection quality (F1, FPR, FNR, time). | **Different construct**. Manuscript RQ3 operationally resembles experiment RQ4. |
+| **RQ4** | Does formal impact analysis plus validation outperform periodic heuristic review? | Runtime/CI/adaptation overhead. | **Different construct**. Manuscript RQ4 needs a predeclared B1 contrast and possibly ablation; experiment RQ4 is overhead. |
+
+No manuscript RQ has been replaced. A reviewed crosswalk, baseline cadence and formal testable hypotheses are **open decisions** before official measurement (also see M-01/M-02/M-05 in §10).
+
+### Validation design, limits and threats
+
+- **Internal/construct validity:** wrong or vacuous evaluators, stale scope/version evidence, incomplete authority, falsely trusted negative facts, and an incomplete obligation denominator can inflate measured coverage. Require independent exact-pair evidence and separately record UNKNOWN, false INACTIVE, missing evidence, invalid runs and blocked candidates.
+- **Comparator validity:** periodic B1 and immediate post-change human B1 are not equivalent interventions; control common facts/policies, actor prior exposure, time budget, human independence, evaluator capability inventory and traceability access. Do not represent synthetic B1 logic as a real operator.
+- **Data leakage and confirmation bias:** scenarios/oracles and expected operations must remain outside B1/P inputs and algorithm authoring. Freeze generic P and all scoring choices before independent sealed predictions; keep holdout scenarios separate from development fixtures.
+- **Statistical independence:** a controlled architectural delta (not each HTTP request, metric sample, obligation or repeated run) is the unit of architecture-level analysis. DA01 alone permits a case demonstration, not population inference. Repeatability and additional **independently designed** deltas are necessary but not sufficient for external generalization.
+- **External/ecological validity:** the controlled Python benchmark, three criteria and initially small FV predicate space may omit cloud production behaviours. Results must state coverage of architectural styles, obligation families, evaluator kinds and trust assumptions; technology-agnostic contracts are not evidence of cross-stack generalizability.
+- **Analysis before results:** pre-register numerator/denominator definitions, abstention handling, F1/FPR/FNR, valid mandatory coverage, consistency-violation rate, evaluation/adaptation time and resource/telemetry costs, permissible overhead, uncertainty intervals and effect sizes. Pick statistical tests only after fixing sample design; do not pool correlated repeated observations as independent architecture cases.
+
+**Gates:** the measured DA01 protocol still requires G1 (reviewed/frozen general method and experimental decisions) and G4 (explicit authorization), plus relevant isolation/evidence checks. Synthetic SPEC tests, existing A0 telemetry and successful GitHub Actions are **engineering readiness evidence only**.
+
+
 ## 8. Constraints that every future implementation must preserve
 
 1. **Stable criterion intent:** an evaluator change must not silently change a criterion's semantic meaning.
@@ -191,6 +239,17 @@ See `AGENTS.md`, `docs/TESTING.md`, `experiments/execution/da01/INPUT_ISOLATION.
 | Actual authorized B0/B1/P measurements and inferential validation | Phase A protocol, sealed scorer, fixtures | **Not authorized / not yet executed** |
 
 `P_ALGORITHM_STATUS = NOT_READY` is a current implementation fact. The manuscript's dated §4.2 status describes an *earlier* working state and must not override the later merged repo commits.
+
+### What can count as a contribution — and what cannot
+
+| Level | Examples in this project | Evidence needed |
+| --- | --- | --- |
+| **Engineering** | Python parser, JSON Schemas, hashes, GitHub Actions, SPEC 01/02 validators, scenario harness, telemetry instrumentation. | Code review, reproducibility, positive/negative/integration tests; **not a scientific effectiveness claim**. |
+| **Methodological** | Explicit obligation states, per-pair semantic/evidence checks, deterministic operation selection, governable explanations, controlled B0/B1/P comparison. | Coherent specification, independent test traceability, falsifying cases and a fair, frozen protocol. |
+| **Potential scientific** | A generalizable formally defined method for preserving semantic mandatory architectural control while adapting the *fitness configuration* after `ΔA`. | Prior-work differentiation, soundness/limits of decision rules, comparative independent experimental effects and reported uncertainty. |
+
+Candidate novelty is **conditional**. SPEC 01/02 create prerequisites, not verified benefits. The weighted sum `F = Σ αᵢ fᵢ_norm`, a green CI check, or an implementation-specific framework integration is not itself the new scientific result.
+
 
 ## 10. Open methodological discrepancies — do not silently choose
 
