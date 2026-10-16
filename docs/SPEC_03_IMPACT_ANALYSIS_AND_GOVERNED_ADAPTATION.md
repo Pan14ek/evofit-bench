@@ -303,3 +303,43 @@ These rows map **required observations** to current test entry points, but they 
 | TT-P03-30 | P03-09 | positive | Unique IDs, complete candidate, parent digest, actual artifact and exact revision. | Pass candidate v1 and extra semantic checks. |
 | TT-P03-31 | P03-09 | negative | New representation ID collision, orphaned q, stale parent hash or missing evaluator. | Candidate validation failure with audit. |
 | TT-P03-32 | P03-09,P03-13 | regression | Output adapter projects non-retain and proposed operations to old v1 prediction schema. | validate_prediction passes without changing frozen schema. |
+
+| TT-P03-33 | P03-10 | positive | Materialized candidate with positive authority, coverage, evidence, invariants and cost. | ACCEPT with version/provenance and no blockers. |
+| TT-P03-34 | P03-10 | negative | Structurally valid candidate but mandatory pair evidence UNKNOWN. | HOLD; not accepted, not disproved compliance. |
+| TT-P03-35 | P03-10 | negative | Candidate provably violates H or authorized cost ceiling. | REJECT candidate; no publish; other feasible candidates may still be considered. |
+| TT-P03-36 | P03-10 | boundary | Tampered input vs well-formed OPEN/DRAFT source. | INPUT_REJECTED vs HOLD; distinct reasons. |
+| TT-P03-37 | P03-11 | positive | Accepted candidate, append-only events. | Parent hash preserved; immutable audit chain. |
+| TT-P03-38 | P03-11 | negative | Old configuration fails current-state coverage on rollback. | ROLLBACK_BLOCKED/HOLD. |
+| TT-P03-39 | P03-11 | race/replay | Source SHA changes during validate/publish; retry same event. | Abort stale publish; idempotent replay; no overwritten history. |
+| TT-P03-40 | P03-12 | property | Random independent reorder of facts, graph, capabilities. | Same canonical semantic decision/digest. |
+| TT-P03-41 | P03-12 | boundary/property | Tie by operation count/cost/IDs; missing cost; exhausted budget. | Deterministic tie or HOLD; no false optimality. |
+| TT-P03-42 | P03-12 | metamorphic | Add irrelevant unrelated criterion and verified evidence. | Unrelated impact and operation decisions unchanged. |
+| TT-P03-43 | P03-13 | regression | Re-export pinned V1 B0/B1/P; verify V2/V3 and B1/P source parity. | Legacy bytes compatible; common policy bytes identical. |
+| TT-P03-44 | P03-13,S01 | isolation/adversarial | Digest-pinned method container probes scorer, oracle, Git, network and other outputs. | Denied; Docker unavailable reported SKIP, never PASS. |
+| TT-P03-45 | P03-14 | E2E positive | Synthetic before/after, TEST_ONLY trusted policies and executable evaluator. | SPEC01→SPEC02→Impact→Candidate→Governance→audit works, no oracle. |
+| TT-P03-46 | P03-14 | E2E negative | OPEN/DRAFT authority, conflicting data or missing candidate template. | UNKNOWN/HOLD; no measured output. |
+| TT-P03-47 | P03-14 | E2E boundary | No architecture/policy change + verified adequate controls; then missing mandatory evidence. | No-op ACCEPT first, HOLD second. |
+| TT-P03-48 | P03-14 | mutation | Flip link, pair identity, scope, SHA or absence proof. | Relevant assertion fails; no unsafe ACCEPT. |
+
+### 4.6 Mandatory property-based / metamorphic laws
+
+1. UNKNOWN cannot authorize INACTIVE, deactivation or an improvement in demonstrated mandatory coverage.
+2. Permutations of independent input rows/edges/options preserve canonical output and operation mapping.
+3. Tampering with source/version/scope/evidence binding never preserves prior positive proof.
+4. Changes in an unrelated isolated graph component do not trigger an unsupported operation elsewhere.
+5. A representation with ACTIVE/UNKNOWN mandatory q2 cannot be deactivated because q1 becomes INACTIVE.
+6. High weighted score cannot compensate for missing mandatory exact-pair evidence.
+7. One valid pair (r,q1) cannot imply validity of another pair (r,q2).
+8. A successful but vacuous evaluator does not establish coverage.
+9. Rollback requires valid evidence under current conditions.
+10. Re-running identical version-pinned input yields identical semantic content and digest (not necessarily identical external timestamp).
+
+Use deterministic property seeds; store shrinking counterexample and seed. Fixtures and test assertions must be independently constructed from general contract semantics, never copied from DA01 oracle.
+
+### 4.7 Test file ownership, verification commands and reporting
+
+Recommended locations: tests/unit/test_p_impact_v1.py (TT-P03-04–12), test_p_semantic_pairs_v1.py (13–20), test_p_operations_v1.py (21–29,41), test_p_candidate_governance_v1.py (30–39), test_p_adaptation_properties_v1.py (07,12,17,40–42), and tests/integration/test_p_governed_adaptation_v1.py (01–03,43–48). Names are proposed; the final TTM must point to actual test functions and evidence.
+
+Run repository scripts in a disposable environment, including: uv sync --frozen --extra dev; make test-unit; make lint; make typecheck; make security; make architecture-test; make migration-test; make quality. Run targeted SPEC 01/02/03 tests, legacy byte-compatibility checks and Docker negative isolation where a digest-pinned image exists. Docker unavailability = SKIP/BLOCKED (not PASS); quality coverage of app is NOT P method test/requirements coverage.
+
+**Complete status matrix:** all 25 requirement IDs (C01–C03, A01–A06, S01, P03-01–P03-14, E01) and all 60 traceability rows (12 prior + 48 new) need implementation/test path, PASS/FAIL/SKIP/BLOCKED, reason, fixture hash and CI reference. E01 is NOT AUTHORIZED by this specification. Do not report planned tests as executed.
