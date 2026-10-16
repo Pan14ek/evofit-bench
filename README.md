@@ -1,6 +1,8 @@
 # EvoFitBench
 
-EvoFitBench is a controlled research platform for studying how architectural fitness-function configurations evolve as software architecture changes. This repository implements only **A0_MONOLITH**, the baseline: one deployable Python application process, one PostgreSQL database, synchronous internal calls, and a versioned REST API. It is intentionally a small layered monolith.
+EvoFitBench is a controlled research platform for studying the evolution of architectural fitness-function configurations. Its frozen starting point is **A0_MONOLITH**; the current application code after DA01 is **A0_1_CAPABILITY_MODULES**, a capability-oriented monolith that still uses one FastAPI/Uvicorn application process, one PostgreSQL database, synchronous internal calls, and a versioned REST API. Planned distributed/cloud-native states are research scenarios, not currently deployed services.
+
+For project context, architecture, experiment safeguards, technology stack and test strategy, start with **[docs/README.md](docs/README.md)**. Automated coding agents should also read **[AGENTS.md](AGENTS.md)**. The authoritative scientific protocol and frozen artifacts remain under `experiments/` and `fitness/`.
 
 ## Run locally
 
