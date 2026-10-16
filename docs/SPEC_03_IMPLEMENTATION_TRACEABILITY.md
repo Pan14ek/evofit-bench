@@ -212,8 +212,8 @@ git diff --check
 | Mypy `app scripts tests` | PASS — 94 source files |
 | Bandit on changed implementation modules | PASS |
 | `git diff --check` | PASS |
-| Full `make quality` after these remediations | BLOCKED — not rerun because it includes the two test modules prohibited above |
-| Hosted CI for the remediation commit | PENDING — update after push |
+| Local full `make quality` after these remediations | BLOCKED — not run locally because it includes the two protected test modules listed above |
+| Hosted GitHub Actions `A0 quality` | PASS — [run 38889778200](https://github.com/Pan14ek/evofit-bench/actions/runs/38889778200), commit `b62d7d1837b09e3f7a453af8b7da65da592f8b43` |
 
 ## Unresolved method decisions and research boundary
 
