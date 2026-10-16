@@ -249,8 +249,8 @@ git diff --check
 | Mypy `app scripts tests` | PASS — 95 source files, no issues. |
 | Bandit over `app scripts experiments/execution/tooling` | PASS — existing Bandit comment-parsing and `nosec` warnings only. |
 | `git diff --check` | PASS. |
-| Full `make quality`, migrations and protected DA01 tests | BLOCKED / NOT RUN — full quality invokes the prohibited DA01 ground-truth/scorer test modules; no disposable PostgreSQL validation was run for this focused review fix. |
-| Hosted GitHub Actions for the review-fix commit | PENDING — record the run URL and result after the branch push. |
+| Local full `make quality` and migrations | BLOCKED / NOT RUN — the local full suite invokes DA01 ground-truth/scorer test modules; this focused worktree run did not start those tests or configure disposable PostgreSQL. |
+| Hosted GitHub Actions for review-fix commit `5f4319985d4739dc9add19ba4c46f4346026c1ce` | PASS — [A0 quality run 38896056182](https://github.com/Pan14ek/evofit-bench/actions/runs/38896056182), including `make migration-test` and `make quality`. GitHub emitted existing Node.js 20 deprecation and upcoming `ubuntu-latest` migration annotations. |
 
 The two protected DA01 modules were not opened or run; no oracle, scorer,
 expected operations, or sealed reference output was read. The worktree diff
