@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, fields, is_dataclass
+from datetime import date, datetime
+from enum import Enum
 from pathlib import Path
 from typing import Any
+from weakref import WeakKeyDictionary
 
 import yaml
 
@@ -31,6 +34,7 @@ from experiments.execution.tooling.p_candidate import (
     candidate_sha256,
     derive_configuration_version,
     materialize_candidate,
+    normalize_parent_representation,
 )
 from experiments.execution.tooling.p_governance import (
     GovernanceDecision,
@@ -70,9 +74,9 @@ from experiments.execution.tooling.p_semantic import (
 METHOD_VERSION = "P_GOVERNED_ADAPTATION_DEVELOPMENT_V1"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=False)
 class VerifiedPBundle:
-    """Inputs verified from the strict, version-bound V3 P bundle."""
+    """Version-bound P inputs; only the V3 verifier registers verified objects."""
 
     root: Path
     manifest: Mapping[str, Any]
@@ -91,7 +95,10 @@ class VerifiedPBundle:
     parent_configuration_path: str
     parent_configuration_sha256: str
     cost_model: Mapping[str, Any] | None
-    bundle_provenance: str = "VERIFIED_V3"
+    bundle_provenance: str = "UNVERIFIED"
+
+
+_VERIFIED_V3_BUNDLE_DIGESTS: WeakKeyDictionary[VerifiedPBundle, str] = WeakKeyDictionary()
 
 
 @dataclass(frozen=True)
@@ -212,7 +219,7 @@ def verify_v3_p_bundle(
         for path, row in file_records.items()
         if row.get("role") in {"evaluator_artifact", "evaluator_evidence", "evidence_artifact"}
     }
-    return VerifiedPBundle(
+    bundle = VerifiedPBundle(
         root,
         manifest,
         snapshot,
@@ -230,7 +237,10 @@ def verify_v3_p_bundle(
         "fitness/a0-representations.yaml",
         sha256_bytes(representation_bytes),
         cost_model,
+        "VERIFIED_V3",
     )
+    _VERIFIED_V3_BUNDLE_DIGESTS[bundle] = _verified_bundle_content_sha256(bundle)
+    return bundle
 
 
 def run_adaptation(
@@ -601,7 +611,7 @@ def _invariant_verdicts(
         if coverage.status.value == "COMPLETE" and candidate_status == "valid"
         else "UNKNOWN",
         "INV-11": "PASS",
-        "INV-12": "PASS" if bundle_provenance in {"VERIFIED_V3", "TEST_ONLY"} else "UNKNOWN",
+        "INV-12": "PASS" if bundle_provenance == "VERIFIED_V3" else "UNKNOWN",
     }
 
 
@@ -666,26 +676,10 @@ def _bind_obligations(
 
 
 def _normalize_representation(row: Any) -> Mapping[str, Any]:
-    if not isinstance(row, Mapping):
-        raise ProtocolError("P03_REPRESENTATION_ROW_INVALID")
-    required = ("id", "criterion", "stage", "evaluator", "covers")
-    if any(not isinstance(row.get(key), list if key == "covers" else str) for key in required):
-        raise ProtocolError("P03_REPRESENTATION_ROW_INVALID")
-    return {
-        "id": row["id"],
-        "active": True,
-        "criterion": row["criterion"],
-        "stage": row["stage"],
-        "evaluator": row["evaluator"],
-        "evaluator_artifact": row.get("evaluator_artifact"),
-        "covers": sorted(_string_set(row["covers"])),
-        "applicability_scope": dict(row.get("applicability_scope", {}))
-        if isinstance(row.get("applicability_scope"), Mapping)
-        else {},
-        "evidence_contract": dict(row.get("evidence_contract", {}))
-        if isinstance(row.get("evidence_contract"), Mapping)
-        else {},
-    }
+    try:
+        return normalize_parent_representation(row)
+    except ContractValidationError as error:
+        raise ProtocolError("P03_REPRESENTATION_ROW_INVALID") from error
 
 
 def _read_pinned_file(root: Path, relative: str, records: Mapping[str, Mapping[str, Any]]) -> bytes:
@@ -734,12 +728,20 @@ def _input_status(validation: SnapshotValidationResult, provenance: str) -> str:
     )
     if ValidationStatus.INVALID in statuses or provenance not in {"VERIFIED_V3", "TEST_ONLY"}:
         return "INVALID"
-    if ValidationStatus.UNDETERMINED in statuses:
+    if provenance == "TEST_ONLY" or ValidationStatus.UNDETERMINED in statuses:
         return "UNDETERMINED"
     return "VALID"
 
 
 def _validate_verified_bundle_bindings(bundle: VerifiedPBundle) -> None:
+    if bundle.bundle_provenance == "VERIFIED_V3":
+        verified_digest = _VERIFIED_V3_BUNDLE_DIGESTS.get(bundle)
+        if verified_digest is None:
+            raise ContractValidationError("P03_VERIFIED_BUNDLE_NOT_VERIFIED")
+        if verified_digest != _verified_bundle_content_sha256(bundle):
+            raise ContractValidationError("P03_VERIFIED_BUNDLE_CONTENT_CHANGED")
+    elif bundle.bundle_provenance != "TEST_ONLY":
+        raise ContractValidationError("P03_BUNDLE_PROVENANCE_INVALID")
     manifest = bundle.manifest
     files = manifest.get("files")
     if manifest.get("method_id") != "P" or not isinstance(files, list):
@@ -767,6 +769,45 @@ def _validate_verified_bundle_bindings(bundle: VerifiedPBundle) -> None:
 
 def _is_sha256(value: str) -> bool:
     return len(value) == 64 and all(character in "0123456789abcdef" for character in value)
+
+
+def _verified_bundle_content_sha256(bundle: VerifiedPBundle) -> str:
+    content = {
+        item.name: _canonicalize_bundle_value(getattr(bundle, item.name)) for item in fields(bundle)
+    }
+    return sha256_bytes(canonical_json_bytes(content))
+
+
+def _canonicalize_bundle_value(value: Any) -> Any:
+    if isinstance(value, Enum):
+        return value.value
+    if isinstance(value, Path):
+        return str(value)
+    if isinstance(value, date | datetime):
+        return value.isoformat()
+    if isinstance(value, bytes):
+        return {"sha256": sha256_bytes(value), "size": len(value)}
+    if is_dataclass(value) and not isinstance(value, type):
+        return {
+            item.name: _canonicalize_bundle_value(getattr(value, item.name))
+            for item in fields(value)
+        }
+    if isinstance(value, Mapping):
+        entries = [
+            [_canonicalize_bundle_value(key), _canonicalize_bundle_value(item)]
+            for key, item in value.items()
+        ]
+        return {
+            "mapping_entries": sorted(entries, key=lambda entry: canonical_json_bytes(entry[0]))
+        }
+    if isinstance(value, (list, tuple)):
+        return [_canonicalize_bundle_value(item) for item in value]
+    if isinstance(value, set | frozenset):
+        entries = [_canonicalize_bundle_value(item) for item in value]
+        return sorted(entries, key=canonical_json_bytes)
+    if value is None or isinstance(value, str | int | float | bool):
+        return value
+    raise ContractValidationError("P03_VERIFIED_BUNDLE_VALUE_UNSUPPORTED")
 
 
 def _string_set(value: Any) -> set[str]:

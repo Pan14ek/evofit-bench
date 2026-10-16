@@ -32,10 +32,11 @@ that defines the builder and assertions.
 | P03-GENERIC | `tests/fixtures/p_method/generic_architecture_evolution_v1.json` | `4a1b63cc08c219d40d6298d8ecd5f6d64208952afd87f5bede39f99002ffe194` |
 | P03-BUILDER | `tests/unit/p_spec03_support.py` | `fabedf83695ddaff92af17c23ded9ab872fc8de30d6a376d78af271c6cad7554` |
 | P03-IMPACT | `tests/unit/test_p_impact_v1.py` | `87db3af4d76bec0936655550f400635c59612194c9de9f77a32e4a0c4990fea6` |
-| P03-PAIR | `tests/unit/test_p_semantic_pairs_v1.py` | `268dece4aa618b51c5a8b77ef7fcd82e5064078a089edb22ae91a96a358cd00f` |
+| P03-PAIR | `tests/unit/test_p_semantic_pairs_v1.py` | `c060e9cc71b1a12d11e93f79a987d14fe0a4b510b8b879945aed62748f36ac5a` |
 | P03-OPS | `tests/unit/test_p_operations_v1.py` | `284a9ec32ed121eb77069648dfa1b1d0f9f2e6c39b72bd3f358996bbd20ed0bc` |
-| P03-CANDIDATE | `tests/unit/test_p_candidate_governance_v1.py` | `053d86a652d557e5f0df9fb425aa9419d869103358e65ff1f5d0151cc4e54238` |
-| P03-E2E | `tests/integration/test_p_governed_adaptation_v1.py` | `572b07cc3b068c48a41c1b1df9c7836e9693cce921af12a71fe47626b5865f19` |
+| P03-CANDIDATE | `tests/unit/test_p_candidate_governance_v1.py` | `0ccc8f1d13ad0c924d26a0cc2013a9d171deb806a799487f9f80a681ac818b87` |
+| P03-E2E | `tests/integration/test_p_governed_adaptation_v1.py` | `c10ae1b68d9f87efe0696b86c608b0650f6cd87e03a58bc01c5b435ccd481b8c` |
+| P03-V3-VERIFY | `tests/integration/test_p_applicability_v3.py` | `8f81731a6190913199a5f46b21b5eb4f35cc63829832d3e06456672970b3ef34` |
 | SPEC01-SNAPSHOT | `tests/fixtures/p_input_contract_v11_snapshot.json` | `c32ca2e72a451820d72193f18d1ca0ef2c546e739e8004ddf290e41f97fd677f` |
 | SPEC01-TESTS | `tests/unit/test_p_input_contract_v11.py` | `b4d8f0f6aa3d7b4b07870f7bc623709d89c5afd4452a6246ded2f121d047cc33` |
 | AUTHORITY-TESTS | `tests/unit/test_p_input_authority_validation.py` | `8eb732b91632cb69aba85f9335b2fbc12cc7e53680a3d5091a49dd504e2e9dde` |
@@ -57,7 +58,7 @@ exercised. `E01` is not authorized by SPEC 03.
 | C01–C03 | PASS | SPEC 01 schema, trust, V2 isolation and legacy adapter tests; see TT-C rows. |
 | A01–A06 | PASS | SPEC 02 DSL, authority, three-state, stale-validation and V3 parity/pipeline tests; see TT-A rows. |
 | S01 | PASS | Synthetic method-input isolation suite, including the digest-pinned Docker negative probe. |
-| P03-01 | BLOCKED | Digest-bound checks pass, but the positive test path constructs `VerifiedPBundle` directly rather than exercising a fully verified V3 P bundle. |
+| P03-01 | BLOCKED | Caller-constructed V3 claims are rejected, verifier-returned object identities bind all bundle content, and TEST_ONLY remains HOLD. The positive production verifier path is still not exercised with approved V3 authority. |
 | P03-02–P03-12 | PASS | Typed diffs, graph, exact-pair semantics, coverage, operations, materialization, governance, provenance and rollback tests. |
 | P03-13 | BLOCKED | V1/V2/V3 compatibility and B1/P parity tests pass; no frozen experimental output was re-exported or byte-compared. The branch changes no protected artifact paths. |
 | P03-14 | BLOCKED | Synthetic end-to-end OPEN-authority path correctly returns HOLD. A fully approved positive V3 P run is unavailable and was not fabricated. |
@@ -89,7 +90,7 @@ and E01 BLOCKED/NOT AUTHORIZED.
 | Test ID | Requirement | Test entry point | Outcome |
 | --- | --- | --- | --- |
 | TT-P03-01 | P03-01 | `test_p_governed_adaptation_v1.py::test_synthetic_pipeline_runs_spec02_and_holds_open_authority_unknown` | BLOCKED — direct test bundle, not a fully verified V3 P export |
-| TT-P03-02 | P03-01 | `test_preflight_rejects_snapshot_validation_from_another_exact_revision`, `test_preflight_rejects_policy_and_ruleset_digest_substitution` | PASS |
+| TT-P03-02 | P03-01 | `test_preflight_rejects_snapshot_validation_from_another_exact_revision`, `test_preflight_rejects_policy_and_ruleset_digest_substitution`, `test_caller_cannot_claim_verified_v3_without_verifier_identity`, `test_p_applicability_v3.py::test_v3_verifier_binds_nested_bundle_content_before_adaptation` | PASS — direct claims rejected and nested mutation detected after strict verification; no positive authorized V3 path |
 | TT-P03-03 | P03-01,S01 | `test_p_applicability_v3.py::test_policy_source_rejects_answer_markers_and_unallowlisted_files`; V2 path/symlink and method isolation tests | PASS |
 | TT-P03-04 | P03-02 | `test_p_impact_v1.py::test_typed_fact_diff_preserves_values_scope_and_source_versions`, `test_fact_scope_shift_is_not_reported_as_removal_plus_addition` | PASS |
 | TT-P03-05 | P03-02 | `test_policy_only_change_is_detected_with_identical_architecture_revision` | PASS |
@@ -105,7 +106,7 @@ and E01 BLOCKED/NOT AUTHORIZED.
 | TT-P03-15 | P03-05 | `test_wrong_stage_architecture_or_mapping_never_reuses_pair_proof`, `test_wrong_obligation_identity_cannot_borrow_same_metric_evidence` | PASS |
 | TT-P03-16 | P03-05 | `test_clean_nonzero_exit_records_noncompliance_without_invalidating_monitor_semantics`, `test_evaluator_infrastructure_failure_is_unknown_and_not_a_compliance_verdict` | PASS |
 | TT-P03-17 | P03-05 | `test_wrong_obligation_identity_cannot_borrow_same_metric_evidence`, exact-pair proof subject/hash assertions | PASS |
-| TT-P03-18 | P03-06 | `test_same_valid_pair_counts_once_and_unknown_mandate_blocks_coverage` | PASS — two representations cover one q; denominator is one |
+| TT-P03-18 | P03-06 | `test_same_valid_pair_counts_once_and_unknown_mandate_blocks_coverage`, `test_stale_pair_architecture_revision_cannot_satisfy_coverage`, `test_conflicting_assessments_for_same_pair_cannot_count_as_valid`, `test_same_status_pair_records_with_different_stages_are_conflicting`, `test_mutated_pair_status_with_stale_digest_cannot_count_as_valid` | PASS — stale, conflicting and digest-tampered records stay unresolved |
 | TT-P03-19 | P03-06 | `test_high_score_or_covers_declaration_cannot_replace_exact_pair_evidence` | PASS |
 | TT-P03-20 | P03-06 | `test_same_valid_pair_counts_once_and_unknown_mandate_blocks_coverage`, `test_required_stage_set_needs_independent_stage_contract` | PASS |
 | TT-P03-21 | P03-07 | `test_valid_unaffected_configuration_is_retained` | PASS |
@@ -117,7 +118,7 @@ and E01 BLOCKED/NOT AUTHORIZED.
 | TT-P03-27 | P03-07 | `test_adjustment_requires_authorized_bounded_soft_rule` | PASS |
 | TT-P03-28 | P03-08 | `test_missing_or_untrusted_template_is_hold_not_a_fictional_add` | PASS — explicit HOLD |
 | TT-P03-29 | P03-08 | `test_template_wrong_digest_or_path_traversal_is_never_materialized` | PASS |
-| TT-P03-30 | P03-09 | `test_candidate_materialization_binds_parent_artifacts_and_all_source_versions`, `test_child_configuration_version_is_deterministic_and_parent_bound` | PASS |
+| TT-P03-30 | P03-09 | `test_candidate_materialization_binds_parent_artifacts_and_all_source_versions`, `test_candidate_rejects_parent_mapping_unbound_from_hashed_bytes`, `test_child_configuration_version_is_deterministic_and_parent_bound` | PASS |
 | TT-P03-31 | P03-09 | `test_candidate_rejects_stale_parent_collision_and_orphaned_obligation_link` | PASS |
 | TT-P03-32 | P03-09,P03-13 | `test_v1_candidate_adapter_validates_without_changing_legacy_schema`, `test_v1_prediction_adapter_projects_exact_nonretain_targets_and_blocks_hold` | PASS |
 | TT-P03-33 | P03-10 | `test_governance_accepts_only_when_every_required_gate_is_positive` | PASS — unit-level synthetic decision |
@@ -125,8 +126,8 @@ and E01 BLOCKED/NOT AUTHORIZED.
 | TT-P03-35 | P03-10 | `test_proven_cost_limit_violation_rejects_only_the_candidate` | PASS |
 | TT-P03-36 | P03-10 | `test_preflight_rejects_snapshot_validation_from_another_exact_revision`, `test_synthetic_pipeline_runs_spec02_and_holds_open_authority_unknown` | PASS — input rejection versus HOLD |
 | TT-P03-37 | P03-11 | `test_append_only_event_chain_is_deterministic_and_identical_replay_is_idempotent` | PASS |
-| TT-P03-38 | P03-11 | `test_rollback_requires_positive_fresh_current_context_validation` | PASS |
-| TT-P03-39 | P03-11 | `test_publish_requires_accept_and_current_context_parent_compare_and_swap`, `test_event_chain_tampering_is_detected_before_append` | PASS |
+| TT-P03-38 | P03-11 | `test_rollback_requires_positive_fresh_current_context_validation` | PASS — mismatched configuration hash is blocked |
+| TT-P03-39 | P03-11 | `test_publish_requires_accept_and_current_context_parent_compare_and_swap`, `test_publish_rejects_mutated_or_unsealed_governance_decisions`, `test_event_chain_tampering_is_detected_before_append` | PASS — mutation and re-digested HOLD-to-ACCEPT attempts are blocked |
 | TT-P03-40 | P03-12 | `test_input_permutations_preserve_graph_and_impact_digests`, deterministic operation/template ordering tests | PASS — deterministic metamorphic cases |
 | TT-P03-41 | P03-12 | `test_bounded_set_cover_prefers_fewer_operations_then_cost_then_ids`, `test_search_budget_exhaustion_and_missing_cost_return_hold`, `test_cost_model_rejects_duplicate_or_over_budget_candidate_and_ties_are_stable` | PASS |
 | TT-P03-42 | P03-12 | `test_irrelevant_isolated_component_does_not_change_existing_impact` | PASS |
@@ -137,7 +138,10 @@ and E01 BLOCKED/NOT AUTHORIZED.
 | TT-P03-47 | P03-14 | `test_high_score_or_covers_declaration_cannot_replace_exact_pair_evidence`, end-to-end OPEN-authority HOLD test | BLOCKED — negative half passes; no-op ACCEPT positive path is unavailable |
 | TT-P03-48 | P03-14 | Link, exact-pair, stage/context, digest, fact-scope and absence-proof mutation tests listed above | PASS |
 
-## Commands and local results
+## Initial implementation commands and local results
+
+The results in this section apply to the initial implementation before the
+review remediations below.
 
 The two existing test modules below were intentionally excluded because they
 read the actual DA01 ground truth or execute the private scorer, which SPEC 03
@@ -184,6 +188,32 @@ write `coverage.xml` in the managed worktree. The successful run redirected the
 coverage data and XML report to `/private/tmp`; it completed with 91.24%
 application coverage. This is application coverage, not P requirement or method
 coverage.
+
+## Review remediation revalidation
+
+The following focused checks ran after the review fixes. The two protected DA01
+test modules listed above were not run; no DA01 ground truth, scorer, expected
+operations or sealed output was read or used.
+
+```bash
+/private/tmp/evofit-spec03-venv/bin/python -m pytest -p no:cacheprovider tests/unit/test_p_candidate_governance_v1.py tests/unit/test_p_semantic_pairs_v1.py tests/integration/test_p_governed_adaptation_v1.py tests/integration/test_p_applicability_v3.py
+RUFF_CACHE_DIR=/private/tmp/evofit-spec03-ruff-cache /private/tmp/evofit-spec03-venv/bin/ruff check experiments/execution/tooling/p_adaptation.py experiments/execution/tooling/p_candidate.py experiments/execution/tooling/p_governance.py experiments/execution/tooling/p_semantic.py tests/unit/test_p_candidate_governance_v1.py tests/unit/test_p_semantic_pairs_v1.py tests/integration/test_p_governed_adaptation_v1.py tests/integration/test_p_applicability_v3.py
+RUFF_CACHE_DIR=/private/tmp/evofit-spec03-ruff-cache /private/tmp/evofit-spec03-venv/bin/ruff format --check experiments/execution/tooling/p_adaptation.py experiments/execution/tooling/p_candidate.py experiments/execution/tooling/p_governance.py experiments/execution/tooling/p_semantic.py tests/unit/test_p_candidate_governance_v1.py tests/unit/test_p_semantic_pairs_v1.py tests/integration/test_p_governed_adaptation_v1.py tests/integration/test_p_applicability_v3.py
+MYPY_CACHE_DIR=/private/tmp/evofit-spec03-mypy-cache /private/tmp/evofit-spec03-venv/bin/mypy app scripts tests
+/private/tmp/evofit-spec03-venv/bin/bandit -q -r experiments/execution/tooling/p_adaptation.py experiments/execution/tooling/p_candidate.py experiments/execution/tooling/p_governance.py experiments/execution/tooling/p_semantic.py
+git diff --check
+```
+
+| Check | Result |
+| --- | --- |
+| Focused SPEC 03 regression tests plus strict V3 verifier regression suite | PASS — 42 passed, 1 existing Starlette/httpx deprecation warning, 0 skipped |
+| Ruff check on changed Python files | PASS |
+| Ruff format check on changed Python files | PASS |
+| Mypy `app scripts tests` | PASS — 94 source files |
+| Bandit on changed implementation modules | PASS |
+| `git diff --check` | PASS |
+| Full `make quality` after these remediations | BLOCKED — not rerun because it includes the two test modules prohibited above |
+| Hosted CI for the remediation commit | PENDING — update after push |
 
 ## Unresolved method decisions and research boundary
 

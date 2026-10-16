@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
@@ -23,11 +24,28 @@ class GovernanceResult(StrEnum):
     HOLD = "HOLD"
 
 
+_DECISION_SEAL = object()
+
+
+@dataclass(frozen=True)
+class _DecisionSeal:
+    """Private capability bound to the exact serialized decision payload."""
+
+    authority: object = field(repr=False, compare=False)
+    payload_sha256: str
+
+
 @dataclass(frozen=True)
 class GovernanceDecision:
     """Version-bound, canonical decision with blockers and invariant verdicts."""
 
-    payload: Mapping[str, Any]
+    _payload_bytes: bytes = field(repr=False)
+    _decision_seal: _DecisionSeal | None = field(default=None, repr=False, compare=False)
+
+    @property
+    def payload(self) -> dict[str, Any]:
+        """Return an isolated copy so callers cannot mutate the signed decision."""
+        return json.loads(self._payload_bytes)
 
     @property
     def result(self) -> GovernanceResult:
@@ -159,7 +177,11 @@ def decide_governance(
     }
     content["decision_sha256"] = sha256_bytes(canonical_json_bytes(content))
     validate_payload("p_governance_decision_v1.schema.json", content)
-    return GovernanceDecision(content)
+    payload_bytes = canonical_json_bytes(content)
+    return GovernanceDecision(
+        payload_bytes,
+        _DecisionSeal(_DECISION_SEAL, sha256_bytes(payload_bytes)),
+    )
 
 
 def append_event(
@@ -234,15 +256,30 @@ def authorize_conditional_publish(
     current_parent_sha256: str,
 ) -> bool:
     """Return true only for ACCEPT and a current context/parent CAS match."""
-    if decision.result is not GovernanceResult.ACCEPT:
+    seal = decision._decision_seal
+    if seal is None or seal.authority is not _DECISION_SEAL:
         return False
-    expected_context = governance_context_sha256(decision.payload)
-    return (
-        expected_context == validated_context_sha256
-        and validated_context_sha256 == current_context_sha256
-        and expected_parent_sha256 == current_parent_sha256
-        and expected_parent_sha256 == decision.payload.get("parent_configuration_sha256")
-    )
+    try:
+        payload = decision.payload
+        validate_payload("p_governance_decision_v1.schema.json", payload)
+        payload_digest = sha256_bytes(canonical_json_bytes(payload))
+        claimed_digest = payload.pop("decision_sha256")
+        actual_digest = sha256_bytes(canonical_json_bytes(payload))
+        if (
+            seal.payload_sha256 != payload_digest
+            or claimed_digest != actual_digest
+            or payload.get("result") != GovernanceResult.ACCEPT.value
+        ):
+            return False
+        expected_context = governance_context_sha256(payload)
+        return (
+            expected_context == validated_context_sha256
+            and validated_context_sha256 == current_context_sha256
+            and expected_parent_sha256 == current_parent_sha256
+            and expected_parent_sha256 == payload.get("parent_configuration_sha256")
+        )
+    except (ContractValidationError, KeyError, TypeError, ValueError):
+        return False
 
 
 def governance_context_sha256(decision: Mapping[str, Any]) -> str:
@@ -280,6 +317,7 @@ def assess_rollback(
         and all(verdicts.get(key) == "PASS" for key in required_invariants)
         and revalidation.get("candidate_validation_status") == "valid"
         and revalidation.get("cost_verdict") == "PASS"
+        and revalidation.get("configuration_sha256") == prior_configuration_sha256
     )
     return {
         "status": "ROLLBACK_ALLOWED" if allowed else "ROLLBACK_BLOCKED",

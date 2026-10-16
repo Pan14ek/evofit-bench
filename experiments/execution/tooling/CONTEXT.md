@@ -34,6 +34,15 @@ Module responsibilities:
 - `p_governance.py` applies ACCEPT/REJECT/HOLD precedence, records an
   append-only event chain, and checks conditional publish and rollback.
 
+Review safeguards recognize only bundle objects returned by the V3 verifier,
+bind their identity to every input digest, and recheck their content before
+adaptation. Candidate materialization verifies that the
+configuration mapping is the projection of the exact parent bytes whose hash
+is recorded. Coverage excludes stale pair revisions and holds on conflicting
+or digest-invalid assessments. Governance decisions expose isolated payload
+copies; conditional publication rechecks the signed decision payload, and
+rollback requires the exact configuration hash that was revalidated.
+
 The pipeline must preserve `UNKNOWN` as unresolved, never infer `INACTIVE` from
 missing evidence, and never use scorer/oracle output as P input. The JSON
 schemas are additive DEVELOPMENT contracts. Synthetic test builders and

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+from dataclasses import replace
 from typing import Any
 
 import pytest
@@ -60,6 +61,7 @@ def make_candidate(
     plan: OperationPlan | None = None,
     *,
     parent_bytes: bytes | None = None,
+    parent_mapping: dict[str, Any] | None = None,
     valid_obligation_ids: tuple[str, ...] | None = None,
     extra_artifact_bytes: dict[str, bytes] | None = None,
 ) -> dict[str, Any]:
@@ -72,7 +74,7 @@ def make_candidate(
         )
     )
     return materialize_candidate(
-        parent_configuration=parent,
+        parent_configuration=parent if parent_mapping is None else parent_mapping,
         parent_configuration_bytes=parent_bytes or exact_parent_bytes,
         parent_path="configs/synthetic-parent.json",
         parent_sha256=sha256_bytes(exact_parent_bytes),
@@ -207,6 +209,11 @@ def test_candidate_rejects_stale_parent_collision_and_orphaned_obligation_link()
     )
     assert candidate["candidate_validation"]["status"] == "invalid"
     assert "ORPHANED_OBLIGATION_LINK" in candidate["candidate_validation"]["reason_codes"]
+
+
+def test_candidate_rejects_parent_mapping_unbound_from_hashed_bytes() -> None:
+    with pytest.raises(ContractValidationError, match="P03_PARENT_CONFIGURATION_CONTENT_MISMATCH"):
+        make_candidate(parent_mapping={"configuration_version": "SYN_OTHER", "representations": []})
 
 
 def test_v1_candidate_adapter_validates_without_changing_legacy_schema() -> None:
@@ -430,6 +437,52 @@ def test_publish_requires_accept_and_current_context_parent_compare_and_swap() -
     )
 
 
+def test_publish_rejects_mutated_or_unsealed_governance_decisions() -> None:
+    from experiments.execution.tooling.p_applicability import ApplicabilityStatus
+
+    obligation = make_obligation()
+    held = accepted_decision(
+        make_coverage([obligation], statuses={obligation["id"]: ApplicabilityStatus.UNKNOWN})
+    )
+    exposed_payload = held.payload
+    exposed_payload["result"] = GovernanceResult.ACCEPT.value
+    assert held.result is GovernanceResult.HOLD
+
+    context = governance_context_sha256(held.to_dict())
+    assert not authorize_conditional_publish(
+        decision=held,
+        validated_context_sha256=context,
+        current_context_sha256=context,
+        expected_parent_sha256="8" * 64,
+        current_parent_sha256="8" * 64,
+    )
+
+    forged_payload = held.to_dict()
+    forged_payload["result"] = GovernanceResult.ACCEPT.value
+    forged_payload.pop("decision_sha256")
+    forged_payload["decision_sha256"] = sha256_bytes(canonical_json_bytes(forged_payload))
+    forged = replace(held, _payload_bytes=canonical_json_bytes(forged_payload))
+    forged_context = governance_context_sha256(forged_payload)
+    assert not authorize_conditional_publish(
+        decision=forged,
+        validated_context_sha256=forged_context,
+        current_context_sha256=forged_context,
+        expected_parent_sha256="8" * 64,
+        current_parent_sha256="8" * 64,
+    )
+
+    accepted = accepted_decision()
+    unsealed = GovernanceDecision(canonical_json_bytes(accepted.to_dict()))
+    accepted_context = governance_context_sha256(accepted.to_dict())
+    assert not authorize_conditional_publish(
+        decision=unsealed,
+        validated_context_sha256=accepted_context,
+        current_context_sha256=accepted_context,
+        expected_parent_sha256="8" * 64,
+        current_parent_sha256="8" * 64,
+    )
+
+
 def test_rollback_requires_positive_fresh_current_context_validation() -> None:
     blocked = assess_rollback(
         prior_configuration_sha256="8" * 64,
@@ -438,6 +491,7 @@ def test_rollback_requires_positive_fresh_current_context_validation() -> None:
     )
     valid = {
         "context_sha256": "a" * 64,
+        "configuration_sha256": "8" * 64,
         "coverage_status": "COMPLETE",
         "invariant_verdicts": {f"INV-{index:02d}": "PASS" for index in range(1, 13)},
         "candidate_validation_status": "valid",
@@ -450,3 +504,9 @@ def test_rollback_requires_positive_fresh_current_context_validation() -> None:
     )
     assert blocked["status"] == "ROLLBACK_BLOCKED"
     assert allowed["status"] == "ROLLBACK_ALLOWED"
+    mismatched_configuration = assess_rollback(
+        prior_configuration_sha256="8" * 64,
+        current_context_sha256="a" * 64,
+        revalidation={**valid, "configuration_sha256": "b" * 64},
+    )
+    assert mismatched_configuration["status"] == "ROLLBACK_BLOCKED"

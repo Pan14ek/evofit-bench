@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from experiments.execution.tooling.p_applicability import ApplicabilityStatus, ProofStatus
 from experiments.execution.tooling.p_semantic import (
     ComplianceStatus,
@@ -137,6 +139,65 @@ def test_same_valid_pair_counts_once_and_unknown_mandate_blocks_coverage() -> No
     )
     assert unresolved.status is CoverageStatus.UNKNOWN
     assert unresolved.obligations[0].applicability_status == "UNKNOWN"
+
+
+def test_stale_pair_architecture_revision_cannot_satisfy_coverage() -> None:
+    pair, _rep, obligation, *_ = make_valid_pair()
+    stale = replace(pair, architecture_source_sha="9999999999999999999999999999999999999999")
+    coverage = assess_mandatory_coverage(
+        applicability=make_applicability({obligation["id"]: ApplicabilityStatus.ACTIVE}),
+        obligations=[obligation],
+        pair_assessments=[stale],
+    )
+    assert coverage.status is CoverageStatus.UNKNOWN
+    assert coverage.obligations[0].status == "UNKNOWN"
+    assert "PAIR_ARCHITECTURE_REVISION_MISMATCH" in coverage.obligations[0].reason_codes
+
+
+def test_conflicting_assessments_for_same_pair_cannot_count_as_valid() -> None:
+    valid, _rep, obligation, *_ = make_valid_pair()
+    invalid, *_ = make_valid_pair(evidence_changes={"stage_applicable": False})
+    coverage = assess_mandatory_coverage(
+        applicability=make_applicability({obligation["id"]: ApplicabilityStatus.ACTIVE}),
+        obligations=[obligation],
+        pair_assessments=[valid, invalid],
+    )
+    assert coverage.status is CoverageStatus.UNKNOWN
+    assert coverage.obligations[0].status == "UNKNOWN"
+    assert coverage.obligations[0].valid_pair_ids == ()
+    assert "PAIR_ASSESSMENT_CONFLICT" in coverage.obligations[0].reason_codes
+
+
+def test_same_status_pair_records_with_different_stages_are_conflicting() -> None:
+    first, _rep, obligation, *_ = make_valid_pair()
+    second, *_ = make_valid_pair(representation=make_representation(stage="runtime"))
+    assert first.status is PairStatus.VALID
+    assert second.status is PairStatus.VALID
+    assert first.representation_id == second.representation_id
+    assert first.stage != second.stage
+    coverage = assess_mandatory_coverage(
+        applicability=make_applicability({obligation["id"]: ApplicabilityStatus.ACTIVE}),
+        obligations=[obligation],
+        pair_assessments=[first, second],
+        required_stages={obligation["id"]: ["ci", "runtime"]},
+        stage_contract_verified=True,
+    )
+    assert coverage.status is CoverageStatus.UNKNOWN
+    assert coverage.obligations[0].valid_pair_ids == ()
+    assert "PAIR_ASSESSMENT_CONFLICT" in coverage.obligations[0].reason_codes
+
+
+def test_mutated_pair_status_with_stale_digest_cannot_count_as_valid() -> None:
+    valid, _rep, obligation, *_ = make_valid_pair()
+    tampered = replace(valid, status=PairStatus.INVALID)
+    coverage = assess_mandatory_coverage(
+        applicability=make_applicability({obligation["id"]: ApplicabilityStatus.ACTIVE}),
+        obligations=[obligation],
+        pair_assessments=[valid, tampered],
+    )
+    assert coverage.status is CoverageStatus.UNKNOWN
+    assert coverage.obligations[0].valid_pair_ids == ()
+    assert "PAIR_ASSESSMENT_DIGEST_MISMATCH" in coverage.obligations[0].reason_codes
 
 
 def test_high_score_or_covers_declaration_cannot_replace_exact_pair_evidence() -> None:

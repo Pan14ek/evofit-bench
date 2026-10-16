@@ -7,6 +7,8 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any
 
+import yaml
+
 from experiments.execution.tooling.contracts import (
     validate_candidate,
     validate_payload,
@@ -52,6 +54,8 @@ def materialize_candidate(
         or sha256_bytes(parent_configuration_bytes) != parent_sha256
     ):
         raise ContractValidationError("P03_PARENT_CONFIGURATION_DIGEST_MISMATCH")
+    if not _parent_configuration_matches_bytes(parent_configuration, parent_configuration_bytes):
+        raise ContractValidationError("P03_PARENT_CONFIGURATION_CONTENT_MISMATCH")
     if not isinstance(parent_path, str) or _SAFE_PATH.fullmatch(parent_path) is None:
         raise ContractValidationError("P03_PARENT_CONFIGURATION_PATH_INVALID")
     if operation_plan.reject_reasons:
@@ -158,6 +162,57 @@ def candidate_sha256(candidate: Mapping[str, Any]) -> str:
     """Return the stable semantic digest of the complete development candidate."""
     validate_payload("p_candidate_configuration_v1.schema.json", dict(candidate))
     return sha256_bytes(canonical_json_bytes(dict(candidate)))
+
+
+def normalize_parent_representation(row: Any) -> dict[str, Any]:
+    """Normalize one source representation into the configuration projection."""
+    required = ("id", "criterion", "stage", "evaluator", "covers")
+    if not isinstance(row, Mapping) or any(
+        not isinstance(row.get(key), list if key == "covers" else str) for key in required
+    ):
+        raise ContractValidationError("P03_PARENT_REPRESENTATION_INVALID")
+    scope = row.get("applicability_scope")
+    evidence_contract = row.get("evidence_contract")
+    return {
+        "id": row["id"],
+        "active": True,
+        "criterion": row["criterion"],
+        "stage": row["stage"],
+        "evaluator": row["evaluator"],
+        "evaluator_artifact": row.get("evaluator_artifact"),
+        "covers": sorted({value for value in row["covers"] if isinstance(value, str)}),
+        "applicability_scope": dict(scope) if isinstance(scope, Mapping) else {},
+        "evidence_contract": dict(evidence_contract)
+        if isinstance(evidence_contract, Mapping)
+        else {},
+    }
+
+
+def _parent_configuration_matches_bytes(
+    parent_configuration: Mapping[str, Any], parent_configuration_bytes: bytes
+) -> bool:
+    try:
+        source = yaml.safe_load(parent_configuration_bytes)
+        if not isinstance(source, Mapping):
+            return False
+        if canonical_json_bytes(dict(source)) == canonical_json_bytes(dict(parent_configuration)):
+            return True
+        source_rows = source.get("representations")
+        schema_version = source.get("schema_version", 1)
+        if (
+            not isinstance(source_rows, list)
+            or not isinstance(schema_version, int)
+            or isinstance(schema_version, bool)
+            or schema_version != 1
+        ):
+            return False
+        projection = {
+            "schema_version": 1,
+            "representations": [normalize_parent_representation(row) for row in source_rows],
+        }
+        return canonical_json_bytes(projection) == canonical_json_bytes(dict(parent_configuration))
+    except (ContractValidationError, TypeError, ValueError, yaml.YAMLError):
+        return False
 
 
 def adapt_candidate_v1(candidate: Mapping[str, Any]) -> dict[str, Any]:

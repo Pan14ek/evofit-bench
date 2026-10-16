@@ -21,6 +21,9 @@ Use disposable DB and genuine interfaces instead of only mocked modules.
 ## Constraints and known gaps
 
 Do not report integration success as G1/G4 or sample-level significance. The SPEC03 orchestration fixture is TEST_ONLY and intentionally HOLDs under OPEN authority.
+The integration tests also reject caller-claimed VERIFIED_V3 provenance and
+detect nested input mutation after the strict V3 verifier returns a bundle;
+these checks do not replace a positive approved V3 production-input path.
 
 ## Verification and further reading
 

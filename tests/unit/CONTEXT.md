@@ -27,6 +27,9 @@ This is a selected list (13 direct tracked files), not a complete source invento
 ## Established conventions
 
 Test negative/unverified/expired/contradictory inputs plus backward compatibility.
+SPEC03 regression cases also check stale pair revisions, conflicting and
+digest-tampered pair assessments, parent-byte/mapping consistency, publish
+decision integrity, and exact-hash rollback authorization.
 
 ## Constraints and known gaps
 

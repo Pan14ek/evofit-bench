@@ -18,6 +18,7 @@ from experiments.execution.tooling.contracts import load_schema
 from experiments.execution.tooling.errors import ContractValidationError, ProtocolError
 from experiments.execution.tooling.hashing import canonical_json_bytes, sha256_bytes
 from experiments.execution.tooling.inputs import FITNESS_INPUTS, TRACEABILITY_INPUT
+from experiments.execution.tooling.p_adaptation import run_adaptation, verify_v3_p_bundle
 from experiments.execution.tooling.p_applicability import (
     ApplicabilityStatus,
     EvidenceLedger,
@@ -594,7 +595,6 @@ def test_v3_spec01_evidence_ledger_and_applicability_pipeline(tmp_path: Path) ->
     assert unresolved_result.status is ApplicabilityStatus.UNKNOWN
     assert "POLICY_APPROVAL_UNVERIFIED" in unresolved_result.reason_codes
     assert closure_id == snapshot["policy_registry"]["closure_claim_id"]
-
     substituted = dict(snapshot)
     substituted_registry = dict(snapshot["policy_registry"])
     substituted_registry["registry_version"] = "substituted-snapshot-v1"
@@ -620,3 +620,23 @@ def test_v3_spec01_evidence_ledger_and_applicability_pipeline(tmp_path: Path) ->
     )
     assert damaged_result.status is ApplicabilityStatus.UNKNOWN
     assert "EVIDENCE_VERSION_MISMATCH" in damaged_result.reason_codes
+
+
+def test_v3_verifier_binds_nested_bundle_content_before_adaptation(tmp_path: Path) -> None:
+    repository, before_sha, after_sha = _synthetic_architecture_repository(tmp_path)
+    policy_source, _closure_id = _synthetic_policy_source_for_pipeline(tmp_path, after_sha)
+    policy_bundle = tmp_path / "policy-bundles/verification-binding"
+    package_policy_source_v3(policy_source, policy_bundle, "synthetic-verification-binding-v1")
+    bundle_root = tmp_path / "method-inputs/P"
+    _export(repository, policy_bundle, bundle_root, "P", before_sha, after_sha)
+
+    verified = verify_v3_p_bundle(
+        bundle_root,
+        evidence_ledger=EvidenceLedger({}, {}, {}),
+    )
+    facts = verified.snapshot["facts"]
+    assert isinstance(facts, list)
+    facts.append({"id": "SYN_TAMPERED_FACT"})
+
+    with pytest.raises(ContractValidationError, match="P03_VERIFIED_BUNDLE_CONTENT_CHANGED"):
+        run_adaptation(verified)

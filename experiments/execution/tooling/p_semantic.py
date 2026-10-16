@@ -426,9 +426,19 @@ def assess_mandatory_coverage(
     applicability_rows = {item.obligation_id: item.status.value for item in applicability.results}
     if len(applicability_rows) != len(applicability.results):
         raise ContractValidationError("P03_APPLICABILITY_DUPLICATE_OBLIGATION")
-    pair_index: dict[str, list[PairAssessment]] = defaultdict(list)
+    pair_index: dict[str, dict[str, list[PairAssessment]]] = defaultdict(lambda: defaultdict(list))
+    stale_pair_obligations: set[str] = set()
+    invalid_pair_obligations: set[str] = set()
+    invalid_pair_representations: dict[str, set[str]] = defaultdict(set)
     for pair in pair_assessments:
-        pair_index[pair.obligation_id].append(pair)
+        if pair.architecture_source_sha != applicability.architecture_source_sha:
+            stale_pair_obligations.add(pair.obligation_id)
+            continue
+        if not _pair_assessment_digest_is_valid(pair):
+            invalid_pair_obligations.add(pair.obligation_id)
+            invalid_pair_representations[pair.obligation_id].add(pair.representation_id)
+            continue
+        pair_index[pair.obligation_id][pair.representation_id].append(pair)
     stage_map = required_stages or {}
     records: list[ObligationCoverage] = []
     reasons: set[str] = set()
@@ -473,6 +483,34 @@ def assess_mandatory_coverage(
         else:
             active_mandatory_count += 1
             required = tuple(sorted(set(stage_map.get(obligation_id, ()))))
+            current_pairs: list[PairAssessment] = []
+            conflicting_pair = False
+            for representation_pairs in pair_index.get(obligation_id, {}).values():
+                pair_statuses = {pair.status for pair in representation_pairs}
+                assessment_digests = {pair.assessment_sha256 for pair in representation_pairs}
+                if (
+                    len(pair_statuses) > 1
+                    or len(assessment_digests) > 1
+                    or representation_pairs[0].representation_id
+                    in invalid_pair_representations.get(obligation_id, set())
+                ):
+                    conflicting_pair = True
+                    continue
+                current_pairs.extend(representation_pairs)
+            stale_pair = obligation_id in stale_pair_obligations
+            invalid_pair = obligation_id in invalid_pair_obligations
+            if stale_pair:
+                row_reasons.add("PAIR_ARCHITECTURE_REVISION_MISMATCH")
+            if invalid_pair:
+                row_reasons.add("PAIR_ASSESSMENT_DIGEST_MISMATCH")
+            if conflicting_pair:
+                row_reasons.add("PAIR_ASSESSMENT_CONFLICT")
+            unresolved_pair = (
+                stale_pair
+                or invalid_pair
+                or conflicting_pair
+                or any(pair.status is PairStatus.UNKNOWN for pair in current_pairs)
+            )
             if required and stage_contract_verified is not True:
                 status = "UNKNOWN"
                 row_reasons.add("STAGE_CONTRACT_UNVERIFIED")
@@ -480,23 +518,17 @@ def assess_mandatory_coverage(
                 covered = ()
                 valid_ids = ()
             else:
-                valid_pairs = [
-                    pair
-                    for pair in pair_index.get(obligation_id, [])
-                    if pair.status is PairStatus.VALID
-                ]
+                valid_pairs = [pair for pair in current_pairs if pair.status is PairStatus.VALID]
                 valid_stages = {pair.stage for pair in valid_pairs if pair.stage is not None}
                 if required:
                     missing_stages = sorted(set(required) - valid_stages)
                     covered = tuple(stage for stage in required if stage in valid_stages)
                     if not missing_stages:
                         status = "COVERED"
-                    elif any(
-                        pair.status is PairStatus.UNKNOWN
-                        for pair in pair_index.get(obligation_id, [])
-                    ):
+                    elif unresolved_pair:
                         status = "UNKNOWN"
-                        row_reasons.add("REQUIRED_STAGE_EVIDENCE_UNKNOWN")
+                        if not stale_pair and not invalid_pair and not conflicting_pair:
+                            row_reasons.add("REQUIRED_STAGE_EVIDENCE_UNKNOWN")
                         unknown_any = True
                     else:
                         status = "NOT_DEMONSTRATED"
@@ -505,12 +537,10 @@ def assess_mandatory_coverage(
                     covered = tuple(sorted(valid_stages))
                     if valid_pairs:
                         status = "COVERED"
-                    elif any(
-                        pair.status is PairStatus.UNKNOWN
-                        for pair in pair_index.get(obligation_id, [])
-                    ):
+                    elif unresolved_pair:
                         status = "UNKNOWN"
-                        row_reasons.add("PAIR_VALIDITY_UNKNOWN")
+                        if not stale_pair and not invalid_pair and not conflicting_pair:
+                            row_reasons.add("PAIR_VALIDITY_UNKNOWN")
                         unknown_any = True
                     else:
                         status = "NOT_DEMONSTRATED"
@@ -629,6 +659,12 @@ def _pair_result(
 
 def _assessment_digest(assessment: ApplicabilityAssessment) -> str:
     return sha256_bytes(canonical_json_bytes(assessment.to_dict()))
+
+
+def _pair_assessment_digest_is_valid(pair: PairAssessment) -> bool:
+    content = pair.to_dict()
+    claimed_digest = content.pop("assessment_sha256")
+    return claimed_digest == sha256_bytes(canonical_json_bytes(content))
 
 
 def _digest_value(value: Any) -> str:

@@ -15,7 +15,10 @@ from experiments.execution.tooling.hashing import (
     pretty_json_bytes,
     sha256_bytes,
 )
-from experiments.execution.tooling.p_adaptation import VerifiedPBundle, run_adaptation
+from experiments.execution.tooling.p_adaptation import (
+    VerifiedPBundle,
+    run_adaptation,
+)
 from experiments.execution.tooling.p_applicability import (
     CompiledRuleset,
     EvidenceLedger,
@@ -144,6 +147,9 @@ def test_synthetic_pipeline_runs_spec02_and_holds_open_authority_unknown() -> No
     assert result.candidate_coverage is not None
     assert result.candidate_coverage.status.value == "UNKNOWN"
     assert result.governance.result.value == "HOLD"
+    assert (
+        "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED" in result.governance.to_dict()["reason_codes"]
+    )
     assert result.candidate is not None
     assert result.candidate["configuration_version"] != "SYN_CONFIG_1"
     assert result.prediction_v1 is None
@@ -152,6 +158,12 @@ def test_synthetic_pipeline_runs_spec02_and_holds_open_authority_unknown() -> No
 def test_preflight_rejects_snapshot_validation_from_another_exact_revision() -> None:
     with pytest.raises(ContractValidationError, match="P03_PREFLIGHT_SNAPSHOT_BINDING_MISMATCH"):
         run_adaptation(synthetic_verified_bundle(tamper_validation_digest=True))
+
+
+def test_caller_cannot_claim_verified_v3_without_verifier_identity() -> None:
+    forged = replace(synthetic_verified_bundle(), bundle_provenance="VERIFIED_V3")
+    with pytest.raises(ContractValidationError, match="P03_VERIFIED_BUNDLE_NOT_VERIFIED"):
+        run_adaptation(forged)
 
 
 def test_preflight_rejects_policy_and_ruleset_digest_substitution() -> None:
