@@ -46,7 +46,13 @@ For a representation **r**, obligation **q**, target architecture **A**, and evi
 
     V(r,q,A,E) ∈ {VALID, INVALID, UNKNOWN}
 
-VALID requires current revision and scope, applicable stage/context, resolved nonvacuous evaluator artifact, pair-specific semantic match, adequate evidence, and admissible provenance. INVALID requires a demonstrated contradiction or failed necessary condition. Missing, stale, conflicting, or unverified proof is UNKNOWN.
+This is the method-side result from [`assess_pair()`](../experiments/execution/tooling/p_semantic.py), and is distinct from evaluator execution validity, observed compliance, policy applicability, and governance. Its code-level classification is:
+
+- **INVALID** when evaluator evidence fails its schema; when a hard pair mismatch is explicit (for example, a representation/evaluator/revision mismatch, missing obligation or criterion mapping, target-resolution or stage/context mismatch, scope mismatch in the pair-proof subject, an invalid artifact/reference binding, semantic incompatibility, or a pair-proof subject/source mismatch); or when the supplied semantic proof is `INVALID`. A target-revision mismatch is therefore invalid; there is no blanket rule that every item called “stale” is invalid.
+- **UNKNOWN** when evidence or required artifacts are absent/unavailable, bytes or proof references cannot be verified, execution is unresolved/not run, semantic compatibility or semantic proof is undetermined, or another non-hard reason prevents a positive conclusion without proving a mismatch.
+- **VALID** only when the supplied exact-pair semantic proof is `VALID` and no invalid or unresolved condition remains. A completed non-zero evaluator exit sets `compliance_status=NON_COMPLIANT`; that compliance-only reason does not by itself change `status` from `VALID` to `INVALID`.
+
+These rules concern the returned pair status only. An invalid input architecture SHA is rejected as a contract error rather than assigned a pair status. The code does not have a generic “stale evidence” verdict: a concrete revision or proof-binding mismatch is `INVALID`, while unavailable, incomplete, or unverified evidence without a proved mismatch remains `UNKNOWN`.
 
 ## 3. Decisions that must remain separate
 
@@ -87,26 +93,39 @@ For a policy-only revision with the same architecture SHA, the policy delta is s
 
 ## 5. Typed differences and conservative impact
 
-The proposed typed difference is:
+The impact result contains three different domains, so it is a product, not a union of graph nodes, obligations, and trace-link diagnostics:
 
-    Δₜ = Diff(Zₜ,Zₜ₊₁) ∪ Diff(Πₜ,Πₜ₊₁) ∪ Diff(Qₜ,Qₜ₊₁)
-    Seedₜ = Map(Δₜ, G_T)
-    Iₜ = Reach_G_T(Seedₜ) ∪ Uₜ₊₁ ∪ Lₜ
+    Δ_A = Diff(Fₜ,Fₜ₊₁) ⊆ ChangeFact
+    Δ_Π = Diff(Πₜ,Πₜ₊₁) ⊆ ChangePolicy
+    Δ = Δ_A ⊎ Δ_Π ⊎ Δ_Q                 (typed change sum; see implementation note)
+    S⁺, S? = Map(Δ, G_T)                 (verified and uncertain change seeds)
+    P⁺ = Reach⁺_G_T(S⁺)
+    P? = Reach_G_T(S⁺ ∪ S?) \ P⁺
+    R⁺ = π_R(P⁺);  R? = π_R(P?)
+    Uₜ₊₁ = {q ∈ Q | mandatory(q) ∧ applicableₜ₊₁(q)=ACTIVE ∧ q ∉ Coveredₜ₊₁}
+    L?ₜ = unresolved trace-link, mapping, provenance, or inventory diagnostics
+    Iₜ = ⟨Impact_R(R⁺, R?), Uₜ₊₁, L?ₜ⟩
 
-The difference records entity kind and identity, change kind, predicate, subject, old/new scopes, value digests, versions, evidence references, and reason codes. Typed graph traversal may identify causal paths; it does not itself prove invalidity.
+`ChangeFact` and `ChangePolicy` are disjoint typed record domains. `Δ_Q` denotes a conceptual obligation/applicability change domain in the general model; it is not an emitted change set in the current `p_impact.py` implementation. `F` is the supplied architecture-fact inventory, `π_R` projects graph nodes onto declared representation IDs, and `Q` is the obligation catalog. A change seeds its entity node only when the ID, context, and source provenance bind to a graph node. Unmapped, indeterminate, or unverified changes are retained as unresolved/uncertain input, not silently dropped.
 
-Let **Uₜ₊₁** be the set of currently mandatory obligations not demonstrated by a valid pair, and **Lₜ** the set of unresolved trace links or inventory omissions. The graph-reachable representation set is conservative; its members are not automatically invalid.
+`Reach⁺` traverses typed edges whose scope, endpoint versions, and source references are verified. `Reach` traverses the declared typed graph to retain possible paths through unverified edges. `P⁺` and `P?` are path domains; `R⁺` and `R?` are representation-ID sets. A reachable representation requires reassessment; reachability alone does not establish semantic invalidity.
+
+`Uₜ₊₁` is computed independently from graph reachability: it contains currently mandatory, positively applicable obligations not demonstrated covered by the after-state pair assessment. The impact assessment records these separately. Operation planning independently derives remaining uncovered active mandatory obligations from coverage and may select `ADD` only when a suitable materializable template and its required authorization/cost evidence exist; otherwise it holds. Thus a missing graph edge cannot suppress an ADD candidate for a proven uncovered obligation, and an ADD candidate is not itself an accepted adaptation.
+
+`L?ₜ` is a set of diagnostic identifiers/reason codes for unresolved graph links, missing mappings, provenance/context failures, or incomplete inventory. The tuple **Iₜ** keeps this diagnostic domain separate from affected representation IDs and uncovered obligation IDs. The serialized [`ImpactAssessment`](../experiments/execution/tooling/p_impact.py) correspondingly has separate `representations`, `uncovered_obligations`, and `unresolved_links` fields.
+
+**Implementation boundary.** SPEC 03 and the equations above provide the typed method abstraction. In the current code, [`diff_snapshot()` and `analyze_impact()`](../experiments/execution/tooling/p_impact.py) emit fact/policy changes and derive `uncovered_obligations`; no `Δ_Q` records are produced. [`run_adaptation()`](../experiments/execution/tooling/p_adaptation.py) passes impact and coverage into the operation planner, which derives its own remaining uncovered set. The code binds change seeds to nodes, tracks verified and possible paths separately, projects paths to declared representations, and emits the three separate result domains. It does not serialize these mathematical sets or a generic `Δ_Q` object.
 
 Each representation receives one conservative impact state:
 
 | State | Meaning |
 | --- | --- |
-| PROVEN_AFFECTED | A supported typed path or direct bound change establishes an effect |
-| POSSIBLY_AFFECTED | A relevant path exists but does not prove semantic invalidity |
-| NOT_AFFECTED_WITH_PROOF | Complete, verified inputs and graph establish no relevant change |
-| UNRESOLVED | Missing edges, incomplete inventory, or uncertain evidence prevent classification |
+| PROVEN_AFFECTED | A path from a provenance/context-verified change seed follows only verified typed edges. |
+| POSSIBLY_AFFECTED | A candidate path exists through the declared graph but is not fully verified, or an incomplete inventory leaves a known/possible change seed without a resolved path. |
+| NOT_AFFECTED_WITH_PROOF | No path exists and both change and graph inventories are complete and verified, with no unresolved context, provenance, or seed evidence. |
+| UNRESOLVED | The representation is absent from the graph, or missing/inconsistent links or evidence prevent a possible/no-impact classification. |
 
-An uncovered newly/currently mandatory obligation is considered even if the previous graph lacks a link. An absent edge in an incomplete graph yields possible impact or unresolved status, never proof of no impact. The implementation reports paths and evidence references and binds the result digest to architecture, policy, ruleset, Snapshot, and graph versions.
+The implementation sorts change records, adjacency, seeds, representation outputs, uncovered obligations, and unresolved diagnostics; breadth-first traversal over sorted seeds/adjacency selects a stable first path. An absent edge in an incomplete graph yields possible impact or unresolved status, never proof of no impact. The result digest binds architecture, policy, ruleset, Snapshot, and graph versions.
 
 ## 6. Exact-pair semantics and mandatory coverage
 

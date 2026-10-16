@@ -103,12 +103,17 @@ flowchart TD
 **Formal impact starting point:**
 
 ```text
-ΔZ = Diff(Z_t, Z_(t+1));  ΔΠ = Diff(Π_t, Π_(t+1))
-Seed = Map(ΔZ ∪ ΔΠ ∪ ΔQ, G_T)
-I_t = Representations(Reach_G(Seed)) ∪ Uncovered(Q_(t+1)^+) ∪ UncertainLinks_t
+Δ_A = Diff(F_t, F_(t+1)) ⊆ ChangeFact
+ΔΠ = Diff(Π_t, Π_(t+1)) ⊆ ChangePolicy
+Δ = Δ_A ⊎ ΔΠ ⊎ Δ_Q                 (disjoint typed change sum)
+S⁺, S? = Map(Δ, G_T)                (verified and uncertain seeds)
+R_t = π_R(Reach_G(S⁺ ∪ S?))         (representation IDs only)
+U_t = {q ∈ Q | mandatory(q) ∧ applicable_(t+1)(q)=ACTIVE ∧ q ∉ Covered_(t+1)}
+L?_t = unresolved trace-link and inventory diagnostics
+I_t = ⟨R_t, U_t, L?_t⟩
 ```
 
-The reachability set contains **possibly affected** representations, not automatically invalid ones. Missing links in an incomplete traceability graph do not prove no impact. Reassess every candidate pair `(r,q)` in the target context:
+The equation is a typed conceptual abstraction: `ChangeFact`, `ChangePolicy`, `Δ_Q`, representation IDs, obligation IDs, and unresolved-link diagnostics are separate domains, and the result is a tuple rather than a heterogeneous set union. In the current `p_impact.py`, `diff_snapshot()` emits fact and policy changes but no `Δ_Q` records; after-state applicability and mandatory coverage are supplied separately to derive uncovered obligations. The reachability projection contains **possibly affected** representations, not automatically invalid ones. Missing links in an incomplete traceability graph do not prove no impact. Reassess every candidate pair `(r,q)` in the target context:
 
 ```text
 V(r,q,A_(t+1),E) ∈ {1,0,⊥}

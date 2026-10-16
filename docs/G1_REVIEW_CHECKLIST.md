@@ -18,7 +18,7 @@ Permitted review outcomes include **NOT_REVIEWED**, **EVIDENCE_INCOMPLETE**, **P
 | --- | --- | --- |
 | G0 — architecture/input freeze | PASS for recorded Phase A inputs in [READINESS](../experiments/execution/da01/READINESS.md) | A changed-path review for this documentation package is not an independent byte-parity re-export |
 | G1 — method/protocol freeze | INCOMPLETE | Independent review of the method, RQ/endpoints, B1 cadence, unresolved decisions, and an authentic freeze record |
-| G2 — isolation audit | Prior local digest-pinned negative probes PASS; cited CI probe was SKIPPED in the recorded Phase A report | Reconfirm the selected measured environment and exact deployed runtime before a later run |
+| G2 — isolation audit | Phase A and PR #11 current-branch DEVELOPMENT synthetic probes PASS locally; measured-environment audit remains pending. | [READINESS](../experiments/execution/da01/READINESS.md) records the historical CI probe SKIPPED. At PR #11 head `b2a6a8d`, direct execution of the selected synthetic test passed (`1 passed in 4.53s`, digest-pinned image); push and PR `make development-quality` also passed, but their `200 passed, 1 skipped` aggregate does not identify the selected test's individual CI result. Independently validate the selected measured environment and exact deployed runtime before a later run. |
 | G3 — synthetic rehearsal | Engineering-only PASS for recorded tests; PR #10 has TEST_ONLY no-op and ADD ACCEPT cases | This is synthetic DEVELOPMENT evidence, not production authority, independent review, or an outcome |
 | G4 — measured-run authorization | NOT AUTHORIZED | Separate explicit human authorization after G1 and required prerequisites |
 
