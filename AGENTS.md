@@ -1,6 +1,6 @@
 # Agent instructions — EvoFitBench
 
-This file governs automated contributors working in this repository. Read it before editing. The repository is a **research instrument**, not a production task-management product. Read `docs/RESEARCH_CONTEXT.md` to understand the scientific purpose and limits of the proposed method. Prefer verifiable, reproducible behavior to feature breadth.
+This file governs automated contributors working in this repository. Read it before editing. The repository is a **research instrument**, not a production task-management product. Read [`docs/RESEARCH_CONTEXT.md`](docs/RESEARCH_CONTEXT.md) for the scientific purpose, model, manuscript-to-protocol RQ crosswalk, falsifiable hypotheses, validity threats, and implementation boundaries of the proposed method. Prefer verifiable, reproducible behavior to feature breadth.
 
 ## Read-first map
 
@@ -12,7 +12,7 @@ This file governs automated contributors working in this repository. Read it bef
 6. [Actual technology stack and commands](docs/TECHNOLOGY.md).
 7. [Verification and test traceability](docs/TESTING.md).
 
-For normative experimental details, prefer the **versioned source files** over narrative summaries: `experiments/design/ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md`; `experiments/execution/da01/PROTOCOL.md`, `INPUT_ISOLATION.md`, `READINESS.md`, `SCORE_RULES.md`, `VALIDITY_RULES.md`; `fitness/catalog/architectural-obligations.yaml`; and the corresponding JSON Schemas. If narrative documents disagree, identify the discrepancy in the PR; do not silently reconcile or rewrite scientific rules.
+For manuscript scientific RQ1–RQ4 versus executable experiment RQ1–RQ4, start with the explicit crosswalk and open methodological discrepancies in [`docs/RESEARCH_CONTEXT.md`](docs/RESEARCH_CONTEXT.md). These are not equivalent numbering schemes; do not rename or resolve either one by editing frozen research artifacts.\n\nFor normative experimental details, prefer the **versioned source files** over narrative summaries: `experiments/design/ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md`; `experiments/execution/da01/PROTOCOL.md`, `INPUT_ISOLATION.md`, `READINESS.md`, `SCORE_RULES.md`, `VALIDITY_RULES.md`; `fitness/catalog/architectural-obligations.yaml`; and the corresponding JSON Schemas. If narrative documents disagree, identify the discrepancy in the PR; do not silently reconcile or rewrite scientific rules.
 
 ## Hierarchical CONTEXT.md convention (mandatory for repository work)
 
