@@ -1,7 +1,7 @@
 """Check that every Git-tracked source directory has local agent context."""
 
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 import pytest
 
@@ -19,11 +19,7 @@ def test_context_files_cover_all_tracked_directories_except_docs() -> None:
         capture_output=True,
         check=True,
     )
-    paths = {
-        path.decode("utf-8")
-        for path in result.stdout.split(b"\x00")
-        if path
-    }
+    paths = {path.decode("utf-8") for path in result.stdout.split(b"\x00") if path}
     expected = {"CONTEXT.md"}
     for name in paths:
         for parent in Path(name).parents:
