@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:p-impact-assessment:v1",
+  "title": "Development-only P impact assessment v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "algorithm_version", "architecture_before_sha", "architecture_after_sha", "policy_source_revision", "policy_bundle_sha256", "ruleset_sha256", "snapshot_sha256", "trace_graph_sha256", "changes", "representations", "uncovered_obligations", "unresolved_links", "assessment_sha256"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "algorithm_version": {"const": "P_IMPACT_V1"},
+    "architecture_before_sha": {"$ref": "#/$defs/sha1"},
+    "architecture_after_sha": {"$ref": "#/$defs/sha1"},
+    "policy_source_revision": {"type": "string", "minLength": 1, "maxLength": 128},
+    "policy_bundle_sha256": {"$ref": "#/$defs/sha256"},
+    "ruleset_sha256": {"$ref": "#/$defs/sha256"},
+    "snapshot_sha256": {"$ref": "#/$defs/sha256"},
+    "trace_graph_sha256": {"$ref": "#/$defs/sha256"},
+    "changes": {"type": "array", "items": {"$ref": "#/$defs/change"}},
+    "representations": {"type": "array", "items": {"$ref": "#/$defs/impact"}},
+    "uncovered_obligations": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "unresolved_links": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "assessment_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$"},
+    "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "nullableText": {"type": ["string", "null"]},
+    "refs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "change": {
+      "type": "object", "additionalProperties": false,
+      "required": ["change_id", "entity_kind", "entity_id", "change_kind", "predicate", "subject", "old_scope", "new_scope", "old_value_sha256", "new_value_sha256", "old_version", "new_version", "evidence_refs", "reason_codes"],
+      "properties": {
+        "change_id": {"type": "string", "minLength": 1},
+        "entity_kind": {"enum": ["fact", "policy", "obligation"]},
+        "entity_id": {"$ref": "#/$defs/id"},
+        "change_kind": {"enum": ["ADDED", "REMOVED", "VALUE_CHANGED", "SCOPE_CHANGED", "VERSION_CHANGED", "UNCHANGED", "INDETERMINATE"]},
+        "predicate": {"$ref": "#/$defs/nullableText"},
+        "subject": {"$ref": "#/$defs/nullableText"},
+        "old_scope": {"$ref": "#/$defs/nullableText"},
+        "new_scope": {"$ref": "#/$defs/nullableText"},
+        "old_value_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+        "new_value_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+        "old_version": {"$ref": "#/$defs/nullableText"},
+        "new_version": {"$ref": "#/$defs/nullableText"},
+        "evidence_refs": {"$ref": "#/$defs/refs"},
+        "reason_codes": {"$ref": "#/$defs/refs"}
+      }
+    },
+    "impact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["representation_id", "status", "causal_paths", "reason_codes", "evidence_refs"],
+      "properties": {
+        "representation_id": {"$ref": "#/$defs/id"},
+        "status": {"enum": ["PROVEN_AFFECTED", "POSSIBLY_AFFECTED", "NOT_AFFECTED_WITH_PROOF", "UNRESOLVED"]},
+        "causal_paths": {"type": "array", "items": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/id"}}},
+        "reason_codes": {"$ref": "#/$defs/refs"},
+        "evidence_refs": {"$ref": "#/$defs/refs"}
+      }
+    }
+  }
+}

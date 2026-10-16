@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:p-operation-plan:v1",
+  "title": "Development-only deterministic P operation plan v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["operations", "hold_reasons", "reject_reasons", "plan_sha256"],
+  "properties": {
+    "operations": {"type": "array", "items": {"$ref": "#/$defs/operation"}},
+    "hold_reasons": {"$ref": "#/$defs/codes"},
+    "reject_reasons": {"$ref": "#/$defs/codes"},
+    "plan_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "codes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]{1,127}$"}},
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["target_type", "target_id", "operation", "reason_codes", "evidence_refs", "payload", "artifact_sha256", "incremental_cost"],
+      "properties": {
+        "target_type": {"enum": ["representation", "obligation"]},
+        "target_id": {"$ref": "#/$defs/id"},
+        "operation": {"enum": ["retain", "replace", "add", "deactivate", "adjust"]},
+        "reason_codes": {"$ref": "#/$defs/codes"},
+        "evidence_refs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "payload": {"oneOf": [{"type": "object"}, {"type": "null"}]},
+        "artifact_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+        "incremental_cost": {"type": ["number", "null"], "minimum": 0}
+      }
+    }
+  }
+}

@@ -5,13 +5,17 @@
 
 ## Responsibility
 
-Phase A input isolation, contracts, preparation, SPEC01 validator and SPEC02 applicability.
+Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 applicability, and the generic SPEC03 governed-adaptation development pipeline.
 
 ## Local landmarks
 
 - `P_APPLICABILITY_V1.md`
 - `P_INPUT_V11.md`
 - `P_INPUT_V11_SENSITIVE_SHA256.txt`
+- `da01/P_ALGORITHM_STATUS.md`
+- `tooling/p_adaptation.py`
+- `tooling/p_impact.py`
+- `P_GOVERNED_ADAPTATION_V1.md`
 - `README.md`
 
 ## Established conventions
@@ -20,7 +24,7 @@ Research implementation under tooling/; DA01 protocol under da01/.
 
 ## Constraints and known gaps
 
-P impact/operation/governance still NOT_READY; no authorized measured trials.
+SPEC03 pipeline code and additive DEVELOPMENT schemas are implemented and synthetically tested. This does not make P ready for measured trials: current inputs do not provide complete mandatory classifications, approved generic evaluator templates, or an authorized cost model, and G1/G4 remain separate. Keep `p_interface.py` readiness blocked until the documented gates are met.
 
 ## Verification and further reading
 

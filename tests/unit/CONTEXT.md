@@ -16,6 +16,11 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_fault_state.py`
 - `test_p_applicability_policies_v1.py`
 - `test_p_applicability_ruleset_v1.py`
+- `p_spec03_support.py`
+- `test_p_impact_v1.py`
+- `test_p_semantic_pairs_v1.py`
+- `test_p_operations_v1.py`
+- `test_p_candidate_governance_v1.py`
 
 This is a selected list (13 direct tracked files), not a complete source inventory.
 
@@ -25,7 +30,7 @@ Test negative/unverified/expired/contradictory inputs plus backward compatibilit
 
 ## Constraints and known gaps
 
-Current coverage gate reports app-only coverage, not research-tool completeness.
+Current coverage gate reports app-only coverage, not research-tool or requirement completeness. SPEC03 fixtures are synthetic and explicitly TEST_ONLY.
 
 ## Verification and further reading
 

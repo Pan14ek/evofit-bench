@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:p-cost-model:v1",
+  "title": "Versioned bounded evaluator cost model v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "model_version", "authority_status", "max_incremental_cost", "max_search_nodes", "candidate_costs"],
+  "properties": {"schema_version": {"const": 1}, "model_version": {"type": "string", "minLength": 1}, "authority_status": {"enum": ["VERIFIED", "UNVERIFIED", "TEST_ONLY"]}, "max_incremental_cost": {"type": "number", "minimum": 0}, "max_search_nodes": {"type": "integer", "minimum": 1, "maximum": 100000}, "candidate_costs": {"type": "object", "propertyNames": {"pattern": "^[a-f0-9]{64}$"}, "additionalProperties": {"type": "number", "minimum": 0}}}
+}

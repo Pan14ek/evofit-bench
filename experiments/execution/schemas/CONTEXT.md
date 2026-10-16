@@ -16,6 +16,15 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `coverage_assessment.schema.json`
 - `evaluator_evidence.schema.json`
 - `ground_truth_hash.schema.json`
+- `p_traceability_graph_v1.schema.json`
+- `p_impact_assessment_v1.schema.json`
+- `p_pair_assessment_v1.schema.json`
+- `p_coverage_assessment_v1.schema.json`
+- `p_operation_plan_v1.schema.json`
+- `p_candidate_configuration_v1.schema.json`
+- `p_governance_decision_v1.schema.json`
+- `p_adaptation_trace_v1.schema.json`
+- `p_cost_model_v1.schema.json`
 
 This is a selected list (17 direct tracked files), not a complete source inventory.
 
@@ -25,7 +34,7 @@ Validate exact contract version; maintain separate intermediate V3 profile.
 
 ## Constraints and known gaps
 
-Do not weaken frozen DA01 prediction or scorer schemas to force a fit.
+The `p_*_v1` contracts are additive DEVELOPMENT contracts. Do not weaken frozen DA01 prediction or scorer schemas to force a fit.
 
 ## Verification and further reading
 

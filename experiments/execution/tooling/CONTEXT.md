@@ -16,6 +16,12 @@ Python tooling for export, validation, sealing and independent assessment.
 - `errors.py`
 - `hashing.py`
 - `inputs.py`
+- `p_adaptation.py`
+- `p_impact.py`
+- `p_semantic.py`
+- `p_operations.py`
+- `p_candidate.py`
+- `p_governance.py`
 
 This is a selected list (17 direct tracked files), not a complete source inventory.
 
@@ -25,7 +31,7 @@ Use deterministic source hashes and method-input isolation; keep scorer oracle-s
 
 ## Constraints and known gaps
 
-SPEC03 cannot consult scenario ground truth; P impact/candidate/governance not yet done.
+SPEC03 is a DEVELOPMENT implementation only. It uses SPEC02 applicability, exact-pair evidence, conservative impact, materialized templates, bounded deterministic operations, governance, provenance and conditional rollback. Do not use oracle/scorer inputs or claim G1/G4 readiness; unresolved authority, mandatory classifications, templates, costs, multi-stage contracts and method review produce HOLD or remain blockers.
 
 ## Verification and further reading
 

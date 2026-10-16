@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:p-adaptation-trace:v1",
+  "title": "Append-only P adaptation event trace v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema_version", "head_sha256", "events"],
+  "properties": {"schema_version": {"const": 1}, "head_sha256": {"$ref": "#/$defs/sha256"}, "events": {"type": "array", "items": {"$ref": "#/$defs/event"}}},
+  "$defs": {
+    "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "event": {"type": "object", "additionalProperties": false, "required": ["event_id", "event_type", "parent_configuration_sha256", "configuration_sha256", "context_sha256", "previous_event_sha256", "semantic_sha256", "recorded_at_utc", "reason_codes", "evidence_refs"], "properties": {"event_id": {"type": "string", "minLength": 1}, "event_type": {"enum": ["PROPOSED", "VALIDATED", "ACCEPTED", "REJECTED", "HELD", "ROLLED_BACK", "ROLLBACK_BLOCKED"]}, "parent_configuration_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]}, "configuration_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]}, "context_sha256": {"$ref": "#/$defs/sha256"}, "previous_event_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]}, "semantic_sha256": {"$ref": "#/$defs/sha256"}, "recorded_at_utc": {"type": "string", "format": "date-time"}, "reason_codes": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}, "evidence_refs": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}}}
+  }
+}

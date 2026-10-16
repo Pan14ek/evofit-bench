@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:p-traceability-graph:v1",
+  "title": "Development-only typed traceability graph v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "inventory_complete", "nodes", "edges"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "inventory_complete": {"type": "boolean"},
+    "nodes": {"type": "array", "items": {"$ref": "#/$defs/node"}},
+    "edges": {"type": "array", "items": {"$ref": "#/$defs/edge"}}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$"},
+    "refs": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "node": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "kind", "source_refs"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "kind": {"enum": ["fact", "policy", "architectural_element", "obligation", "criterion", "representation", "evaluator", "evidence_contract"]},
+        "scope": {"type": ["string", "null"]},
+        "version": {"type": ["string", "null"]},
+        "source_refs": {"$ref": "#/$defs/refs"}
+      }
+    },
+    "edge": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_id", "target_id", "kind", "source_refs"],
+      "properties": {
+        "source_id": {"$ref": "#/$defs/id"},
+        "target_id": {"$ref": "#/$defs/id"},
+        "kind": {"enum": ["fact_to_obligation", "policy_to_obligation", "element_to_obligation", "element_to_representation", "obligation_to_criterion", "criterion_to_representation", "representation_to_evaluator", "representation_to_evidence_contract", "evaluator_to_evidence_contract"]},
+        "source_refs": {"$ref": "#/$defs/refs"}
+      }
+    }
+  }
+}
