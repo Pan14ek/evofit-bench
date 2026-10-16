@@ -13,7 +13,7 @@ These are **maintained navigation documents**, not replacements for the versione
 
 ## Local context guide
 
-The root [`../CONTEXT.md`](../CONTEXT.md) and each tracked subdirectory's `CONTEXT.md` describe local responsibilities, conventions and constraints. See [`../AGENTS.md`](../AGENTS.md) for the **explicit root-to-leaf reading order**; these files are not automatically loaded by every AI agent. This `docs/` directory is intentionally exempt because its documents provide the centralized research and engineering narrative. See also [GitHub's community discussion of this pattern](https://github.com/orgs/community/discussions/191257).
+The root [`../CONTEXT.md`](../CONTEXT.md) and each eligible tracked subdirectory's `CONTEXT.md` describe local responsibilities, conventions and constraints. See [`../AGENTS.md`](../AGENTS.md) for the **explicit root-to-leaf reading order**; these files are not automatically loaded by every AI agent. The `docs/` directory is intentionally exempt because its documents provide the centralized research and engineering narrative. The strict V3 policy source `experiments/execution/policy-pilot/v1/source/` and its descendants are also exempt: their file allowlist rejects any unexpected `CONTEXT.md`. The parent `experiments/execution/policy-pilot/v1/CONTEXT.md` supplies local context without weakening input integrity. See also [GitHub's community discussion of this pattern](https://github.com/orgs/community/discussions/191257).
 
 ## State at documentation baseline
 

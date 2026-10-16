@@ -4,7 +4,7 @@
 
 ## Local context integrity
 
-The tracked-directory coverage check lives in `tests/unit/test_context_documents.py`. It requires a `CONTEXT.md` at the repository root and in every Git-tracked directory outside `docs/`, including nested directories. Do not conflate this documentation check with the input-isolation or scientific readiness gates. Run:
+The tracked-directory coverage check lives in `tests/unit/test_context_documents.py`. It requires a `CONTEXT.md` at the repository root and in every Git-tracked directory outside `docs/`, except under `experiments/execution/policy-pilot/v1/source/`, including nested directories. That V3 policy-source root is protected by an exact file allowlist: do not relax the exporter to permit documentation. Keep its context in the parent `policy-pilot/v1/CONTEXT.md`. Do not conflate this documentation check with the input-isolation or scientific readiness gates. Run:
 
 ```bash
 uv run pytest --no-cov tests/unit/test_context_documents.py

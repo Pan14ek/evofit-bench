@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
+STRICT_POLICY_SOURCE = "experiments/execution/policy-pilot/v1/source"
 
 
 def test_context_files_cover_all_tracked_directories_except_docs() -> None:
@@ -28,6 +29,8 @@ def test_context_files_cover_all_tracked_directories_except_docs() -> None:
             if directory == ".":
                 continue
             if directory == "docs" or directory.startswith("docs/"):
+                continue
+            if directory == STRICT_POLICY_SOURCE or directory.startswith(f"{STRICT_POLICY_SOURCE}/"):
                 continue
             expected.add(f"{directory}/CONTEXT.md")
     missing = sorted(expected - paths)
