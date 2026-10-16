@@ -49,16 +49,17 @@ flowchart TD
     Valid --> Evidence[External per-object evidence verdicts]
     Evidence --> AR[SPEC 02 applicability interpreter]
     AR --> Assessment[ApplicabilityAssessment ACTIVE / INACTIVE / UNKNOWN]
-    Assessment --> P3[SPEC 03: planned impact and governed adaptation]
-    P3 -. future, gated .-> Seal[Write-once prediction sealing]
+    Assessment --> P3[SPEC 03 DEVELOPMENT impact and governed adaptation]
+    P3 -. measured interface NOT_READY .-> Seal[Write-once prediction sealing]
     Seal -. after authorization .-> Oracle[Independent reference scoring]
 ```
 
 **Status of individual stages:**
 - **Implemented:** versioned snapshot schema, FV_CORE_V1, APA/trust/completeness interfaces, V2 candidate B1/P exporter and strict isolation verification (`p_input_validation.py`, `p_input_export_v2.py`).
 - **Implemented for synthetic/development:** canonical AR-DSL and Strong Kleene condition evaluation with policy proofs and trace (`p_applicability.py`); separate, digest-pinned V3 policy source and shared B1/P inputs (`p_policy_source_v3.py`).
+- **Implemented for synthetic/development:** generic typed impact analysis, exact-pair validity and coverage, deterministic operation planning, candidate materialization, governance decisions, and conditional rollback checks (`p_impact.py`, `p_semantic.py`, `p_operations.py`, `p_candidate.py`, `p_governance.py`, orchestrated by `p_adaptation.py`). PR #10 records TEST_ONLY no-op and ADD paths reaching ACCEPT.
 - **Existing Phase A infrastructure, not proof of P:** input isolation, B0/B1 preparation, sealing, independent validity/scoring interfaces (`experiments/execution/tooling/`).
-- **Not implemented:** end-to-end P Impact Analysis and candidate/operation engine; decision governance, acceptance/rollback; approved production policy authority; completed measured DA01 B0/B1/P studies.
+- **Not established:** production policy/evaluator authority, independent method freeze, production publication, human B1 results, and measured DA01 B0/B1/P outcomes. `p_interface.py` remains `NOT_READY`; TEST_ONLY ACCEPT is software evidence only.
 
 ### Repository map
 
@@ -82,7 +83,7 @@ flowchart TD
 | `scripts/` | Seeding, reset, experiment runners, evidence collection |
 | `tests/` | Unit, architecture and integration suites |
 
-## Boundary requirements for forthcoming SPEC 03
+## SPEC 03 DEVELOPMENT and review boundaries
 
-The P implementation must depend on verified, pinned method inputs and `ApplicabilityAssessment`, not scenario oracle answers. Preserve the separation of **candidate generation** and **independent validation**. Fail closed on invalid inputs; carry UNKNOWN/HOLD through to governance (do not fabricate `retain` or remove obligations to make a scorer happy). Maintain byte-compatible old V1 and SPEC 01 V2 as well as explicitly versioned V3 compatibility. Any new interface gets a contract, provenance, negative tests and requirement-to-test mapping.
+The DEVELOPMENT implementation depends on verified, pinned method inputs and `ApplicabilityAssessment`, not scenario oracle answers. Preserve the separation of **candidate generation** and **independent validation**. Fail closed on invalid inputs; carry UNKNOWN/HOLD through to governance (do not fabricate `retain` or remove obligations to make a scorer happy). Maintain byte-compatible old V1 and SPEC 01 V2 as well as explicitly versioned V3 compatibility. Synthetic tests and TEST_ONLY ACCEPT do not establish G1, G4, production authority, or measured readiness. See the [G1 method specification](G1_METHOD_SPECIFICATION.md) and [PR #10 implementation traceability](SPEC_03_IMPLEMENTATION_TRACEABILITY.md).
 

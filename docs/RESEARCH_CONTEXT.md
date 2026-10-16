@@ -137,9 +137,9 @@ If a necessary evaluator artifact cannot be materialized, return `BLOCKED / NEED
 | Mechanism | Question it answers | Failure if omitted | Current proof status |
 | --- | --- | --- | --- |
 | **Obligation Activation** | Which *normative* requirements apply, based on facts, authority and bounded completeness? | An obligation is removed merely because no matching fact or evaluator was observed. | SPEC 02 has a general synthetic/development interpreter; actual authority/evidence is not established. |
-| **Architecture Change Impact Analysis** | Which criteria, obligation links, scopes and representations *may* be affected by `ΔA`? | Every check is replaced, or an affected check is incorrectly retained because a trace edge is missing. | Not implemented in P; planned SPEC 03. |
-| **Semantic Validity & Evidence Adequacy** | For a particular `(representation, obligation)`, does the evaluator still measure the required property in the correct scope/stage? | A vacuous or stale evaluator reports success while mandatory coverage is lost. | Independent pair-verdict **scoring contract exists**; automatic P pair selection/revalidation is not implemented. |
-| **Governed Adaptation** | Is the proposed `Φ'` actually admissible, versioned, justified, and safe to accept or conditionally roll back? | Unverifiable edits, missing mandatory controls, or an unsafe rollback become silently accepted. | Interfaces/protocol exist; P ACCEPT/REJECT/HOLD, materialization, and rollback remain planned. |
+| **Architecture Change Impact Analysis** | Which criteria, obligation links, scopes and representations *may* be affected by `ΔA`? | Every check is replaced, or an affected check is incorrectly retained because a trace edge is missing. | Implemented in the SPEC 03 DEVELOPMENT pipeline with synthetic regressions; independent method review and measured validation remain open. |
+| **Semantic Validity & Evidence Adequacy** | For a particular `(representation, obligation)`, does the evaluator still measure the required property in the correct scope/stage? | A vacuous or stale evaluator reports success while mandatory coverage is lost. | Method-side exact-pair assessment is implemented for DEVELOPMENT; independent reference scoring remains a separate contract and authority boundary. |
+| **Governed Adaptation** | Is the proposed `Φ'` actually admissible, versioned, justified, and safe to accept or conditionally roll back? | Unverifiable edits, missing mandatory controls, or an unsafe rollback become silently accepted. | DEVELOPMENT candidate materialization, ACCEPT/REJECT/HOLD, and conditional rollback checks are implemented; production publication is disabled and G1 remains incomplete. |
 
 **Dependency:** activation determines *what must be controlled*; impact identifies *what must be rechecked*; semantic validity demonstrates *what is genuinely controlled*; governance decides *whether an adaptation is permissible*. Neither a positive applicability decision nor evaluator exit code establishes compliance or coverage. The eventual implementation must include a full SPEC 01–03 verification/validation plan and requirement-to-test matrix (see `docs/TESTING.md`), not just happy-path DA01 fixtures.
 
@@ -233,12 +233,12 @@ See `AGENTS.md`, `docs/TESTING.md`, `experiments/execution/da01/INPUT_ISOLATION.
 | Architectural criteria, obligations and base stage representations | `fitness/configs/a0-monolith.yaml`, `fitness/catalog/` | A0 artifacts implemented |
 | Versioned architecture/APA/FV Snapshot, validators | `p_input_validation.py`, `p_input_export_v2.py` | SPEC 01 DEVELOPMENT implemented |
 | Three-valued obligation applicability, rulebook and V3 pinned policy bundle | `p_applicability.py`, `p_policy_source_v3.py`, pilot policy source | SPEC 02 DEVELOPMENT implemented; pilot DRAFT/OPEN |
-| Impact and semantic pair reassessment | `fitness/traceability/a0-traceability.yaml`; interfaces and scoring contracts | **SPEC 03 planned**, not implemented |
-| Materialized candidate configuration, deterministic operations | `candidate_configuration.schema.json` and method interfaces | Contracts/preparation only; P selection not implemented |
-| ACCEPT/REJECT/HOLD, governed acceptance/monitor/rollback | Manuscript proposed model | **Planned** |
+| Impact and semantic pair reassessment | `experiments/execution/tooling/p_impact.py`, `p_semantic.py` | SPEC 03 DEVELOPMENT implemented and synthetically verified; not independently frozen |
+| Materialized candidate configuration, deterministic operations | `p_operations.py`, `p_candidate.py`, versioned schemas | DEVELOPMENT operation planning/materialization implemented; authority, cost choices, and scoring boundary remain open |
+| ACCEPT/REJECT/HOLD, governed acceptance/conditional rollback | `p_governance.py`, `p_adaptation.py` | DEVELOPMENT path implemented; TEST_ONLY no-op/ADD ACCEPT is recorded after PR #10; production publication remains disabled |
 | Actual authorized B0/B1/P measurements and inferential validation | Phase A protocol, sealed scorer, fixtures | **Not authorized / not yet executed** |
 
-`P_ALGORITHM_STATUS = NOT_READY` is a current implementation fact. The manuscript's dated §4.2 status describes an *earlier* working state and must not override the later merged repo commits.
+`P_ALGORITHM_STATUS = NOT_READY` is the measured-interface/readiness status, not a claim that no DEVELOPMENT algorithm code exists. The current synthetic pipeline and its limits are recorded in [P_GOVERNED_ADAPTATION_V1.md](../experiments/execution/P_GOVERNED_ADAPTATION_V1.md) and [SPEC_03_IMPLEMENTATION_TRACEABILITY.md](SPEC_03_IMPLEMENTATION_TRACEABILITY.md). The manuscript's dated §4.2 status describes an earlier working state and must not override the later merged repo commits.
 
 ### What can count as a contribution — and what cannot
 
