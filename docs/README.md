@@ -10,6 +10,8 @@ These are **maintained navigation documents**, not replacements for the versione
 | [EXPERIMENT.md](EXPERIMENT.md) | What is being compared, how are observations and oracle isolated, and which approval gates apply? |
 | [TECHNOLOGY.md](TECHNOLOGY.md) | Which tools are *actually used*, how is the environment run, and which tools are merely future options? |
 | [TESTING.md](TESTING.md) | What test categories, requirement-to-test traceability and pre-merge checks are expected? |
+| [SPEC_03_IMPACT_ANALYSIS_AND_GOVERNED_ADAPTATION.md](SPEC_03_IMPACT_ANALYSIS_AND_GOVERNED_ADAPTATION.md) | **DRAFT** scientific/engineering SPEC 03: Impact, semantic validity, governed operations, rollback and complete SPEC 01–03 test traceability. Not frozen G1. |
+| [SPEC_03_AGENT_IMPLEMENTATION_PROMPT.md](SPEC_03_AGENT_IMPLEMENTATION_PROMPT.md) | Implementation-agent prompt for a **separate** DEVELOPMENT PR, without measured DA01 or oracle access. |
 
 **Research reading order for AI agents:** read [`RESEARCH_CONTEXT.md`](RESEARCH_CONTEXT.md) before making scientific claims or beginning SPEC 03, then consult [`EXPERIMENT.md`](EXPERIMENT.md) and the exact DA01 protocol for operational definitions. The manuscript's RQ3/RQ4 and the executable protocol's RQ3/RQ4 are **not interchangeable**; the discrepancy is documented, not resolved by this documentation change.
 
