@@ -176,7 +176,8 @@ writers. The `make quality` target used these same two exclusions.
 | Docker method isolation probe | PASS in the full quality run; no pytest skips were reported |
 | Tests excluded by prohibition | BLOCKED — `test_da01_execution.py` and `test_research_schema_foundation.py` |
 | Main baseline CI | [A0 quality run 38865248861](https://github.com/Pan14ek/evofit-bench/actions/runs/38865248861) — main only, not this implementation branch |
-| Implementation branch CI | Pending PR creation |
+| Implementation branch CI (push) | [A0 quality run 38871687813](https://github.com/Pan14ek/evofit-bench/actions/runs/38871687813) — PASS for `e9c08fb` |
+| Implementation branch CI (pull request) | [A0 quality run 38871742376](https://github.com/Pan14ek/evofit-bench/actions/runs/38871742376) — PASS for `e9c08fb` |
 
 `make quality` initially reached 192 passing tests but pytest-cov failed to
 write `coverage.xml` in the managed worktree. The successful run redirected the
