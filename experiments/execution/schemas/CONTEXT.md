@@ -26,6 +26,7 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `p_adaptation_trace_v1.schema.json`
 - `p_cost_model_v1.schema.json`
 - `p_adaptation_evidence_v1.schema.json`
+- `p_adaptation_evidence_v2.schema.json`
 
 This is a selected list (17 direct tracked files), not a complete source inventory.
 
@@ -35,7 +36,10 @@ Validate exact contract version; maintain separate intermediate V3 profile.
 
 ## Constraints and known gaps
 
-The `p_*_v1` contracts are additive DEVELOPMENT contracts. Do not weaken frozen DA01 prediction or scorer schemas to force a fit.
+The `p_*_v1` contracts remain additive DEVELOPMENT contracts. Adaptation
+evidence V2 is an additive sidecar schema for full-template descriptor
+authorization; it does not reinterpret V1 signed evidence. Do not weaken frozen
+DA01 prediction or scorer schemas to force a fit.
 
 ## Verification and further reading
 

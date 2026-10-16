@@ -57,6 +57,7 @@ class VerifiedAdaptationEvidence:
     sidecar_sha256: str
     source_bindings: tuple[tuple[str, str], ...]
     payload: Mapping[str, Any]
+    schema_version: int = 1
 
 
 def verify_adaptation_evidence(
@@ -82,7 +83,17 @@ def verify_adaptation_evidence(
         raise ContractValidationError("P03_EVIDENCE_CONTEXT_NOT_JSON") from error
     if not isinstance(snapshot, dict):
         raise ContractValidationError("P03_EVIDENCE_CONTEXT_INVALID")
-    validate_payload("p_adaptation_evidence_v1.schema.json", snapshot)
+    schema_version_value = snapshot.get("schema_version")
+    if type(schema_version_value) is not int:
+        raise ContractValidationError("P03_EVIDENCE_SCHEMA_VERSION_UNSUPPORTED")
+    schema_version = schema_version_value
+    schema_name = {
+        1: "p_adaptation_evidence_v1.schema.json",
+        2: "p_adaptation_evidence_v2.schema.json",
+    }.get(schema_version)
+    if schema_name is None:
+        raise ContractValidationError("P03_EVIDENCE_SCHEMA_VERSION_UNSUPPORTED")
+    validate_payload(schema_name, snapshot)
     verifier_id = snapshot.get("verifier_id")
     if not isinstance(verifier_id, str):
         raise ContractValidationError("P03_EVIDENCE_VERIFIER_ID_INVALID")
@@ -128,11 +139,12 @@ def verify_adaptation_evidence(
     if not isinstance(payload, Mapping):
         raise ContractValidationError("P03_EVIDENCE_SIDECAR_PAYLOAD_INVALID")
     return VerifiedAdaptationEvidence(
-        expected_scope,
-        verifier_id,
-        content_sha256,
-        tuple(source_bindings),
-        _freeze(payload),
+        trust_scope=expected_scope,
+        verifier_id=verifier_id,
+        sidecar_sha256=content_sha256,
+        source_bindings=tuple(source_bindings),
+        payload=_freeze(payload),
+        schema_version=schema_version,
     )
 
 

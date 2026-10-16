@@ -80,9 +80,13 @@ def validate_materializable_template(
     template: Mapping[str, Any],
     *,
     artifact_bytes: Mapping[str, bytes],
-    authorized_artifact_digests: frozenset[str] = frozenset(),
+    authorized_template_descriptor_digests: frozenset[str] = frozenset(),
 ) -> tuple[Mapping[str, Any] | None, str | None, str | None]:
-    """Return a template only when signed authority evidence binds its artifact."""
+    """Return a template only when signed evidence binds its full descriptor."""
+    try:
+        descriptor_digest = template_descriptor_sha256(template)
+    except ContractValidationError:
+        return None, None, "TEMPLATE_DESCRIPTOR_INVALID"
     representation = template.get("representation")
     if not isinstance(representation, Mapping):
         return None, None, "TEMPLATE_REPRESENTATION_MISSING"
@@ -92,7 +96,7 @@ def validate_materializable_template(
     digest = artifact.get("sha256")
     if not isinstance(digest, str) or _SHA256.fullmatch(digest) is None:
         return None, None, "TEMPLATE_ARTIFACT_DIGEST_INVALID"
-    if digest not in authorized_artifact_digests:
+    if descriptor_digest not in authorized_template_descriptor_digests:
         return None, None, "TEMPLATE_AUTHORITY_UNVERIFIED"
     path, digest = artifact.get("path"), artifact.get("sha256")
     if not isinstance(path, str) or _SAFE_PATH.fullmatch(path) is None:
@@ -122,6 +126,19 @@ def validate_materializable_template(
     return normalized, digest, None
 
 
+def template_descriptor_sha256(template: Mapping[str, Any]) -> str:
+    """Hash every template field under the explicit descriptor contract v1.
+
+    The full template object is included so future semantics-bearing fields
+    cannot silently inherit permission from an existing artifact hash.
+    """
+    try:
+        body = {"descriptor_version": 1, "template": dict(template)}
+        return sha256_bytes(canonical_json_bytes(body))
+    except (TypeError, ValueError) as error:
+        raise ContractValidationError("P03_TEMPLATE_DESCRIPTOR_NOT_JSON") from error
+
+
 def build_operation_plan(
     *,
     representations: Sequence[Mapping[str, Any]],
@@ -132,7 +149,7 @@ def build_operation_plan(
     impact: ImpactAssessment,
     templates: Sequence[Mapping[str, Any]] = (),
     artifact_bytes: Mapping[str, bytes] | None = None,
-    authorized_artifact_digests: frozenset[str] = frozenset(),
+    authorized_template_descriptor_digests: frozenset[str] = frozenset(),
     adjustment_rules: Sequence[Mapping[str, Any]] = (),
     cost_model: Mapping[str, Any] | None = None,
     cost_model_authorized: bool = False,
@@ -180,7 +197,7 @@ def build_operation_plan(
     }
     coverage_by_id = {row.obligation_id: row for row in coverage.obligations}
     bytes_by_path = artifact_bytes or {}
-    usable_templates: list[tuple[Mapping[str, Any], str]] = []
+    usable_templates: list[tuple[Mapping[str, Any], str, str]] = []
     unusable_template_reasons: set[str] = set()
     hold: set[str] = set()
     reject: set[str] = set()
@@ -188,13 +205,14 @@ def build_operation_plan(
         representation, digest, issue = validate_materializable_template(
             template,
             artifact_bytes=bytes_by_path,
-            authorized_artifact_digests=authorized_artifact_digests,
+            authorized_template_descriptor_digests=authorized_template_descriptor_digests,
         )
         if issue is not None:
             unusable_template_reasons.add(issue)
         elif representation is not None and digest is not None:
-            usable_templates.append((representation, digest))
-    usable_templates.sort(key=lambda item: (str(item[0].get("id")), item[1]))
+            descriptor_digest = template_descriptor_sha256(template)
+            usable_templates.append((representation, digest, descriptor_digest))
+    usable_templates.sort(key=lambda item: (str(item[0].get("id")), item[1], item[2]))
     template_ids = [str(item[0].get("id")) for item in usable_templates]
     if len(template_ids) != len(set(template_ids)):
         reject.add("DUPLICATE_TEMPLATE_REPRESENTATION_ID")
@@ -335,7 +353,7 @@ def build_operation_plan(
                 if issue in {"COST_MODEL_UNRESOLVED", "BUDGET_EXHAUSTED"}:
                     hold.add(issue)
             else:
-                successor_rep, digest, cost = successors[0]
+                successor_rep, digest, _descriptor_digest, cost = successors[0]
                 operations.append(
                     PlannedOperation(
                         "representation",
@@ -401,7 +419,7 @@ def build_operation_plan(
             hold.update(unusable_template_reasons)
     else:
         assigned: set[str] = set()
-        for representation, digest, cost in additions:
+        for representation, digest, _descriptor_digest, cost in additions:
             owner_candidates = sorted(
                 uncovered & _string_set(representation.get("covers")) - assigned
             )
@@ -534,13 +552,13 @@ def template_evidence(representation: Mapping[str, Any]) -> tuple[str, ...]:
 
 def _choose_templates(
     required: set[str],
-    templates: Sequence[tuple[Mapping[str, Any], str]],
+    templates: Sequence[tuple[Mapping[str, Any], str, str]],
     cost_model: Mapping[str, Any] | None,
     *,
     cost_model_authorized: bool,
     max_count: int | None,
     existing_ids: set[str],
-) -> tuple[tuple[tuple[Mapping[str, Any], str, float], ...], str | None]:
+) -> tuple[tuple[tuple[Mapping[str, Any], str, str, float], ...], str | None]:
     """Find a bounded minimum-count, then minimum-cost deterministic template set."""
     if not required:
         return (), None
@@ -566,7 +584,7 @@ def _choose_templates(
         return (), "COST_MODEL_UNRESOLVED"
     if any(
         digest not in costs or not isinstance(costs[digest], int | float) or costs[digest] < 0
-        for _representation, digest in candidates
+        for _representation, digest, _descriptor_digest in candidates
     ):
         return (), "COST_MODEL_UNRESOLVED"
     candidates.sort(key=lambda item: (str(item[0].get("id")), item[1]))
@@ -590,7 +608,7 @@ def _choose_templates(
         if max_count is not None and len(selected) >= max_count:
             return
         for index in range(start, len(candidates)):
-            representation, _digest = candidates[index]
+            representation, _digest, _descriptor_digest = candidates[index]
             next_remaining = remaining - _string_set(representation.get("covers"))
             if next_remaining == remaining:
                 continue
@@ -608,7 +626,12 @@ def _choose_templates(
         return (), "AUTHORIZED_COST_LIMIT_EXCEEDED"
     _, selected = min(in_budget, key=lambda item: item[0])
     return tuple(
-        (candidates[index][0], candidates[index][1], float(costs[candidates[index][1]]))
+        (
+            candidates[index][0],
+            candidates[index][1],
+            candidates[index][2],
+            float(costs[candidates[index][1]]),
+        )
         for index in selected
     ), None
 
@@ -681,12 +704,12 @@ def _authorized_adjustment(
 
 
 def _templates_for_required(
-    templates: Sequence[tuple[Mapping[str, Any], str]],
+    templates: Sequence[tuple[Mapping[str, Any], str, str]],
     required: set[str],
     obligations: Mapping[str, Mapping[str, Any]],
-) -> tuple[tuple[Mapping[str, Any], str], ...]:
-    permitted: list[tuple[Mapping[str, Any], str]] = []
-    for representation, digest in templates:
+) -> tuple[tuple[Mapping[str, Any], str, str], ...]:
+    permitted: list[tuple[Mapping[str, Any], str, str]] = []
+    for representation, digest, descriptor_digest in templates:
         covered = _string_set(representation.get("covers"))
         if not covered or not covered.issubset(required):
             continue
@@ -696,7 +719,7 @@ def _templates_for_required(
             for obligation_id in covered
         ):
             continue
-        permitted.append((representation, digest))
+        permitted.append((representation, digest, descriptor_digest))
     return tuple(permitted)
 
 
@@ -759,6 +782,7 @@ def _pair_digest_is_valid(pair: PairAssessment) -> bool:
 __all__ = [
     "OperationKind",
     "OperationPlan",
+    "template_descriptor_sha256",
     "PlannedOperation",
     "build_operation_plan",
     "choose_candidate_plan",

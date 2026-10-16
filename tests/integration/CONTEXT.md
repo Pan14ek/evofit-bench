@@ -20,7 +20,14 @@ Use disposable DB and genuine interfaces instead of only mocked modules.
 
 ## Constraints and known gaps
 
-Do not report integration success as G1/G4 or sample-level significance. The SPEC03 orchestration fixture is TEST_ONLY and intentionally HOLDs under OPEN authority.
+Do not report integration success as G1/G4 or sample-level significance. The
+SPEC03 orchestration fixtures use TEST_ONLY keys and do not grant production
+trust. Current V3 no-op and ADD attempts verify a real synthetic evaluator,
+typed impact, exact-pair evidence, candidate materialization, and (for ADD)
+full-descriptor authorization, but HOLD before V1 output because the policy
+Registry has a single `closure_claim_id` that cannot bind both before and after
+applicability. Treat this as an explicit contract blocker, not an accepted
+method path.
 The integration tests also reject caller-claimed VERIFIED_V3 provenance and
 detect nested input mutation after the strict V3 verifier returns a bundle;
 these checks do not replace a positive approved V3 production-input path.

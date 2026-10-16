@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 from typing import Any, Literal
 
+import pytest
+
+from experiments.execution.tooling.errors import ContractValidationError
 from experiments.execution.tooling.hashing import canonical_json_bytes, sha256_bytes
 from experiments.execution.tooling.p_adaptation_evidence import (
     AdaptationEvidenceVerifierRegistry,
@@ -29,6 +34,19 @@ class _SyntheticVerifier:
             assert isinstance(evidence, dict)
             evidence["synthetic_mutation"] = True
         return True
+
+
+class _HmacVerifier:
+    trust_scope: Literal["TEST_ONLY"] = "TEST_ONLY"
+
+    def __init__(self, key: bytes) -> None:
+        self.key = key
+
+    def verify(self, verifier_id: str, content_sha256: str, signature: str) -> bool:
+        if verifier_id != "SYN_TEST_VERIFIER":
+            return False
+        expected = hmac.new(self.key, content_sha256.encode("ascii"), hashlib.sha256).hexdigest()
+        return hmac.compare_digest(expected, signature)
 
 
 def _sidecar() -> tuple[dict[str, Any], dict[str, str], dict[str, Any]]:
@@ -109,6 +127,89 @@ def test_verified_payload_uses_the_signed_snapshot_after_verifier_mutation() -> 
         expected_trust_scope="TEST_ONLY",
     )
     assert result is not None
+    assert result.schema_version == 1
     payload = thaw_verified_payload(result)
     assert payload["evaluator_evidence"][0]["evidence"] == {"synthetic_value": "original"}
+    assert payload["authorized_template_artifact_sha256"] == []
     assert sidecar["payload"]["evaluator_evidence"][0]["evidence"]["synthetic_mutation"] is True
+
+
+def _signed_v2_sidecar(key: bytes) -> tuple[dict[str, Any], dict[str, str], dict[str, Any]]:
+    sidecar, source_digests, bindings = _sidecar()
+    sidecar.pop("sidecar_sha256")
+    sidecar.pop("signature")
+    sidecar["schema_version"] = 2
+    sidecar["contract_id"] = "P_ADAPTATION_EVIDENCE_V2"
+    payload = sidecar["payload"]
+    payload["authorized_template_descriptor_sha256"] = []
+    payload.pop("authorized_template_artifact_sha256")
+    sidecar["sidecar_sha256"] = sha256_bytes(canonical_json_bytes(sidecar))
+    content_sha256 = sidecar["sidecar_sha256"]
+    sidecar["signature"] = hmac.new(key, content_sha256.encode("ascii"), hashlib.sha256).hexdigest()
+    return sidecar, source_digests, bindings
+
+
+def test_v2_sidecar_uses_hmac_signature_and_explicit_descriptor_authority() -> None:
+    key = b"synthetic-test-key-not-for-production"
+    sidecar, source_digests, bindings = _signed_v2_sidecar(key)
+    result = verify_adaptation_evidence(
+        sidecar,
+        expected_bindings=bindings,
+        expected_source_digests=source_digests,
+        verifier_registry=AdaptationEvidenceVerifierRegistry(
+            {"SYN_TEST_VERIFIER": _HmacVerifier(key)}
+        ),
+        allow_test_only=True,
+        expected_trust_scope="TEST_ONLY",
+    )
+    assert result is not None
+    assert result.schema_version == 2
+    assert result.payload["authorized_template_descriptor_sha256"] == ()
+
+
+def test_v2_sidecar_rejects_signature_tampering() -> None:
+    key = b"synthetic-test-key-not-for-production"
+    sidecar, source_digests, bindings = _signed_v2_sidecar(key)
+    sidecar["signature"] = "0" * 64
+    with pytest.raises(ContractValidationError, match="P03_EVIDENCE_SIDECAR_SIGNATURE_INVALID"):
+        verify_adaptation_evidence(
+            sidecar,
+            expected_bindings=bindings,
+            expected_source_digests=source_digests,
+            verifier_registry=AdaptationEvidenceVerifierRegistry(
+                {"SYN_TEST_VERIFIER": _HmacVerifier(key)}
+            ),
+            allow_test_only=True,
+            expected_trust_scope="TEST_ONLY",
+        )
+
+
+@pytest.mark.parametrize(
+    ("binding", "replacement"),
+    [
+        ("architecture_after_sha", "3" * 40),
+        ("scope", "service:other"),
+    ],
+)
+def test_v2_sidecar_rejects_cross_revision_or_scope_replay(
+    binding: str,
+    replacement: str,
+) -> None:
+    key = b"synthetic-test-key-not-for-production"
+    sidecar, source_digests, bindings = _signed_v2_sidecar(key)
+    replayed_bindings = dict(bindings)
+    replayed_bindings[binding] = replacement
+    with pytest.raises(
+        ContractValidationError,
+        match=f"P03_EVIDENCE_CONTEXT_BINDING_MISMATCH:{binding}",
+    ):
+        verify_adaptation_evidence(
+            sidecar,
+            expected_bindings=replayed_bindings,
+            expected_source_digests=source_digests,
+            verifier_registry=AdaptationEvidenceVerifierRegistry(
+                {"SYN_TEST_VERIFIER": _HmacVerifier(key)}
+            ),
+            allow_test_only=True,
+            expected_trust_scope="TEST_ONLY",
+        )

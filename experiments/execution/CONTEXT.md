@@ -24,7 +24,15 @@ Research implementation under tooling/; DA01 protocol under da01/.
 
 ## Constraints and known gaps
 
-SPEC03 pipeline code and additive DEVELOPMENT schemas are implemented and synthetically tested. This does not make P ready for measured trials: current inputs do not provide complete mandatory classifications, approved generic evaluator templates, or an authorized cost model, and G1/G4 remain separate. Keep `p_interface.py` readiness blocked until the documented gates are met.
+SPEC03 pipeline code and additive DEVELOPMENT schemas are implemented and
+synthetically tested. V2 adaptation evidence binds full template descriptors;
+V1 artifact hashes remain non-authorizing. Synthetic V3 no-op and ADD attempts
+still HOLD because one Registry closure claim ID cannot establish both exact
+before and after applicability. This does not make P ready for measured trials:
+production inputs still lack approved policy authority, mandatory
+classifications, evaluator templates, and cost authority, and G1/G4 remain
+separate. Keep `p_interface.py` readiness blocked until the documented gates
+are met.
 
 ## Verification and further reading
 

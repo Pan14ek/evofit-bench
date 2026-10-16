@@ -22,6 +22,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_p_operations_v1.py`
 - `test_p_candidate_governance_v1.py`
 - `test_p_adaptation_evidence_v1.py`
+- `test_g1_method_decision_register.py`
 
 This is a selected list (13 direct tracked files), not a complete source inventory.
 
@@ -30,8 +31,11 @@ This is a selected list (13 direct tracked files), not a complete source invento
 Test negative/unverified/expired/contradictory inputs plus backward compatibility.
 SPEC03 regression cases also check stale pair revisions, conflicting and
 digest-tampered pair assessments, parent-byte/mapping consistency, publish
-decision integrity, and exact-hash rollback authorization. Verifier-sidecar
-tests bind signed evidence to source digests and immutable snapshots.
+decision integrity, exact-hash rollback authorization, and full-template
+descriptor authorization. Verifier-sidecar tests bind signed evidence to source
+digests and immutable snapshots, including V1 compatibility and V2 replay
+rejection. The G1 register test audits required decision IDs and pending gate
+status; it cannot approve a decision.
 
 ## Constraints and known gaps
 

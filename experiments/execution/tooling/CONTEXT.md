@@ -45,7 +45,12 @@ rollback requires the exact configuration hash that was revalidated.
 
 Method-side sidecars are schema-checked, content-hashed, bound to exact source
 digests and verified through an explicitly configured verifier registry in
-`p_adaptation_evidence.py`. A missing trust anchor leaves evidence unresolved.
+`p_adaptation_evidence.py`. V1 retains its artifact-hash meaning and cannot
+authorize ADD/REPLACE; additive V2 authorizes a canonical full-template
+descriptor digest tied to pinned capabilities and exact context. A missing
+trust anchor leaves evidence unresolved. Synthetic no-op and ADD V3 scenarios
+reach candidate validation but HOLD because the Snapshot Registry exposes one
+closure claim ID for before and after states; no V1 output is emitted.
 
 The pipeline must preserve `UNKNOWN` as unresolved, never infer `INACTIVE` from
 missing evidence, and never use scorer/oracle output as P input. The JSON
@@ -65,6 +70,7 @@ tracked in `docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`.
 - `hashing.py`
 - `inputs.py`
 - `p_adaptation.py`
+- `p_adaptation_evidence.py`
 - `p_adaptation_evidence.py`
 - `p_impact.py`
 - `p_semantic.py`
