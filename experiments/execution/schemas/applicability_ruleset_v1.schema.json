@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:applicability-ruleset:v1",
+  "title": "Applicability Ruleset AR-DSL v1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ruleset_version",
+    "snapshot_contract_id",
+    "fact_vocabulary_version",
+    "obligation_catalog_sha256",
+    "conditions"
+  ],
+  "properties": {
+    "ruleset_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "snapshot_contract_id": {
+      "const": "VERSIONED_ARCH_POLICY_SNAPSHOT_V1_1"
+    },
+    "fact_vocabulary_version": {
+      "const": "FV_CORE_V1"
+    },
+    "obligation_catalog_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "conditions": {
+      "type": "array",
+      "maxItems": 128,
+      "items": {
+        "$ref": "#/$defs/condition"
+      }
+    }
+  },
+  "$defs": {
+    "predicate": {
+      "enum": [
+        "component.python_module_identity",
+        "component.module_added",
+        "component.module_removed",
+        "component.capability_module",
+        "component.declared_cross_module_dependency",
+        "component.shared_infrastructure",
+        "deployment.unit_count_declared",
+        "deployment.process_count_declared",
+        "deployment.database_instance_count_declared",
+        "deployment.database_product_declared",
+        "communication.internal_mode_declared",
+        "communication.broker_declared"
+      ]
+    },
+    "selector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["predicate", "state", "scope"],
+      "properties": {
+        "predicate": {
+          "$ref": "#/$defs/predicate"
+        },
+        "state": {
+          "enum": ["before", "after"]
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      }
+    },
+    "comparator": {
+      "enum": ["eq", "neq", "lt", "lte", "gt", "gte"]
+    },
+    "expression": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "args"],
+          "properties": {
+            "op": {"const": "all"},
+            "args": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": {"$ref": "#/$defs/expression"}
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "args"],
+          "properties": {
+            "op": {"const": "any"},
+            "args": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 128,
+              "items": {"$ref": "#/$defs/expression"}
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "arg"],
+          "properties": {
+            "op": {"const": "not"},
+            "arg": {"$ref": "#/$defs/expression"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "selector", "comparator", "expected"],
+          "properties": {
+            "op": {"const": "compare"},
+            "selector": {"$ref": "#/$defs/selector"},
+            "comparator": {"$ref": "#/$defs/comparator"},
+            "expected": {
+              "oneOf": [
+                {"type": "integer", "minimum": 0},
+                {"type": "string", "minLength": 1, "maxLength": 256}
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "selector", "comparator", "expected"],
+          "properties": {
+            "op": {"const": "set_size"},
+            "selector": {"$ref": "#/$defs/selector"},
+            "comparator": {"$ref": "#/$defs/comparator"},
+            "expected": {"type": "integer", "minimum": 0}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["op", "selector"],
+          "properties": {
+            "op": {"const": "exists"},
+            "selector": {"$ref": "#/$defs/selector"}
+          }
+        }
+      ]
+    },
+    "condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "description", "fact_dependencies", "expression"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]{1,63}$"
+        },
+        "version": {
+          "const": "1.0"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "fact_dependencies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/predicate"}
+        },
+        "expression": {
+          "$ref": "#/$defs/expression"
+        }
+      }
+    }
+  }
+}

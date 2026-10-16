@@ -1,0 +1,202 @@
+schema_version: 1
+status: DEVELOPMENT_CANDIDATES_ONLY
+policy_source_revision: controlled-policy-pilot-candidates-v1
+obligations:
+  - obligation_id: P_EXT_LATENCY
+    criterion: performance
+    normative_intent: Define latency expectations for a declared user-facing API scope.
+    applicability_kind: UNCONDITIONAL_MANDATE
+    condition_ref: null
+    predicate_dependencies: []
+    allowed_scopes: [application]
+    negative_evidence_requirements: [none_for_unconditional_applicability]
+    evidence_gaps: [api_boundary_and_actual_latency_are_not_activation_facts]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE
+  - obligation_id: P_REMOTE_LATENCY
+    criterion: performance
+    normative_intent: Define a latency budget when synchronous remote calls are in scope.
+    applicability_kind: CONDITIONAL_MANDATE
+    condition_ref: COND_REMOTE_SYNCHRONOUS_DEPENDENCY
+    predicate_dependencies: [communication.remote_synchronous_call]
+    allowed_scopes: [application]
+    negative_evidence_requirements: [verified_closed_runtime_communication_inventory]
+    evidence_gaps: [predicate_reserved_as_FV16]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE
+  - obligation_id: P_ASYNC_LAG
+    criterion: performance
+    normative_intent: Define delivery and processing lag controls when async channels exist.
+    applicability_kind: CONDITIONAL_MANDATE
+    condition_ref: COND_ASYNC_CHANNEL_PRESENT
+    predicate_dependencies: [communication.async_channel]
+    allowed_scopes: [application]
+    negative_evidence_requirements: [verified_closed_runtime_channel_inventory]
+    evidence_gaps: [predicate_reserved_as_FV17]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE
+  - obligation_id: R_BUSINESS_FAILURE
+    criterion: reliability
+    normative_intent: Observe unexpected business-operation failures separately from expected rejection.
+    applicability_kind: UNCONDITIONAL_MANDATE
+    condition_ref: null
+    predicate_dependencies: []
+    allowed_scopes: [application]
+    negative_evidence_requirements: [none_for_unconditional_applicability]
+    evidence_gaps: [no_production_policy_approval]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE
+  - obligation_id: R_HTTP_5XX
+    criterion: reliability
+    normative_intent: Observe external or business HTTP 5xx responses.
+    applicability_kind: UNCONDITIONAL_MANDATE
+    condition_ref: null
+    predicate_dependencies: []
+    allowed_scopes: [application]
+    negative_evidence_requirements: [none_for_unconditional_applicability]
+    evidence_gaps: [http_boundary_is_not_in_FV_CORE_V1]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE
+  - obligation_id: R_LOCAL_ATOMICITY
+    criterion: reliability
+    normative_intent: Preserve atomicity across in-scope local transaction boundaries.
+    applicability_kind: UNCONDITIONAL_MANDATE
+    condition_ref: null
+    predicate_dependencies: [data.transaction_boundary]
+    allowed_scopes: [application]
+    negative_evidence_requirements: [verified_transaction_boundary_inventory]
+    evidence_gaps: [predicate_reserved_as_FV18]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE
+  - obligation_id: R_REMOTE_DEPENDENCY
+    criterion: reliability
+    normative_intent: Control timeout and retry failure modes for remote dependencies.
+    applicability_kind: CONDITIONAL_MANDATE
+    condition_ref: COND_REMOTE_SYNCHRONOUS_DEPENDENCY
+    predicate_dependencies: [communication.remote_synchronous_call]
+    allowed_scopes: [application]
+    negative_evidence_requirements: [verified_closed_runtime_dependency_inventory]
+    evidence_gaps: [predicate_reserved_as_FV16]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE
+  - obligation_id: R_EVENT_DELIVERY
+    criterion: reliability
+    normative_intent: Control event delivery failure, backlog, and dead-letter handling.
+    applicability_kind: CONDITIONAL_MANDATE
+    condition_ref: COND_ASYNC_CHANNEL_PRESENT
+    predicate_dependencies: [communication.async_channel]
+    allowed_scopes: [application]
+    negative_evidence_requirements: [verified_closed_runtime_channel_inventory]
+    evidence_gaps: [predicate_reserved_as_FV17]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE
+  - obligation_id: R_IDEMPOTENCY
+    criterion: reliability
+    normative_intent: Prevent duplicate effects under repeated event delivery.
+    applicability_kind: CONDITIONAL_MANDATE
+    condition_ref: COND_ASYNC_CHANNEL_PRESENT
+    predicate_dependencies: [communication.async_channel]
+    allowed_scopes: [application]
+    negative_evidence_requirements: [verified_closed_runtime_delivery_model]
+    evidence_gaps: [predicate_reserved_as_FV17]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE
+  - obligation_id: R_READMODEL_CONVERGENCE
+    criterion: reliability
+    normative_intent: Bound convergence of an event-driven reporting read model.
+    applicability_kind: CONDITIONAL_MANDATE
+    condition_ref: COND_EVENT_DRIVEN_READ_MODEL_PRESENT
+    predicate_dependencies: [runtime.event_driven_read_model]
+    allowed_scopes: [application]
+    negative_evidence_requirements: [verified_closed_read_model_inventory]
+    evidence_gaps: [predicate_not_in_FV_CORE_V1]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE
+  - obligation_id: AC_LAYERING
+    criterion: architecture_compliance
+    normative_intent: Constrain internal dependencies to the approved layering model.
+    applicability_kind: UNCONDITIONAL_MANDATE
+    condition_ref: null
+    predicate_dependencies: []
+    allowed_scopes: [application]
+    negative_evidence_requirements: [none_for_unconditional_applicability]
+    evidence_gaps: [compliance_and_evaluator_coverage_are_separate]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE
+  - obligation_id: AC_MODULE_STRUCTURE
+    criterion: architecture_compliance
+    normative_intent: Require declared identity and structure for capability modules.
+    applicability_kind: CONDITIONAL_MANDATE
+    condition_ref: COND_HAS_CAPABILITY_MODULE
+    predicate_dependencies: [component.capability_module]
+    allowed_scopes: [application]
+    negative_evidence_requirements: [verified_closed_declared_module_inventory]
+    evidence_gaps: [FV04_is_DECLARED_and_does_not_prove_runtime_behavior]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE
+  - obligation_id: AC_PUBLIC_API
+    criterion: architecture_compliance
+    normative_intent: Require cross-module access through public module APIs.
+    applicability_kind: UNCONDITIONAL_MANDATE
+    condition_ref: null
+    predicate_dependencies: [component.declared_cross_module_dependency]
+    allowed_scopes: [application]
+    negative_evidence_requirements: [verified_complete_import_and_api_inventory_for_compliance]
+    evidence_gaps: [FV05_is_DECLARED_and_enforcement_flag_is_not_authority]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE
+  - obligation_id: AC_MODULE_GRAPH
+    criterion: architecture_compliance
+    normative_intent: Require an acyclic module graph with approved dependency directions.
+    applicability_kind: UNCONDITIONAL_MANDATE
+    condition_ref: null
+    predicate_dependencies: [component.declared_cross_module_dependency]
+    allowed_scopes: [application]
+    negative_evidence_requirements: [verified_complete_import_graph_for_compliance]
+    evidence_gaps: [FV05_is_not_a_complete_import_graph]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE
+  - obligation_id: AC_DATA_OWNERSHIP
+    criterion: architecture_compliance
+    normative_intent: Prevent bypass of data ownership boundaries.
+    applicability_kind: CONDITIONAL_MANDATE
+    condition_ref: COND_DATA_OWNERSHIP_FACT
+    predicate_dependencies: [data.ownership]
+    allowed_scopes: [application]
+    negative_evidence_requirements: [verified_closed_ownership_inventory]
+    evidence_gaps: [predicate_reserved_as_FV19]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE
+  - obligation_id: AC_SERVICE_BOUNDARY
+    criterion: architecture_compliance
+    normative_intent: Constrain dependencies across verified deployment-unit boundaries.
+    applicability_kind: CONDITIONAL_MANDATE
+    condition_ref: COND_DECLARED_MULTI_UNIT
+    predicate_dependencies: [deployment.unit_count_declared]
+    allowed_scopes: [application]
+    negative_evidence_requirements: [verified_actual_deployment_boundary_inventory]
+    evidence_gaps: [FV07_is_DECLARED_and_does_not_prove_actual_service_separation]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE
+  - obligation_id: AC_COMMUNICATION_POLICY
+    criterion: architecture_compliance
+    normative_intent: Constrain communication channels to approved architecture decisions.
+    applicability_kind: UNCONDITIONAL_MANDATE
+    condition_ref: null
+    predicate_dependencies: [communication.internal_mode_declared, communication.broker_declared]
+    allowed_scopes: [application]
+    negative_evidence_requirements: [verified_closed_runtime_channel_inventory_for_absence]
+    evidence_gaps: [FV11_and_FV12_are_DECLARED_only]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE
+  - obligation_id: AC_DEPLOYMENT_TOPOLOGY
+    criterion: architecture_compliance
+    normative_intent: Constrain actual deployment units and replicas to an approved topology.
+    applicability_kind: CONDITIONAL_MANDATE
+    condition_ref: COND_RUNTIME_TOPOLOGY_VERIFIED
+    predicate_dependencies: [deployment.unit_count_declared, deployment.process_count_declared, deployment.database_instance_count_declared]
+    allowed_scopes: [application]
+    negative_evidence_requirements: [verified_runtime_topology_for_target_revision]
+    evidence_gaps: [FV07_through_FV09_are_DECLARED_only]
+    owner: research_policy_author
+    approval_status: NEEDS_SOURCE

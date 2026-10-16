@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:policy-source:v3-candidate",
+  "title": "Separately pinned policy source bundle v3 candidate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "profile_id", "policy_source_revision", "files", "policy_bundle_sha256"],
+  "properties": {
+    "schema_version": {"const": 3},
+    "profile_id": {"const": "P_POLICY_SOURCE_V3_CANDIDATE"},
+    "policy_source_revision": {"type": "string", "minLength": 1, "maxLength": 128},
+    "files": {
+      "type": "array",
+      "minItems": 4,
+      "items": {"$ref": "#/$defs/file"}
+    },
+    "policy_bundle_sha256": {"$ref": "#/$defs/sha256"}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "role", "size_bytes", "sha256"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9_./-]+$"
+        },
+        "role": {
+          "enum": [
+            "policy_charter",
+            "policy_registry",
+            "approval_evidence",
+            "completeness_evidence",
+            "applicability_ruleset",
+            "policy_completeness_claims"
+          ]
+        },
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  }
+}

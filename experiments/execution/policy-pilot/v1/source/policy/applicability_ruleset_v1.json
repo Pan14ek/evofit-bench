@@ -1,0 +1,85 @@
+{
+  "conditions": [
+    {
+      "description": "At least two deployment units are declared for the selected architecture state.",
+      "expression": {
+        "comparator": "gte",
+        "expected": 2,
+        "op": "compare",
+        "selector": {
+          "predicate": "deployment.unit_count_declared",
+          "scope": "application",
+          "state": "after",
+          "subject": "application"
+        }
+      },
+      "fact_dependencies": ["deployment.unit_count_declared"],
+      "id": "COND_DECLARED_MULTI_UNIT",
+      "version": "1.0"
+    },
+    {
+      "description": "A capability module is present in the declared structural inventory.",
+      "expression": {
+        "op": "exists",
+        "selector": {
+          "predicate": "component.capability_module",
+          "scope": "application",
+          "state": "after"
+        }
+      },
+      "fact_dependencies": ["component.capability_module"],
+      "id": "COND_HAS_CAPABILITY_MODULE",
+      "version": "1.0"
+    },
+    {
+      "description": "At least one cross-module dependency is declared.",
+      "expression": {
+        "op": "exists",
+        "selector": {
+          "predicate": "component.declared_cross_module_dependency",
+          "scope": "application",
+          "state": "after"
+        }
+      },
+      "fact_dependencies": ["component.declared_cross_module_dependency"],
+      "id": "COND_HAS_DECLARED_CROSS_MODULE_DEPENDENCY",
+      "version": "1.0"
+    },
+    {
+      "description": "At least one shared infrastructure module is declared.",
+      "expression": {
+        "op": "exists",
+        "selector": {
+          "predicate": "component.shared_infrastructure",
+          "scope": "application",
+          "state": "after",
+          "subject": "application"
+        }
+      },
+      "fact_dependencies": ["component.shared_infrastructure"],
+      "id": "COND_HAS_SHARED_INFRASTRUCTURE",
+      "version": "1.0"
+    },
+    {
+      "description": "The declared shared infrastructure set contains at least one module.",
+      "expression": {
+        "comparator": "gte",
+        "expected": 1,
+        "op": "set_size",
+        "selector": {
+          "predicate": "component.shared_infrastructure",
+          "scope": "application",
+          "state": "after",
+          "subject": "application"
+        }
+      },
+      "fact_dependencies": ["component.shared_infrastructure"],
+      "id": "COND_SHARED_INFRASTRUCTURE_NONEMPTY",
+      "version": "1.0"
+    }
+  ],
+  "fact_vocabulary_version": "FV_CORE_V1",
+  "obligation_catalog_sha256": "8c5bd8fffe3bdb2af8fb85f8d0012bc34673f72866e52daed99fab96f9763011",
+  "ruleset_version": "AR_V1_CANDIDATE_PILOT_1",
+  "snapshot_contract_id": "VERSIONED_ARCH_POLICY_SNAPSHOT_V1_1"
+}
