@@ -343,3 +343,54 @@ Recommended locations: tests/unit/test_p_impact_v1.py (TT-P03-04–12), test_p_s
 Run repository scripts in a disposable environment, including: uv sync --frozen --extra dev; make test-unit; make lint; make typecheck; make security; make architecture-test; make migration-test; make quality. Run targeted SPEC 01/02/03 tests, legacy byte-compatibility checks and Docker negative isolation where a digest-pinned image exists. Docker unavailability = SKIP/BLOCKED (not PASS); quality coverage of app is NOT P method test/requirements coverage.
 
 **Complete status matrix:** all 25 requirement IDs (C01–C03, A01–A06, S01, P03-01–P03-14, E01) and all 60 traceability rows (12 prior + 48 new) need implementation/test path, PASS/FAIL/SKIP/BLOCKED, reason, fixture hash and CI reference. E01 is NOT AUTHORIZED by this specification. Do not report planned tests as executed.
+
+## 5. Research validity and official experiment boundaries
+
+| Topic | Boundary |
+| --- | --- |
+| B0 | Original fitness configuration remains byte-frozen. Evaluate stale/nonvacuous target coverage instead of replacing with current engineering acceptance. |
+| B1 | Real independent human using reviewed B1_CHECKLIST; record skill/exposure/time and only common normative/capability inputs. No simulated human result. |
+| P | Same permitted common facts/policies/capabilities as B1, with only the separately allowed P traceability. No oracle/scorer privilege. |
+| DA01 | One controlled architecture transition; official protocol evaluates RQ1 (impact/operations precision/recall/F1) and RQ2 (independently evidenced obligation coverage). It does not establish runtime improvement or general statistical significance. |
+| RQ discrepancy | Manuscript RQ3 = overhead and RQ4 = benefit of formal analysis against periodic heuristic review. Executable RQ3 = degradation detection and RQ4 = overhead. Keep explicit crosswalk, no silent renumbering. |
+| Internal and construct threats | Incomplete fact and policy coverage, bad provenance, vacuous evaluator, wrong scope, missing pair proof, distorted denominator and confusion between compliance/coverage. |
+| Comparator threats | Event-triggered vs periodic B1, experience differences, unequal evaluator inventories, unequal evidence budgets and P-only data leaks. |
+| External/statistical threats | Controlled Python system and 12 FV predicates cannot establish cross-stack generality. Experimental unit is independent architecture transition, NOT request, log row, obligation or repeated run of same delta. |
+| Inferential evidence | Predefine outcomes, unknown and false-INACTIVE handling, effect sizes, CI, cost limits, hypothesis family and independent sample units before measured work; do not manufacture statistics. |
+| G1 | General P algorithm and interpretation, baseline fairness, missing evidence, holdout, independent methodological review and freeze still required. |
+| G4 | Explicit authorization and genuine independent experimental evidence still required. Green CI/synthetic results do not confer G4. |
+
+## 6. Delivery checkpoints and Definition of Done
+
+| Checkpoint | Deliverable | Exit evidence |
+| --- | --- | --- |
+| S03-A | Additive DEVELOPMENT contracts, input bindings, reason/status taxonomy, 25-requirement registry | Schema and contract tests; unresolved research choices explicitly recorded. |
+| S03-B | Typed change, policy-only diff, graph validation and conservative impact | Positive/negative/partial/unchanged/metamorphic tests pass. |
+| S03-C | Method-side exact-pair semantic/evidence checks and finite source-backed operation generation | Mandatory coverage, UNKNOWN and shared-representation tests; no invented evaluator. |
+| S03-D | Candidate materialization, ACCEPT/REJECT/HOLD, audit, safe rollback and v1 prediction adapter | Legacy projection and governance/race tests pass. |
+| S03-E | Complete 60-row TTM, synthetic E2E, adversarial isolation, compatibility and documentation | Actual local test/CI results, skips disclosed, protected artifact checksums unchanged. |
+
+**Development implementation DONE requires** general code (not DA01-specific), all 12 invariants and required statuses, source-backed artifact handling, strict preflight, materialized candidates, no prohibited data access, safe versioning/rollback, independent P versus oracle semantics, deterministic outputs, complete Test Traceability Matrix and actual PASS/FAIL/SKIP/BLOCKED report. All 60 rows must either be implemented/tested or transparently flagged BLOCKED with justification and review, not silently omitted.
+
+Implementation agent should create a **separate implementation branch/PR from then-current main**, with base/head SHA, paths, requirement IDs, tested fixtures, commands, CI links, exact version compatibility, altered context/docs, G1/G4 status and scientifically open questions. Do not direct-push/merge main without explicit user approval. A DEVELOPMENT success must NOT flip the measured DA01 gate.
+
+## 7. Open scientific/methodological decisions — do not resolve silently
+
+| ID | Required independent decision | Safe interim practice |
+| --- | --- | --- |
+| OPEN-01 | Is B1 periodic (manuscript) or triggered after every architectural change (DA01 protocol)? What is the time allowance? | Preserve existing B1 rules, do not fabricate an operator. |
+| OPEN-02 | Which RQ mapping and primary outcome/hypothesis family will be used for final reporting? | Keep two numberings and the research crosswalk. |
+| OPEN-03 | Which q require control at multiple lifecycle stages? | Preserve DA01's frozen exact pair rule; do not invent stages. |
+| OPEN-04 | Who approves real Authority Charter, Registry, trust anchors and completeness validation? | DRAFT/OPEN remains UNKNOWN/HOLD. |
+| OPEN-05 | Which real, versioned, executable generic evaluator templates will be available equally to B1/P? | Missing template yields NEEDS_IMPLEMENTATION/HOLD. |
+| OPEN-06 | What exact bounded candidate limit, per-artifact incremental costs and cost threshold apply? | Missing/incomparable cost or budget exhaustion yields HOLD. |
+| OPEN-07 | How are genuine detected architecture violations separated from unavailable/nonvacuous monitoring under current reference verdict rules? | Preserve separate compliance and semantic validity; no scorer rewrite. |
+| OPEN-08 | How is one multi-obligation ADD represented under v1 single-obligation-target scoring? | Canonical owner rule is DEVELOPMENT proposal only; review before G1. |
+| OPEN-09 | Who independently reviews/fixes versioned P algorithm and holdout policy? | Synthetic implementation can proceed, measured DA01 blocked. |
+| OPEN-10 | If/when should adaptive α and θ be studied, and how isolate their causal effect? | No generalized automatic α/θ changes or RQ2 benefit claims in core v1. |
+
+## 8. Canonical source references and forbidden implementation sources
+
+Read AGENTS.md, docs/RESEARCH_CONTEXT.md, docs/TESTING.md, docs/EXPERIMENT.md, SPEC 01/02 journals, experiments/execution/da01/PROTOCOL.md, INPUT_ISOLATION.md, READINESS.md, VALIDITY_RULES.md, B1_CHECKLIST.md; implementation tool contracts and SPEC 01/02 module code; fitness/catalog/architectural-obligations.yaml, fitness/catalog/a0-fitness-elements.yaml, fitness/configs/a0-monolith.yaml, fitness/traceability/a0-traceability.yaml.
+
+**Explicitly excluded as P design or test fixtures:** frozen ground truth, scenario answer lists, oracle, scorer, sealed reference outputs and engineering acceptance implementation copied as an oracle checker.
