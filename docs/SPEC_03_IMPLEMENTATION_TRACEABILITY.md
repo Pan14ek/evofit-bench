@@ -366,14 +366,18 @@ Broader safe unit/architecture command:
 PYTHONPATH='.venv/lib/python3.12/site-packages' /Users/oleksii_makieiev/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m pytest -q --no-cov -p no:cacheprovider --ignore=tests/unit/test_da01_execution.py --ignore=tests/unit/test_research_schema_foundation.py tests/unit tests/architecture
 ```
 
-The two protected modules above were not opened or run. They remain explicitly
-BLOCKED by the user's boundary. The full `make quality` target was not run
-because it invokes the protected modules. Migration validation used a
+The two protected modules were not opened or run locally. They remain
+explicitly BLOCKED by the user's boundary. The full local `make quality` target
+was not run because it invokes those modules. Migration validation used a
 disposable PostgreSQL 16 database named `evofit_spec03_test`; the temporary
-container was stopped after validation. The hosted CI URL and final head SHA
-are added to the PR description after push. No measured B0/B1/P run occurred;
-G1 is **INCOMPLETE**, G4 is **NOT AUTHORIZED**, and `p_interface.py` remains
-`NOT_READY`.
+container was stopped after validation. Push and pull-request Actions runs
+38914050510 and 38914100028 were cancelled after their `make quality` steps
+started; that workflow invokes the protected modules. Their logs were not
+inspected, so whether protected tests began is unknown and no hosted pass is
+claimed.
+Both run URLs and the base/head commits are in the [draft PR description](https://github.com/Pan14ek/evofit-bench/pull/10).
+No measured B0/B1/P run occurred; G1 is **INCOMPLETE**, G4 is **NOT
+AUTHORIZED**, and `p_interface.py` remains `NOT_READY`.
 
 | Check | Current branch result |
 | --- | --- |
@@ -386,4 +390,4 @@ G1 is **INCOMPLETE**, G4 is **NOT AUTHORIZED**, and `p_interface.py` remains
 | Disposable PostgreSQL migration validation | PASS — PostgreSQL 16, `0001_a0_schema` |
 | Full local `make quality` | BLOCKED / intentionally not run — invokes two protected test modules |
 | Frozen output byte parity (TT-P03-43) | BLOCKED — changed-path audit only; independent byte-parity verification not authorized/performed |
-| Hosted CI | Pending PR creation; URL will be added after push |
+| Hosted CI | CANCELLED / unverified — [push run 38914050510](https://github.com/Pan14ek/evofit-bench/actions/runs/38914050510), [PR run 38914100028](https://github.com/Pan14ek/evofit-bench/actions/runs/38914100028). Both cancelled due to the protected-module boundary; logs were not inspected. |
