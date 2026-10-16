@@ -11,6 +11,10 @@ These are **maintained navigation documents**, not replacements for the versione
 | [TECHNOLOGY.md](TECHNOLOGY.md) | Which tools are *actually used*, how is the environment run, and which tools are merely future options? |
 | [TESTING.md](TESTING.md) | What test categories, requirement-to-test traceability and pre-merge checks are expected? |
 
+## Local context guide
+
+The root [`../CONTEXT.md`](../CONTEXT.md) and each tracked subdirectory's `CONTEXT.md` describe local responsibilities, conventions and constraints. See [`../AGENTS.md`](../AGENTS.md) for the **explicit root-to-leaf reading order**; these files are not automatically loaded by every AI agent. This `docs/` directory is intentionally exempt because its documents provide the centralized research and engineering narrative. See also [GitHub's community discussion of this pattern](https://github.com/orgs/community/discussions/191257).
+
 ## State at documentation baseline
 
 Prepared against `main` after merged PR #5, commit `32172d7acd31a7a0210bdb64f8472d722a702d29` (16 Oct 2026). This is a snapshot of documentation review, **not** a frozen scientific protocol or claim that future HEAD will be unchanged.

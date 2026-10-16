@@ -2,6 +2,14 @@
 
 **Purpose:** give coding agents an explicit, auditable test plan. The table is a documentation-level **traceability seed**: it is not a claim that every row has a passing test. Tests for future SPEC 03 remain planned until the associated functionality is implemented.
 
+## Local context integrity
+
+The tracked-directory coverage check lives in `tests/unit/test_context_documents.py`. It requires a `CONTEXT.md` at the repository root and in every Git-tracked directory outside `docs/`, including nested directories. Do not conflate this documentation check with the input-isolation or scientific readiness gates. Run:
+
+```bash
+uv run pytest --no-cov tests/unit/test_context_documents.py
+```
+
 ## Required distinction
 
 - **Unit/contract/integration tests:** validate implementation behavior or local synthetic input.

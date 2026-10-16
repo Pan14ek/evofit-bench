@@ -14,6 +14,20 @@ This file governs automated contributors working in this repository. Read it bef
 
 For normative experimental details, prefer the **versioned source files** over narrative summaries: `experiments/design/ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md`; `experiments/execution/da01/PROTOCOL.md`, `INPUT_ISOLATION.md`, `READINESS.md`, `SCORE_RULES.md`, `VALIDITY_RULES.md`; `fitness/catalog/architectural-obligations.yaml`; and the corresponding JSON Schemas. If narrative documents disagree, identify the discrepancy in the PR; do not silently reconcile or rewrite scientific rules.
 
+## Hierarchical CONTEXT.md convention (mandatory for repository work)
+
+The repository uses **local, descriptive** `CONTEXT.md` files in the root and **every tracked directory outside `docs/`**. The approach is inspired by [GitHub Community Discussion #191257](https://github.com/orgs/community/discussions/191257); it is a project convention, **not automatic context loading by every AI tool**. Explicitly read these files. `docs/RESEARCH_CONTEXT.md` remains the canonical research-rationale document; `docs/` deliberately has no local `CONTEXT.md` files.
+
+Before working on any path:
+1. Read root `AGENTS.md`, root `CONTEXT.md` and `docs/RESEARCH_CONTEXT.md`.
+2. Read the `CONTEXT.md` files for **all ancestors** of the target file, in order from root to leaf. For example, editing `app/modules/tasks/service.py` requires `app/CONTEXT.md`, `app/modules/CONTEXT.md`, `app/modules/tasks/CONTEXT.md`.
+3. Read and follow the actual module code, tests, manifests and frozen research protocols. `CONTEXT.md` is descriptive context, **not permission** to override these sources.
+4. When adding a tracked directory outside `docs/`, create its `CONTEXT.md` in the same PR. Update existing local context **in the same PR** when boundaries, artifacts, APIs, commands or known limitations materially change.
+5. Keep each local file focused: responsibility, meaningful file landmarks, architectural patterns, validation commands and concrete anti-patterns. Do not copy whole source files, embed secrets or oracle labels, fabricate experiment outcomes or treat local context as an approved policy.
+6. Archived/scientific directories also contain navigation files solely to satisfy repository coverage; these additions **do not enter the curated evidence inventories, ground truth or method input allowlists**. Never alter existing frozen bytes or rebase a protocol on supplemental context.
+
+CI tests `tests/unit/test_context_documents.py` check complete tracked-directory coverage (except `docs/`). If such a test cannot inspect Git metadata, report a clear skip rather than pretending to have verified coverage.
+
 ## Current state (update only with evidence)
 
 - The **A0_MONOLITH** starting point is a frozen research baseline. The current `main` application code is the **A0_1_CAPABILITY_MODULES** capability-oriented monolith from DA01, still **one deployable application process, one PostgreSQL database, synchronous calls and no broker**. See `ARCHITECTURE.md` and the state manifest.
