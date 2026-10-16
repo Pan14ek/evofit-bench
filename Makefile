@@ -4,8 +4,28 @@ RUN_ID ?= $(shell date -u +%Y%m%dT%H%M%SZ)
 PROFILE ?= a0-smoke-v1
 DURATION ?= 30
 RUN_STARTED_AT_UTC ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+DEVELOPMENT_REGRESSION_TESTS = \
+	tests/unit/test_p_input_contract_v11.py \
+	tests/unit/test_p_input_authority_validation.py \
+	tests/unit/test_p_input_v2_isolation.py \
+	tests/unit/test_p_applicability_ruleset_v1.py \
+	tests/unit/test_p_applicability_policies_v1.py \
+	tests/unit/test_p_impact_v1.py \
+	tests/unit/test_p_semantic_pairs_v1.py \
+	tests/unit/test_p_operations_v1.py \
+	tests/unit/test_p_candidate_governance_v1.py \
+	tests/unit/test_p_adaptation_evidence_v1.py \
+	tests/unit/test_g1_method_decision_register.py \
+	tests/unit/test_context_documents.py \
+	tests/unit/test_da01_inputs_and_isolation.py::test_container_negative_probes_cannot_reach_oracle_history_network_or_other_output \
+	tests/integration/test_p_applicability_v3.py \
+	tests/integration/test_p_governed_adaptation_v1.py
 
-.PHONY: install run test test-unit test-integration lint typecheck security architecture-test quality migration-test db-upgrade seed seed-fingerprint reset wait-ready load-smoke load-baseline experiment-reset export-metrics metadata
+DEVELOPMENT_PROTECTED_TESTS = \
+	tests/unit/test_da01_execution.py \
+	tests/unit/test_research_schema_foundation.py
+
+.PHONY: install run test test-unit test-integration development-regression-test development-lint development-typecheck development-quality lint typecheck security architecture-test quality migration-test db-upgrade seed seed-fingerprint reset wait-ready load-smoke load-baseline experiment-reset export-metrics metadata
 
 install:
 	$(UV) sync --extra dev
@@ -37,6 +57,26 @@ architecture-test:
 	$(UV) run python -m pytest --no-cov tests/architecture
 
 quality: lint typecheck security architecture-test migration-test test
+
+development-regression-test:
+	$(UV) run python -m pytest -q --no-cov -p no:cacheprovider \
+		$(foreach test,$(DEVELOPMENT_PROTECTED_TESTS),--ignore=$(test)) \
+		$(DEVELOPMENT_REGRESSION_TESTS)
+
+development-lint:
+	$(UV) run ruff check . \
+		--extend-exclude=tests/unit/test_da01_execution.py \
+		--extend-exclude=tests/unit/test_research_schema_foundation.py
+	$(UV) run ruff format --check . \
+		--extend-exclude=tests/unit/test_da01_execution.py \
+		--extend-exclude=tests/unit/test_research_schema_foundation.py
+
+development-typecheck:
+	$(UV) run mypy app scripts tests \
+		--exclude '(^|/)test_da01_execution\.py$$' \
+		--exclude '(^|/)test_research_schema_foundation\.py$$'
+
+development-quality: development-lint development-typecheck security architecture-test migration-test development-regression-test
 
 migration-test:
 	$(UV) run python -m scripts.validate_migrations

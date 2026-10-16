@@ -92,7 +92,11 @@ PYTHONPATH='.venv/lib/python3.12/site-packages' /Users/oleksii_makieiev/.cache/c
 git diff --check
 ```
 
-Latest local results on the prepared branch: focused SPEC 03 regressions **42
+The following earlier results describe the pre-review-fix PR #10 implementation.
+The current review-fix outcome is recorded below. Earlier outcomes remain in
+place as historical evidence.
+
+Pre-review-fix local results: focused SPEC 03 regressions **42
 passed** (one existing Starlette/httpx deprecation warning); unit and
 architecture suites **213 passed** (one existing Locust monkey-patch warning,
 zero skips); Ruff check and format **PASS** (220 files formatted); Mypy **PASS**
@@ -103,10 +107,51 @@ passed without a skip. Migration validation passed on a temporary PostgreSQL
 16 database named `evofit_spec03_test`; the container was stopped and removed
 afterward.
 
-Do not run the default full `make quality` locally for this work: it invokes
+For SPEC 03 DEVELOPMENT changes, use `make development-quality` with a
+**disposable** PostgreSQL database. The target runs explicit SPEC 01/02/03 and
+S03R regressions, the synthetic Docker isolation probe, static/security/
+architecture checks, and migrations. It excludes
 `tests/unit/test_da01_execution.py` and
-`tests/unit/test_research_schema_foundation.py`, which the user prohibited.
-Those modules were excluded explicitly and not opened. A clean local full
-quality run or hosted CI does not change G1/G4 readiness, and no measured DA01
-run is part of this DEVELOPMENT scope.
+`tests/unit/test_research_schema_foundation.py` from Ruff check/format, Mypy,
+and pytest discovery. The default `make quality` still includes the broader
+test suite and must not be used for this protected work. These engineering
+checks do not change G1/G4 readiness, and no measured DA01 run is part of this
+DEVELOPMENT scope.
+
+The reproducible safe command is:
+
+```bash
+TEST_DATABASE_URL=postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test make development-quality
+```
+
+The database must be disposable and its database name must contain `evofit`.
+GitHub Actions supplies a temporary PostgreSQL 16 service and runs this same
+Make target on push and pull request events.
+
+### PR #10 review-fix verification
+
+On 2026-10-16, the full safe target passed locally with a temporary PostgreSQL
+16 container and the synthetic Docker isolation probe enabled. The host had no
+`uv` executable, so a temporary wrapper delegated the Make target's `uv run`
+commands to the project's installed Python 3.12 tool environment. The wrapper
+and database container were removed/stopped after the run.
+
+| Check | Result |
+| --- | --- |
+| Ruff check | PASS — all checks passed; protected test modules excluded |
+| Ruff format | PASS — 219 Python files checked; protected modules excluded |
+| Mypy | PASS — 94 source files; protected modules excluded |
+| Bandit | PASS — existing comment-parser and `nosec` warnings only |
+| Architecture import rules | PASS — 5 contracts kept, 0 broken |
+| Architecture tests | PASS — 6 passed |
+| Disposable PostgreSQL migration validation | PASS — PostgreSQL 16, `0001_a0_schema` |
+| Safe SPEC 01/02/03 and S03R regressions, including Docker isolation probe | PASS — 201 passed, one existing Starlette/httpx deprecation warning, 0 skipped |
+| `git diff --check` | PASS |
+
+The target explicitly excludes `tests/unit/test_da01_execution.py` and
+`tests/unit/test_research_schema_foundation.py` from test, lint, formatting,
+and type-check discovery. Neither protected module was opened, executed,
+modified, linted, formatted, or type-checked in this run.
+The exact current-head GitHub Actions URLs and conclusions are recorded in the
+existing [PR #10 description](https://github.com/Pan14ek/evofit-bench/pull/10).
 

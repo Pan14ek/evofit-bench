@@ -82,6 +82,9 @@ _METHOD_EXTRA_ROLES = {
     "policy_completeness_claims",
     "policy_source_manifest",
 }
+_REGISTRY_V12_PROPERTY_NAMES = (_REGISTRY_PROPERTY_NAMES - {"closure_claim_id"}) | {
+    "closure_claim_ids"
+}
 _FORBIDDEN_POLICY_MARKERS = (
     b"expected_operations",
     b"ground_truth",
@@ -189,8 +192,7 @@ def verify_policy_source_bundle_v3(bundle_directory: Path) -> dict[str, Any]:
         raise ProtocolError("Policy bundle digest does not match its manifest")
     registry = _read_json_object(root / REGISTRY_PATH, "policy registry")
     _read_json_object(root / CHARTER_PATH, "policy charter")
-    if set(registry) != _REGISTRY_PROPERTY_NAMES:
-        raise ContractValidationError("POLICY_SOURCE_INVALID: registry has unexpected fields")
+    _validate_registry_source(registry)
     if registry.get("authority_charter_source_id") != "CHARTER":
         raise ContractValidationError("POLICY_SOURCE_INVALID: registry must reference CHARTER")
     if registry.get("policies") is None or not isinstance(registry.get("policies"), list):
@@ -200,6 +202,21 @@ def verify_policy_source_bundle_v3(bundle_directory: Path) -> dict[str, Any]:
         if not isinstance(claim, Mapping):
             raise ContractValidationError(
                 "POLICY_SOURCE_INVALID: completeness claim must be an object"
+            )
+    closure_claim_ids = _registry_closure_claim_ids(registry)
+    if closure_claim_ids:
+        claims_by_id: dict[str, list[Mapping[str, Any]]] = {}
+        for claim in claims:
+            if isinstance(claim, Mapping) and isinstance(claim.get("id"), str):
+                claims_by_id.setdefault(str(claim["id"]), []).append(claim)
+        if any(
+            len(claims_by_id.get(claim_id, [])) != 1
+            or claims_by_id[claim_id][0].get("kind") != "AUTHORITATIVE_POLICY_REGISTRY"
+            for claim_id in closure_claim_ids
+        ):
+            raise ContractValidationError(
+                "POLICY_SOURCE_INVALID: registry closure references must bind "
+                "unique registry claims"
             )
     load_and_validate_ruleset(
         root / RULESET_PATH,
@@ -362,6 +379,65 @@ def _read_json_object(path: Path, label: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ContractValidationError(f"POLICY_SOURCE_INVALID: {label} must be an object")
     return value
+
+
+def _validate_registry_source(registry: Mapping[str, Any]) -> None:
+    """Accept the legacy registry v1.1 shape and the additive v1.2 closure list."""
+    schema_version = registry.get("schema_version")
+    if schema_version == "1.1":
+        valid_shape = set(registry) == _REGISTRY_PROPERTY_NAMES
+        closure_claims = [registry.get("closure_claim_id")]
+    elif schema_version == "1.2":
+        valid_shape = set(registry) == _REGISTRY_V12_PROPERTY_NAMES
+        value = registry.get("closure_claim_ids")
+        valid_shape = valid_shape and isinstance(value, list)
+        closure_claims = value if isinstance(value, list) else []
+    else:
+        valid_shape = False
+        closure_claims = []
+    if not valid_shape:
+        raise ContractValidationError("POLICY_SOURCE_INVALID: registry has unexpected fields")
+
+    closure = registry.get("closure")
+    if closure not in {"OPEN", "CLAIMED_CLOSED"}:
+        raise ContractValidationError("POLICY_SOURCE_INVALID: registry closure is invalid")
+    if schema_version == "1.1":
+        claim_id = closure_claims[0]
+        valid_claims = claim_id is None or (
+            isinstance(claim_id, str)
+            and bool(re.fullmatch(r"[A-Za-z][A-Za-z0-9_.:-]{0,127}", claim_id))
+        )
+        if (closure == "OPEN" and claim_id is not None) or (
+            closure == "CLAIMED_CLOSED" and not isinstance(claim_id, str)
+        ):
+            valid_claims = False
+    else:
+        valid_claims = all(
+            isinstance(claim_id, str)
+            and bool(re.fullmatch(r"[A-Za-z][A-Za-z0-9_.:-]{0,127}", claim_id))
+            for claim_id in closure_claims
+        ) and len(closure_claims) == len(set(closure_claims))
+        if (closure == "OPEN" and closure_claims) or (
+            closure == "CLAIMED_CLOSED" and not closure_claims
+        ):
+            valid_claims = False
+    if not valid_claims:
+        raise ContractValidationError(
+            "POLICY_SOURCE_INVALID: registry closure claim binding is invalid"
+        )
+
+
+def _registry_closure_claim_ids(registry: Mapping[str, Any]) -> list[str]:
+    """Return the registry's explicitly referenced closure claim IDs."""
+    if registry.get("schema_version") == "1.1":
+        claim_id = registry.get("closure_claim_id")
+        return [claim_id] if isinstance(claim_id, str) else []
+    claim_ids = registry.get("closure_claim_ids")
+    return (
+        [claim_id for claim_id in claim_ids if isinstance(claim_id, str)]
+        if isinstance(claim_ids, list)
+        else []
+    )
 
 
 def _read_json_array(path: Path, label: str) -> list[Any]:
@@ -558,6 +634,7 @@ def export_method_inputs_v3(
         sources=source_records,
         registry_artifact=registry_artifact,
         completeness_claims=list(policy_source.completeness_claims),
+        allow_snapshot_v1_2=True,
     )
     snapshot_bytes = pretty_json_bytes(snapshot)
 
@@ -764,7 +841,7 @@ def verify_method_bundle_v3(
         raise ProtocolError(
             "V3 source references invalid: " + ", ".join(source_report.reason_codes)
         )
-    _verify_normalized_snapshot_projection(root, snapshot, snapshot_bytes)
+    _verify_normalized_snapshot_projection(root, snapshot, snapshot_bytes, allow_snapshot_v1_2=True)
     compiled = load_and_validate_ruleset(
         root / RULESET_PATH,
         load_fact_vocabulary(),

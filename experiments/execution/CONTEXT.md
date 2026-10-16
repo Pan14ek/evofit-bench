@@ -11,6 +11,7 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 
 - `P_APPLICABILITY_V1.md`
 - `P_INPUT_V11.md`
+- `P_INPUT_V12_DEVELOPMENT.md`
 - `P_INPUT_V11_SENSITIVE_SHA256.txt`
 - `da01/P_ALGORITHM_STATUS.md`
 - `tooling/p_adaptation.py`
@@ -26,14 +27,14 @@ Research implementation under tooling/; DA01 protocol under da01/.
 
 SPEC03 pipeline code and additive DEVELOPMENT schemas are implemented and
 synthetically tested. V2 adaptation evidence binds full template descriptors;
-V1 artifact hashes remain non-authorizing. Synthetic V3 no-op and ADD attempts
-still HOLD because one Registry closure claim ID cannot establish both exact
-before and after applicability. This does not make P ready for measured trials:
-production inputs still lack approved policy authority, mandatory
-classifications, evaluator templates, and cost authority, and G1/G4 remain
-separate. Keep `p_interface.py` readiness blocked until the documented gates
-are met.
+V1 artifact hashes remain non-authorizing. V3 Snapshot v1.2 can bind separate
+before/after registry closure claims; its positive no-op and ADD regressions
+use TEST_ONLY evidence, while the v1.1 single-claim negative case remains
+UNKNOWN/HOLD. This does not make P ready for measured trials: production inputs
+still lack approved policy authority, mandatory classifications, evaluator
+templates, and cost authority, and G1/G4 remain separate. Keep
+`p_interface.py` readiness blocked until the documented gates are met.
 
 ## Verification and further reading
 
-Consult the original source files and nearest relevant tests, then `docs/README.md` for repository-wide architecture, experiment, stack and verification references. Implementation work uses `make quality` with a **disposable** PostgreSQL database. When a context summary conflicts with source code, a reviewed manifest or a frozen scientific protocol, **report the conflict**; do not silently reinterpret research rules.
+Consult the original source files and nearest relevant tests, then `docs/README.md` for repository-wide architecture, experiment, stack and verification references. The DEVELOPMENT validation workflow uses `make development-quality` with a **disposable** PostgreSQL database and excludes the two protected DA01 test modules from discovery. When a context summary conflicts with source code, a reviewed manifest or a frozen scientific protocol, **report the conflict**; do not silently reinterpret research rules.

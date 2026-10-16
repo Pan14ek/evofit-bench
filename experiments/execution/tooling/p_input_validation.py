@@ -22,7 +22,12 @@ from experiments.execution.tooling.hashing import (
 )
 
 P_INPUT_SCHEMA_NAME = "architecture_policy_snapshot_v1_1.schema.json"
+P_INPUT_SCHEMA_V12_NAME = "architecture_policy_snapshot_v1_2.schema.json"
 P_INPUT_SNAPSHOT_PATH = "architecture-policy-snapshot.json"
+_P_INPUT_SCHEMA_NAMES = {
+    "1.1": P_INPUT_SCHEMA_NAME,
+    "1.2": P_INPUT_SCHEMA_V12_NAME,
+}
 FACT_VOCABULARY_PATH = Path(__file__).resolve().parents[1] / "contracts" / "fact_vocabulary_v1.json"
 _FV_CORE_V1_NAMES = (
     "component.python_module_identity",
@@ -148,17 +153,21 @@ class CompletenessVerifier(Protocol):
 
 
 def validate_snapshot_schema(payload: Mapping[str, Any]) -> None:
-    """Validate a Snapshot against the canonical Draft 2020-12 schema.
+    """Validate a Snapshot against its canonical Draft 2020-12 schema.
 
     The shared schema loader checks the schema itself. The standard format
-    checker has a strict RFC 3339 date-time assertion for this contract, and
-    validation errors include the failing JSON path.
+    checker has a strict RFC 3339 date-time assertion for each contract, and
+    validation errors include the failing JSON path. V1.2 is an additive
+    DEVELOPMENT extension; existing V1.1 Snapshots retain their original schema.
     """
     if not isinstance(payload, Mapping):
         raise ContractValidationError("P input Snapshot must be a JSON object")
-    validator = Draft202012Validator(
-        load_schema(P_INPUT_SCHEMA_NAME), format_checker=_FORMAT_CHECKER
-    )
+    schema_name = _P_INPUT_SCHEMA_NAMES.get(str(payload.get("schema_version")))
+    if schema_name is None:
+        raise ContractValidationError(
+            f"Unsupported P input Snapshot schema_version: {payload.get('schema_version')!r}"
+        )
+    validator = Draft202012Validator(load_schema(schema_name), format_checker=_FORMAT_CHECKER)
     errors = sorted(
         validator.iter_errors(dict(payload)), key=lambda error: list(error.absolute_path)
     )
@@ -167,7 +176,7 @@ def validate_snapshot_schema(payload: Mapping[str, Any]) -> None:
             f"/{'/'.join(str(part) for part in error.absolute_path)}: {error.message}"
             for error in errors
         )
-        raise ContractValidationError(f"{P_INPUT_SCHEMA_NAME} validation failed: {details}")
+        raise ContractValidationError(f"{schema_name} validation failed: {details}")
 
 
 def load_fact_vocabulary() -> dict[str, Any]:
@@ -600,19 +609,27 @@ def _verified_source_manifest(
             "POLICY_CHARTER",
             "/policy_registry/authority_charter_source_id",
         )
-        closure_claim_id = registry.get("closure_claim_id")
-        if closure_claim_id is not None:
-            claim = next(
-                (
-                    item
-                    for item in claims
-                    if isinstance(item, Mapping) and item.get("id") == closure_claim_id
-                ),
-                None,
-            )
-            if claim is None or claim.get("kind") != "AUTHORITATIVE_POLICY_REGISTRY":
+        if snapshot.get("schema_version") == "1.1":
+            closure_claim_ids = [registry.get("closure_claim_id")]
+            detail_path = "/policy_registry/closure_claim_id"
+        else:
+            value = registry.get("closure_claim_ids")
+            closure_claim_ids = value if isinstance(value, list) else []
+            detail_path = "/policy_registry/closure_claim_ids"
+        for closure_claim_id in closure_claim_ids:
+            if closure_claim_id is None:
+                continue
+            matching_claims = [
+                item
+                for item in claims
+                if isinstance(item, Mapping) and item.get("id") == closure_claim_id
+            ]
+            if (
+                len(matching_claims) != 1
+                or matching_claims[0].get("kind") != "AUTHORITATIVE_POLICY_REGISTRY"
+            ):
                 invalid_codes.add("MISSING_SOURCE_REF")
-                details.add("/policy_registry/closure_claim_id")
+                details.add(detail_path)
 
     if invalid_codes:
         report = ValidationReport(
@@ -923,13 +940,26 @@ def verify_policy_authority(
         undetermined_codes.add("REGISTRY_CLOSURE_UNVERIFIED")
         details.add("/policy_registry/closure")
     elif closure == "CLAIMED_CLOSED":
-        closure_id = str(registry.get("closure_claim_id"))
+        closure_claim_ids_value = (
+            [registry.get("closure_claim_id")]
+            if snapshot.get("schema_version") == "1.1"
+            else registry.get("closure_claim_ids")
+        )
+        closure_claim_ids = (
+            [claim_id for claim_id in closure_claim_ids_value if isinstance(claim_id, str)]
+            if isinstance(closure_claim_ids_value, list)
+            else []
+        )
         if completeness_report is None or (
             completeness_report.status is not ValidationStatus.VALID
-            or closure_id not in completeness_report.evidence_refs
+            or not set(closure_claim_ids).issubset(completeness_report.evidence_refs)
         ):
             undetermined_codes.add("REGISTRY_CLOSURE_UNVERIFIED")
-            details.add("/policy_registry/closure_claim_id")
+            details.add(
+                "/policy_registry/closure_claim_id"
+                if snapshot.get("schema_version") == "1.1"
+                else "/policy_registry/closure_claim_ids"
+            )
 
     if invalid_codes:
         return ValidationReport(
@@ -1079,26 +1109,43 @@ def _source_json(source: SourceReference) -> Mapping[str, Any] | None:
 def _registry_artifact_matches(
     artifact: Mapping[str, Any], snapshot: Mapping[str, Any], registry: Mapping[str, Any]
 ) -> bool:
-    allowed_keys = {
+    common_keys = {
         "schema_version",
         "registry_version",
         "scope",
         "as_of",
         "closure",
-        "closure_claim_id",
         "authority_charter_source_id",
         "policies",
     }
-    if set(artifact) != allowed_keys or artifact.get("schema_version") != "1.1":
+    if snapshot.get("schema_version") == "1.1":
+        if (
+            set(artifact) != common_keys | {"closure_claim_id"}
+            or artifact.get("schema_version") != "1.1"
+        ):
+            return False
+        closure_projection = {"closure_claim_id": artifact.get("closure_claim_id")}
+    elif snapshot.get("schema_version") == "1.2":
+        closure_claim_ids = artifact.get("closure_claim_ids")
+        if (
+            set(artifact) != common_keys | {"closure_claim_ids"}
+            or artifact.get("schema_version") != "1.2"
+            or not isinstance(closure_claim_ids, list)
+            or any(not isinstance(claim_id, str) for claim_id in closure_claim_ids)
+            or len(closure_claim_ids) != len(set(closure_claim_ids))
+        ):
+            return False
+        closure_projection = {"closure_claim_ids": sorted(closure_claim_ids)}
+    else:
         return False
     expected_registry = {
         "scope": artifact.get("scope"),
         "source_id": registry.get("source_id"),
         "closure": artifact.get("closure"),
-        "closure_claim_id": artifact.get("closure_claim_id"),
         "authority_charter_source_id": artifact.get("authority_charter_source_id"),
         "registry_version": artifact.get("registry_version"),
         "as_of": artifact.get("as_of"),
+        **closure_projection,
     }
     return dict(registry) == expected_registry and snapshot.get("policies") == artifact.get(
         "policies"

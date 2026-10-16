@@ -64,16 +64,14 @@ classifications, executable generic templates, or cost authority, so real runs
 remain on the `HOLD` path until those inputs are supplied under approved rules.
 Unknown multi-stage obligations also remain unresolved.
 
-Synthetic V3 no-op and ADD attempts use signed TEST_ONLY policy/evidence inputs,
-a hash-pinned evaluator, typed impact, exact-pair evidence, candidate
-materialization, and full-descriptor authorization for ADD. Both correctly
-HOLD before accepted output: the current Snapshot Registry has one
-`closure_claim_id`, so its selected claim cannot establish applicability for
-both the before and after revisions. This contract blocker is recorded in the
-implementation traceability report; it is not bypassed. A successful
-synthetic unit-level governance decision verifies its finite contract but does
-not amount to a positively accepted V3 P run. No measured DA01 trial, G1/G4
-approval, human B1 result, or claim of scientific novelty follows from these
-tests. See
+Synthetic V3 no-op and full-descriptor ADD scenarios use signed TEST_ONLY
+policy/evidence inputs, a hash-pinned evaluator, typed impact, exact-pair
+evidence, and candidate materialization. Snapshot v1.2 binds the before and
+after registry closure claims independently; both scenarios reach governance
+ACCEPT and the V1 adapters only under TEST_ONLY trust. The v1.1 single-claim,
+incomplete-evidence, and mismatched-binding regressions remain UNKNOWN/HOLD or
+reject. These are software-verification results, not production authority or a
+measured DA01 trial. G1/G4, human B1 results, and claims of scientific novelty
+remain separate. See
 [`da01/P_ALGORITHM_STATUS.md`](da01/P_ALGORITHM_STATUS.md) and
 [`docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`](../../docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md).

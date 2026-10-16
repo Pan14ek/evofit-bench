@@ -93,6 +93,9 @@ _REGISTRY_PROPERTY_NAMES = {
     "authority_charter_source_id",
     "policies",
 }
+_REGISTRY_V12_PROPERTY_NAMES = (_REGISTRY_PROPERTY_NAMES - {"closure_claim_id"}) | {
+    "closure_claim_ids"
+}
 _REGISTRY_SNAPSHOT_PROPERTY_NAMES = {
     "scope",
     "source_id",
@@ -133,6 +136,7 @@ def build_normalized_snapshot(
     sources: Sequence[Mapping[str, Any]],
     registry_artifact: Mapping[str, Any],
     completeness_claims: Sequence[Mapping[str, Any]] = (),
+    allow_snapshot_v1_2: bool = False,
 ) -> dict[str, Any]:
     """Build a deterministic Snapshot from typed, explicitly allowlisted fields.
 
@@ -156,7 +160,16 @@ def build_normalized_snapshot(
         "preserved_cross_module_dependencies",
     }:
         raise ContractValidationError("structural projection has unexpected fields")
-    if set(registry_artifact) != _REGISTRY_PROPERTY_NAMES:
+    registry_v11 = (
+        registry_artifact.get("schema_version") == "1.1"
+        and set(registry_artifact) == _REGISTRY_PROPERTY_NAMES
+    )
+    registry_v12 = (
+        allow_snapshot_v1_2
+        and registry_artifact.get("schema_version") == "1.2"
+        and set(registry_artifact) == _REGISTRY_V12_PROPERTY_NAMES
+    )
+    if not (registry_v11 or registry_v12):
         raise ContractValidationError("policy registry artifact has unexpected fields")
 
     projected_sources = [_project_source(source) for source in sources]
@@ -222,18 +235,30 @@ def build_normalized_snapshot(
     )
     facts.extend(_facts_from_structural_manifest(structural_manifest))
 
-    registry = {
+    registry: dict[str, Any] = {
         "scope": registry_artifact["scope"],
         "source_id": "REGISTRY",
         "closure": registry_artifact["closure"],
-        "closure_claim_id": registry_artifact["closure_claim_id"],
         "authority_charter_source_id": registry_artifact["authority_charter_source_id"],
         "registry_version": registry_artifact["registry_version"],
         "as_of": registry_artifact["as_of"],
     }
+    if registry_v12:
+        closure_claim_ids = registry_artifact.get("closure_claim_ids")
+        if not isinstance(closure_claim_ids, list) or any(
+            not isinstance(claim_id, str) for claim_id in closure_claim_ids
+        ):
+            raise ContractValidationError("policy registry closure_claim_ids must be strings")
+        registry["closure_claim_ids"] = sorted(closure_claim_ids)
+        schema_version = "1.2"
+        contract_id = "VERSIONED_ARCH_POLICY_SNAPSHOT_V1_2"
+    else:
+        registry["closure_claim_id"] = registry_artifact["closure_claim_id"]
+        schema_version = "1.1"
+        contract_id = "VERSIONED_ARCH_POLICY_SNAPSHOT_V1_1"
     snapshot = {
-        "schema_version": "1.1",
-        "contract_id": "VERSIONED_ARCH_POLICY_SNAPSHOT_V1_1",
+        "schema_version": schema_version,
+        "contract_id": contract_id,
         "fact_vocabulary_version": "FV_CORE_V1",
         "architecture": dict(architecture),
         "sources": sorted(projected_sources, key=lambda item: str(item["id"])),
@@ -1018,7 +1043,11 @@ def _verify_structural_observation(
 
 
 def _verify_normalized_snapshot_projection(
-    root: Path, snapshot: Mapping[str, Any], snapshot_bytes: bytes
+    root: Path,
+    snapshot: Mapping[str, Any],
+    snapshot_bytes: bytes,
+    *,
+    allow_snapshot_v1_2: bool = False,
 ) -> None:
     try:
         before_inventory = json.loads((root / BEFORE_INVENTORY_PATH).read_bytes())
@@ -1066,6 +1095,7 @@ def _verify_normalized_snapshot_projection(
         sources=sources,
         registry_artifact=registry_artifact,
         completeness_claims=claims,
+        allow_snapshot_v1_2=allow_snapshot_v1_2,
     )
     if pretty_json_bytes(normalized) != snapshot_bytes:
         raise ProtocolError("COMMON_PROJECTION_MISMATCH: Snapshot differs from typed projection")

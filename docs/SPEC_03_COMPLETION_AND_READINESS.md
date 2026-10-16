@@ -55,7 +55,12 @@ The existing `p_adaptation_evidence_v1.schema.json` has `authorized_template_art
 
 Preserve unknown → HOLD, proven invalid/fraudulent → INPUT_REJECTED or documented validation error, and exact-digest mismatch → reject/hold according to the relevant original contract. Keep reason codes deterministic and specific. Any changes to `INV-01…INV-12` should preserve independent invariant checks rather than replacing them with a generic boolean.
 
-### Requirement S03R-04 — current legitimate behavior preserved
+For the two-state closure limitation found in review, the DEVELOPMENT
+implementation uses the additive Snapshot v1.2 extension documented in
+[`experiments/execution/P_INPUT_V12_DEVELOPMENT.md`](../experiments/execution/P_INPUT_V12_DEVELOPMENT.md).
+Snapshot v1.1 and V2 exports retain their original single-claim contract.
+
+### Compatibility constraint — current legitimate behavior preserved
 
 Do not require a replacement-template authorization merely to RETAIN an existing valid representation. Preserve exact-pair evidence, independent mandatory coverage, unknown/false-INACTIVE protection, bounded deterministic operation selection, signed governance ACCEPT requirement, output adapters restricted to ACCEPT, safe rollback binding, and publication-disabled status. No new authorization may relax hard constraints or criterion intent.
 

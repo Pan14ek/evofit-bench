@@ -47,6 +47,8 @@ from experiments.execution.tooling.p_applicability import (
     evaluate_obligations,
     load_and_validate_ruleset,
 )
+from experiments.execution.tooling.p_candidate import candidate_sha256
+from experiments.execution.tooling.p_governance import governance_authorizes_outputs
 from experiments.execution.tooling.p_input_export_v2 import (
     STRUCTURAL_MANIFEST_PATH,
 )
@@ -423,6 +425,9 @@ def _synthetic_policy_source_for_pipeline(
     *,
     before_revision: str | None = None,
     positive_active_policy_id: str | None = None,
+    multi_state_closure: bool = True,
+    closure_binding_override: tuple[str, str, str] | None = None,
+    complete_fact_inventory: bool = False,
 ) -> tuple[Path, str]:
     """Build a closed test-only source; the optional positive fixture resolves all candidates."""
     source = root / "synthetic-policy-source"
@@ -479,7 +484,16 @@ def _synthetic_policy_source_for_pipeline(
         )
 
     registry["closure"] = "CLAIMED_CLOSED"
-    registry["closure_claim_id"] = "SYNTHETIC_POLICY_CLOSURE_AFTER"
+    if multi_state_closure:
+        registry["schema_version"] = "1.2"
+        registry.pop("closure_claim_id")
+        registry["closure_claim_ids"] = [
+            f"SYNTHETIC_POLICY_CLOSURE_{state.upper()}"
+            for state, revision in (("after", after_revision), ("before", before_revision))
+            if revision is not None
+        ]
+    else:
+        registry["closure_claim_id"] = "SYNTHETIC_POLICY_CLOSURE_AFTER"
     _write_json(registry_path, registry)
 
     for policy in selected:
@@ -540,6 +554,9 @@ def _synthetic_policy_source_for_pipeline(
             "policy_registry_version": registry["registry_version"],
             "as_of": registry["as_of"],
         }
+        if closure_binding_override is not None and state == closure_binding_override[0]:
+            _, field, value = closure_binding_override
+            closure_claim[field] = value
         closure_claims.append(closure_claim)
         evidence = {
             "fixture": "synthetic-closed-policy-registry-v1",
@@ -550,7 +567,40 @@ def _synthetic_policy_source_for_pipeline(
             "architecture_revision": revision,
         }
         _write_json(source / f"fitness/policy/evidence/{evidence_id}.json", evidence)
-    _write_json(source / "fitness/policy/completeness-claims.json", closure_claims)
+    if complete_fact_inventory:
+        for fact_type in ("component.module_added", "component.module_removed"):
+            claim_id = f"SYNTHETIC_EMPTY_{fact_type.rsplit('.', maxsplit=1)[-1].upper()}_BEFORE"
+            evidence_id = (
+                f"SYNTHETIC_EMPTY_{fact_type.rsplit('.', maxsplit=1)[-1].upper()}_EVIDENCE"
+            )
+            claim = {
+                "id": claim_id,
+                "kind": "EXACT_ENUMERATION",
+                "state": "before",
+                "fact_type": fact_type,
+                "scope": registry["scope"],
+                "architecture_revision": before_revision,
+                "method_id": "synthetic_exact_fact_inventory_v1",
+                "evidence_source_ids": [evidence_id],
+                "assumptions": [],
+                "procedure_ref": "synthetic-test://exact-module-delta",
+            }
+            closure_claims.append(claim)
+            _write_json(
+                source / f"fitness/policy/evidence/{evidence_id}.json",
+                {
+                    "fixture": "synthetic-empty-module-delta-v1",
+                    "state": "before",
+                    "fact_type": fact_type,
+                    "scope": registry["scope"],
+                    "architecture_revision": before_revision,
+                    "value": [],
+                },
+            )
+    _write_json(
+        source / "fitness/policy/completeness-claims.json",
+        sorted(closure_claims, key=lambda claim: str(claim["id"])),
+    )
     return source, "SYNTHETIC_POLICY_CLOSURE_AFTER"
 
 
@@ -574,8 +624,9 @@ def _synthetic_completeness_verifier(
     registry = snapshot.get("policy_registry", {})
     state = claim.get("state")
     revision_key = "before_commit" if state == "before" else "after_commit"
-    return bool(
-        evidence.get("fixture") == "synthetic-closed-policy-registry-v1"
+    closure_verified = bool(
+        claim.get("kind") == "AUTHORITATIVE_POLICY_REGISTRY"
+        and evidence.get("fixture") == "synthetic-closed-policy-registry-v1"
         and evidence.get("state") == state
         and claim.get("scope") == evidence.get("scope") == registry.get("scope")
         and claim.get("policy_registry_version")
@@ -585,6 +636,33 @@ def _synthetic_completeness_verifier(
         and claim.get("architecture_revision")
         == evidence.get("architecture_revision")
         == architecture.get(revision_key)
+    )
+    if claim.get("kind") == "AUTHORITATIVE_POLICY_REGISTRY":
+        return closure_verified
+
+    facts = snapshot.get("facts", [])
+    matching_facts = [
+        fact
+        for fact in facts
+        if isinstance(fact, Mapping)
+        and fact.get("predicate") == claim.get("fact_type")
+        and fact.get("state") == "after"
+        and fact.get("scope") == claim.get("scope")
+    ]
+    return bool(
+        claim.get("kind") == "EXACT_ENUMERATION"
+        and state == "before"
+        and evidence.get("fixture") == "synthetic-empty-module-delta-v1"
+        and evidence.get("state") == state
+        and evidence.get("fact_type") == claim.get("fact_type")
+        and evidence.get("scope") == claim.get("scope") == registry.get("scope")
+        and evidence.get("architecture_revision")
+        == claim.get("architecture_revision")
+        == architecture.get("before_commit")
+        and architecture.get("before_tree") == architecture.get("after_tree")
+        and evidence.get("value") == []
+        and len(matching_facts) == 1
+        and matching_facts[0].get("value") == evidence.get("value")
     )
 
 
@@ -800,6 +878,9 @@ def _synthetic_positive_bundle(
     *,
     include_parent_representation: bool = True,
     include_add_template: bool = False,
+    multi_state_closure: bool = True,
+    closure_binding_override: tuple[str, str, str] | None = None,
+    architecture_noop: bool = False,
 ) -> tuple[Any, _SyntheticTrustContext, bytes]:
     repository, before_sha, after_sha, evaluator_artifact = (
         _synthetic_positive_architecture_repository(
@@ -807,11 +888,18 @@ def _synthetic_positive_bundle(
             include_parent_representation=include_parent_representation,
         )
     )
+    if architecture_noop:
+        before_sha = after_sha
+        _git(repository, "commit", "--allow-empty", "-m", "synthetic no-op revision")
+        after_sha = _git(repository, "rev-parse", "HEAD")
     policy_source, _closure_id = _synthetic_policy_source_for_pipeline(
         tmp_path,
         after_sha,
         before_revision=before_sha,
         positive_active_policy_id="POLICY_CANDIDATE_AC_LAYERING",
+        multi_state_closure=multi_state_closure,
+        closure_binding_override=closure_binding_override,
+        complete_fact_inventory=architecture_noop,
     )
     policy_bundle = tmp_path / "policy-bundles/synthetic-positive"
     package_policy_source_v3(policy_source, policy_bundle, "synthetic-positive-policy-v1")
@@ -1023,7 +1111,7 @@ def _scoped_sidecar_proof(
         "status": "VALID",
         "subject_sha256": sha256_bytes(canonical_json_bytes(dict(subject))),
         "scope": scope,
-        "architecture_source_shas": list(architecture_shas),
+        "architecture_source_shas": list(dict.fromkeys(architecture_shas)),
         "verifier_id": "synthetic_adaptation_test_verifier_v1",
         "source_bindings": [
             {"source_id": source_id, "sha256": bundle.source_digests[source_id]}
@@ -1229,6 +1317,39 @@ def _positive_adaptation_sidecar(
         architecture_shas=(before_sha, after_sha),
         source_ids=sorted(policy_source_ids),
     )
+    fact_absence_proofs = []
+    for claim in bundle.snapshot.get("completeness_claims", []):
+        if (
+            not isinstance(claim, Mapping)
+            or claim.get("kind") != "EXACT_ENUMERATION"
+            or claim.get("state") != "before"
+        ):
+            continue
+        predicate = str(claim["fact_type"])
+        claim_scope = str(claim["scope"])
+        absence_subject = {
+            "claim_type": "fact_absence",
+            "state": "before",
+            "predicate": predicate,
+            "scope": claim_scope,
+            "architecture_source_sha": before_sha,
+            "input_bundle_sha256": bundle.manifest["bundle_sha256"],
+        }
+        fact_absence_proofs.append(
+            {
+                "state": "before",
+                "predicate": predicate,
+                "scope": claim_scope,
+                "architecture_source_sha": before_sha,
+                "proof": _scoped_sidecar_proof(
+                    bundle=bundle,
+                    subject=absence_subject,
+                    scope=claim_scope,
+                    architecture_shas=(before_sha,),
+                    source_ids=list(claim["evidence_source_ids"]),
+                ),
+            }
+        )
     payload = {
         "evaluator_evidence": [
             {
@@ -1250,7 +1371,7 @@ def _positive_adaptation_sidecar(
                 "content_base64": base64.b64encode(evidence_bytes).decode("ascii"),
             },
         ],
-        "fact_absence_proofs": [],
+        "fact_absence_proofs": fact_absence_proofs,
         "policy_inventories": policy_inventories,
         "trace_inventory_proof": trace_proof,
         "change_inventory_proof": change_proof,
@@ -1294,28 +1415,79 @@ def _positive_adaptation_sidecar(
     return sidecar
 
 
-def test_v3_synthetic_noop_holds_when_registry_has_one_closure_claim_id(
+def test_v3_synthetic_noop_accepts_with_independent_before_after_closure_claims(
     tmp_path: Path,
 ) -> None:
-    bundle, trust_context, evaluator_artifact = _synthetic_positive_bundle(tmp_path)
+    bundle, trust_context, evaluator_artifact = _synthetic_positive_bundle(
+        tmp_path, architecture_noop=True
+    )
     sidecar = _positive_adaptation_sidecar(bundle, trust_context, evaluator_artifact, tmp_path)
 
     result = run_adaptation(bundle, evidence_context=sidecar)
     assert result.evidence_trust_scope == "TEST_ONLY"
-    assert result.governance.result.value == "HOLD"
+    assert bundle.snapshot["schema_version"] == "1.2"
+    assert result.governance.result.value == "ACCEPT", result.governance.to_dict()
     assert result.before_applicability.input_validation["completeness_status"] == "VALID"
     before = {row.obligation_id: row.status.value for row in result.before_applicability.results}
     after = {row.obligation_id: row.status.value for row in result.after_applicability.results}
-    assert before["AC_LAYERING"] == "UNKNOWN"
+    assert before["AC_LAYERING"] == "ACTIVE"
     assert after["AC_LAYERING"] == "ACTIVE"
+    before_row = next(
+        row for row in result.before_applicability.results if row.obligation_id == "AC_LAYERING"
+    )
+    after_row = next(
+        row for row in result.after_applicability.results if row.obligation_id == "AC_LAYERING"
+    )
+    assert "SYNTHETIC_POLICY_CLOSURE_BEFORE" in before_row.evidence_refs
+    assert "SYNTHETIC_POLICY_CLOSURE_AFTER" in after_row.evidence_refs
     assert result.current_coverage.status.value == "COMPLETE"
+    assert result.candidate_coverage is not None
+    assert result.candidate_coverage.status.value == "COMPLETE"
+    assert any(
+        row.obligation_id == "AC_LAYERING" and row.status.value == "VALID"
+        for row in result.current_pairs
+    )
+    assert any(
+        row.obligation_id == "AC_LAYERING" and row.status.value == "VALID"
+        for row in result.candidate_pairs
+    )
     assert result.candidate is not None
     assert result.candidate["candidate_validation"]["status"] == "valid"
-    assert result.candidate_v1 is None
-    assert result.prediction_v1 is None
-    operations = [row.operation.value for row in result.operation_plan.operations]
-    assert "retain" in operations
-    assert not {"add", "replace"}.intersection(operations)
+    assert result.candidate_sha256 == candidate_sha256(result.candidate)
+    assert result.candidate_v1 is not None
+    assert result.prediction_v1 is not None
+    assert result.candidate_v1["configuration_version"] == result.candidate["configuration_version"]
+    assert result.candidate_v1["candidate_validation"] == result.candidate["candidate_validation"]
+    assert (
+        result.candidate_v1["architecture_source_sha"]
+        == bundle.snapshot["architecture"]["after_commit"]
+    )
+    assert (
+        result.prediction_v1["architecture_source_sha"]
+        == bundle.snapshot["architecture"]["after_commit"]
+    )
+    assert result.prediction_v1["input_bundle_sha256"] == bundle.manifest["bundle_sha256"]
+    operation_rows = [row.to_dict() for row in result.operation_plan.operations]
+    assert governance_authorizes_outputs(
+        result.governance,
+        candidate_configuration_sha256=str(result.candidate_sha256),
+        architecture_source_sha=str(bundle.snapshot["architecture"]["after_commit"]),
+        input_bundle_sha256=str(bundle.manifest["bundle_sha256"]),
+        operations=result.candidate["changes"],
+    )
+    assert governance_authorizes_outputs(
+        result.governance,
+        candidate_configuration_sha256=str(result.candidate_sha256),
+        architecture_source_sha=str(bundle.snapshot["architecture"]["after_commit"]),
+        input_bundle_sha256=str(bundle.manifest["bundle_sha256"]),
+        operations=operation_rows,
+    )
+    invariant_verdicts = result.governance.to_dict()["invariant_verdicts"]
+    assert len(invariant_verdicts) == 12
+    assert set(invariant_verdicts.values()) == {"PASS"}
+    operation_kinds = [row.operation.value for row in result.operation_plan.operations]
+    assert "retain" in operation_kinds
+    assert not {"add", "replace", "deactivate", "adjust"}.intersection(operation_kinds)
     assert next(
         row for row in result.candidate["representations"] if row["id"] == "REP_A0_ARCH_CI_LAYERING"
     ) == next(
@@ -1323,12 +1495,18 @@ def test_v3_synthetic_noop_holds_when_registry_has_one_closure_claim_id(
         for row in bundle.parent_configuration["representations"]
         if row["id"] == "REP_A0_ARCH_CI_LAYERING"
     )
-    assert "BEFORE_APPLICABILITY_UNRESOLVED" in result.governance.to_dict()["reason_codes"]
-    assert result.governance.to_dict()["invariant_verdicts"]["INV-06"] == "PASS"
-    assert result.governance.to_dict()["invariant_verdicts"]["INV-10"] == "UNKNOWN"
+    replay = run_adaptation(bundle, evidence_context=sidecar)
+    assert replay.candidate_sha256 == result.candidate_sha256
+    assert replay.operation_plan.plan_sha256 == result.operation_plan.plan_sha256
+    assert (
+        replay.governance.to_dict()["decision_sha256"]
+        == result.governance.to_dict()["decision_sha256"]
+    )
+    assert replay.candidate_v1 == result.candidate_v1
+    assert replay.prediction_v1 == result.prediction_v1
 
 
-def test_v3_synthetic_add_uses_authorized_descriptor_but_holds_before_state(
+def test_v3_synthetic_add_uses_authorized_descriptor_and_accepts_with_scoped_closure_claims(
     tmp_path: Path,
 ) -> None:
     bundle, trust_context, evaluator_artifact = _synthetic_positive_bundle(
@@ -1350,6 +1528,9 @@ def test_v3_synthetic_add_uses_authorized_descriptor_but_holds_before_state(
     assert {row["source_id"] for row in sidecar["source_bindings"]} >= {"P_CAPABILITIES"}
     result = run_adaptation(bundle, evidence_context=sidecar)
 
+    assert result.evidence_trust_scope == "TEST_ONLY"
+    assert len(result.governance.to_dict()["invariant_verdicts"]) == 12
+    assert set(result.governance.to_dict()["invariant_verdicts"].values()) == {"PASS"}
     add_operations = [
         row for row in result.operation_plan.operations if row.operation.value == "add"
     ]
@@ -1367,11 +1548,55 @@ def test_v3_synthetic_add_uses_authorized_descriptor_but_holds_before_state(
         and row.status.value == "VALID"
         for row in result.candidate_pairs
     )
+    assert result.governance.result.value == "ACCEPT"
+    assert result.candidate_v1 is not None
+    assert result.prediction_v1 is not None
+    assert result.candidate_v1["candidate_validation"]["status"] == "valid"
+    assert result.prediction_v1["input_bundle_sha256"] == bundle.manifest["bundle_sha256"]
+    operations = [row.operation.value for row in result.operation_plan.operations]
+    assert operations.count("add") == 1
+    assert not {"replace", "deactivate", "adjust"}.intersection(operations)
+
+
+def test_v3_synthetic_noop_holds_when_legacy_registry_has_one_closure_claim_id(
+    tmp_path: Path,
+) -> None:
+    bundle, trust_context, evaluator_artifact = _synthetic_positive_bundle(
+        tmp_path, multi_state_closure=False
+    )
+    sidecar = _positive_adaptation_sidecar(bundle, trust_context, evaluator_artifact, tmp_path)
+
+    result = run_adaptation(bundle, evidence_context=sidecar)
+    assert bundle.snapshot["schema_version"] == "1.1"
+    before = {row.obligation_id: row.status.value for row in result.before_applicability.results}
+    after = {row.obligation_id: row.status.value for row in result.after_applicability.results}
+    assert before["AC_LAYERING"] == "UNKNOWN"
+    assert after["AC_LAYERING"] == "ACTIVE"
     assert result.governance.result.value == "HOLD"
-    assert "BEFORE_APPLICABILITY_UNRESOLVED" in result.governance.to_dict()["reason_codes"]
-    assert result.governance.to_dict()["invariant_verdicts"]["INV-06"] == "PASS"
     assert result.candidate_v1 is None
     assert result.prediction_v1 is None
+
+
+@pytest.mark.parametrize(
+    ("state", "field", "value"),
+    [
+        ("before", "architecture_revision", "0" * 40),
+        ("after", "architecture_revision", "0" * 40),
+        ("before", "scope", "service:other"),
+        ("after", "policy_registry_version", "SYNTHETIC_STALE_REGISTRY"),
+    ],
+)
+def test_v3_export_rejects_mismatched_state_scoped_closure_bindings(
+    tmp_path: Path,
+    state: str,
+    field: str,
+    value: str,
+) -> None:
+    with pytest.raises(ContractValidationError, match="SPEC 01 semantic validation"):
+        _synthetic_positive_bundle(
+            tmp_path,
+            closure_binding_override=(state, field, value),
+        )
 
 
 def test_v1_artifact_hash_sidecar_does_not_authorize_template_descriptor(
@@ -1461,7 +1686,9 @@ def test_missing_scoped_adaptation_proof_holds_without_legacy_outputs(
 
 def test_v3_spec01_evidence_ledger_and_applicability_pipeline(tmp_path: Path) -> None:
     repository, before_sha, after_sha = _synthetic_architecture_repository(tmp_path)
-    policy_source, closure_id = _synthetic_policy_source_for_pipeline(tmp_path, after_sha)
+    policy_source, closure_id = _synthetic_policy_source_for_pipeline(
+        tmp_path, after_sha, multi_state_closure=False
+    )
     policy_bundle = tmp_path / "policy-bundles/pipeline"
     package_policy_source_v3(policy_source, policy_bundle, "synthetic-integration-policy-v1")
     bundle_root = tmp_path / "method-inputs/P"

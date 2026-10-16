@@ -48,9 +48,11 @@ digests and verified through an explicitly configured verifier registry in
 `p_adaptation_evidence.py`. V1 retains its artifact-hash meaning and cannot
 authorize ADD/REPLACE; additive V2 authorizes a canonical full-template
 descriptor digest tied to pinned capabilities and exact context. A missing
-trust anchor leaves evidence unresolved. Synthetic no-op and ADD V3 scenarios
-reach candidate validation but HOLD because the Snapshot Registry exposes one
-closure claim ID for before and after states; no V1 output is emitted.
+trust anchor leaves evidence unresolved. The additive Snapshot v1.2 DEVELOPMENT
+projection supports independently verified closure claims for before and after
+states. Synthetic V3 no-op and full-descriptor ADD cases reach ACCEPT and V1
+adapters only under TEST_ONLY trust; legacy v1.1 single-claim, incomplete, or
+mismatched evidence remains UNKNOWN/HOLD.
 
 The pipeline must preserve `UNKNOWN` as unresolved, never infer `INACTIVE` from
 missing evidence, and never use scorer/oracle output as P input. The JSON
@@ -90,4 +92,4 @@ SPEC03 is a DEVELOPMENT implementation only. It uses SPEC02 applicability, exact
 
 ## Verification and further reading
 
-Consult the original source files and nearest relevant tests, then `docs/README.md` for repository-wide architecture, experiment, stack and verification references. Implementation work uses `make quality` with a **disposable** PostgreSQL database. When a context summary conflicts with source code, a reviewed manifest or a frozen scientific protocol, **report the conflict**; do not silently reinterpret research rules.
+Consult the original source files and nearest relevant tests, then `docs/README.md` for repository-wide architecture, experiment, stack and verification references. DEVELOPMENT validation uses `make development-quality` with a **disposable** PostgreSQL database; the protected DA01 test modules are excluded. When a context summary conflicts with source code, a reviewed manifest or a frozen scientific protocol, **report the conflict**; do not silently reinterpret research rules.

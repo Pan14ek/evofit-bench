@@ -26,6 +26,14 @@ This v1 implementation matches policy scope exactly. It does not infer parent/ch
 
 The result is a separate diagnostic `applicability_assessment_v1` artifact. It emits one row for every catalog obligation, sorted by ID, with ACTIVE/INACTIVE/UNKNOWN, stable reasons, policy/condition/evidence references, common semantic projection digest, ruleset digest, and optional policy bundle digest. It has no confidence score and does not modify the frozen prediction schema or choose operations.
 
+The Snapshot v1.1 contract keeps its singular Registry `closure_claim_id`.
+The additive, unfrozen V3 DEVELOPMENT path may use Snapshot v1.2 and its
+`closure_claim_ids` list to reference separate before/after claims. Each claim
+still must validate against its exact architecture revision, scope, registry
+version, provenance, authority, and `as_of`; a missing or mismatched state
+remains UNKNOWN. The V2 exporter continues to emit v1.1. See
+[`P_INPUT_V12_DEVELOPMENT.md`](P_INPUT_V12_DEVELOPMENT.md).
+
 ## Separately pinned policy source candidate
 
 `p_policy_source_v3.py` adds a strict policy-only bundle with an independent revision label and bundle SHA-256. `export_method_inputs_v3` combines it with architecture inputs pinned to their original commits. It reuses SPEC 01 typed Snapshot construction, validation, source references, and architecture inventory helpers. The existing V1 and V2 schemas/exporters and outputs are unchanged. A policy-only update changes the policy bundle digest; it cannot change either architecture source SHA or Git tree inventory.

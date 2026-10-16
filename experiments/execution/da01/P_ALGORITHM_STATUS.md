@@ -20,12 +20,14 @@ Synthetic tests use independent generic identifiers and explicit `TEST_ONLY`
 provenance. They are code-verification evidence, not authority, measured
 outcomes, a B1 result, or evidence of scientific advantage. Adaptation sidecar
 V2 binds ADD/REPLACE authority to a canonical full-template descriptor and its
-pinned capability source; V1 artifact digests do not grant that authority. A
-TEST_ONLY no-op and ADD rehearsal reaches a validated candidate but remains
-`HOLD`: one Snapshot Registry `closure_claim_id` cannot establish exact policy
-closure for both architecture revisions. No accepted V3 end-to-end path is
-claimed. `p_interface.py` continues to report `NOT_READY`; the measured-method
-gate has not been opened.
+pinned capability source; V1 artifact digests do not grant that authority.
+TEST_ONLY V3 no-op and full-descriptor ADD regressions now reach governance
+`ACCEPT` and the V1 adapters through the additive Snapshot v1.2 DEVELOPMENT
+contract, which binds separate exact-revision closure claims. The legacy v1.1
+single-claim and mismatched/incomplete evidence cases remain UNKNOWN/HOLD or
+reject. This synthetic acceptance proves software behavior only; it is not
+production authority or a measured result. `p_interface.py` continues to
+report `NOT_READY`; the measured-method gate has not been opened.
 
 ## Current operational limits
 
@@ -44,9 +46,10 @@ versus monitor-validity reporting (OPEN-07), multi-obligation V1 ADD encoding
 threshold research (OPEN-10). The DEVELOPMENT implementation does not resolve
 them.
 
-G1 and G4 remain separate approval requirements. The current positive V3
-rehearsals are blocked by the single-claim before/after closure limitation; no
-measured DA01 run was conducted, and no human B1 result or oracle-derived
-expectation was created.
+G1 and G4 remain separate approval requirements. TEST_ONLY positive V3
+rehearsals now pass with separate before/after closure evidence; production
+authority and the measured-method gates remain unavailable. No measured DA01
+run was conducted, and no human B1 result or oracle-derived expectation was
+created.
 See [`docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`](../../../docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md)
 for requirement-level coverage, blocked rows and actual verification results.

@@ -1,11 +1,11 @@
-name: A0 quality
+name: Development quality
 
 on:
   push:
   pull_request:
 
 jobs:
-  quality:
+  development-quality:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -33,5 +33,4 @@ jobs:
         with:
           python-version: "3.12"
       - run: uv sync --frozen --extra dev
-      - run: make migration-test
-      - run: make quality
+      - run: make development-quality
