@@ -32,7 +32,10 @@
         "source_id": {"$ref": "#/$defs/id"},
         "target_id": {"$ref": "#/$defs/id"},
         "kind": {"enum": ["fact_to_obligation", "policy_to_obligation", "element_to_obligation", "element_to_representation", "obligation_to_criterion", "criterion_to_representation", "representation_to_evaluator", "representation_to_evidence_contract", "evaluator_to_evidence_contract"]},
-        "source_refs": {"$ref": "#/$defs/refs"}
+        "source_refs": {"$ref": "#/$defs/refs"},
+        "scope": {"type": ["string", "null"]},
+        "source_version": {"type": ["string", "null"]},
+        "target_version": {"type": ["string", "null"]}
       }
     }
   }

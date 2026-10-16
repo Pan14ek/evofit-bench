@@ -21,7 +21,7 @@
     "id": "SYN_POLICY_REQUIRE_TRACE",
     "kind": "UNCONDITIONAL_MANDATE",
     "normative_status": "APPROVED",
-    "source_id": "SYN_POLICY_SOURCE",
+    "source_id": "SYN_SOURCE_POLICY",
     "obligation_ids": ["SYN_OBL_TRACE"],
     "proposition": "The declared synthetic component has an auditable trace control.",
     "scope": "service:synth"
@@ -30,7 +30,7 @@
     "id": "SYN_POLICY_REQUIRE_TRACE",
     "kind": "UNCONDITIONAL_MANDATE",
     "normative_status": "APPROVED",
-    "source_id": "SYN_POLICY_SOURCE",
+    "source_id": "SYN_SOURCE_POLICY",
     "obligation_ids": ["SYN_OBL_TRACE"],
     "proposition": "The declared synthetic component has a versioned auditable trace control.",
     "scope": "service:synth"

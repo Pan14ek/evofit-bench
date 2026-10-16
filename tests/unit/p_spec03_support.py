@@ -15,6 +15,13 @@ from experiments.execution.tooling.p_applicability import (
     ObligationResult,
     ProofStatus,
 )
+from experiments.execution.tooling.p_impact import (
+    ImpactAssessment,
+    ImpactRecord,
+    ImpactStatus,
+    analyze_impact,
+    parse_trace_graph,
+)
 from experiments.execution.tooling.p_semantic import (
     CoverageAssessment,
     PairAssessment,
@@ -209,6 +216,160 @@ def make_coverage(
     )
 
 
+def make_impact_assessment(
+    representations: list[dict[str, Any]],
+    obligations: list[dict[str, Any]],
+    applicability: dict[str, str] | None = None,
+) -> ImpactAssessment:
+    """Build an independently declared, complete synthetic no-change analysis."""
+    fixture = load_synthetic_fixture()
+    nodes: dict[str, dict[str, Any]] = {}
+    edges: list[dict[str, Any]] = []
+    for obligation in obligations:
+        obligation_id, criterion_id = str(obligation["id"]), str(obligation["criterion"])
+        nodes[obligation_id] = {
+            "id": obligation_id,
+            "kind": "obligation",
+            "scope": "service:synth",
+            "version": "catalog:1",
+            "source_refs": ["SYN_SOURCE_CATALOG"],
+        }
+        nodes.setdefault(
+            criterion_id,
+            {
+                "id": criterion_id,
+                "kind": "criterion",
+                "scope": "service:synth",
+                "version": "criterion:1",
+                "source_refs": ["SYN_SOURCE_CATALOG"],
+            },
+        )
+        edges.append(
+            {
+                "source_id": obligation_id,
+                "target_id": criterion_id,
+                "kind": "obligation_to_criterion",
+                "source_refs": ["SYN_SOURCE_CATALOG"],
+                "scope": "service:synth",
+                "source_version": "catalog:1",
+                "target_version": "criterion:1",
+            }
+        )
+    for representation in representations:
+        representation_id = str(representation["id"])
+        criterion_id = str(representation["criterion"])
+        evaluator_id = "SYN_EVALUATOR_" + representation_id
+        nodes[representation_id] = {
+            "id": representation_id,
+            "kind": "representation",
+            "scope": "service:synth",
+            "version": "configuration:1",
+            "source_refs": ["SYN_SOURCE_CONFIG"],
+        }
+        nodes[evaluator_id] = {
+            "id": evaluator_id,
+            "kind": "evaluator",
+            "scope": "service:synth",
+            "version": "artifact:1",
+            "source_refs": ["SYN_SOURCE_ARTIFACT"],
+        }
+        edges.append(
+            {
+                "source_id": criterion_id,
+                "target_id": representation_id,
+                "kind": "criterion_to_representation",
+                "source_refs": ["SYN_SOURCE_CATALOG", "SYN_SOURCE_CONFIG"],
+                "scope": "service:synth",
+                "source_version": "criterion:1",
+                "target_version": "configuration:1",
+            }
+        )
+        edges.append(
+            {
+                "source_id": representation_id,
+                "target_id": evaluator_id,
+                "kind": "representation_to_evaluator",
+                "source_refs": ["SYN_SOURCE_CONFIG", "SYN_SOURCE_ARTIFACT"],
+                "scope": "service:synth",
+                "source_version": "configuration:1",
+                "target_version": "artifact:1",
+            }
+        )
+    graph = parse_trace_graph(
+        {
+            "schema_version": 1,
+            "inventory_complete": True,
+            "nodes": list(nodes.values()),
+            "edges": edges,
+        }
+    )
+    graph = replace(graph, inventory_complete_verified=True)
+    statuses = applicability or {str(row["id"]): "ACTIVE" for row in obligations}
+    mandatory = [str(row["id"]) for row in obligations if row.get("mandatory") is True]
+    return analyze_impact(
+        architecture_before_sha=fixture["architecture_before_sha"],
+        architecture_after_sha=fixture["architecture_after_sha"],
+        policy_source_revision=fixture["policy_source_revision"],
+        policy_bundle_sha256=fixture["policy_bundle_sha256"],
+        ruleset_sha256=fixture["ruleset_sha256"],
+        snapshot_sha256=fixture["snapshot_sha256"],
+        changes=(),
+        graph=graph,
+        source_digests={
+            source_id: fixture["source_sha256"]
+            for source_id in (
+                "SYN_SOURCE_CATALOG",
+                "SYN_SOURCE_CONFIG",
+                "SYN_SOURCE_ARTIFACT",
+            )
+        },
+        expected_scope="service:synth",
+        representation_ids=[str(row["id"]) for row in representations],
+        applicability_after=statuses,
+        mandatory_obligations=mandatory,
+        covered_obligations=mandatory,
+        change_inventory_verified=True,
+    )
+
+
+def impact_with_status(assessment: ImpactAssessment, status: ImpactStatus) -> ImpactAssessment:
+    """Return a digest-consistent synthetic impact outcome for planner tests."""
+    records = tuple(
+        ImpactRecord(
+            record.representation_id,
+            status,
+            ((record.representation_id,),) if status is ImpactStatus.PROVEN_AFFECTED else (),
+            ("SYNTHETIC_TEST_IMPACT",),
+            ("SYN_SOURCE_FACT",) if status is ImpactStatus.PROVEN_AFFECTED else (),
+        )
+        for record in assessment.representations
+    )
+    updated = replace(assessment, representations=records, assessment_sha256="")
+    content = updated.to_dict()
+    content.pop("assessment_sha256")
+    return replace(
+        updated,
+        assessment_sha256=sha256_bytes(canonical_json_bytes(content)),
+    )
+
+
 def pair_with_status(pair: PairAssessment, status: PairStatus) -> PairAssessment:
-    """Change only the synthetic test assessment status, preserving its identity."""
-    return replace(pair, status=status)
+    """Build a digest-consistent synthetic pair assessment with a chosen status."""
+    reasons = set(pair.reason_codes)
+    if status is PairStatus.INVALID:
+        reasons.add("SYNTHETIC_PAIR_INVALID")
+    payload = pair.to_dict()
+    payload["status"] = status.value
+    payload["reason_codes"] = sorted(reasons)
+    if status is PairStatus.INVALID:
+        payload["semantic_proof_status"] = "INVALID"
+    payload.pop("assessment_sha256")
+    return replace(
+        pair,
+        status=status,
+        semantic_proof_status=(
+            "INVALID" if status is PairStatus.INVALID else pair.semantic_proof_status
+        ),
+        reason_codes=tuple(sorted(reasons)),
+        assessment_sha256=sha256_bytes(canonical_json_bytes(payload)),
+    )

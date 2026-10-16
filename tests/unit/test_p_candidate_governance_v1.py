@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+from collections.abc import Iterator, Mapping
 from dataclasses import replace
 from typing import Any
 
@@ -18,8 +19,11 @@ from experiments.execution.tooling.p_candidate import (
     materialize_candidate,
 )
 from experiments.execution.tooling.p_governance import (
+    PUBLISHING_ENABLED,
     GovernanceDecision,
     GovernanceResult,
+    _decide_governance_authorized,
+    _issue_governance_pipeline_authorization,
     append_event,
     assess_rollback,
     authorize_conditional_publish,
@@ -61,7 +65,7 @@ def make_candidate(
     plan: OperationPlan | None = None,
     *,
     parent_bytes: bytes | None = None,
-    parent_mapping: dict[str, Any] | None = None,
+    parent_mapping: Mapping[str, Any] | None = None,
     valid_obligation_ids: tuple[str, ...] | None = None,
     extra_artifact_bytes: dict[str, bytes] | None = None,
 ) -> dict[str, Any]:
@@ -95,34 +99,49 @@ def make_candidate(
     )
 
 
-def accepted_decision(coverage: CoverageAssessment | None = None) -> GovernanceDecision:
+def governed_decision(
+    *,
+    coverage: CoverageAssessment | None = None,
+    candidate_digest: str = "9" * 64,
+    plan: OperationPlan | None = None,
+) -> GovernanceDecision:
     obligation = make_obligation()
     pair, _rep, _obligation, _artifacts, _proof = make_valid_pair()
     measured_coverage = coverage or make_coverage([obligation], pairs=[pair])
-    return decide_governance(
-        method_version="P_GOVERNED_ADAPTATION_DEVELOPMENT_V1",
-        architecture_before_sha=ARCH_BEFORE,
-        architecture_after_sha=ARCH_AFTER,
-        policy_source_revision="SYN_POLICY_REV_1",
-        policy_ruleset_sha256="5" * 64,
-        input_bundle_sha256="6" * 64,
-        parent_configuration_sha256="8" * 64,
-        candidate_configuration_sha256="9" * 64,
-        impact_assessment_sha256="a" * 64,
-        coverage=measured_coverage,
-        operation_plan=ready_plan(
-            PlannedOperation(
-                "representation",
-                "REP_SYNTH_TRACE",
-                OperationKind.RETAIN,
-                ("EXACT_PAIR_VALIDITY_PROVEN",),
-            )
-        ),
-        invariant_verdicts={f"INV-{index:02d}": "PASS" for index in range(1, 13)},
-        cost_verdict="PASS",
-        input_status="VALID",
-        candidate_validation_status="valid",
+    operation_plan = plan or ready_plan(
+        PlannedOperation(
+            "representation",
+            "REP_SYNTH_TRACE",
+            OperationKind.RETAIN,
+            ("EXACT_PAIR_VALIDITY_PROVEN",),
+        )
     )
+    arguments: dict[str, Any] = {
+        "method_version": "P_GOVERNED_ADAPTATION_DEVELOPMENT_V1",
+        "architecture_before_sha": ARCH_BEFORE,
+        "architecture_after_sha": ARCH_AFTER,
+        "policy_source_revision": "SYN_POLICY_REV_1",
+        "policy_ruleset_sha256": "5" * 64,
+        "input_bundle_sha256": "6" * 64,
+        "parent_configuration_sha256": "8" * 64,
+        "candidate_configuration_sha256": candidate_digest,
+        "impact_assessment_sha256": "a" * 64,
+        "coverage": measured_coverage,
+        "operation_plan": operation_plan,
+        "invariant_verdicts": {f"INV-{index:02d}": "PASS" for index in range(1, 13)},
+        "cost_verdict": "PASS",
+        "input_status": "VALID",
+        "candidate_validation_status": "valid",
+    }
+    authorization = _issue_governance_pipeline_authorization(**arguments)
+    return _decide_governance_authorized(
+        **arguments,
+        pipeline_authorization=authorization,
+    )
+
+
+def accepted_decision(coverage: CoverageAssessment | None = None) -> GovernanceDecision:
+    return governed_decision(coverage=coverage)
 
 
 def test_candidate_materialization_binds_parent_artifacts_and_all_source_versions() -> None:
@@ -216,8 +235,39 @@ def test_candidate_rejects_parent_mapping_unbound_from_hashed_bytes() -> None:
         make_candidate(parent_mapping={"configuration_version": "SYN_OTHER", "representations": []})
 
 
+def test_candidate_uses_bytes_bound_parent_snapshot_for_stateful_mapping() -> None:
+    parent = parent_config()
+    injected = make_representation(id="REP_INJECTED_AFTER_BINDING")
+
+    class StatefulParentMapping(Mapping[str, Any]):
+        def __init__(self) -> None:
+            self.representation_reads = 0
+
+        def __getitem__(self, key: str) -> Any:
+            if key == "configuration_version":
+                return parent[key]
+            if key == "representations":
+                self.representation_reads += 1
+                return parent["representations"] if self.representation_reads == 1 else [injected]
+            raise KeyError(key)
+
+        def __iter__(self) -> Iterator[str]:
+            return iter(parent)
+
+        def __len__(self) -> int:
+            return len(parent)
+
+    candidate = make_candidate(parent_mapping=StatefulParentMapping())
+    assert candidate["representations"] == parent["representations"]
+    assert all(row["id"] != "REP_INJECTED_AFTER_BINDING" for row in candidate["representations"])
+
+
 def test_v1_candidate_adapter_validates_without_changing_legacy_schema() -> None:
-    legacy = adapt_candidate_v1(make_candidate())
+    candidate = make_candidate()
+    legacy = adapt_candidate_v1(
+        candidate,
+        governance=governed_decision(candidate_digest=candidate_sha256(candidate)),
+    )
     assert legacy["method_id"] == "P"
     assert "method_version" not in legacy
     assert "soft_parameter_overrides" not in legacy
@@ -236,6 +286,7 @@ def test_v1_prediction_adapter_projects_exact_nonretain_targets_and_blocks_hold(
         artifact_sha256=representation["evaluator_artifact"]["sha256"],
     )
     plan = ready_plan(add)
+    candidate_digest = "9" * 64
     prediction = adapt_prediction_v1(
         architecture_source_sha=ARCH_AFTER,
         method_version="P_GOVERNED_ADAPTATION_DEVELOPMENT_V1",
@@ -244,6 +295,8 @@ def test_v1_prediction_adapter_projects_exact_nonretain_targets_and_blocks_hold(
         impact_records=[
             {"representation_id": "REP_SYNTH_TRACE", "status": ImpactStatus.PROVEN_AFFECTED.value}
         ],
+        candidate_configuration_sha256=candidate_digest,
+        governance=governed_decision(candidate_digest=candidate_digest, plan=plan),
     )
     assert prediction["predicted_affected"] == [
         {
@@ -253,6 +306,7 @@ def test_v1_prediction_adapter_projects_exact_nonretain_targets_and_blocks_hold(
         }
     ]
     blocked = OperationPlan(plan.operations, ("COST_MODEL_UNRESOLVED",), (), "b" * 64)
+    held_governance = governed_decision(candidate_digest=candidate_digest, plan=blocked)
     with pytest.raises(ContractValidationError, match="PREDICTION_V1_UNAVAILABLE_FOR_BLOCKED_PLAN"):
         adapt_prediction_v1(
             architecture_source_sha=ARCH_AFTER,
@@ -260,6 +314,8 @@ def test_v1_prediction_adapter_projects_exact_nonretain_targets_and_blocks_hold(
             input_bundle_sha256="6" * 64,
             plan=blocked,
             impact_records=[],
+            candidate_configuration_sha256=candidate_digest,
+            governance=held_governance,
         )
 
 
@@ -270,20 +326,63 @@ def test_v1_adapter_rejects_identifiers_the_frozen_contract_cannot_represent() -
         OperationKind.ADD,
         ("ACTIVE_MANDATORY_CONTROL_UNCOVERED",),
     )
+    plan = ready_plan(operation)
+    candidate_digest = "9" * 64
     with pytest.raises(ContractValidationError, match="PREDICTION_V1_ID_UNREPRESENTABLE"):
         adapt_prediction_v1(
             architecture_source_sha=ARCH_AFTER,
             method_version="P_DEV",
             input_bundle_sha256="6" * 64,
-            plan=ready_plan(operation),
+            plan=plan,
             impact_records=[],
+            candidate_configuration_sha256=candidate_digest,
+            governance=governed_decision(candidate_digest=candidate_digest, plan=plan),
         )
 
 
 def test_governance_accepts_only_when_every_required_gate_is_positive() -> None:
-    decision = accepted_decision()
+    obligation = make_obligation()
+    pair, _rep, _obligation, _artifacts, _proof = make_valid_pair()
+    arguments: dict[str, Any] = {
+        "method_version": "P_GOVERNED_ADAPTATION_DEVELOPMENT_V1",
+        "architecture_before_sha": ARCH_BEFORE,
+        "architecture_after_sha": ARCH_AFTER,
+        "policy_source_revision": "SYN_POLICY_REV_1",
+        "policy_ruleset_sha256": "5" * 64,
+        "input_bundle_sha256": "6" * 64,
+        "parent_configuration_sha256": "8" * 64,
+        "candidate_configuration_sha256": "9" * 64,
+        "impact_assessment_sha256": "a" * 64,
+        "coverage": make_coverage([obligation], pairs=[pair]),
+        "operation_plan": ready_plan(),
+        "invariant_verdicts": {f"INV-{index:02d}": "PASS" for index in range(1, 13)},
+        "cost_verdict": "PASS",
+        "input_status": "VALID",
+        "candidate_validation_status": "valid",
+    }
+    decision = decide_governance(**arguments)
+    assert decision.result is GovernanceResult.HOLD
+    assert "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING" in decision.to_dict()["reason_codes"]
+    decision = governed_decision()
     assert decision.result is GovernanceResult.ACCEPT
     assert decision.to_dict()["decision_sha256"]
+
+
+def test_v1_candidate_adapter_rejects_a_candidate_without_governed_acceptance() -> None:
+    with pytest.raises(ContractValidationError, match="P03_V1_OUTPUT_NOT_GOVERNED_ACCEPT"):
+        adapt_candidate_v1(make_candidate(), governance=accepted_decision())
+
+
+def test_candidate_adapter_rejects_mutated_accept_payload_even_with_recomputed_digest() -> None:
+    candidate = make_candidate()
+    decision = governed_decision(candidate_digest=candidate_sha256(candidate))
+    forged_payload = decision.to_dict()
+    forged_payload["operations"] = []
+    forged_payload.pop("decision_sha256")
+    forged_payload["decision_sha256"] = sha256_bytes(canonical_json_bytes(forged_payload))
+    forged = replace(decision, _payload_bytes=canonical_json_bytes(forged_payload))
+    with pytest.raises(ContractValidationError, match="P03_V1_OUTPUT_NOT_GOVERNED_ACCEPT"):
+        adapt_candidate_v1(candidate, governance=forged)
 
 
 def test_input_rejection_has_precedence_over_candidate_fitness_decisions() -> None:
@@ -418,10 +517,11 @@ def test_event_chain_tampering_is_detected_before_append() -> None:
         )
 
 
-def test_publish_requires_accept_and_current_context_parent_compare_and_swap() -> None:
+def test_publication_stays_disabled_without_an_atomic_compare_and_swap_writer() -> None:
     decision = accepted_decision()
     context = governance_context_sha256(decision.to_dict())
-    assert authorize_conditional_publish(
+    assert not PUBLISHING_ENABLED
+    assert not authorize_conditional_publish(
         decision=decision,
         validated_context_sha256=context,
         current_context_sha256=context,

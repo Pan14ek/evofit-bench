@@ -11,6 +11,7 @@ from typing import Any
 from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError
 from experiments.execution.tooling.hashing import canonical_json_bytes, sha256_bytes
+from experiments.execution.tooling.p_impact import ImpactAssessment, ImpactStatus
 from experiments.execution.tooling.p_semantic import CoverageAssessment, PairAssessment, PairStatus
 
 _SAFE_PATH = re.compile(r"^(?!/)(?!.*(?:^|/)\.\.(?:/|$))[A-Za-z0-9_./-]+$")
@@ -76,18 +77,23 @@ class OperationPlan:
 
 
 def validate_materializable_template(
-    template: Mapping[str, Any], *, artifact_bytes: Mapping[str, bytes]
+    template: Mapping[str, Any],
+    *,
+    artifact_bytes: Mapping[str, bytes],
+    authorized_artifact_digests: frozenset[str] = frozenset(),
 ) -> tuple[Mapping[str, Any] | None, str | None, str | None]:
-    """Return a checked representation only when authority, path and bytes bind."""
+    """Return a template only when signed authority evidence binds its artifact."""
     representation = template.get("representation")
-    authority = template.get("authority_status")
-    if authority not in {"VERIFIED", "TEST_ONLY"}:
-        return None, None, "TEMPLATE_AUTHORITY_UNVERIFIED"
     if not isinstance(representation, Mapping):
         return None, None, "TEMPLATE_REPRESENTATION_MISSING"
     artifact = representation.get("evaluator_artifact")
     if not isinstance(artifact, Mapping):
         return None, None, "TEMPLATE_ARTIFACT_MISSING"
+    digest = artifact.get("sha256")
+    if not isinstance(digest, str) or _SHA256.fullmatch(digest) is None:
+        return None, None, "TEMPLATE_ARTIFACT_DIGEST_INVALID"
+    if digest not in authorized_artifact_digests:
+        return None, None, "TEMPLATE_AUTHORITY_UNVERIFIED"
     path, digest = artifact.get("path"), artifact.get("sha256")
     if not isinstance(path, str) or _SAFE_PATH.fullmatch(path) is None:
         return None, None, "TEMPLATE_ARTIFACT_PATH_INVALID"
@@ -123,16 +129,20 @@ def build_operation_plan(
     applicability: Mapping[str, str],
     pair_assessments: Sequence[PairAssessment],
     coverage: CoverageAssessment,
+    impact: ImpactAssessment,
     templates: Sequence[Mapping[str, Any]] = (),
     artifact_bytes: Mapping[str, bytes] | None = None,
+    authorized_artifact_digests: frozenset[str] = frozenset(),
     adjustment_rules: Sequence[Mapping[str, Any]] = (),
     cost_model: Mapping[str, Any] | None = None,
+    cost_model_authorized: bool = False,
+    adjustments_authorized: bool = False,
 ) -> OperationPlan:
     """Plan justified edits without converting unknown evidence to inactivity.
 
-    Templates are selectable only when their authority is verified (or the
-    isolated TEST_ONLY authority used by synthetic tests) and exact artifact
-    bytes match the declared digest. The planner never authors evaluator code.
+    Template labels are never authority. A digest becomes admissible only
+    after the caller verifies a signed, input-bound authority sidecar. The
+    planner never authors evaluator code.
     """
     by_obligation = {_required_id(row.get("id"), "obligation"): row for row in obligations}
     if len(by_obligation) != len(obligations):
@@ -142,9 +152,32 @@ def build_operation_plan(
     }
     if len(by_representation) != len(representations):
         raise ContractValidationError("P03_DUPLICATE_REPRESENTATION")
+    if impact.architecture_after_sha != coverage.architecture_source_sha:
+        raise ContractValidationError("P03_IMPACT_COVERAGE_REVISION_MISMATCH")
+    if not _impact_digest_is_valid(impact):
+        raise ContractValidationError("P03_IMPACT_ASSESSMENT_DIGEST_MISMATCH")
+    impact_by_representation = {row.representation_id: row for row in impact.representations}
+    if len(impact_by_representation) != len(impact.representations):
+        raise ContractValidationError("P03_DUPLICATE_IMPACT_REPRESENTATION")
+    representation_ids = set(by_representation)
+    if set(impact_by_representation) != representation_ids:
+        raise ContractValidationError("P03_IMPACT_REPRESENTATION_SET_MISMATCH")
     pair_index: dict[tuple[str, str], list[PairAssessment]] = {}
+    unverified_pairs: set[tuple[str, str]] = set()
     for pair in pair_assessments:
-        pair_index.setdefault((pair.representation_id, pair.obligation_id), []).append(pair)
+        key = (pair.representation_id, pair.obligation_id)
+        if (
+            pair.architecture_source_sha != coverage.architecture_source_sha
+            or not _pair_digest_is_valid(pair)
+        ):
+            unverified_pairs.add(key)
+        pair_index.setdefault(key, []).append(pair)
+    conflicted_pairs = {
+        key
+        for key, assessments in pair_index.items()
+        if len({pair.status for pair in assessments}) > 1
+        or len({pair.assessment_sha256 for pair in assessments}) > 1
+    }
     coverage_by_id = {row.obligation_id: row for row in coverage.obligations}
     bytes_by_path = artifact_bytes or {}
     usable_templates: list[tuple[Mapping[str, Any], str]] = []
@@ -153,7 +186,9 @@ def build_operation_plan(
     reject: set[str] = set()
     for template in templates:
         representation, digest, issue = validate_materializable_template(
-            template, artifact_bytes=bytes_by_path
+            template,
+            artifact_bytes=bytes_by_path,
+            authorized_artifact_digests=authorized_artifact_digests,
         )
         if issue is not None:
             unusable_template_reasons.add(issue)
@@ -193,7 +228,35 @@ def build_operation_plan(
             continue
         covers = _string_set(representation.get("covers"))
         linked = covers & (active_mandatory | unknown_mandatory)
+        impact_record = impact_by_representation.get(representation_id)
+        impact_status = (
+            impact_record.status if impact_record is not None else ImpactStatus.UNRESOLVED
+        )
         if not linked:
+            active_links = covers & {
+                obligation_id
+                for obligation_id, status in applicability.items()
+                if status == "ACTIVE"
+            }
+            if impact_status is ImpactStatus.UNRESOLVED:
+                hold.add("REPRESENTATION_IMPACT_UNRESOLVED")
+                continue
+            if impact_status in {
+                ImpactStatus.PROVEN_AFFECTED,
+                ImpactStatus.POSSIBLY_AFFECTED,
+            } and (
+                not active_links
+                or any(
+                    not any(
+                        pair.status is PairStatus.VALID
+                        and pair.architecture_source_sha == impact.architecture_after_sha
+                        for pair in pair_index.get((representation_id, obligation_id), ())
+                    )
+                    for obligation_id in active_links
+                )
+            ):
+                hold.add("IMPACTED_RETAIN_REASSESSMENT_MISSING")
+                continue
             if covers and covers.issubset(inactive):
                 operations.append(
                     PlannedOperation(
@@ -216,10 +279,15 @@ def build_operation_plan(
         if linked & unknown_mandatory:
             hold.add("UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION")
             continue
+        if impact_status is ImpactStatus.UNRESOLVED:
+            hold.add("MANDATORY_IMPACT_UNRESOLVED")
+            continue
         unresolved_pairs = {
             obligation_id
             for obligation_id in linked
-            if not any(
+            if (representation_id, obligation_id) not in unverified_pairs
+            and (representation_id, obligation_id) not in conflicted_pairs
+            and not any(
                 pair.status is PairStatus.VALID
                 for pair in pair_index.get((representation_id, obligation_id), ())
             )
@@ -228,9 +296,15 @@ def build_operation_plan(
                 for pair in pair_index.get((representation_id, obligation_id), ())
             )
         }
+        if any((representation_id, obligation_id) in unverified_pairs for obligation_id in linked):
+            hold.add("PAIR_ASSESSMENT_PROVENANCE_INVALID")
+        if any((representation_id, obligation_id) in conflicted_pairs for obligation_id in linked):
+            hold.add("PAIR_ASSESSMENT_CONFLICT")
         invalid_pairs = {
             obligation_id
             for obligation_id in linked
+            if (representation_id, obligation_id) not in unverified_pairs
+            and (representation_id, obligation_id) not in conflicted_pairs
             if any(
                 pair.status is PairStatus.INVALID
                 for pair in pair_index.get((representation_id, obligation_id), ())
@@ -241,13 +315,14 @@ def build_operation_plan(
             )
         }
         if unresolved_pairs:
-            if unresolved_pairs:
-                hold.add("PAIR_VALIDITY_UNRESOLVED")
+            hold.add("PAIR_VALIDITY_UNRESOLVED")
         if invalid_pairs:
+            replacement_templates = _templates_for_required(usable_templates, linked, by_obligation)
             successors, issue = _choose_templates(
                 linked,
-                usable_templates,
+                replacement_templates,
                 cost_model,
+                cost_model_authorized=cost_model_authorized,
                 max_count=1,
                 existing_ids=set(by_representation),
             )
@@ -276,6 +351,18 @@ def build_operation_plan(
                 planned_covered.update(linked & _string_set(successor_rep.get("covers")))
         retained = linked - invalid_pairs - unresolved_pairs if not invalid_pairs else set()
         if retained:
+            if impact_status in {
+                ImpactStatus.PROVEN_AFFECTED,
+                ImpactStatus.POSSIBLY_AFFECTED,
+            } and any(
+                not any(
+                    pair.status is PairStatus.VALID
+                    for pair in pair_index.get((representation_id, obligation_id), ())
+                )
+                for obligation_id in retained
+            ):
+                hold.add("IMPACTED_RETAIN_REASSESSMENT_MISSING")
+                continue
             operations.append(
                 PlannedOperation(
                     "representation",
@@ -296,8 +383,9 @@ def build_operation_plan(
     additions, add_issue = (
         _choose_templates(
             uncovered,
-            usable_templates,
+            _templates_for_required(usable_templates, uncovered, by_obligation),
             cost_model,
+            cost_model_authorized=cost_model_authorized,
             max_count=None,
             existing_ids=set(by_representation),
         )
@@ -340,12 +428,15 @@ def build_operation_plan(
                 )
             )
 
-    for rule in adjustment_rules:
-        adjustment, issue = _authorized_adjustment(rule)
-        if issue:
-            reject.add(issue)
-        elif adjustment is not None:
-            operations.append(adjustment)
+    if adjustment_rules and not adjustments_authorized:
+        hold.add("ADJUSTMENT_AUTHORITY_UNVERIFIED")
+    else:
+        for rule in adjustment_rules:
+            adjustment, issue = _authorized_adjustment(rule, by_representation)
+            if issue:
+                reject.add(issue)
+            elif adjustment is not None:
+                operations.append(adjustment)
 
     operations.sort(
         key=lambda item: (
@@ -374,14 +465,17 @@ def build_operation_plan(
 
 
 def choose_candidate_plan(
-    candidates: Sequence[Mapping[str, Any]], cost_model: Mapping[str, Any]
+    candidates: Sequence[Mapping[str, Any]],
+    cost_model: Mapping[str, Any],
+    *,
+    cost_model_authorized: bool = False,
 ) -> Mapping[str, Any] | None:
     """Choose a fully cost-bound plan by count, cost, then canonical IDs.
 
     Returns ``None`` on unknown authority/cost or search-budget exhaustion; it
     does not claim optimality when the declared bounded search was not complete.
     """
-    if cost_model.get("authority_status") not in {"VERIFIED", "TEST_ONLY"}:
+    if not cost_model_authorized:
         return None
     limit = cost_model.get("max_search_nodes")
     budget = cost_model.get("max_incremental_cost")
@@ -443,6 +537,7 @@ def _choose_templates(
     templates: Sequence[tuple[Mapping[str, Any], str]],
     cost_model: Mapping[str, Any] | None,
     *,
+    cost_model_authorized: bool,
     max_count: int | None,
     existing_ids: set[str],
 ) -> tuple[tuple[tuple[Mapping[str, Any], str, float], ...], str | None]:
@@ -457,7 +552,7 @@ def _choose_templates(
     ]
     if not candidates:
         return (), "MATERIALIZABLE_TEMPLATE_MISSING"
-    if cost_model is None or cost_model.get("authority_status") not in {"VERIFIED", "TEST_ONLY"}:
+    if cost_model is None or not cost_model_authorized:
         return (), "COST_MODEL_UNRESOLVED"
     node_limit = cost_model.get("max_search_nodes")
     max_cost = cost_model.get("max_incremental_cost")
@@ -518,7 +613,9 @@ def _choose_templates(
     ), None
 
 
-def _authorized_adjustment(rule: Mapping[str, Any]) -> tuple[PlannedOperation | None, str | None]:
+def _authorized_adjustment(
+    rule: Mapping[str, Any], representations: Mapping[str, Mapping[str, Any]]
+) -> tuple[PlannedOperation | None, str | None]:
     required = (
         "target_id",
         "parameter",
@@ -530,14 +627,18 @@ def _authorized_adjustment(rule: Mapping[str, Any]) -> tuple[PlannedOperation | 
     )
     if any(key not in rule for key in required):
         return None, "ADJUSTMENT_AUTHORITY_MISSING"
-    if rule.get("authority_status") not in {"VERIFIED", "TEST_ONLY"}:
-        return None, "ADJUSTMENT_AUTHORITY_UNVERIFIED"
     parameter = rule.get("parameter")
+    target_id = rule.get("target_id")
+    current = representations.get(str(target_id))
+    soft_parameters = current.get("soft_parameters") if current is not None else None
     if (
         not isinstance(parameter, str)
         or not parameter
         or rule.get("hard_constraint") is True
         or rule.get("criterion_intent_change") is True
+        or not isinstance(soft_parameters, Mapping)
+        or parameter not in soft_parameters
+        or soft_parameters.get(parameter) != rule.get("old_value")
     ):
         return None, "UNAUTHORIZED_HARD_OR_INTENT_ADJUSTMENT"
     bounds = rule.get("bounds")
@@ -552,7 +653,12 @@ def _authorized_adjustment(rule: Mapping[str, Any]) -> tuple[PlannedOperation | 
     ):
         return None, "ADJUSTMENT_OUT_OF_BOUNDS"
     digest = rule.get("rule_sha256")
-    if not isinstance(digest, str) or _SHA256.fullmatch(digest) is None:
+    unsigned_rule = {key: value for key, value in rule.items() if key != "rule_sha256"}
+    if (
+        not isinstance(digest, str)
+        or _SHA256.fullmatch(digest) is None
+        or sha256_bytes(canonical_json_bytes(unsigned_rule)) != digest
+    ):
         return None, "ADJUSTMENT_RULE_DIGEST_INVALID"
     refs = rule.get("evidence_refs")
     if not isinstance(refs, list) or not refs or any(not isinstance(ref, str) for ref in refs):
@@ -572,6 +678,26 @@ def _authorized_adjustment(rule: Mapping[str, Any]) -> tuple[PlannedOperation | 
         tuple(sorted(set(refs))),
         payload,
     ), None
+
+
+def _templates_for_required(
+    templates: Sequence[tuple[Mapping[str, Any], str]],
+    required: set[str],
+    obligations: Mapping[str, Mapping[str, Any]],
+) -> tuple[tuple[Mapping[str, Any], str], ...]:
+    permitted: list[tuple[Mapping[str, Any], str]] = []
+    for representation, digest in templates:
+        covered = _string_set(representation.get("covers"))
+        if not covered or not covered.issubset(required):
+            continue
+        if any(
+            obligation_id not in obligations
+            or representation.get("criterion") != obligations[obligation_id].get("criterion")
+            for obligation_id in covered
+        ):
+            continue
+        permitted.append((representation, digest))
+    return tuple(permitted)
 
 
 def _valid_representation(row: Mapping[str, Any]) -> bool:
@@ -616,6 +742,18 @@ def _required_id(value: Any, label: str) -> str:
     if not isinstance(value, str) or not value or len(value) > 128:
         raise ContractValidationError("P03_ID_INVALID: " + label)
     return value
+
+
+def _impact_digest_is_valid(impact: ImpactAssessment) -> bool:
+    payload = impact.to_dict()
+    claimed = payload.pop("assessment_sha256", None)
+    return isinstance(claimed, str) and claimed == sha256_bytes(canonical_json_bytes(payload))
+
+
+def _pair_digest_is_valid(pair: PairAssessment) -> bool:
+    payload = pair.to_dict()
+    claimed = payload.pop("assessment_sha256", None)
+    return isinstance(claimed, str) and claimed == sha256_bytes(canonical_json_bytes(payload))
 
 
 __all__ = [

@@ -2,25 +2,43 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
 from typing import Any
 
-from experiments.execution.tooling.hashing import sha256_bytes
+from experiments.execution.tooling.hashing import canonical_json_bytes, sha256_bytes
 from experiments.execution.tooling.p_applicability import ApplicabilityStatus
+from experiments.execution.tooling.p_impact import ImpactStatus
 from experiments.execution.tooling.p_operations import (
     OperationKind,
-    build_operation_plan,
+    OperationPlan,
     choose_candidate_plan,
     validate_materializable_template,
+)
+from experiments.execution.tooling.p_operations import (
+    build_operation_plan as _build_operation_plan,
 )
 from experiments.execution.tooling.p_semantic import PairStatus
 from tests.unit.p_spec03_support import (
     SYN_ARTIFACT,
+    impact_with_status,
     make_coverage,
+    make_impact_assessment,
     make_obligation,
     make_representation,
     make_valid_pair,
+    pair_with_status,
 )
+
+
+def build_operation_plan(**kwargs: Any) -> OperationPlan:
+    """Supply explicit complete synthetic impact to the pure planner tests."""
+    impact = kwargs.pop("impact", None)
+    if impact is None:
+        impact = make_impact_assessment(
+            list(kwargs["representations"]),
+            list(kwargs["obligations"]),
+            dict(kwargs["applicability"]),
+        )
+    return _build_operation_plan(**kwargs, impact=impact)
 
 
 def cost_model(*digests: str, max_cost: float = 20, search_nodes: int = 100) -> dict[str, Any]:
@@ -68,9 +86,78 @@ def test_valid_unaffected_configuration_is_retained() -> None:
     ]
 
 
+def test_proven_impact_requires_reassessment_but_does_not_override_valid_semantics() -> None:
+    pair, rep, obligation, artifacts, _proof = make_valid_pair()
+    impact = impact_with_status(
+        make_impact_assessment([rep], [obligation]),
+        ImpactStatus.PROVEN_AFFECTED,
+    )
+    plan = build_operation_plan(
+        representations=[rep],
+        obligations=[obligation],
+        applicability={obligation["id"]: "ACTIVE"},
+        pair_assessments=[pair],
+        coverage=make_coverage([obligation], pairs=[pair]),
+        impact=impact,
+        artifact_bytes=artifacts,
+        cost_model=cost_model(),
+    )
+    assert plan.ready
+    assert len(plan.operations) == 1
+    assert plan.operations[0].operation is OperationKind.RETAIN
+    assert plan.operations[0].reason_codes == ("EXACT_PAIR_VALIDITY_PROVEN",)
+
+
+def test_unresolved_impact_holds_a_mandatory_representation_without_deactivating_it() -> None:
+    _pair, rep, obligation, artifacts, _proof = make_valid_pair()
+    impact = impact_with_status(
+        make_impact_assessment([rep], [obligation]),
+        ImpactStatus.UNRESOLVED,
+    )
+    plan = build_operation_plan(
+        representations=[rep],
+        obligations=[obligation],
+        applicability={obligation["id"]: "ACTIVE"},
+        pair_assessments=[],
+        coverage=make_coverage([obligation]),
+        impact=impact,
+        artifact_bytes=artifacts,
+        cost_model=cost_model(),
+    )
+    assert not plan.reject_reasons
+    assert "MANDATORY_IMPACT_UNRESOLVED" in plan.hold_reasons
+    assert all(operation.operation is not OperationKind.DEACTIVATE for operation in plan.operations)
+
+
+def test_affected_optional_representation_requires_current_pair_reassessment() -> None:
+    obligation = make_obligation(
+        id="SYN_OBL_OPTIONAL",
+        criterion="SYN_CRIT_OPTIONAL",
+        mandatory=False,
+    )
+    representation = make_representation(criterion="SYN_CRIT_OPTIONAL", covers=[obligation["id"]])
+    impact = impact_with_status(
+        make_impact_assessment([representation], [obligation], {obligation["id"]: "ACTIVE"}),
+        ImpactStatus.PROVEN_AFFECTED,
+    )
+    plan = build_operation_plan(
+        representations=[representation],
+        obligations=[obligation],
+        applicability={obligation["id"]: "ACTIVE"},
+        pair_assessments=[],
+        coverage=make_coverage([obligation]),
+        impact=impact,
+        artifact_bytes={},
+        cost_model=cost_model(),
+    )
+    assert not plan.ready
+    assert "IMPACTED_RETAIN_REASSESSMENT_MISSING" in plan.hold_reasons
+    assert all(operation.operation is not OperationKind.RETAIN for operation in plan.operations)
+
+
 def test_invalid_representation_replacement_covers_all_its_live_mandatory_links() -> None:
     pair, rep, obligation, artifacts, _proof = make_valid_pair()
-    invalid = replace(pair, status=PairStatus.INVALID)
+    invalid = pair_with_status(pair, PairStatus.INVALID)
     successor = template("REP_SYNTH_TRACE_V2", [obligation["id"]])
     digest = successor["representation"]["evaluator_artifact"]["sha256"]
     plan = build_operation_plan(
@@ -81,7 +168,9 @@ def test_invalid_representation_replacement_covers_all_its_live_mandatory_links(
         coverage=make_coverage([obligation], pairs=[invalid]),
         templates=[successor],
         artifact_bytes={**artifacts, "evaluators/REP_SYNTH_TRACE_V2.py": SYN_ARTIFACT},
+        authorized_artifact_digests=frozenset({digest}),
         cost_model=cost_model(digest),
+        cost_model_authorized=True,
     )
     assert plan.ready
     assert len(plan.operations) == 1
@@ -103,7 +192,9 @@ def test_active_uncovered_obligation_adds_only_a_real_hash_bound_test_template()
         coverage=make_coverage([obligation]),
         templates=[addition],
         artifact_bytes={artifact_path: SYN_ARTIFACT},
+        authorized_artifact_digests=frozenset({digest}),
         cost_model=cost_model(digest),
+        cost_model_authorized=True,
     )
     assert plan.ready
     assert plan.operations[0].target_type == "obligation"
@@ -146,13 +237,19 @@ def test_template_wrong_digest_or_path_traversal_is_never_materialized() -> None
         },
     }
     assert (
-        validate_materializable_template(wrong, artifact_bytes={"evaluators/bad.py": SYN_ARTIFACT})[
-            2
-        ]
+        validate_materializable_template(
+            wrong,
+            artifact_bytes={"evaluators/bad.py": SYN_ARTIFACT},
+            authorized_artifact_digests=frozenset({"0" * 64}),
+        )[2]
         == "TEMPLATE_ARTIFACT_DIGEST_MISMATCH"
     )
     assert (
-        validate_materializable_template(escaped, artifact_bytes={"../secret.py": SYN_ARTIFACT})[2]
+        validate_materializable_template(
+            escaped,
+            artifact_bytes={"../secret.py": SYN_ARTIFACT},
+            authorized_artifact_digests=frozenset({sha256_bytes(SYN_ARTIFACT)}),
+        )[2]
         == "TEMPLATE_ARTIFACT_PATH_INVALID"
     )
     untrusted = {"authority_status": "UNVERIFIED", "representation": good["representation"]}
@@ -223,16 +320,15 @@ def test_adjustment_requires_authorized_bounded_soft_rule() -> None:
     obligation = make_obligation()
     rep = make_representation()
     valid_rule = {
-        "authority_status": "TEST_ONLY",
         "target_id": rep["id"],
         "parameter": "sample_window",
         "old_value": 5,
         "new_value": 8,
         "bounds": {"minimum": 1, "maximum": 10},
         "rule_id": "SYN_SOFT_RULE",
-        "rule_sha256": "a" * 64,
         "evidence_refs": ["SYN_RULE_AUTH"],
     }
+    valid_rule["rule_sha256"] = sha256_bytes(canonical_json_bytes(valid_rule))
     accepted = build_operation_plan(
         representations=[rep],
         obligations=[obligation],
@@ -244,6 +340,7 @@ def test_adjustment_requires_authorized_bounded_soft_rule() -> None:
         artifact_bytes={},
         cost_model=cost_model(),
         adjustment_rules=[valid_rule],
+        adjustments_authorized=True,
     )
     assert any(op.operation is OperationKind.ADJUST for op in accepted.operations)
     forbidden = dict(valid_rule, parameter="hard_threshold", hard_constraint=True)
@@ -258,6 +355,7 @@ def test_adjustment_requires_authorized_bounded_soft_rule() -> None:
         artifact_bytes={},
         cost_model=cost_model(),
         adjustment_rules=[forbidden],
+        adjustments_authorized=True,
     )
     assert "UNAUTHORIZED_HARD_OR_INTENT_ADJUSTMENT" in rejected.reject_reasons
 
@@ -283,7 +381,9 @@ def test_bounded_set_cover_prefers_fewer_operations_then_cost_then_ids() -> None
             f"evaluators/{name}.py": SYN_ARTIFACT
             for name in ("REP_SYNTH_BOTH", "REP_SYNTH_ONE", "REP_SYNTH_TWO")
         },
+        authorized_artifact_digests=frozenset({sha256_bytes(SYN_ARTIFACT)}),
         cost_model=model,
+        cost_model_authorized=True,
     )
     adds = [op for op in plan.operations if op.operation is OperationKind.ADD]
     assert len(adds) == 1
@@ -309,7 +409,9 @@ def test_search_budget_exhaustion_and_missing_cost_return_hold() -> None:
         coverage=make_coverage([q1, q2]),
         templates=[first, second],
         artifact_bytes=artifacts,
+        authorized_artifact_digests=frozenset({digest}),
         cost_model=cost_model(digest, search_nodes=1),
+        cost_model_authorized=True,
     )
     missing_cost = build_operation_plan(
         representations=[],
@@ -319,7 +421,9 @@ def test_search_budget_exhaustion_and_missing_cost_return_hold() -> None:
         coverage=make_coverage([q1]),
         templates=[first],
         artifact_bytes=artifacts,
+        authorized_artifact_digests=frozenset({digest}),
         cost_model=cost_model(),
+        cost_model_authorized=True,
     )
     assert "BUDGET_EXHAUSTED" in exhausted.hold_reasons
     assert "COST_MODEL_UNRESOLVED" in missing_cost.hold_reasons
@@ -334,6 +438,6 @@ def test_cost_model_rejects_duplicate_or_over_budget_candidate_and_ties_are_stab
         ]
     }
     model = {**cost_model(digest), "candidate_costs": {digest: 2}}
-    assert choose_candidate_plan([cheaper, first], model) is first
+    assert choose_candidate_plan([cheaper, first], model, cost_model_authorized=True) is first
     over_budget = {**model, "max_incremental_cost": 1}
-    assert choose_candidate_plan([cheaper], over_budget) is None
+    assert choose_candidate_plan([cheaper], over_budget, cost_model_authorized=True) is None

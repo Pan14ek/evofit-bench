@@ -16,6 +16,10 @@ from experiments.execution.tooling.contracts import (
 )
 from experiments.execution.tooling.errors import ContractValidationError
 from experiments.execution.tooling.hashing import canonical_json_bytes, sha256_bytes
+from experiments.execution.tooling.p_governance import (
+    GovernanceDecision,
+    governance_authorizes_outputs,
+)
 from experiments.execution.tooling.p_operations import (
     OperationKind,
     OperationPlan,
@@ -54,14 +58,13 @@ def materialize_candidate(
         or sha256_bytes(parent_configuration_bytes) != parent_sha256
     ):
         raise ContractValidationError("P03_PARENT_CONFIGURATION_DIGEST_MISMATCH")
-    if not _parent_configuration_matches_bytes(parent_configuration, parent_configuration_bytes):
-        raise ContractValidationError("P03_PARENT_CONFIGURATION_CONTENT_MISMATCH")
+    parent_snapshot = _bind_parent_configuration(parent_configuration, parent_configuration_bytes)
     if not isinstance(parent_path, str) or _SAFE_PATH.fullmatch(parent_path) is None:
         raise ContractValidationError("P03_PARENT_CONFIGURATION_PATH_INVALID")
     if operation_plan.reject_reasons:
         raise ContractValidationError("P03_OPERATION_PLAN_REJECTED")
     _validate_operation_plan(operation_plan)
-    rows_value = parent_configuration.get("representations")
+    rows_value = parent_snapshot.get("representations")
     if not isinstance(rows_value, list):
         raise ContractValidationError("P03_PARENT_REPRESENTATIONS_INVALID")
     representations = [copy.deepcopy(dict(row)) for row in rows_value if isinstance(row, Mapping)]
@@ -188,15 +191,21 @@ def normalize_parent_representation(row: Any) -> dict[str, Any]:
     }
 
 
-def _parent_configuration_matches_bytes(
+def _bind_parent_configuration(
     parent_configuration: Mapping[str, Any], parent_configuration_bytes: bytes
-) -> bool:
+) -> dict[str, Any]:
+    """Validate one detached parent view and return the bytes-derived snapshot."""
     try:
-        source = yaml.safe_load(parent_configuration_bytes)
-        if not isinstance(source, Mapping):
-            return False
-        if canonical_json_bytes(dict(source)) == canonical_json_bytes(dict(parent_configuration)):
-            return True
+        parsed_source = yaml.safe_load(parent_configuration_bytes)
+        if not isinstance(parsed_source, Mapping):
+            raise ContractValidationError("P03_PARENT_CONFIGURATION_CONTENT_MISMATCH")
+        source_value = _snapshot_json_value(parsed_source)
+        if not isinstance(source_value, dict):
+            raise ContractValidationError("P03_PARENT_CONFIGURATION_CONTENT_MISMATCH")
+        source: dict[str, Any] = source_value
+        supplied = _snapshot_json_value(parent_configuration)
+        if canonical_json_bytes(source) == canonical_json_bytes(supplied):
+            return source
         source_rows = source.get("representations")
         schema_version = source.get("schema_version", 1)
         if (
@@ -205,19 +214,48 @@ def _parent_configuration_matches_bytes(
             or isinstance(schema_version, bool)
             or schema_version != 1
         ):
-            return False
+            raise ContractValidationError("P03_PARENT_CONFIGURATION_CONTENT_MISMATCH")
         projection = {
             "schema_version": 1,
             "representations": [normalize_parent_representation(row) for row in source_rows],
         }
-        return canonical_json_bytes(projection) == canonical_json_bytes(dict(parent_configuration))
-    except (ContractValidationError, TypeError, ValueError, yaml.YAMLError):
-        return False
+        if canonical_json_bytes(projection) != canonical_json_bytes(supplied):
+            raise ContractValidationError("P03_PARENT_CONFIGURATION_CONTENT_MISMATCH")
+        projection_snapshot = _snapshot_json_value(projection)
+        if not isinstance(projection_snapshot, dict):
+            raise ContractValidationError("P03_PARENT_CONFIGURATION_CONTENT_MISMATCH")
+        return projection_snapshot
+    except (TypeError, ValueError, RecursionError, yaml.YAMLError) as error:
+        raise ContractValidationError("P03_PARENT_CONFIGURATION_CONTENT_MISMATCH") from error
 
 
-def adapt_candidate_v1(candidate: Mapping[str, Any]) -> dict[str, Any]:
-    """Project a DEVELOPMENT candidate through the unchanged candidate-v1 validator."""
+def _snapshot_json_value(value: Any) -> Any:
+    """Detach JSON-shaped values from caller-owned or stateful mappings."""
+    if isinstance(value, Mapping):
+        items = list(value.items())
+        if any(not isinstance(key, str) for key, _ in items):
+            raise TypeError("Configuration mapping keys must be strings")
+        return {key: _snapshot_json_value(item) for key, item in items}
+    if isinstance(value, list | tuple):
+        return [_snapshot_json_value(item) for item in value]
+    if value is None or isinstance(value, str | bool | int | float):
+        return value
+    raise TypeError("Configuration values must be JSON-compatible")
+
+
+def adapt_candidate_v1(
+    candidate: Mapping[str, Any], *, governance: GovernanceDecision
+) -> dict[str, Any]:
+    """Project only the exact candidate authorized by a sealed governance ACCEPT."""
     validate_payload("p_candidate_configuration_v1.schema.json", dict(candidate))
+    if not governance_authorizes_outputs(
+        governance,
+        candidate_configuration_sha256=candidate_sha256(candidate),
+        architecture_source_sha=str(candidate.get("architecture_source_sha", "")),
+        input_bundle_sha256=str(candidate.get("input_bundle_sha256", "")),
+        operations=candidate.get("changes", []),
+    ):
+        raise ContractValidationError("P03_V1_OUTPUT_NOT_GOVERNED_ACCEPT")
     rows: list[dict[str, Any]] = []
     for source in candidate["representations"]:
         if not isinstance(source, Mapping):
@@ -262,8 +300,10 @@ def adapt_prediction_v1(
     input_bundle_sha256: str,
     plan: OperationPlan,
     impact_records: Sequence[Mapping[str, Any]],
+    candidate_configuration_sha256: str,
+    governance: GovernanceDecision,
 ) -> dict[str, Any]:
-    """Project non-retain decisions to the unchanged prediction-v1 contract.
+    """Project only an accepted plan to the unchanged prediction-v1 contract.
 
     HOLD and INPUT_REJECTED are diagnostic outcomes and cannot be passed as a
     valid legacy prediction. The caller must only invoke this for a complete
@@ -271,6 +311,14 @@ def adapt_prediction_v1(
     """
     if plan.hold_reasons or plan.reject_reasons:
         raise ContractValidationError("PREDICTION_V1_UNAVAILABLE_FOR_BLOCKED_PLAN")
+    if not governance_authorizes_outputs(
+        governance,
+        candidate_configuration_sha256=candidate_configuration_sha256,
+        architecture_source_sha=architecture_source_sha,
+        input_bundle_sha256=input_bundle_sha256,
+        operations=[operation.to_dict() for operation in plan.operations],
+    ):
+        raise ContractValidationError("P03_V1_OUTPUT_NOT_GOVERNED_ACCEPT")
     affected: list[dict[str, str]] = []
     proposed: list[dict[str, str]] = []
     explanations: list[dict[str, Any]] = []

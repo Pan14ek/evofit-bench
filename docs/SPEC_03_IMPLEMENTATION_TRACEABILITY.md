@@ -215,6 +215,49 @@ git diff --check
 | Local full `make quality` after these remediations | BLOCKED — not run locally because it includes the two protected test modules listed above |
 | Hosted GitHub Actions `A0 quality` | PASS — [run 38889778200](https://github.com/Pan14ek/evofit-bench/actions/runs/38889778200), commit `b62d7d1837b09e3f7a453af8b7da65da592f8b43` |
 
+## PR #9 review findings: five targeted remediations
+
+This section records the follow-up to the five review findings supplied for
+PR #9. The commands and counts below are from this review-fix worktree and
+supersede earlier local counts for these changed files.
+
+| Finding | Regression coverage |
+| --- | --- |
+| V3 provenance could be caller-constructed | `test_caller_cannot_claim_verified_v3_without_verifier_identity`; verifier-returned bundles are content-rechecked before adaptation. |
+| Rollback did not bind to the exact prior configuration | `test_rollback_requires_positive_fresh_current_context_validation`; revalidation with a different configuration digest is blocked. |
+| Mutable decision payload could authorize publication | `test_publish_rejects_mutated_or_unsealed_governance_decisions`, `test_candidate_adapter_rejects_mutated_accept_payload_even_with_recomputed_digest`. |
+| Parent bytes and candidate mapping could disagree, including a stateful mapping changed after binding | `test_candidate_rejects_parent_mapping_unbound_from_hashed_bytes`, `test_candidate_uses_bytes_bound_parent_snapshot_for_stateful_mapping`. |
+| Stale/conflicting pair evidence could satisfy coverage | `test_stale_pair_architecture_revision_cannot_satisfy_coverage`, `test_conflicting_assessments_for_same_pair_cannot_count_as_valid`, `test_same_status_pair_records_with_different_stages_are_conflicting`, `test_mutated_pair_status_with_stale_digest_cannot_count_as_valid`. |
+
+Exact local checks:
+
+```bash
+PYTHONPATH=/Users/oleksii_makieiev/Documents/startups/evofit-bench/.venv/lib/python3.12/site-packages /Users/oleksii_makieiev/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_p_impact_v1.py tests/unit/test_p_operations_v1.py tests/unit/test_p_candidate_governance_v1.py tests/unit/test_p_adaptation_evidence_v1.py tests/unit/test_p_semantic_pairs_v1.py tests/integration/test_p_governed_adaptation_v1.py tests/integration/test_p_applicability_v3.py
+PYTHONPATH=/Users/oleksii_makieiev/Documents/startups/evofit-bench/.venv/lib/python3.12/site-packages /Users/oleksii_makieiev/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m pytest -q --no-cov -p no:cacheprovider --ignore=tests/unit/test_da01_execution.py --ignore=tests/unit/test_research_schema_foundation.py tests/unit tests/architecture
+/Users/oleksii_makieiev/Documents/startups/evofit-bench/.venv/bin/ruff check .
+/Users/oleksii_makieiev/Documents/startups/evofit-bench/.venv/bin/ruff format --check .
+PYTHONPATH=/Users/oleksii_makieiev/Documents/startups/evofit-bench/.venv/lib/python3.12/site-packages MYPY_CACHE_DIR=/private/tmp/evofit-spec03-mypy-cache /Users/oleksii_makieiev/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m mypy app scripts tests
+PYTHONPATH=/Users/oleksii_makieiev/Documents/startups/evofit-bench/.venv/lib/python3.12/site-packages /Users/oleksii_makieiev/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 -m bandit -q -r app scripts experiments/execution/tooling
+git diff --check
+```
+
+| Check | Result |
+| --- | --- |
+| Focused SPEC 03 and SPEC 02 regression tests | PASS — 83 passed, 1 existing Starlette/httpx deprecation warning, 0 skipped. |
+| Unit and architecture suites, excluding the two DA01-protected test modules | PASS — 205 passed, 1 existing Locust monkey-patch warning, 0 skipped. |
+| Ruff check and format check | PASS — repository check passed; 217 Python files already formatted. |
+| Mypy `app scripts tests` | PASS — 95 source files, no issues. |
+| Bandit over `app scripts experiments/execution/tooling` | PASS — existing Bandit comment-parsing and `nosec` warnings only. |
+| `git diff --check` | PASS. |
+| Full `make quality`, migrations and protected DA01 tests | BLOCKED / NOT RUN — full quality invokes the prohibited DA01 ground-truth/scorer test modules; no disposable PostgreSQL validation was run for this focused review fix. |
+| Hosted GitHub Actions for the review-fix commit | PENDING — record the run URL and result after the branch push. |
+
+The two protected DA01 modules were not opened or run; no oracle, scorer,
+expected operations, or sealed reference output was read. The worktree diff
+changes only development code, additive schemas, synthetic tests, fixture
+content and descriptive documentation. No frozen architecture state, input,
+baseline, protocol or scorer semantics were modified.
+
 ## Unresolved method decisions and research boundary
 
 All OPEN-01 through OPEN-10 items in SPEC 03 remain unresolved. In particular,

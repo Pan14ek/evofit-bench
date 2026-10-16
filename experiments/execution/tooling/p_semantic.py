@@ -451,6 +451,9 @@ def assess_mandatory_coverage(
         mandatory_value = obligation.get("mandatory")
         mandatory = mandatory_value if isinstance(mandatory_value, bool) else None
         row_reasons: set[str] = set()
+        required: tuple[str, ...] = ()
+        covered: tuple[str, ...] = ()
+        valid_ids: tuple[str, ...] = ()
         if applicability_status is None:
             applicability_status = "UNKNOWN"
             row_reasons.add("APPLICABILITY_RESULT_MISSING")
@@ -466,9 +469,9 @@ def assess_mandatory_coverage(
             valid_ids = ()
         elif applicability_status == "INACTIVE" and mandatory is not None:
             status = "NOT_REQUIRED"
-            required: tuple[str, ...] = ()
-            covered: tuple[str, ...] = ()
-            valid_ids: tuple[str, ...] = ()
+            required = ()
+            covered = ()
+            valid_ids = ()
         elif mandatory is False:
             status = "NOT_REQUIRED"
             required = ()
@@ -570,10 +573,11 @@ def assess_mandatory_coverage(
     )
     if status is CoverageStatus.INCOMPLETE:
         reasons.add("MANDATORY_COVERAGE_INCOMPLETE")
+    applicability_digest = _assessment_digest(applicability)
     content = {
         "schema_version": 1,
         "architecture_source_sha": applicability.architecture_source_sha,
-        "applicability_assessment_sha256": _assessment_digest(applicability),
+        "applicability_assessment_sha256": applicability_digest,
         "policy_source_revision": applicability.policy_source_revision,
         "policy_bundle_sha256": applicability.policy_bundle_sha256,
         "ruleset_sha256": applicability.ruleset_sha256,
@@ -586,7 +590,7 @@ def assess_mandatory_coverage(
     digest = sha256_bytes(canonical_json_bytes(content))
     result = CoverageAssessment(
         applicability.architecture_source_sha,
-        content["applicability_assessment_sha256"],
+        applicability_digest,
         applicability.policy_source_revision,
         applicability.policy_bundle_sha256,
         applicability.ruleset_sha256,
@@ -664,7 +668,9 @@ def _assessment_digest(assessment: ApplicabilityAssessment) -> str:
 def _pair_assessment_digest_is_valid(pair: PairAssessment) -> bool:
     content = pair.to_dict()
     claimed_digest = content.pop("assessment_sha256")
-    return claimed_digest == sha256_bytes(canonical_json_bytes(content))
+    return isinstance(claimed_digest, str) and claimed_digest == sha256_bytes(
+        canonical_json_bytes(content)
+    )
 
 
 def _digest_value(value: Any) -> str:

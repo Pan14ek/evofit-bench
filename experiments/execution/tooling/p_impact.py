@@ -111,6 +111,9 @@ class TraceEdge:
     target_id: str
     kind: str
     source_refs: tuple[str, ...] = ()
+    scope: str | None = None
+    source_version: str | None = None
+    target_version: str | None = None
 
 
 @dataclass(frozen=True)
@@ -122,6 +125,7 @@ class TraceGraph:
     inventory_complete: bool
     graph_sha256: str
     unresolved_links: tuple[str, ...] = ()
+    inventory_complete_verified: bool = False
 
 
 @dataclass(frozen=True)
@@ -260,13 +264,11 @@ def parse_trace_graph(payload: Mapping[str, Any]) -> TraceGraph:
         refs = _string_tuple(
             row.get("source_refs", []), "TRACE_NODE_SOURCE_REFS_INVALID", unresolved
         )
-        node = TraceNode(
-            node_id,
-            kind,
-            _optional_string(row.get("scope")),
-            _optional_string(row.get("version")),
-            refs,
+        scope = _trace_optional_string(row.get("scope"), "TRACE_NODE_SCOPE_INVALID", unresolved)
+        version = _trace_optional_string(
+            row.get("version"), "TRACE_NODE_VERSION_INVALID", unresolved
         )
+        node = TraceNode(node_id, kind, scope, version, refs)
         if node_id in by_id or node_id in duplicate_ids:
             unresolved.add("DUPLICATE_TRACE_NODE")
             by_id.pop(node_id, None)
@@ -304,7 +306,21 @@ def parse_trace_graph(payload: Mapping[str, Any]) -> TraceGraph:
         refs = _string_tuple(
             row.get("source_refs", []), "TRACE_EDGE_SOURCE_REFS_INVALID", unresolved
         )
-        edges.append(TraceEdge(edge_key[0], edge_key[1], edge_key[2], refs))
+        edges.append(
+            TraceEdge(
+                edge_key[0],
+                edge_key[1],
+                edge_key[2],
+                refs,
+                _trace_optional_string(row.get("scope"), "TRACE_EDGE_SCOPE_INVALID", unresolved),
+                _trace_optional_string(
+                    row.get("source_version"), "TRACE_EDGE_SOURCE_VERSION_INVALID", unresolved
+                ),
+                _trace_optional_string(
+                    row.get("target_version"), "TRACE_EDGE_TARGET_VERSION_INVALID", unresolved
+                ),
+            )
+        )
 
     nodes.sort(key=lambda item: (item.kind, item.node_id))
     edges.sort(key=lambda item: (item.kind, item.source_id, item.target_id))
@@ -327,6 +343,9 @@ def parse_trace_graph(payload: Mapping[str, Any]) -> TraceGraph:
                 "target_id": item.target_id,
                 "kind": item.kind,
                 "source_refs": list(item.source_refs),
+                "scope": item.scope,
+                "source_version": item.source_version,
+                "target_version": item.target_version,
             }
             for item in edges
         ],
@@ -457,10 +476,13 @@ def analyze_impact(
     snapshot_sha256: str,
     changes: Sequence[ChangeRecord],
     graph: TraceGraph,
+    source_digests: Mapping[str, str],
+    expected_scope: str,
     representation_ids: Sequence[str],
     applicability_after: Mapping[str, str],
     mandatory_obligations: Sequence[str],
     covered_obligations: Sequence[str],
+    change_inventory_verified: bool = False,
 ) -> ImpactAssessment:
     """Trace typed changes conservatively and identify uncovered active controls."""
     for name, value, length in (
@@ -489,16 +511,51 @@ def analyze_impact(
 
     node_by_id = {node.node_id: node for node in graph.nodes}
     adjacency: dict[str, list[str]] = defaultdict(list)
+    proven_adjacency: dict[str, list[str]] = defaultdict(list)
     edge_refs: dict[tuple[str, str], tuple[str, ...]] = {}
+    graph_context_unresolved: set[str] = set()
+    for node in graph.nodes:
+        if node.scope != expected_scope:
+            graph_context_unresolved.add("TRACE_NODE_SCOPE_UNVERIFIED:" + node.node_id)
+        if not node.version:
+            graph_context_unresolved.add("TRACE_NODE_VERSION_UNVERIFIED:" + node.node_id)
+        if not node.source_refs or any(
+            ref not in source_digests or not _is_sha256(source_digests[ref])
+            for ref in node.source_refs
+        ):
+            graph_context_unresolved.add("TRACE_NODE_SOURCE_PROVENANCE_UNVERIFIED:" + node.node_id)
     for edge in graph.edges:
         adjacency[edge.source_id].append(edge.target_id)
         edge_refs[(edge.source_id, edge.target_id)] = edge.source_refs
+        source_node, target_node = node_by_id.get(edge.source_id), node_by_id.get(edge.target_id)
+        context_matches = bool(
+            source_node
+            and target_node
+            and edge.scope
+            and source_node.scope == edge.scope == target_node.scope
+            and edge.source_version
+            and edge.source_version == source_node.version
+            and edge.target_version
+            and edge.target_version == target_node.version
+            and set(edge.source_refs) <= set(source_node.source_refs) | set(target_node.source_refs)
+        )
+        refs_verified = bool(edge.source_refs) and all(
+            ref in source_digests and _is_sha256(source_digests[ref]) for ref in edge.source_refs
+        )
+        if context_matches and refs_verified:
+            proven_adjacency[edge.source_id].append(edge.target_id)
+        else:
+            graph_context_unresolved.add(
+                "TRACE_EDGE_CONTEXT_UNVERIFIED:" + edge.source_id + ":" + edge.target_id
+            )
     for key in adjacency:
         adjacency[key].sort()
+    for key in proven_adjacency:
+        proven_adjacency[key].sort()
 
     proven_seed_ids: set[str] = set()
     possible_seed_ids: set[str] = set()
-    unresolved: set[str] = set(graph.unresolved_links)
+    unresolved: set[str] = set(graph.unresolved_links) | graph_context_unresolved
     uncertain_seed = False
     for change in changes:
         if change.change_kind is ChangeKind.UNCHANGED:
@@ -507,15 +564,34 @@ def analyze_impact(
             unresolved.add("INDETERMINATE_CHANGE:" + change.change_id)
             uncertain_seed = True
         if change.entity_id in node_by_id:
-            if change.change_kind is ChangeKind.INDETERMINATE:
+            source_proven = bool(change.evidence_refs) and all(
+                ref in source_digests and _is_sha256(source_digests[ref])
+                for ref in change.evidence_refs
+            )
+            source_proven = source_proven and set(change.evidence_refs).issubset(
+                node_by_id[change.entity_id].source_refs
+            )
+            context_matches = _change_matches_node(change, node_by_id[change.entity_id])
+            if (
+                change.change_kind is ChangeKind.INDETERMINATE
+                or not source_proven
+                or not context_matches
+            ):
                 possible_seed_ids.add(change.entity_id)
+                if not source_proven:
+                    unresolved.add("CHANGE_SOURCE_PROVENANCE_UNVERIFIED:" + change.change_id)
+                if not context_matches:
+                    unresolved.add("CHANGE_CONTEXT_MISMATCH:" + change.change_id)
+                uncertain_seed = True
             else:
                 proven_seed_ids.add(change.entity_id)
         else:
             unresolved.add("UNMAPPED_CHANGE:" + change.change_id)
             uncertain_seed = True
 
-    def reachable(seeds: set[str]) -> dict[str, tuple[str, ...]]:
+    def reachable(
+        seeds: set[str], edges: Mapping[str, Sequence[str]]
+    ) -> dict[str, tuple[str, ...]]:
         paths: dict[str, tuple[str, ...]] = {}
         queue: deque[tuple[str, tuple[str, ...]]] = deque(
             (node_id, (node_id,)) for node_id in sorted(seeds)
@@ -525,31 +601,71 @@ def analyze_impact(
             if current in paths:
                 continue
             paths[current] = path
-            for next_id in adjacency.get(current, []):
+            for next_id in edges.get(current, []):
                 queue.append((next_id, path + (next_id,)))
         return paths
 
-    proven_reach = reachable(proven_seed_ids)
-    possible_reach = reachable(possible_seed_ids)
+    proven_reach = reachable(proven_seed_ids, proven_adjacency)
+    all_reach = reachable(proven_seed_ids | possible_seed_ids, adjacency)
+    possible_reach = {key: path for key, path in all_reach.items() if key not in proven_reach}
     representation_nodes = {
         node_id for node_id, node in node_by_id.items() if node.kind == "representation"
     }
     declared_representations = set(representation_ids)
     mapped_representations = representation_nodes & declared_representations
+    for representation_id in mapped_representations:
+        has_criterion_link = any(
+            edge.kind == "criterion_to_representation" and edge.target_id == representation_id
+            for edge in graph.edges
+        )
+        has_evaluator_link = any(
+            edge.source_id == representation_id
+            and edge.kind in {"representation_to_evaluator", "representation_to_evidence_contract"}
+            for edge in graph.edges
+        )
+        if not has_criterion_link or not has_evaluator_link:
+            unresolved.add("REPRESENTATION_TRACEABILITY_INCOMPLETE:" + representation_id)
+    for obligation_id, status in applicability_after.items():
+        if status != "ACTIVE":
+            continue
+        obligation_node = node_by_id.get(obligation_id)
+        if obligation_node is None or obligation_node.kind != "obligation":
+            unresolved.add("ACTIVE_OBLIGATION_MISSING_FROM_GRAPH:" + obligation_id)
+            continue
+        has_criterion_link = any(
+            edge.source_id == obligation_id and edge.kind == "obligation_to_criterion"
+            for edge in graph.edges
+        )
+        if not has_criterion_link:
+            unresolved.add("ACTIVE_OBLIGATION_TRACEABILITY_INCOMPLETE:" + obligation_id)
     records: list[ImpactRecord] = []
     for representation_id in sorted(declared_representations):
+        if representation_id not in mapped_representations:
+            unresolved.add("REPRESENTATION_MISSING_FROM_GRAPH:" + representation_id)
+            records.append(
+                ImpactRecord(
+                    representation_id,
+                    ImpactStatus.UNRESOLVED,
+                    (),
+                    ("REPRESENTATION_MISSING_FROM_GRAPH",),
+                    (),
+                )
+            )
+            continue
         if representation_id in proven_reach:
             path = proven_reach[representation_id]
             refs = {
                 ref
                 for left, right in zip(path, path[1:], strict=False)
                 for ref in edge_refs.get((left, right), ())
+                if ref in source_digests
             }
             refs.update(
                 ref
                 for change in changes
                 if change.entity_id == path[0]
                 for ref in change.evidence_refs
+                if ref in source_digests
             )
             records.append(
                 ImpactRecord(
@@ -566,12 +682,14 @@ def analyze_impact(
                 ref
                 for left, right in zip(path, path[1:], strict=False)
                 for ref in edge_refs.get((left, right), ())
+                if ref in source_digests
             }
             refs.update(
                 ref
                 for change in changes
                 if change.entity_id == path[0]
                 for ref in change.evidence_refs
+                if ref in source_digests
             )
             records.append(
                 ImpactRecord(
@@ -582,7 +700,11 @@ def analyze_impact(
                     tuple(sorted(refs)),
                 )
             )
-        elif not graph.inventory_complete:
+        elif not (
+            graph.inventory_complete
+            and graph.inventory_complete_verified
+            and change_inventory_verified
+        ):
             status = (
                 ImpactStatus.POSSIBLY_AFFECTED
                 if uncertain_seed or proven_seed_ids or possible_seed_ids
@@ -593,7 +715,7 @@ def analyze_impact(
                     representation_id, status, (), ("TRACEABILITY_INVENTORY_INCOMPLETE",), ()
                 )
             )
-        elif uncertain_seed or graph.unresolved_links:
+        elif uncertain_seed or unresolved:
             records.append(
                 ImpactRecord(
                     representation_id,
@@ -631,8 +753,6 @@ def analyze_impact(
     for obligation_id, status in applicability_after.items():
         if status == "UNKNOWN" and obligation_id in mandatory:
             unresolved.add("MANDATORY_APPLICABILITY_UNKNOWN:" + obligation_id)
-        if obligation_id not in node_by_id and status == "ACTIVE":
-            unresolved.add("ACTIVE_OBLIGATION_MISSING_FROM_GRAPH:" + obligation_id)
 
     content: dict[str, Any] = {
         "schema_version": 1,
@@ -700,12 +820,13 @@ def _diff_facts(
     groups: dict[
         tuple[str, str], dict[str, list[tuple[tuple[str, str, str], Mapping[str, Any]]]]
     ] = defaultdict(lambda: defaultdict(list))
-    for key, states in indexed.items():
-        for state, state_rows in states.items():
+    for key, state_rows_by_name in indexed.items():
+        for state, state_rows in state_rows_by_name.items():
             for row in state_rows:
                 groups[(key[0], key[1])][state].append((key, row))
-    for (predicate, subject), states in sorted(groups.items()):
-        before_rows, after_rows = states.get("before", []), states.get("after", [])
+    for (predicate, subject), grouped_rows in sorted(groups.items()):
+        before_rows = grouped_rows.get("before", [])
+        after_rows = grouped_rows.get("after", [])
         by_scope_before = {key[2]: (key, row) for key, row in before_rows}
         by_scope_after = {key[2]: (key, row) for key, row in after_rows}
         if (
@@ -891,6 +1012,7 @@ def _diff_policies(
                     "policy",
                     policy_id,
                     kind,
+                    new_scope=_policy_scope(after),
                     new_version=_policy_version_bound(after, source_digests),
                     evidence_refs=_policy_refs(after),
                     reason_codes=(
@@ -906,6 +1028,7 @@ def _diff_policies(
                     "policy",
                     policy_id,
                     kind,
+                    old_scope=_policy_scope(before),
                     old_version=_policy_version_bound(before, source_digests),
                     evidence_refs=_policy_refs(before),
                     reason_codes=(
@@ -922,6 +1045,8 @@ def _diff_policies(
                     "policy",
                     policy_id,
                     ChangeKind.UNCHANGED,
+                    old_scope=_policy_scope(before),
+                    new_scope=_policy_scope(after),
                     old_version=_policy_version_bound(before, source_digests),
                     new_version=_policy_version_bound(after, source_digests),
                     evidence_refs=_policy_refs(before),
@@ -935,6 +1060,8 @@ def _diff_policies(
                     "policy",
                     policy_id,
                     ChangeKind.VALUE_CHANGED,
+                    old_scope=_policy_scope(before),
+                    new_scope=_policy_scope(after),
                     old_version=_policy_version_bound(before, source_digests),
                     new_version=_policy_version_bound(after, source_digests),
                     evidence_refs=tuple(
@@ -944,6 +1071,11 @@ def _diff_policies(
                 )
             )
     return result
+
+
+def _policy_scope(row: Mapping[str, Any] | None) -> str | None:
+    scope = row.get("scope") if row is not None else None
+    return scope if isinstance(scope, str) and scope else None
 
 
 def _fact_record(
@@ -1021,7 +1153,16 @@ def _policy_version_bound(
         for source_id in source_ids
         if isinstance(source_id, str)
     )
-    return _policy_version(row) + ":" + ",".join(refs)
+    policy_version = _policy_version(row)
+    if policy_version is None:
+        return None
+    return (
+        policy_version
+        + ":"
+        + ",".join(refs)
+        + ":"
+        + _value_digest(_policy_semantics(row, source_digests))
+    )
 
 
 def _unknown_fact(row: Mapping[str, Any]) -> bool:
@@ -1063,6 +1204,53 @@ def _string_tuple(value: Any, reason: str, unresolved: set[str]) -> tuple[str, .
 
 def _optional_string(value: Any) -> str | None:
     return value if isinstance(value, str) and value else None
+
+
+def _trace_optional_string(value: Any, reason: str, unresolved: set[str]) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, str) and value:
+        return value
+    unresolved.add(reason)
+    return None
+
+
+def _change_matches_node(change: ChangeRecord, node: TraceNode) -> bool:
+    expected_kind = {
+        "fact": "fact",
+        "policy": "policy",
+        "architectural_element": "architectural_element",
+        "obligation": "obligation",
+        "criterion": "criterion",
+        "representation": "representation",
+        "evaluator": "evaluator",
+        "evidence_contract": "evidence_contract",
+    }.get(change.entity_kind)
+    if expected_kind != node.kind or not node.scope or not node.version:
+        return False
+    if change.change_kind is ChangeKind.REMOVED:
+        expected_scope, expected_version = change.old_scope, change.old_version
+    elif change.change_kind is ChangeKind.ADDED:
+        expected_scope, expected_version = change.new_scope, change.new_version
+    elif change.change_kind in {
+        ChangeKind.VALUE_CHANGED,
+        ChangeKind.SCOPE_CHANGED,
+        ChangeKind.VERSION_CHANGED,
+    }:
+        expected_scope = change.new_scope or change.old_scope
+        expected_version = change.new_version or change.old_version
+    else:
+        return False
+    return bool(
+        expected_scope
+        and expected_version
+        and node.scope == expected_scope
+        and node.version == expected_version
+    )
+
+
+def _is_sha256(value: str) -> bool:
+    return len(value) == 64 and all(character in "0123456789abcdef" for character in value)
 
 
 __all__ = [

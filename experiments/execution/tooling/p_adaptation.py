@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import base64
 import json
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, fields, is_dataclass
+from dataclasses import dataclass, fields, is_dataclass, replace
 from datetime import date, datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from weakref import WeakKeyDictionary
 
 import yaml
@@ -20,11 +21,18 @@ from experiments.execution.tooling.hashing import (
     pretty_json_bytes,
     sha256_bytes,
 )
+from experiments.execution.tooling.p_adaptation_evidence import (
+    AdaptationEvidenceVerifierRegistry,
+    VerifiedAdaptationEvidence,
+    thaw_verified_payload,
+    verify_adaptation_evidence,
+)
 from experiments.execution.tooling.p_applicability import (
     ApplicabilityAssessment,
     CompiledRuleset,
     EvidenceLedger,
     EvidenceProof,
+    ProofStatus,
     evaluate_obligations,
     load_and_validate_ruleset,
 )
@@ -39,7 +47,8 @@ from experiments.execution.tooling.p_candidate import (
 from experiments.execution.tooling.p_governance import (
     GovernanceDecision,
     GovernanceResult,
-    decide_governance,
+    _decide_governance_authorized,
+    _issue_governance_pipeline_authorization,
 )
 from experiments.execution.tooling.p_impact import (
     ChangeKind,
@@ -99,6 +108,10 @@ class VerifiedPBundle:
 
 
 _VERIFIED_V3_BUNDLE_DIGESTS: WeakKeyDictionary[VerifiedPBundle, str] = WeakKeyDictionary()
+_TEST_ONLY_BUNDLE_DIGESTS: WeakKeyDictionary[VerifiedPBundle, str] = WeakKeyDictionary()
+_BUNDLE_EVIDENCE_VERIFIER_REGISTRIES: WeakKeyDictionary[
+    VerifiedPBundle, AdaptationEvidenceVerifierRegistry
+] = WeakKeyDictionary()
 
 
 @dataclass(frozen=True)
@@ -118,6 +131,7 @@ class AdaptationResult:
     governance: GovernanceDecision
     prediction_v1: Mapping[str, Any] | None
     candidate_v1: Mapping[str, Any] | None
+    evidence_trust_scope: str | None
 
 
 def verify_v3_p_bundle(
@@ -198,6 +212,10 @@ def verify_v3_p_bundle(
         record = file_records.get(str(source.get("path")))
         if isinstance(source.get("id"), str) and isinstance(record, Mapping):
             source_digests[str(source["id"])] = str(record.get("sha256", ""))
+    source_digests["P_CAPABILITIES"] = str(
+        file_records["fitness/evaluator-capabilities.json"].get("sha256", "")
+    )
+    source_digests["P_TRACEABILITY"] = str(trace_record.get("sha256", ""))
 
     capabilities_bytes = _read_pinned_file(
         root, "fitness/evaluator-capabilities.json", file_records
@@ -240,24 +258,22 @@ def verify_v3_p_bundle(
         "VERIFIED_V3",
     )
     _VERIFIED_V3_BUNDLE_DIGESTS[bundle] = _verified_bundle_content_sha256(bundle)
+    registry = getattr(trust_context, "adaptation_evidence_verifiers", None)
+    if isinstance(registry, AdaptationEvidenceVerifierRegistry):
+        _BUNDLE_EVIDENCE_VERIFIER_REGISTRIES[bundle] = registry
     return bundle
 
 
 def run_adaptation(
     bundle: VerifiedPBundle,
     *,
-    evaluator_evidence: Mapping[tuple[str, str], Mapping[str, Any]] | None = None,
-    pair_proofs: Mapping[tuple[str, str], EvidenceProof] | None = None,
-    pair_artifact_bytes: Mapping[str, bytes] | None = None,
-    fact_absence_proofs: Mapping[tuple[str, str, str], bool | None] | None = None,
-    policy_inventory_complete: Mapping[str, bool | None] | None = None,
-    policy_before_rows: Sequence[Mapping[str, Any]] | None = None,
-    policy_after_rows: Sequence[Mapping[str, Any]] | None = None,
-    required_stages: Mapping[str, Sequence[str]] | None = None,
-    stage_contract_verified: bool | None = None,
-    adjustment_rules: Sequence[Mapping[str, Any]] = (),
+    evidence_context: Mapping[str, Any] | None = None,
 ) -> AdaptationResult:
-    """Run the entire fail-closed development pipeline on verified inputs."""
+    """Run P only with side evidence verified against this exact input context.
+
+    Raw proofs, inventory flags, stage claims and adjustment rules are accepted
+    only inside the signed DEVELOPMENT sidecar contract.
+    """
     snapshot, validation, ruleset, manifest = (
         bundle.snapshot,
         bundle.snapshot_validation,
@@ -271,6 +287,20 @@ def run_adaptation(
     policy_digest = str(manifest.get("policy_bundle_sha256", ""))
     if not policy_revision or not _is_sha256(policy_digest):
         raise ContractValidationError("P03_PREFLIGHT_POLICY_BINDING_INVALID")
+    verified_evidence = _verify_adaptation_evidence(
+        bundle,
+        evidence_context,
+        policy_revision=policy_revision,
+        policy_digest=policy_digest,
+    )
+    side_payload = thaw_verified_payload(verified_evidence) if verified_evidence else {}
+    registry = snapshot.get("policy_registry")
+    expected_scope = str(registry.get("scope", "")) if isinstance(registry, Mapping) else ""
+    before_sha = str(snapshot["architecture"]["before_commit"])
+    after_sha = str(snapshot["architecture"]["after_commit"])
+    side_inputs = _side_evidence_inputs(
+        side_payload, bundle, before_sha, after_sha, verified_evidence
+    )
     before = evaluate_obligations(
         snapshot,
         ruleset,
@@ -292,18 +322,18 @@ def run_adaptation(
     changes = list(
         diff_snapshot(
             snapshot,
-            fact_absence_proofs=fact_absence_proofs,
-            policy_inventory_complete=policy_inventory_complete,
+            fact_absence_proofs=side_inputs["fact_absence_proofs"],
+            policy_inventory_complete=side_inputs["policy_inventory_complete"],
             source_digests=bundle.source_digests,
-            policy_before_rows=policy_before_rows,
-            policy_after_rows=policy_after_rows,
+            policy_before_rows=side_inputs["policy_before_rows"],
+            policy_after_rows=side_inputs["policy_after_rows"],
         )
     )
     changes.extend(_diff_applicability(before, after))
     applicability_after = {row.obligation_id: row.status.value for row in after.results}
-    pair_evidence = evaluator_evidence or {}
-    proofs = pair_proofs or {}
-    checked_artifacts = {**bundle.artifact_bytes, **(pair_artifact_bytes or {})}
+    pair_evidence = side_inputs["evaluator_evidence"]
+    proofs = side_inputs["pair_proofs"]
+    checked_artifacts = _merge_artifacts(bundle.artifact_bytes, side_inputs["artifact_bytes"])
     pairs: list[PairAssessment] = []
     obligations_by_id = {str(row["id"]): row for row in bundle.obligations}
     for representation in sorted(bundle.representations, key=lambda item: str(item.get("id", ""))):
@@ -329,11 +359,15 @@ def run_adaptation(
         applicability=after,
         obligations=bundle.obligations,
         pair_assessments=pairs,
-        required_stages=required_stages,
-        stage_contract_verified=stage_contract_verified,
+        required_stages=side_inputs["required_stages"],
+        stage_contract_verified=side_inputs["stage_contract_verified"],
     )
     mandatory = [str(row["id"]) for row in bundle.obligations if row.get("mandatory") is True]
     covered = [row.obligation_id for row in coverage.obligations if row.status == "COVERED"]
+    impact_graph = replace(
+        bundle.trace_graph,
+        inventory_complete_verified=side_inputs["trace_inventory_verified"],
+    )
     impact = analyze_impact(
         architecture_before_sha=before.architecture_source_sha,
         architecture_after_sha=after.architecture_source_sha,
@@ -342,11 +376,14 @@ def run_adaptation(
         ruleset_sha256=ruleset.ruleset_source_sha256,
         snapshot_sha256=validation.snapshot_digest or "",
         changes=changes,
-        graph=bundle.trace_graph,
+        graph=impact_graph,
+        source_digests=bundle.source_digests,
+        expected_scope=expected_scope,
         representation_ids=[str(row["id"]) for row in bundle.representations],
         applicability_after=applicability_after,
         mandatory_obligations=mandatory,
         covered_obligations=covered,
+        change_inventory_verified=side_inputs["change_inventory_verified"],
     )
     plan = build_operation_plan(
         representations=bundle.representations,
@@ -354,12 +391,18 @@ def run_adaptation(
         applicability=applicability_after,
         pair_assessments=pairs,
         coverage=coverage,
+        impact=impact,
         templates=bundle.templates,
         artifact_bytes=checked_artifacts,
-        adjustment_rules=adjustment_rules,
+        authorized_artifact_digests=side_inputs["authorized_template_artifact_sha256"],
+        adjustment_rules=side_inputs["adjustment_rules"],
         cost_model=bundle.cost_model,
+        cost_model_authorized=side_inputs["cost_model_authorized"],
+        adjustments_authorized=verified_evidence is not None,
     )
-    cost_verdict = _cost_verdict(plan, bundle.cost_model)
+    if evidence_context is not None and verified_evidence is None:
+        plan = _with_hold(plan, "ADAPTATION_EVIDENCE_AUTHORITY_UNRESOLVED")
+    cost_verdict = _cost_verdict(plan, bundle.cost_model, side_inputs["cost_model_authorized"])
     if cost_verdict != "PASS":
         plan = _with_hold(
             plan, "COST_MODEL_UNRESOLVED" if cost_verdict == "UNKNOWN" else "COST_LIMIT_EXCEEDED"
@@ -393,7 +436,6 @@ def run_adaptation(
             valid_obligation_ids=tuple(obligations_by_id),
         )
         candidate_digest = candidate_sha256(candidate)
-        candidate_v1 = adapt_candidate_v1(candidate)
     candidate_pairs: list[PairAssessment] = []
     candidate_coverage: CoverageAssessment | None = None
     if candidate is not None:
@@ -420,12 +462,12 @@ def run_adaptation(
             applicability=after,
             obligations=bundle.obligations,
             pair_assessments=candidate_pairs,
-            required_stages=required_stages,
-            stage_contract_verified=stage_contract_verified,
+            required_stages=side_inputs["required_stages"],
+            stage_contract_verified=side_inputs["stage_contract_verified"],
         )
     decision_coverage = candidate_coverage or coverage
     decision_pairs = candidate_pairs if candidate is not None else pairs
-    input_status = _input_status(validation, bundle.bundle_provenance)
+    input_status = _input_status(validation, bundle.bundle_provenance, verified_evidence)
     mandatory_ids = {str(row["id"]) for row in bundle.obligations if row.get("mandatory") is True}
     before_unresolved = any(
         row.obligation_id in mandatory_ids and row.status.value == "UNKNOWN"
@@ -436,42 +478,56 @@ def run_adaptation(
         coverage=decision_coverage,
         plan=plan,
         candidate=candidate,
+        candidate_digest=candidate_digest,
         representations=bundle.representations,
         obligations=bundle.obligations,
-        applicability=applicability_after,
+        before_applicability=before,
+        after_applicability=after,
         pairs=decision_pairs,
-        bundle_provenance=bundle.bundle_provenance,
+        bundle=bundle,
+        impact=impact,
+        evidence_context_verified=verified_evidence is not None,
+        authorized_template_digests=side_inputs["authorized_template_artifact_sha256"],
+        artifact_bytes=checked_artifacts,
     )
-    governance = decide_governance(
-        method_version=METHOD_VERSION,
-        architecture_before_sha=before.architecture_source_sha,
-        architecture_after_sha=after.architecture_source_sha,
-        policy_source_revision=policy_revision,
-        policy_ruleset_sha256=ruleset.ruleset_source_sha256,
-        input_bundle_sha256=str(manifest.get("bundle_sha256", "")),
-        parent_configuration_sha256=bundle.parent_configuration_sha256,
-        candidate_configuration_sha256=candidate_digest,
-        impact_assessment_sha256=impact.assessment_sha256,
-        coverage=decision_coverage,
-        operation_plan=plan,
-        invariant_verdicts=invariants,
-        cost_verdict=cost_verdict,
-        input_status=input_status,
-        candidate_validation_status=(
+    governance_arguments: dict[str, Any] = {
+        "method_version": METHOD_VERSION,
+        "architecture_before_sha": before.architecture_source_sha,
+        "architecture_after_sha": after.architecture_source_sha,
+        "policy_source_revision": policy_revision,
+        "policy_ruleset_sha256": ruleset.ruleset_source_sha256,
+        "input_bundle_sha256": str(manifest.get("bundle_sha256", "")),
+        "parent_configuration_sha256": bundle.parent_configuration_sha256,
+        "candidate_configuration_sha256": candidate_digest,
+        "impact_assessment_sha256": impact.assessment_sha256,
+        "coverage": decision_coverage,
+        "operation_plan": plan,
+        "invariant_verdicts": invariants,
+        "cost_verdict": cost_verdict,
+        "input_status": input_status,
+        "candidate_validation_status": (
             str(candidate["candidate_validation"]["status"]) if candidate else None
         ),
-        pairs=[item.to_dict() for item in decision_pairs],
-        evidence_refs=validation.evidence_refs,
-        additional_reasons=(("BEFORE_APPLICABILITY_UNRESOLVED",) if before_unresolved else ()),
+        "pairs": [item.to_dict() for item in decision_pairs],
+        "evidence_refs": validation.evidence_refs,
+        "additional_reasons": (("BEFORE_APPLICABILITY_UNRESOLVED",) if before_unresolved else ()),
+    }
+    pipeline_authorization = _issue_governance_pipeline_authorization(**governance_arguments)
+    governance = _decide_governance_authorized(
+        **governance_arguments,
+        pipeline_authorization=pipeline_authorization,
     )
     prediction_v1: Mapping[str, Any] | None = None
     if governance.result is GovernanceResult.ACCEPT and candidate is not None:
+        candidate_v1 = adapt_candidate_v1(candidate, governance=governance)
         prediction_v1 = adapt_prediction_v1(
             architecture_source_sha=after.architecture_source_sha,
             method_version=METHOD_VERSION,
             input_bundle_sha256=str(manifest["bundle_sha256"]),
             plan=plan,
             impact_records=[record.to_dict() for record in impact.representations],
+            candidate_configuration_sha256=str(candidate_digest),
+            governance=governance,
         )
     return AdaptationResult(
         before,
@@ -487,7 +543,467 @@ def run_adaptation(
         governance,
         prediction_v1,
         candidate_v1,
+        verified_evidence.trust_scope if verified_evidence is not None else None,
     )
+
+
+def _verify_adaptation_evidence(
+    bundle: VerifiedPBundle,
+    sidecar: Mapping[str, Any] | None,
+    *,
+    policy_revision: str,
+    policy_digest: str,
+) -> VerifiedAdaptationEvidence | None:
+    if sidecar is None:
+        return None
+    architecture = bundle.snapshot.get("architecture")
+    registry = bundle.snapshot.get("policy_registry")
+    if not isinstance(architecture, Mapping) or not isinstance(registry, Mapping):
+        raise ContractValidationError("P03_EVIDENCE_CONTEXT_SOURCE_INVALID")
+    test_registered = _TEST_ONLY_BUNDLE_DIGESTS.get(bundle) == _verified_bundle_content_sha256(
+        bundle
+    )
+    trust_scope: Literal["PRODUCTION", "TEST_ONLY"] = (
+        "TEST_ONLY" if bundle.bundle_provenance == "TEST_ONLY" else "PRODUCTION"
+    )
+    expected = {
+        "input_bundle_sha256": str(bundle.manifest.get("bundle_sha256", "")),
+        "architecture_before_sha": str(architecture.get("before_commit", "")),
+        "architecture_after_sha": str(architecture.get("after_commit", "")),
+        "policy_source_revision": policy_revision,
+        "policy_bundle_sha256": policy_digest,
+        "evaluation_as_of": str(architecture.get("evaluation_as_of", "")),
+        "scope": str(registry.get("scope", "")),
+    }
+    return verify_adaptation_evidence(
+        sidecar,
+        expected_bindings=expected,
+        expected_source_digests=bundle.source_digests,
+        verifier_registry=_BUNDLE_EVIDENCE_VERIFIER_REGISTRIES.get(bundle),
+        allow_test_only=test_registered,
+        expected_trust_scope=trust_scope,
+    )
+
+
+def _side_evidence_inputs(
+    payload: Mapping[str, Any],
+    bundle: VerifiedPBundle,
+    before_sha: str,
+    after_sha: str,
+    verified_evidence: VerifiedAdaptationEvidence | None,
+) -> dict[str, Any]:
+    if verified_evidence is None:
+        return _empty_side_evidence_inputs()
+    registry = bundle.snapshot.get("policy_registry")
+    scope = str(registry.get("scope", "")) if isinstance(registry, Mapping) else ""
+    bundle_digest = str(bundle.manifest.get("bundle_sha256", ""))
+    policy_revision = str(bundle.manifest.get("policy_source_revision", ""))
+    policy_digest = str(bundle.manifest.get("policy_bundle_sha256", ""))
+    outer_bindings = set(verified_evidence.source_bindings)
+    evaluator_evidence: dict[tuple[str, str], Mapping[str, Any]] = {}
+    for row in payload.get("evaluator_evidence", []):
+        pair_key = _pair_key(row)
+        evidence = row.get("evidence")
+        if pair_key in evaluator_evidence or not isinstance(evidence, Mapping):
+            raise ContractValidationError("P03_EVIDENCE_PAIR_RECORD_INVALID")
+        evaluator_evidence[pair_key] = dict(evidence)
+
+    pair_proofs: dict[tuple[str, str], EvidenceProof] = {}
+    for row in payload.get("pair_proofs", []):
+        pair_key = _pair_key(row)
+        if pair_key in pair_proofs:
+            raise ContractValidationError("P03_EVIDENCE_PAIR_PROOF_CONFLICT")
+        if row.get("verifier_id") != verified_evidence.verifier_id:
+            raise ContractValidationError("P03_EVIDENCE_PAIR_PROOF_VERIFIER_MISMATCH")
+        bindings = _proof_source_bindings(
+            row, bundle.source_digests, allowed_bindings=outer_bindings
+        )
+        pair_proofs[pair_key] = EvidenceProof(
+            ProofStatus(str(row["status"])),
+            str(row["subject_sha256"]),
+            bindings,
+            str(row["verifier_id"]),
+            tuple(sorted(set(_string_tuple(row.get("evidence_refs"))))),
+            tuple(sorted(set(_string_tuple(row.get("reason_codes"))))),
+        )
+
+    artifact_bytes: dict[str, bytes] = {}
+    for row in payload.get("artifact_bytes", []):
+        path, digest, encoded = row.get("path"), row.get("sha256"), row.get("content_base64")
+        if not isinstance(path, str) or not isinstance(encoded, str) or not isinstance(digest, str):
+            raise ContractValidationError("P03_EVIDENCE_ARTIFACT_INVALID")
+        try:
+            content = base64.b64decode(encoded, validate=True)
+        except ValueError as error:
+            raise ContractValidationError("P03_EVIDENCE_ARTIFACT_ENCODING_INVALID") from error
+        if sha256_bytes(content) != digest:
+            raise ContractValidationError("P03_EVIDENCE_ARTIFACT_DIGEST_MISMATCH")
+        if path in artifact_bytes:
+            raise ContractValidationError("P03_EVIDENCE_ARTIFACT_DUPLICATE_PATH")
+        artifact_bytes[path] = content
+
+    absence: dict[tuple[str, str, str], bool | None] = {}
+    expected_revision = {"before": before_sha, "after": after_sha}
+    for row in payload.get("fact_absence_proofs", []):
+        absence_key = (str(row["state"]), str(row["predicate"]), str(row["scope"]))
+        if absence_key in absence:
+            raise ContractValidationError("P03_EVIDENCE_ABSENCE_PROOF_CONFLICT")
+        if row.get("architecture_source_sha") != expected_revision[absence_key[0]]:
+            raise ContractValidationError("P03_EVIDENCE_ABSENCE_REVISION_MISMATCH")
+        proof = row["proof"]
+        proof_subject = {
+            "claim_type": "fact_absence",
+            "state": absence_key[0],
+            "predicate": absence_key[1],
+            "scope": absence_key[2],
+            "architecture_source_sha": expected_revision[absence_key[0]],
+            "input_bundle_sha256": bundle_digest,
+        }
+        _verify_scoped_proof(
+            proof,
+            expected_subject=proof_subject,
+            expected_scope=absence_key[2],
+            expected_architecture_shas=(expected_revision[absence_key[0]],),
+            verified_evidence=verified_evidence,
+            source_digests=bundle.source_digests,
+            allowed_bindings=outer_bindings,
+            allowed_source_ids=_fact_absence_source_ids(
+                bundle, absence_key[0], absence_key[1], absence_key[2]
+            ),
+            required_source_ids=_fact_absence_source_ids(
+                bundle, absence_key[0], absence_key[1], absence_key[2]
+            ),
+        )
+        refs = _string_tuple(proof.get("evidence_refs"))
+        absence[absence_key] = proof.get("status") == "VALID" and bool(refs)
+
+    inventory_rows: dict[str, Sequence[Mapping[str, Any]]] = {}
+    inventory_complete: dict[str, bool | None] = {}
+    for row in payload.get("policy_inventories", []):
+        state = str(row.get("state"))
+        if state in inventory_rows:
+            raise ContractValidationError("P03_EVIDENCE_POLICY_INVENTORY_CONFLICT")
+        if row.get("architecture_source_sha") != expected_revision.get(state):
+            raise ContractValidationError("P03_EVIDENCE_POLICY_REVISION_MISMATCH")
+        rows = row.get("rows")
+        if not isinstance(rows, list) or any(not isinstance(item, Mapping) for item in rows):
+            raise ContractValidationError("P03_EVIDENCE_POLICY_ROWS_INVALID")
+        if row.get("scope") != scope:
+            raise ContractValidationError("P03_EVIDENCE_POLICY_SCOPE_MISMATCH")
+        if any(item.get("scope") != scope for item in rows):
+            raise ContractValidationError("P03_EVIDENCE_POLICY_ROW_SCOPE_MISMATCH")
+        proof = row["proof"]
+        proof_subject = {
+            "claim_type": "policy_inventory",
+            "state": state,
+            "scope": scope,
+            "architecture_source_sha": expected_revision[state],
+            "policy_source_revision": policy_revision,
+            "policy_bundle_sha256": policy_digest,
+            "rows_sha256": sha256_bytes(canonical_json_bytes(rows)),
+        }
+        _verify_scoped_proof(
+            proof,
+            expected_subject=proof_subject,
+            expected_scope=scope,
+            expected_architecture_shas=(expected_revision[state],),
+            verified_evidence=verified_evidence,
+            source_digests=bundle.source_digests,
+            allowed_bindings=outer_bindings,
+            allowed_source_ids=_policy_source_ids(bundle, rows),
+            required_source_ids=_policy_source_ids(bundle, rows),
+        )
+        inventory_rows[state] = tuple(dict(item) for item in rows)
+        inventory_complete[state] = proof.get("status") == "VALID" and bool(
+            _string_tuple(proof.get("evidence_refs"))
+        )
+    both_inventories = set(inventory_rows) == {"before", "after"}
+
+    required_stages_value = payload.get("required_stages", {})
+    required_stages = (
+        {str(key): tuple(_string_tuple(value)) for key, value in required_stages_value.items()}
+        if isinstance(required_stages_value, Mapping)
+        else {}
+    )
+    stage_proof = payload.get("stage_contract_proof", {})
+    capability_digest = bundle.source_digests.get("P_CAPABILITIES")
+    stage_subject = {
+        "claim_type": "required_stages",
+        "required_stages_sha256": sha256_bytes(canonical_json_bytes(required_stages)),
+        "input_bundle_sha256": bundle_digest,
+    }
+    _verify_scoped_proof(
+        stage_proof,
+        expected_subject=stage_subject,
+        expected_scope=scope,
+        expected_architecture_shas=(after_sha,),
+        verified_evidence=verified_evidence,
+        source_digests=bundle.source_digests,
+        allowed_bindings=outer_bindings,
+        allowed_source_ids={"P_CAPABILITIES"},
+        required_source_ids={"P_CAPABILITIES"},
+    )
+    stage_contract_verified = isinstance(stage_proof, Mapping) and (
+        stage_proof.get("status") == "VALID"
+    )
+
+    authorized_digests = frozenset(
+        _string_tuple(payload.get("authorized_template_artifact_sha256"))
+    )
+    materialized_template_digests = {
+        str(artifact.get("sha256"))
+        for template in bundle.templates
+        if isinstance(template, Mapping)
+        and isinstance(template.get("representation"), Mapping)
+        and isinstance((artifact := template["representation"].get("evaluator_artifact")), Mapping)
+        and isinstance(artifact.get("sha256"), str)
+    }
+    if not authorized_digests.issubset(materialized_template_digests):
+        raise ContractValidationError("P03_TEMPLATE_AUTHORITY_NOT_IN_VERIFIED_CAPABILITIES")
+    if authorized_digests and (
+        "P_CAPABILITIES" not in {source_id for source_id, _ in outer_bindings}
+    ):
+        raise ContractValidationError("P03_TEMPLATE_AUTHORITY_SOURCE_NOT_BOUND")
+    trace_proof = payload.get("trace_inventory_proof", {})
+    trace_subject = {
+        "claim_type": "trace_inventory",
+        "trace_graph_sha256": bundle.trace_graph.graph_sha256,
+        "input_bundle_sha256": bundle_digest,
+    }
+    trace_bindings = _verify_scoped_proof(
+        trace_proof,
+        expected_subject=trace_subject,
+        expected_scope=scope,
+        expected_architecture_shas=(before_sha, after_sha),
+        verified_evidence=verified_evidence,
+        source_digests=bundle.source_digests,
+        allowed_bindings=outer_bindings,
+        allowed_source_ids={"P_TRACEABILITY"},
+        required_source_ids={"P_TRACEABILITY"},
+    )
+    change_proof = payload.get("change_inventory_proof", {})
+    change_subject = {
+        "claim_type": "change_inventory",
+        "snapshot_sha256": bundle.snapshot_validation.snapshot_digest,
+        "input_bundle_sha256": bundle_digest,
+        "policy_source_revision": policy_revision,
+        "policy_bundle_sha256": policy_digest,
+    }
+    change_source_ids = _change_inventory_source_ids(bundle)
+    change_bindings = _verify_scoped_proof(
+        change_proof,
+        expected_subject=change_subject,
+        expected_scope=scope,
+        expected_architecture_shas=(before_sha, after_sha),
+        verified_evidence=verified_evidence,
+        source_digests=bundle.source_digests,
+        allowed_bindings=outer_bindings,
+        allowed_source_ids=change_source_ids,
+        required_source_ids=change_source_ids,
+    )
+    cost_model_proof = payload.get("cost_model_proof", {})
+    cost_subject = {
+        "claim_type": "cost_model_authority",
+        "cost_model_sha256": sha256_bytes(canonical_json_bytes(bundle.cost_model)),
+        "capabilities_sha256": capability_digest,
+        "input_bundle_sha256": bundle_digest,
+    }
+    cost_bindings = _verify_scoped_proof(
+        cost_model_proof,
+        expected_subject=cost_subject,
+        expected_scope=scope,
+        expected_architecture_shas=(after_sha,),
+        verified_evidence=verified_evidence,
+        source_digests=bundle.source_digests,
+        allowed_bindings=outer_bindings,
+        allowed_source_ids={"P_CAPABILITIES"},
+        required_source_ids={"P_CAPABILITIES"},
+    )
+    cost_model_authorized = (
+        bundle.cost_model is not None
+        and isinstance(cost_model_proof, Mapping)
+        and cost_model_proof.get("status") == "VALID"
+        and capability_digest is not None
+        and ("P_CAPABILITIES", capability_digest) in cost_bindings
+    )
+    return {
+        "evaluator_evidence": evaluator_evidence,
+        "pair_proofs": pair_proofs,
+        "artifact_bytes": artifact_bytes,
+        "fact_absence_proofs": absence,
+        "policy_inventory_complete": inventory_complete,
+        "policy_before_rows": inventory_rows.get("before") if both_inventories else None,
+        "policy_after_rows": inventory_rows.get("after") if both_inventories else None,
+        "required_stages": required_stages,
+        "stage_contract_verified": stage_contract_verified,
+        "trace_inventory_verified": isinstance(trace_proof, Mapping)
+        and trace_proof.get("status") == "VALID"
+        and ("P_TRACEABILITY", bundle.source_digests.get("P_TRACEABILITY")) in trace_bindings,
+        "change_inventory_verified": isinstance(change_proof, Mapping)
+        and change_proof.get("status") == "VALID"
+        and bool(change_bindings),
+        "adjustment_rules": tuple(payload.get("adjustment_rules", [])),
+        "authorized_template_artifact_sha256": authorized_digests,
+        "cost_model_authorized": cost_model_authorized,
+    }
+
+
+def _pair_key(row: Mapping[str, Any]) -> tuple[str, str]:
+    representation_id, obligation_id = row.get("representation_id"), row.get("obligation_id")
+    if not isinstance(representation_id, str) or not isinstance(obligation_id, str):
+        raise ContractValidationError("P03_EVIDENCE_PAIR_KEY_INVALID")
+    return representation_id, obligation_id
+
+
+def _proof_source_bindings(
+    proof: Mapping[str, Any],
+    source_digests: Mapping[str, str],
+    *,
+    allowed_bindings: set[tuple[str, str]] | None = None,
+    allowed_source_ids: set[str] | None = None,
+    require_sources: bool = True,
+) -> tuple[tuple[str, str], ...]:
+    rows = proof.get("source_bindings")
+    if not isinstance(rows, list) or (require_sources and not rows):
+        raise ContractValidationError("P03_EVIDENCE_PROOF_SOURCE_MISSING")
+    bindings: list[tuple[str, str]] = []
+    for row in rows:
+        if not isinstance(row, Mapping):
+            raise ContractValidationError("P03_EVIDENCE_PROOF_SOURCE_INVALID")
+        source_id, digest = row.get("source_id"), row.get("sha256")
+        if not isinstance(source_id, str) or source_digests.get(source_id) != digest:
+            raise ContractValidationError("P03_EVIDENCE_PROOF_SOURCE_MISMATCH")
+        if allowed_source_ids is not None and source_id not in allowed_source_ids:
+            raise ContractValidationError("P03_EVIDENCE_PROOF_SOURCE_UNRELATED")
+        if allowed_bindings is not None and (source_id, str(digest)) not in allowed_bindings:
+            raise ContractValidationError("P03_EVIDENCE_PROOF_SOURCE_NOT_BOUND_BY_SIDECAR")
+        bindings.append((source_id, str(digest)))
+    if tuple(sorted(set(bindings))) != tuple(bindings):
+        raise ContractValidationError("P03_EVIDENCE_PROOF_SOURCE_INVALID")
+    if require_sources and not _string_tuple(proof.get("evidence_refs")):
+        raise ContractValidationError("P03_EVIDENCE_PROOF_REFERENCE_MISSING")
+    return tuple(bindings)
+
+
+def _verify_scoped_proof(
+    proof: Any,
+    *,
+    expected_subject: Mapping[str, Any],
+    expected_scope: str,
+    expected_architecture_shas: tuple[str, ...],
+    verified_evidence: VerifiedAdaptationEvidence,
+    source_digests: Mapping[str, str],
+    allowed_bindings: set[tuple[str, str]],
+    allowed_source_ids: set[str] | None = None,
+    required_source_ids: set[str] | None = None,
+) -> tuple[tuple[str, str], ...]:
+    if not isinstance(proof, Mapping):
+        raise ContractValidationError("P03_EVIDENCE_PROOF_INVALID")
+    if (
+        proof.get("subject_sha256") != sha256_bytes(canonical_json_bytes(dict(expected_subject)))
+        or proof.get("scope") != expected_scope
+        or tuple(proof.get("architecture_source_shas", ())) != expected_architecture_shas
+        or proof.get("verifier_id") != verified_evidence.verifier_id
+    ):
+        raise ContractValidationError("P03_EVIDENCE_PROOF_CONTEXT_MISMATCH")
+    is_valid = proof.get("status") == "VALID"
+    bindings = _proof_source_bindings(
+        proof,
+        source_digests,
+        allowed_bindings=allowed_bindings,
+        allowed_source_ids=allowed_source_ids,
+        require_sources=is_valid,
+    )
+    if is_valid and required_source_ids is not None:
+        if not required_source_ids.issubset({source_id for source_id, _ in bindings}):
+            raise ContractValidationError("P03_EVIDENCE_PROOF_REQUIRED_SOURCE_MISSING")
+    return bindings if is_valid else ()
+
+
+def _empty_side_evidence_inputs() -> dict[str, Any]:
+    return {
+        "evaluator_evidence": {},
+        "pair_proofs": {},
+        "artifact_bytes": {},
+        "fact_absence_proofs": {},
+        "policy_inventory_complete": {},
+        "policy_before_rows": None,
+        "policy_after_rows": None,
+        "required_stages": {},
+        "stage_contract_verified": False,
+        "trace_inventory_verified": False,
+        "change_inventory_verified": False,
+        "adjustment_rules": (),
+        "authorized_template_artifact_sha256": frozenset(),
+        "cost_model_authorized": False,
+    }
+
+
+def _policy_source_ids(bundle: VerifiedPBundle, rows: Sequence[Mapping[str, Any]]) -> set[str]:
+    registry = bundle.snapshot.get("policy_registry")
+    result: set[str] = set()
+    if isinstance(registry, Mapping):
+        result.update(
+            str(registry[key])
+            for key in ("source_id", "authority_charter_source_id")
+            if isinstance(registry.get(key), str)
+        )
+    for row in [*bundle.snapshot.get("policies", []), *rows]:
+        if isinstance(row, Mapping):
+            result.update(
+                str(row[key])
+                for key in ("source_id", "approval_source_id")
+                if isinstance(row.get(key), str)
+            )
+    return result
+
+
+def _fact_absence_source_ids(
+    bundle: VerifiedPBundle, state: str, predicate: str, scope: str
+) -> set[str]:
+    claims = bundle.snapshot.get("completeness_claims", [])
+    if not isinstance(claims, list):
+        return set()
+    return {
+        str(source_id)
+        for claim in claims
+        if isinstance(claim, Mapping)
+        and claim.get("state") == state
+        and claim.get("fact_type") == predicate
+        and claim.get("scope") == scope
+        for source_id in _string_tuple(claim.get("evidence_source_ids"))
+    }
+
+
+def _change_inventory_source_ids(bundle: VerifiedPBundle) -> set[str]:
+    result: set[str] = set()
+    snapshot = bundle.snapshot
+    for row in snapshot.get("facts", []):
+        if isinstance(row, Mapping):
+            result.update(_string_tuple(row.get("source_ids")))
+    result.update(_policy_source_ids(bundle, ()))
+    for claim in snapshot.get("completeness_claims", []):
+        if isinstance(claim, Mapping):
+            result.update(_string_tuple(claim.get("evidence_source_ids")))
+    return result
+
+
+def _string_tuple(value: Any) -> tuple[str, ...]:
+    if not isinstance(value, list) or any(not isinstance(item, str) for item in value):
+        return ()
+    return tuple(value)
+
+
+def _merge_artifacts(
+    pinned: Mapping[str, bytes], sidecar_artifacts: Mapping[str, bytes]
+) -> dict[str, bytes]:
+    result = dict(pinned)
+    for path, content in sidecar_artifacts.items():
+        existing = result.get(path)
+        if existing is not None and existing != content:
+            raise ContractValidationError("P03_EVIDENCE_ARTIFACT_PATH_COLLISION")
+        result[path] = content
+    return result
 
 
 def _diff_applicability(
@@ -529,94 +1045,371 @@ def _invariant_verdicts(
     coverage: CoverageAssessment,
     plan: OperationPlan,
     candidate: Mapping[str, Any] | None,
+    candidate_digest: str | None,
     representations: Sequence[Mapping[str, Any]],
     obligations: Sequence[Mapping[str, Any]],
-    applicability: Mapping[str, str],
+    before_applicability: ApplicabilityAssessment,
+    after_applicability: ApplicabilityAssessment,
     pairs: Sequence[PairAssessment],
-    bundle_provenance: str,
+    bundle: VerifiedPBundle,
+    impact: ImpactAssessment,
+    evidence_context_verified: bool,
+    authorized_template_digests: frozenset[str],
+    artifact_bytes: Mapping[str, bytes],
 ) -> dict[str, str]:
-    pair_index = {(pair.representation_id, pair.obligation_id): pair.status.value for pair in pairs}
-    unknown_ids = {
-        obligation_id for obligation_id, status in applicability.items() if status == "UNKNOWN"
-    }
-    deactivations = [op.target_id for op in plan.operations if op.operation.value == "deactivate"]
-    active_mandatory = {
-        str(row["id"])
-        for row in obligations
-        if row.get("mandatory") is True and applicability.get(str(row["id"])) == "ACTIVE"
-    }
-    deactivation_safe = all(
-        not (
-            (unknown_ids | active_mandatory)
-            & _string_set(
-                next(
-                    (
-                        row.get("covers", [])
-                        for row in representations
-                        if row.get("id") == representation_id
-                    ),
-                    [],
-                )
-            )
-        )
-        for representation_id in deactivations
+    candidate_rows = candidate.get("representations") if candidate is not None else None
+    candidate_status = (
+        candidate.get("candidate_validation", {}).get("status")
+        if isinstance(candidate, Mapping)
+        and isinstance(candidate.get("candidate_validation"), Mapping)
+        else None
     )
-    candidate_rows = (candidate or {}).get("representations", [])
-    unique_ids = len({str(row.get("id")) for row in candidate_rows}) == len(candidate_rows)
-    positive_retain = all(
-        pair_index.get((op.target_id, obligation_id)) == "VALID"
-        for op in plan.operations
-        if op.operation.value == "retain"
-        for representation in representations
-        if representation.get("id") == op.target_id
-        for obligation_id in _string_set(representation.get("covers"))
-        if applicability.get(obligation_id) == "ACTIVE" and obligation_id in active_mandatory
+    after_status = {row.obligation_id: row.status.value for row in after_applicability.results}
+    before_status = {row.obligation_id: row.status.value for row in before_applicability.results}
+    pair_index: dict[tuple[str, str], list[PairAssessment]] = {}
+    for pair in pairs:
+        pair_index.setdefault((pair.representation_id, pair.obligation_id), []).append(pair)
+
+    plan_body = {
+        "operations": [operation.to_dict() for operation in plan.operations],
+        "hold_reasons": list(plan.hold_reasons),
+        "reject_reasons": list(plan.reject_reasons),
+    }
+    plan_digest_valid = sha256_bytes(canonical_json_bytes(plan_body)) == plan.plan_sha256 and len(
+        {(op.target_type, op.target_id) for op in plan.operations}
+    ) == len(plan.operations)
+    impact_digest_valid = _semantic_digest_valid(impact.to_dict(), "assessment_sha256")
+    coverage_digest_valid = _semantic_digest_valid(coverage.to_dict(), "assessment_sha256")
+    candidate_digest_valid = False
+    if candidate is not None and candidate_digest is not None:
+        try:
+            candidate_digest_valid = candidate_sha256(candidate) == candidate_digest
+        except ContractValidationError:
+            candidate_digest_valid = False
+
+    input_positive = (
+        input_status == "VALID"
+        and evidence_context_verified
+        and _bundle_registration_is_valid(bundle)
+    )
+    input_verdict = "PASS" if input_positive else "FAIL" if input_status == "INVALID" else "UNKNOWN"
+
+    obligation_ids = [str(row.get("id")) for row in obligations]
+    coverage_rows = {row.obligation_id: row for row in coverage.obligations}
+    coverage_accounted = (
+        len(coverage_rows) == len(coverage.obligations)
+        and set(coverage_rows) == set(obligation_ids)
+        and coverage.mandatory_total
+        == sum(
+            1
+            for row in obligations
+            if row.get("mandatory") is True and after_status.get(str(row.get("id"))) == "ACTIVE"
+        )
+        and coverage.mandatory_covered
+        == sum(row.status == "COVERED" for row in coverage.obligations)
     )
     coverage_verdict = (
         "PASS"
-        if coverage.status.value == "COMPLETE"
-        else "UNKNOWN"
-        if coverage.status.value == "UNKNOWN"
+        if coverage.status.value == "COMPLETE" and coverage_accounted and coverage_digest_valid
         else "FAIL"
+        if coverage.status.value == "INCOMPLETE" or not coverage_accounted
+        else "UNKNOWN"
     )
-    candidate_status = str(candidate["candidate_validation"]["status"]) if candidate else None
-    input_verdict = (
-        "PASS" if input_status == "VALID" else "FAIL" if input_status == "INVALID" else "UNKNOWN"
+
+    representation_by_id = {
+        str(row.get("id")): row for row in representations if isinstance(row.get("id"), str)
+    }
+    deactivation_ops = [op for op in plan.operations if op.operation.value == "deactivate"]
+    deactivation_safe = True
+    for operation in deactivation_ops:
+        representation = representation_by_id.get(operation.target_id)
+        covered_ids = _string_set(representation.get("covers")) if representation else set()
+        if not representation or not covered_ids:
+            deactivation_safe = False
+            break
+        for obligation_id in covered_ids:
+            result = next(
+                (
+                    item
+                    for item in after_applicability.results
+                    if item.obligation_id == obligation_id
+                ),
+                None,
+            )
+            obligation = next(
+                (item for item in obligations if item.get("id") == obligation_id), None
+            )
+            if (
+                result is None
+                or result.status.value != "INACTIVE"
+                or not result.evidence_refs
+                or obligation is None
+            ):
+                deactivation_safe = False
+                break
+        if not deactivation_safe:
+            break
+    has_applicability_evidence = bool(after_applicability.results) and set(after_status) == set(
+        obligation_ids
+    )
+    inactive_verdict = (
+        "PASS"
+        if deactivation_safe and has_applicability_evidence
+        else "FAIL"
+        if not deactivation_safe
+        else "UNKNOWN"
+    )
+    active_or_unknown_mandatory = {
+        str(row.get("id"))
+        for row in obligations
+        if row.get("mandatory") is True
+        and after_status.get(str(row.get("id"))) in {"ACTIVE", "UNKNOWN"}
+    }
+    no_required_deactivation = all(
+        not (
+            _string_set(representation_by_id[operation.target_id].get("covers"))
+            & active_or_unknown_mandatory
+        )
+        for operation in deactivation_ops
+        if operation.target_id in representation_by_id
+    ) and all(operation.target_id in representation_by_id for operation in deactivation_ops)
+    no_active_deactivation = (
+        "PASS" if no_required_deactivation and has_applicability_evidence else "FAIL"
+    )
+
+    template_ops = [op for op in plan.operations if op.operation.value in {"add", "replace"}]
+    template_authority_ok = all(
+        operation.artifact_sha256 in authorized_template_digests
+        and isinstance(operation.payload, Mapping)
+        and isinstance(operation.payload.get("evaluator_artifact"), Mapping)
+        and operation.payload["evaluator_artifact"].get("sha256") == operation.artifact_sha256
+        and isinstance(operation.payload["evaluator_artifact"].get("path"), str)
+        and sha256_bytes(
+            artifact_bytes.get(str(operation.payload["evaluator_artifact"]["path"]), b"")
+        )
+        == operation.artifact_sha256
+        for operation in template_ops
     )
     artifact_verdict = (
         "PASS"
-        if candidate_status == "valid"
+        if candidate_status == "valid" and candidate is not None and template_authority_ok
         else "FAIL"
-        if candidate_status == "invalid"
+        if candidate_status == "invalid" or not template_authority_ok
         else "UNKNOWN"
     )
-    pair_verdict = (
+
+    pair_verdict = "PASS"
+    impact_by_id = {record.representation_id: record for record in impact.representations}
+    if pair_verdict != "FAIL" and (
+        not impact_digest_valid or set(impact_by_id) != set(representation_by_id)
+    ):
+        pair_verdict = "UNKNOWN"
+    active_mandatory = {
+        str(row.get("id"))
+        for row in obligations
+        if row.get("mandatory") is True and after_status.get(str(row.get("id"))) == "ACTIVE"
+    }
+    active_candidate_rows = [
+        row
+        for row in candidate_rows or []
+        if isinstance(row, Mapping) and row.get("active") is not False
+    ]
+    valid_pairs_by_obligation: dict[str, set[str]] = {
+        obligation_id: set() for obligation_id in active_mandatory
+    }
+    for representation in active_candidate_rows:
+        representation_id = str(representation.get("id", ""))
+        for obligation_id in _string_set(representation.get("covers")) & active_mandatory:
+            assessments = pair_index.get((representation_id, obligation_id), [])
+            statuses = {pair.status.value for pair in assessments}
+            assessment_digests = {pair.assessment_sha256 for pair in assessments}
+            if len(statuses) > 1 or len(assessment_digests) > 1 or "INVALID" in statuses:
+                pair_verdict = "FAIL"
+                continue
+            if not assessments or any(
+                pair.status.value != "VALID"
+                or pair.architecture_source_sha != after_applicability.architecture_source_sha
+                or not pair.evidence_refs
+                or not _semantic_digest_valid(pair.to_dict(), "assessment_sha256")
+                for pair in assessments
+            ):
+                if pair_verdict != "FAIL":
+                    pair_verdict = "UNKNOWN"
+                continue
+            valid_pairs_by_obligation[obligation_id].add(representation_id)
+    if any(not representation_ids for representation_ids in valid_pairs_by_obligation.values()):
+        if pair_verdict != "FAIL":
+            pair_verdict = "UNKNOWN"
+
+    candidate_ids = (
+        [str(row.get("id")) for row in candidate_rows if isinstance(row, Mapping)]
+        if isinstance(candidate_rows, list)
+        else []
+    )
+    parent_bound = (
+        candidate is not None
+        and candidate.get("parent_configuration", {}).get("sha256")
+        == bundle.parent_configuration_sha256
+        and sha256_bytes(bundle.parent_configuration_bytes) == bundle.parent_configuration_sha256
+    )
+    version_bound = candidate is not None and candidate.get("configuration_version") == (
+        derive_configuration_version(
+            parent_configuration_sha256=bundle.parent_configuration_sha256,
+            operation_plan_sha256=plan.plan_sha256,
+            architecture_source_sha=after_applicability.architecture_source_sha,
+            policy_source_revision=str(bundle.manifest.get("policy_source_revision", "")),
+            policy_bundle_sha256=str(bundle.manifest.get("policy_bundle_sha256", "")),
+        )
+    )
+    stable_identity = (
+        candidate is not None
+        and candidate_digest_valid
+        and parent_bound
+        and version_bound
+        and len(candidate_ids) == len(set(candidate_ids))
+        and candidate_ids == sorted(candidate_ids)
+        and plan_digest_valid
+    )
+    identity_violation = candidate is not None and (
+        not candidate_digest_valid
+        or not parent_bound
+        or not version_bound
+        or len(candidate_ids) != len(set(candidate_ids))
+        or candidate_ids != sorted(candidate_ids)
+        or not plan_digest_valid
+    )
+    identity_verdict = "PASS" if stable_identity else "FAIL" if identity_violation else "UNKNOWN"
+
+    planned_changes = [operation.to_dict() for operation in plan.operations]
+    candidate_changes = candidate.get("changes") if candidate is not None else None
+    operations_match = isinstance(candidate_changes, list) and canonical_json_bytes(
+        candidate_changes
+    ) == canonical_json_bytes(planned_changes)
+    criterion_preserved = candidate is not None and all(
+        isinstance(row, Mapping)
+        and isinstance(row.get("covers"), list)
+        and all(
+            next((str(item.get("criterion")) for item in obligations if item.get("id") == q), None)
+            == row.get("criterion")
+            for q in row["covers"]
+        )
+        for row in candidate_rows or []
+    )
+    no_weakening = (
+        candidate_status == "valid"
+        and criterion_preserved
+        and operations_match
+        and not plan.reject_reasons
+    )
+    invariant1 = (
         "PASS"
-        if positive_retain
+        if no_weakening
+        else "FAIL"
+        if not criterion_preserved or not operations_match or plan.reject_reasons
         else "UNKNOWN"
-        if any(pair.status.value == "UNKNOWN" for pair in pairs)
-        else "PASS"
     )
+    invariant9 = (
+        "UNKNOWN"
+        if candidate is None
+        else "PASS"
+        if operations_match and plan_digest_valid
+        else "FAIL"
+    )
+
+    before_unknown_mandatory = any(
+        row.get("mandatory") is True and before_status.get(str(row.get("id"))) == "UNKNOWN"
+        for row in obligations
+    )
+    governance_ready = (
+        coverage.status.value == "COMPLETE"
+        and coverage_verdict == "PASS"
+        and candidate_status == "valid"
+        and not before_unknown_mandatory
+        and input_positive
+        and not plan.hold_reasons
+        and not plan.reject_reasons
+    )
+    invariant10 = "PASS" if governance_ready else "UNKNOWN"
+
+    deterministic = (
+        plan_digest_valid
+        and impact_digest_valid
+        and coverage_digest_valid
+        and candidate_digest_valid
+        and candidate_ids == sorted(candidate_ids)
+        and [op.target_id for op in plan.operations]
+        == [
+            op.target_id
+            for op in sorted(
+                plan.operations,
+                key=lambda item: (
+                    item.target_type,
+                    item.target_id,
+                    item.operation.value,
+                    str(item.artifact_sha256 or ""),
+                ),
+            )
+        ]
+    )
+    invariant11 = "PASS" if deterministic else "FAIL"
+    isolation = "PASS" if _bundle_isolation_proven(bundle) else "UNKNOWN"
     return {
-        "INV-01": "PASS" if not plan.reject_reasons else "FAIL",
-        "INV-02": "PASS" if deactivation_safe else "FAIL",
-        "INV-03": "PASS" if deactivation_safe else "FAIL",
+        "INV-01": invariant1,
+        "INV-02": inactive_verdict,
+        "INV-03": no_active_deactivation,
         "INV-04": coverage_verdict,
         "INV-05": input_verdict,
         "INV-06": artifact_verdict,
         "INV-07": pair_verdict,
-        "INV-08": "PASS" if unique_ids and candidate is not None else "UNKNOWN",
-        "INV-09": "FAIL" if plan.reject_reasons else "PASS",
-        "INV-10": "PASS"
-        if coverage.status.value == "COMPLETE" and candidate_status == "valid"
-        else "UNKNOWN",
-        "INV-11": "PASS",
-        "INV-12": "PASS" if bundle_provenance == "VERIFIED_V3" else "UNKNOWN",
+        "INV-08": identity_verdict,
+        "INV-09": invariant9,
+        "INV-10": invariant10,
+        "INV-11": invariant11,
+        "INV-12": isolation,
     }
 
 
-def _cost_verdict(plan: OperationPlan, model: Mapping[str, Any] | None) -> str:
-    if model is None or model.get("authority_status") not in {"VERIFIED", "TEST_ONLY"}:
+def _all_unknown_invariants() -> dict[str, str]:
+    return {f"INV-{index:02d}": "UNKNOWN" for index in range(1, 13)}
+
+
+def _semantic_digest_valid(payload: Mapping[str, Any], field_name: str) -> bool:
+    body = dict(payload)
+    claimed = body.pop(field_name, None)
+    return isinstance(claimed, str) and claimed == sha256_bytes(canonical_json_bytes(body))
+
+
+def _bundle_registration_is_valid(bundle: VerifiedPBundle) -> bool:
+    if bundle.bundle_provenance == "VERIFIED_V3":
+        return _VERIFIED_V3_BUNDLE_DIGESTS.get(bundle) == _verified_bundle_content_sha256(bundle)
+    if bundle.bundle_provenance == "TEST_ONLY":
+        return _TEST_ONLY_BUNDLE_DIGESTS.get(bundle) == _verified_bundle_content_sha256(bundle)
+    return False
+
+
+def _bundle_isolation_proven(bundle: VerifiedPBundle) -> bool:
+    if not _bundle_registration_is_valid(bundle):
+        return False
+    files = bundle.manifest.get("files")
+    if not isinstance(files, list):
+        return False
+    forbidden = ("da01", "ground_truth", "groundtruth", "oracle", "scorer", "expected_operations")
+    for row in files:
+        if not isinstance(row, Mapping):
+            return False
+        path = str(row.get("path", "")).lower()
+        role = str(row.get("role", "")).lower()
+        if any(marker in path or marker in role for marker in forbidden):
+            return False
+    if bundle.bundle_provenance == "TEST_ONLY":
+        return _TEST_ONLY_BUNDLE_DIGESTS.get(bundle) == _verified_bundle_content_sha256(bundle)
+    return True
+
+
+def _cost_verdict(
+    plan: OperationPlan, model: Mapping[str, Any] | None, authority_verified: bool
+) -> str:
+    if model is None or not authority_verified:
         return "UNKNOWN"
     maximum, node_limit, costs = (
         model.get("max_incremental_cost"),
@@ -718,7 +1511,11 @@ def _decode_yaml_object(content: bytes, label: str) -> Mapping[str, Any]:
     return value
 
 
-def _input_status(validation: SnapshotValidationResult, provenance: str) -> str:
+def _input_status(
+    validation: SnapshotValidationResult,
+    provenance: str,
+    evidence: VerifiedAdaptationEvidence | None,
+) -> str:
     statuses = (
         validation.schema_status,
         validation.integrity_status,
@@ -728,9 +1525,24 @@ def _input_status(validation: SnapshotValidationResult, provenance: str) -> str:
     )
     if ValidationStatus.INVALID in statuses or provenance not in {"VERIFIED_V3", "TEST_ONLY"}:
         return "INVALID"
-    if provenance == "TEST_ONLY" or ValidationStatus.UNDETERMINED in statuses:
+    if ValidationStatus.UNDETERMINED in statuses:
+        return "UNDETERMINED"
+    if provenance == "TEST_ONLY" and (evidence is None or evidence.trust_scope != "TEST_ONLY"):
         return "UNDETERMINED"
     return "VALID"
+
+
+def _register_test_only_bundle(
+    bundle: VerifiedPBundle,
+    verifier_registry: AdaptationEvidenceVerifierRegistry | None = None,
+) -> VerifiedPBundle:
+    """Register an isolated synthetic bundle for tests; never grants real trust."""
+    if bundle.bundle_provenance != "TEST_ONLY":
+        raise ContractValidationError("P03_TEST_BUNDLE_PROVENANCE_INVALID")
+    _TEST_ONLY_BUNDLE_DIGESTS[bundle] = _verified_bundle_content_sha256(bundle)
+    if verifier_registry is not None:
+        _BUNDLE_EVIDENCE_VERIFIER_REGISTRIES[bundle] = verifier_registry
+    return bundle
 
 
 def _validate_verified_bundle_bindings(bundle: VerifiedPBundle) -> None:
@@ -740,12 +1552,21 @@ def _validate_verified_bundle_bindings(bundle: VerifiedPBundle) -> None:
             raise ContractValidationError("P03_VERIFIED_BUNDLE_NOT_VERIFIED")
         if verified_digest != _verified_bundle_content_sha256(bundle):
             raise ContractValidationError("P03_VERIFIED_BUNDLE_CONTENT_CHANGED")
-    elif bundle.bundle_provenance != "TEST_ONLY":
+    elif bundle.bundle_provenance == "TEST_ONLY":
+        registered_digest = _TEST_ONLY_BUNDLE_DIGESTS.get(bundle)
+        if registered_digest is None:
+            raise ContractValidationError("P03_TEST_BUNDLE_NOT_REGISTERED")
+        if registered_digest != _verified_bundle_content_sha256(bundle):
+            raise ContractValidationError("P03_TEST_BUNDLE_CONTENT_CHANGED")
+    else:
         raise ContractValidationError("P03_BUNDLE_PROVENANCE_INVALID")
     manifest = bundle.manifest
-    files = manifest.get("files")
-    if manifest.get("method_id") != "P" or not isinstance(files, list):
+    files_value = manifest.get("files")
+    if manifest.get("method_id") != "P" or not isinstance(files_value, list):
         raise ContractValidationError("P03_INPUT_MANIFEST_INVALID")
+    if any(not isinstance(row, Mapping) for row in files_value):
+        raise ContractValidationError("P03_INPUT_MANIFEST_FILES_INVALID")
+    files = [dict(row) for row in files_value]
     if bundle_sha256(files) != manifest.get("bundle_sha256"):
         raise ContractValidationError("P03_INPUT_BUNDLE_DIGEST_MISMATCH")
     policy_roles = {
@@ -756,9 +1577,7 @@ def _validate_verified_bundle_bindings(bundle: VerifiedPBundle) -> None:
         "applicability_ruleset",
         "policy_completeness_claims",
     }
-    policy_files = [
-        row for row in files if isinstance(row, Mapping) and row.get("role") in policy_roles
-    ]
+    policy_files = [row for row in files if row.get("role") in policy_roles]
     if bundle_sha256(policy_files) != manifest.get("policy_bundle_sha256"):
         raise ContractValidationError("P03_POLICY_BUNDLE_DIGEST_MISMATCH")
     if manifest.get("common_snapshot_sha256") != bundle.snapshot_validation.snapshot_digest:

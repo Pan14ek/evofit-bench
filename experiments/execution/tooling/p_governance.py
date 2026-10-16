@@ -6,7 +6,7 @@ import json
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any
+from typing import Any, cast
 
 from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError
@@ -25,6 +25,8 @@ class GovernanceResult(StrEnum):
 
 
 _DECISION_SEAL = object()
+_PIPELINE_AUTHORITY = object()
+PUBLISHING_ENABLED = False
 
 
 @dataclass(frozen=True)
@@ -33,6 +35,14 @@ class _DecisionSeal:
 
     authority: object = field(repr=False, compare=False)
     payload_sha256: str
+
+
+@dataclass(frozen=True)
+class _GovernancePipelineAuthorization:
+    """Private capability proving the decision came from the verified P flow."""
+
+    authority: object = field(repr=False, compare=False)
+    request_sha256: str
 
 
 @dataclass(frozen=True)
@@ -45,7 +55,7 @@ class GovernanceDecision:
     @property
     def payload(self) -> dict[str, Any]:
         """Return an isolated copy so callers cannot mutate the signed decision."""
-        return json.loads(self._payload_bytes)
+        return cast(dict[str, Any], json.loads(self._payload_bytes))
 
     @property
     def result(self) -> GovernanceResult:
@@ -76,6 +86,64 @@ def decide_governance(
     evidence_refs: Sequence[str] = (),
     additional_reasons: Sequence[str] = (),
 ) -> GovernanceDecision:
+    """Create a fail-closed decision without granting pipeline authorization."""
+    return _decide_governance(
+        method_version=method_version,
+        architecture_before_sha=architecture_before_sha,
+        architecture_after_sha=architecture_after_sha,
+        policy_source_revision=policy_source_revision,
+        policy_ruleset_sha256=policy_ruleset_sha256,
+        input_bundle_sha256=input_bundle_sha256,
+        parent_configuration_sha256=parent_configuration_sha256,
+        candidate_configuration_sha256=candidate_configuration_sha256,
+        impact_assessment_sha256=impact_assessment_sha256,
+        coverage=coverage,
+        operation_plan=operation_plan,
+        invariant_verdicts=invariant_verdicts,
+        cost_verdict=cost_verdict,
+        input_status=input_status,
+        candidate_validation_status=candidate_validation_status,
+        pairs=pairs,
+        evidence_refs=evidence_refs,
+        additional_reasons=additional_reasons,
+        _pipeline_authorization=None,
+    )
+
+
+def _decide_governance_authorized(
+    *,
+    pipeline_authorization: _GovernancePipelineAuthorization | None,
+    **arguments: Any,
+) -> GovernanceDecision:
+    """Internal pipeline entry point; public decisions cannot supply capabilities."""
+    return _decide_governance(
+        **arguments,
+        _pipeline_authorization=pipeline_authorization,
+    )
+
+
+def _decide_governance(
+    *,
+    method_version: str,
+    architecture_before_sha: str,
+    architecture_after_sha: str,
+    policy_source_revision: str,
+    policy_ruleset_sha256: str,
+    input_bundle_sha256: str,
+    parent_configuration_sha256: str,
+    candidate_configuration_sha256: str | None,
+    impact_assessment_sha256: str,
+    coverage: CoverageAssessment,
+    operation_plan: OperationPlan,
+    invariant_verdicts: Mapping[str, str],
+    cost_verdict: str,
+    input_status: str,
+    candidate_validation_status: str | None,
+    pairs: Sequence[Mapping[str, Any]] = (),
+    evidence_refs: Sequence[str] = (),
+    additional_reasons: Sequence[str] = (),
+    _pipeline_authorization: _GovernancePipelineAuthorization | None = None,
+) -> GovernanceDecision:
     """Apply SPEC03 result precedence without interpreting UNKNOWN as success."""
     _validate_identity(architecture_before_sha, 40, "architecture_before_sha")
     _validate_identity(architecture_after_sha, 40, "architecture_after_sha")
@@ -89,6 +157,31 @@ def decide_governance(
     if candidate_configuration_sha256 is not None:
         _validate_identity(candidate_configuration_sha256, 64, "candidate_configuration_sha256")
 
+    request_sha256 = _governance_request_sha256(
+        method_version=method_version,
+        architecture_before_sha=architecture_before_sha,
+        architecture_after_sha=architecture_after_sha,
+        policy_source_revision=policy_source_revision,
+        policy_ruleset_sha256=policy_ruleset_sha256,
+        input_bundle_sha256=input_bundle_sha256,
+        parent_configuration_sha256=parent_configuration_sha256,
+        candidate_configuration_sha256=candidate_configuration_sha256,
+        impact_assessment_sha256=impact_assessment_sha256,
+        coverage=coverage,
+        operation_plan=operation_plan,
+        invariant_verdicts=invariant_verdicts,
+        cost_verdict=cost_verdict,
+        input_status=input_status,
+        candidate_validation_status=candidate_validation_status,
+        pairs=pairs,
+        evidence_refs=evidence_refs,
+        additional_reasons=additional_reasons,
+    )
+    pipeline_authorized = bool(
+        _pipeline_authorization is not None
+        and _pipeline_authorization.authority is _PIPELINE_AUTHORITY
+        and _pipeline_authorization.request_sha256 == request_sha256
+    )
     reasons = (
         set(additional_reasons)
         | set(operation_plan.hold_reasons)
@@ -130,6 +223,8 @@ def decide_governance(
         reasons.add("MANDATORY_COVERAGE_INCOMPLETE")
     else:
         required_invariants = {f"INV-{index:02d}" for index in range(1, 13)}
+        if not pipeline_authorized:
+            reasons.add("VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING")
         if input_status == "UNDETERMINED":
             reasons.add("INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED")
         if candidate_validation_status != "valid" or candidate_configuration_sha256 is None:
@@ -182,6 +277,150 @@ def decide_governance(
         payload_bytes,
         _DecisionSeal(_DECISION_SEAL, sha256_bytes(payload_bytes)),
     )
+
+
+def _issue_governance_pipeline_authorization(
+    *,
+    method_version: str,
+    architecture_before_sha: str,
+    architecture_after_sha: str,
+    policy_source_revision: str,
+    policy_ruleset_sha256: str,
+    input_bundle_sha256: str,
+    parent_configuration_sha256: str,
+    candidate_configuration_sha256: str | None,
+    impact_assessment_sha256: str,
+    coverage: CoverageAssessment,
+    operation_plan: OperationPlan,
+    invariant_verdicts: Mapping[str, str],
+    cost_verdict: str,
+    input_status: str,
+    candidate_validation_status: str | None,
+    pairs: Sequence[Mapping[str, Any]] = (),
+    evidence_refs: Sequence[str] = (),
+    additional_reasons: Sequence[str] = (),
+) -> _GovernancePipelineAuthorization | None:
+    """Issue an internal capability only for a complete positive P decision."""
+    required_invariants = {f"INV-{index:02d}" for index in range(1, 13)}
+    if (
+        input_status != "VALID"
+        or candidate_validation_status != "valid"
+        or candidate_configuration_sha256 is None
+        or coverage.status is not CoverageStatus.COMPLETE
+        or operation_plan.hold_reasons
+        or operation_plan.reject_reasons
+        or cost_verdict != "PASS"
+        or set(invariant_verdicts) != required_invariants
+        or any(invariant_verdicts.get(key) != "PASS" for key in required_invariants)
+        or additional_reasons
+    ):
+        return None
+    return _GovernancePipelineAuthorization(
+        _PIPELINE_AUTHORITY,
+        _governance_request_sha256(
+            method_version=method_version,
+            architecture_before_sha=architecture_before_sha,
+            architecture_after_sha=architecture_after_sha,
+            policy_source_revision=policy_source_revision,
+            policy_ruleset_sha256=policy_ruleset_sha256,
+            input_bundle_sha256=input_bundle_sha256,
+            parent_configuration_sha256=parent_configuration_sha256,
+            candidate_configuration_sha256=candidate_configuration_sha256,
+            impact_assessment_sha256=impact_assessment_sha256,
+            coverage=coverage,
+            operation_plan=operation_plan,
+            invariant_verdicts=invariant_verdicts,
+            cost_verdict=cost_verdict,
+            input_status=input_status,
+            candidate_validation_status=candidate_validation_status,
+            pairs=pairs,
+            evidence_refs=evidence_refs,
+            additional_reasons=additional_reasons,
+        ),
+    )
+
+
+def governance_authorizes_outputs(
+    decision: GovernanceDecision,
+    *,
+    candidate_configuration_sha256: str,
+    architecture_source_sha: str,
+    input_bundle_sha256: str,
+    operations: Sequence[Mapping[str, Any]],
+) -> bool:
+    """Check a sealed ACCEPT against the exact candidate or prediction inputs."""
+    seal = decision._decision_seal
+    if seal is None or seal.authority is not _DECISION_SEAL:
+        return False
+    try:
+        payload = decision.payload
+        validate_payload("p_governance_decision_v1.schema.json", payload)
+        content = dict(payload)
+        claimed_digest = content.pop("decision_sha256")
+        payload_digest = sha256_bytes(canonical_json_bytes(payload))
+        actual_digest = sha256_bytes(canonical_json_bytes(content))
+        return bool(
+            seal.payload_sha256 == payload_digest
+            and claimed_digest == actual_digest
+            and payload.get("result") == GovernanceResult.ACCEPT.value
+            and payload.get("candidate_configuration_sha256") == candidate_configuration_sha256
+            and payload.get("architecture_after_sha") == architecture_source_sha
+            and payload.get("input_bundle_sha256") == input_bundle_sha256
+            and payload.get("operations") == list(operations)
+        )
+    except (ContractValidationError, KeyError, TypeError, ValueError):
+        return False
+
+
+def _governance_request_sha256(
+    *,
+    method_version: str,
+    architecture_before_sha: str,
+    architecture_after_sha: str,
+    policy_source_revision: str,
+    policy_ruleset_sha256: str,
+    input_bundle_sha256: str,
+    parent_configuration_sha256: str,
+    candidate_configuration_sha256: str | None,
+    impact_assessment_sha256: str,
+    coverage: CoverageAssessment,
+    operation_plan: OperationPlan,
+    invariant_verdicts: Mapping[str, str],
+    cost_verdict: str,
+    input_status: str,
+    candidate_validation_status: str | None,
+    pairs: Sequence[Mapping[str, Any]],
+    evidence_refs: Sequence[str],
+    additional_reasons: Sequence[str],
+) -> str:
+    """Hash the complete request consumed by governance, independent of order."""
+    payload = {
+        "method_version": method_version,
+        "architecture_before_sha": architecture_before_sha,
+        "architecture_after_sha": architecture_after_sha,
+        "policy_source_revision": policy_source_revision,
+        "policy_ruleset_sha256": policy_ruleset_sha256,
+        "input_bundle_sha256": input_bundle_sha256,
+        "parent_configuration_sha256": parent_configuration_sha256,
+        "candidate_configuration_sha256": candidate_configuration_sha256,
+        "impact_assessment_sha256": impact_assessment_sha256,
+        "coverage_assessment_sha256": coverage.assessment_sha256,
+        "operation_plan_sha256": operation_plan.plan_sha256,
+        "operations": [operation.to_dict() for operation in operation_plan.operations],
+        "hold_reasons": sorted(set(operation_plan.hold_reasons)),
+        "reject_reasons": sorted(set(operation_plan.reject_reasons)),
+        "invariant_verdicts": dict(sorted(invariant_verdicts.items())),
+        "cost_verdict": cost_verdict,
+        "input_status": input_status,
+        "candidate_validation_status": candidate_validation_status,
+        "pairs": sorted(
+            (dict(row) for row in pairs),
+            key=lambda row: canonical_json_bytes(row),
+        ),
+        "evidence_refs": sorted(set(evidence_refs)),
+        "additional_reasons": sorted(set(additional_reasons)),
+    }
+    return sha256_bytes(canonical_json_bytes(payload))
 
 
 def append_event(
@@ -255,7 +494,30 @@ def authorize_conditional_publish(
     expected_parent_sha256: str,
     current_parent_sha256: str,
 ) -> bool:
-    """Return true only for ACCEPT and a current context/parent CAS match."""
+    """Keep publication disabled until a transactional CAS writer exists.
+
+    The existing identity, seal, context, and parent checks remain available as
+    a precondition predicate, but a boolean check cannot atomically publish.
+    """
+    _conditional_publish_preconditions(
+        decision=decision,
+        validated_context_sha256=validated_context_sha256,
+        current_context_sha256=current_context_sha256,
+        expected_parent_sha256=expected_parent_sha256,
+        current_parent_sha256=current_parent_sha256,
+    )
+    return PUBLISHING_ENABLED
+
+
+def _conditional_publish_preconditions(
+    *,
+    decision: GovernanceDecision,
+    validated_context_sha256: str,
+    current_context_sha256: str,
+    expected_parent_sha256: str,
+    current_parent_sha256: str,
+) -> bool:
+    """Check what a future atomic publisher must recheck in its transaction."""
     seal = decision._decision_seal
     if seal is None or seal.authority is not _DECISION_SEAL:
         return False

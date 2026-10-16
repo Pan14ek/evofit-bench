@@ -24,12 +24,21 @@ parent configuration and source revisions are bound. The orchestration calls
 the SPEC 02 `evaluate_obligations()` implementation for both Snapshot states;
 it does not add a second activation engine.
 
+The returned V3 bundle is an identity-registered verification result; a
+caller-constructed object cannot claim verified provenance. Evidence sidecars
+are verified by a configured trust registry against their canonical digest,
+scope, revisions and source bindings. Missing verifier authority remains
+unresolved. Publication rechecks the sealed governance decision, and rollback
+compares the revalidated configuration digest with the exact requested target.
+
 Fact and policy absences require their corresponding completeness evidence.
 Impact analysis distinguishes proven reachability, possible reachability and
 unresolved trace links. A new mandatory active obligation is considered even
 when the old trace graph lacks an edge. Pair validity is exact to one
 representation, obligation, architecture revision, stage, scope and semantic
-proof. Compliance status is recorded separately from evaluator adequacy.
+proof. Coverage excludes stale revisions, invalid digests and conflicting
+duplicate assessments. Compliance status is recorded separately from
+evaluator adequacy.
 
 Coverage counts each mandatory obligation once and never treats `UNKNOWN` as
 `INACTIVE`. Operation choice needs exact pair evidence, real hash-bound

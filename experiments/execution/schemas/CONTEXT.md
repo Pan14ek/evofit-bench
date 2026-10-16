@@ -25,6 +25,7 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `p_governance_decision_v1.schema.json`
 - `p_adaptation_trace_v1.schema.json`
 - `p_cost_model_v1.schema.json`
+- `p_adaptation_evidence_v1.schema.json`
 
 This is a selected list (17 direct tracked files), not a complete source inventory.
 

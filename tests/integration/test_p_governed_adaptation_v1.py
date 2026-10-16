@@ -17,6 +17,7 @@ from experiments.execution.tooling.hashing import (
 )
 from experiments.execution.tooling.p_adaptation import (
     VerifiedPBundle,
+    _register_test_only_bundle,
     run_adaptation,
 )
 from experiments.execution.tooling.p_applicability import (
@@ -103,7 +104,7 @@ def synthetic_verified_bundle(*, tamper_validation_digest: bool = False) -> Veri
     }
     parent = {"configuration_version": "SYN_CONFIG_1", "representations": []}
     parent_bytes = canonical_json_bytes(parent)
-    return VerifiedPBundle(
+    bundle = VerifiedPBundle(
         Path("."),
         manifest,
         snapshot,
@@ -137,6 +138,7 @@ def synthetic_verified_bundle(*, tamper_validation_digest: bool = False) -> Veri
         },
         "TEST_ONLY",
     )
+    return _register_test_only_bundle(bundle)
 
 
 def test_synthetic_pipeline_runs_spec02_and_holds_open_authority_unknown() -> None:
@@ -168,18 +170,23 @@ def test_caller_cannot_claim_verified_v3_without_verifier_identity() -> None:
 
 def test_preflight_rejects_policy_and_ruleset_digest_substitution() -> None:
     bundle = synthetic_verified_bundle()
-    with pytest.raises(ContractValidationError, match="P03_POLICY_BUNDLE_DIGEST_MISMATCH"):
-        run_adaptation(
-            replace(
-                bundle,
-                manifest={**bundle.manifest, "policy_bundle_sha256": "9" * 64},
-            )
+    policy_substitution = _register_test_only_bundle(
+        replace(
+            bundle,
+            manifest={**bundle.manifest, "policy_bundle_sha256": "9" * 64},
         )
+    )
+    with pytest.raises(ContractValidationError, match="P03_POLICY_BUNDLE_DIGEST_MISMATCH"):
+        run_adaptation(policy_substitution)
     with pytest.raises(ContractValidationError, match="P03_RULESET_MANIFEST_BINDING_MISMATCH"):
         run_adaptation(
-            replace(
-                bundle,
-                compiled_ruleset=replace(bundle.compiled_ruleset, ruleset_source_sha256="9" * 64),
+            _register_test_only_bundle(
+                replace(
+                    bundle,
+                    compiled_ruleset=replace(
+                        bundle.compiled_ruleset, ruleset_source_sha256="9" * 64
+                    ),
+                )
             )
         )
 

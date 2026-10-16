@@ -43,6 +43,10 @@ or digest-invalid assessments. Governance decisions expose isolated payload
 copies; conditional publication rechecks the signed decision payload, and
 rollback requires the exact configuration hash that was revalidated.
 
+Method-side sidecars are schema-checked, content-hashed, bound to exact source
+digests and verified through an explicitly configured verifier registry in
+`p_adaptation_evidence.py`. A missing trust anchor leaves evidence unresolved.
+
 The pipeline must preserve `UNKNOWN` as unresolved, never infer `INACTIVE` from
 missing evidence, and never use scorer/oracle output as P input. The JSON
 schemas are additive DEVELOPMENT contracts. Synthetic test builders and
@@ -61,6 +65,7 @@ tracked in `docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`.
 - `hashing.py`
 - `inputs.py`
 - `p_adaptation.py`
+- `p_adaptation_evidence.py`
 - `p_impact.py`
 - `p_semantic.py`
 - `p_operations.py`

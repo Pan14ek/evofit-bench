@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import copy
+from collections.abc import Mapping, Sequence
+from dataclasses import replace
+from typing import Any
 
 import pytest
 
@@ -10,12 +13,56 @@ from experiments.execution.tooling.errors import ContractValidationError
 from experiments.execution.tooling.p_impact import (
     ChangeKind,
     ChangeRecord,
+    ImpactAssessment,
     ImpactStatus,
-    analyze_impact,
+    TraceGraph,
     diff_snapshot,
     parse_trace_graph,
 )
+from experiments.execution.tooling.p_impact import (
+    analyze_impact as _analyze_impact,
+)
 from tests.unit.p_spec03_support import load_synthetic_fixture
+
+
+def parse_contextual_graph(
+    payload: Mapping[str, Any], changes: Sequence[ChangeRecord] = ()
+) -> TraceGraph:
+    """Independently bind each synthetic edge to both typed endpoint revisions."""
+    import copy
+
+    contextual = copy.deepcopy(payload)
+    nodes = {row["id"]: row for row in contextual["nodes"]}
+    for change in changes:
+        node = nodes.get(change.entity_id)
+        versions = [value for value in (change.old_version, change.new_version) if value]
+        if node is not None and versions:
+            node["version"] = versions[-1]
+    for edge in contextual["edges"]:
+        source, target = nodes[edge["source_id"]], nodes[edge["target_id"]]
+        if source.get("scope") == target.get("scope"):
+            edge["scope"] = source.get("scope")
+        edge["source_version"] = source.get("version")
+        edge["target_version"] = target.get("version")
+    return parse_trace_graph(contextual)
+
+
+def analyze_impact(**kwargs: Any) -> ImpactAssessment:
+    fixture = load_synthetic_fixture()
+    graph = kwargs.get("graph")
+    source_ids = set()
+    if graph is not None:
+        for node in graph.nodes:
+            source_ids.update(node.source_refs)
+        for edge in graph.edges:
+            source_ids.update(edge.source_refs)
+    for change in kwargs.get("changes", []):
+        source_ids.update(change.evidence_refs)
+    source_digests = kwargs.pop(
+        "source_digests", {source_id: fixture["source_sha256"] for source_id in source_ids}
+    )
+    kwargs.setdefault("expected_scope", "service:synth")
+    return _analyze_impact(**kwargs, source_digests=source_digests)
 
 
 def test_typed_fact_diff_preserves_values_scope_and_source_versions() -> None:
@@ -124,7 +171,7 @@ def test_policy_only_change_is_detected_with_identical_architecture_revision() -
         policy_before_rows=[before],
         policy_after_rows=[after],
         policy_inventory_complete={"before": True, "after": True},
-        source_digests={"SYN_POLICY_SOURCE": fixture["source_sha256"]},
+        source_digests={"SYN_SOURCE_POLICY": fixture["source_sha256"]},
     )
     assert len(result) == 1
     assert result[0].entity_kind == "policy"
@@ -137,7 +184,7 @@ def test_policy_only_change_is_detected_with_identical_architecture_revision() -
         ruleset_sha256=fixture["ruleset_sha256"],
         snapshot_sha256=fixture["snapshot_sha256"],
         changes=result,
-        graph=parse_trace_graph(fixture["trace_graph"]),
+        graph=parse_contextual_graph(fixture["trace_graph"], changes=result),
         representation_ids=["REP_SYNTH_TRACE"],
         applicability_after={"SYN_OBL_TRACE": "ACTIVE"},
         mandatory_obligations=["SYN_OBL_TRACE"],
@@ -180,12 +227,16 @@ def test_policy_duplicate_identity_is_indeterminate_not_last_write_wins() -> Non
 
 def test_trace_graph_keeps_typed_reachability_and_source_path() -> None:
     fixture = load_synthetic_fixture()
-    graph = parse_trace_graph(fixture["trace_graph"])
+    graph = parse_contextual_graph(fixture["trace_graph"])
     change = ChangeRecord(
         "change:fact",
         "fact",
         "SYN_FACT_CAPABILITY_BOUNDARY",
         ChangeKind.VALUE_CHANGED,
+        old_scope="service:synth",
+        new_scope="service:synth",
+        old_version="fixture:1",
+        new_version="fixture:1",
         evidence_refs=("SYN_SOURCE_FACT",),
     )
     result = analyze_impact(
@@ -215,7 +266,7 @@ def test_trace_graph_keeps_typed_reachability_and_source_path() -> None:
 
 def test_unknown_fact_change_yields_possible_not_proven_impact() -> None:
     fixture = load_synthetic_fixture()
-    graph = parse_trace_graph(fixture["trace_graph"])
+    graph = parse_contextual_graph(fixture["trace_graph"])
     result = analyze_impact(
         architecture_before_sha=fixture["architecture_before_sha"],
         architecture_after_sha=fixture["architecture_after_sha"],
@@ -287,6 +338,255 @@ def test_incomplete_graph_cannot_prove_no_impact_and_active_q_is_still_found() -
     assert result.uncovered_obligations == ("SYN_OBL_LATENCY",)
 
 
+def test_unversioned_edge_cannot_prove_causal_impact() -> None:
+    fixture = load_synthetic_fixture()
+    graph = parse_trace_graph(fixture["trace_graph"])
+    result = analyze_impact(
+        architecture_before_sha=fixture["architecture_before_sha"],
+        architecture_after_sha=fixture["architecture_after_sha"],
+        policy_source_revision=fixture["policy_source_revision"],
+        policy_bundle_sha256=fixture["policy_bundle_sha256"],
+        ruleset_sha256=fixture["ruleset_sha256"],
+        snapshot_sha256=fixture["snapshot_sha256"],
+        changes=[
+            ChangeRecord(
+                "change:fact",
+                "fact",
+                "SYN_FACT_CAPABILITY_BOUNDARY",
+                ChangeKind.VALUE_CHANGED,
+                old_scope="service:synth",
+                new_scope="service:synth",
+                old_version="fixture:1",
+                new_version="fixture:1",
+                evidence_refs=("SYN_SOURCE_FACT",),
+            )
+        ],
+        graph=graph,
+        representation_ids=["REP_SYNTH_TRACE"],
+        applicability_after={"SYN_OBL_TRACE": "ACTIVE"},
+        mandatory_obligations=["SYN_OBL_TRACE"],
+        covered_obligations=["SYN_OBL_TRACE"],
+    )
+    assert result.representations[0].status is ImpactStatus.POSSIBLY_AFFECTED
+
+
+def test_complete_inventory_with_unversioned_edges_cannot_prove_no_impact() -> None:
+    fixture = load_synthetic_fixture()
+    graph = parse_trace_graph(fixture["trace_graph"])
+    graph = replace(graph, inventory_complete_verified=True)
+    result = analyze_impact(
+        architecture_before_sha=fixture["architecture_before_sha"],
+        architecture_after_sha=fixture["architecture_after_sha"],
+        policy_source_revision=fixture["policy_source_revision"],
+        policy_bundle_sha256=fixture["policy_bundle_sha256"],
+        ruleset_sha256=fixture["ruleset_sha256"],
+        snapshot_sha256=fixture["snapshot_sha256"],
+        changes=[],
+        graph=graph,
+        source_digests={
+            source_id: fixture["source_sha256"]
+            for source_id in (
+                "SYN_SOURCE_CATALOG",
+                "SYN_SOURCE_CONFIG",
+                "SYN_SOURCE_ARTIFACT",
+                "SYN_SOURCE_POLICY",
+                "SYN_SOURCE_FACT",
+            )
+        },
+        representation_ids=["REP_SYNTH_TRACE"],
+        applicability_after={"SYN_OBL_TRACE": "ACTIVE"},
+        mandatory_obligations=["SYN_OBL_TRACE"],
+        covered_obligations=["SYN_OBL_TRACE"],
+        change_inventory_verified=True,
+    )
+    assert result.representations[0].status is ImpactStatus.UNRESOLVED
+    assert any(
+        reason.startswith("TRACE_EDGE_CONTEXT_UNVERIFIED:") for reason in result.unresolved_links
+    )
+
+
+def test_change_seed_with_stale_target_revision_cannot_prove_impact() -> None:
+    fixture = load_synthetic_fixture()
+    result = analyze_impact(
+        architecture_before_sha=fixture["architecture_before_sha"],
+        architecture_after_sha=fixture["architecture_after_sha"],
+        policy_source_revision=fixture["policy_source_revision"],
+        policy_bundle_sha256=fixture["policy_bundle_sha256"],
+        ruleset_sha256=fixture["ruleset_sha256"],
+        snapshot_sha256=fixture["snapshot_sha256"],
+        changes=[
+            ChangeRecord(
+                "change:stale-fact",
+                "fact",
+                "SYN_FACT_CAPABILITY_BOUNDARY",
+                ChangeKind.VALUE_CHANGED,
+                old_scope="service:synth",
+                new_scope="service:synth",
+                old_version="fixture:1",
+                new_version="fixture:stale",
+                evidence_refs=("SYN_SOURCE_FACT",),
+            )
+        ],
+        graph=parse_contextual_graph(fixture["trace_graph"]),
+        representation_ids=["REP_SYNTH_TRACE"],
+        applicability_after={"SYN_OBL_TRACE": "ACTIVE"},
+        mandatory_obligations=["SYN_OBL_TRACE"],
+        covered_obligations=["SYN_OBL_TRACE"],
+    )
+    assert result.representations[0].status is ImpactStatus.POSSIBLY_AFFECTED
+
+
+def test_missing_representation_node_is_unresolved_even_for_complete_graph() -> None:
+    fixture = load_synthetic_fixture()
+    graph = parse_contextual_graph(fixture["trace_graph"])
+    complete = replace(graph, inventory_complete_verified=True)
+    result = analyze_impact(
+        architecture_before_sha=fixture["architecture_before_sha"],
+        architecture_after_sha=fixture["architecture_after_sha"],
+        policy_source_revision=fixture["policy_source_revision"],
+        policy_bundle_sha256=fixture["policy_bundle_sha256"],
+        ruleset_sha256=fixture["ruleset_sha256"],
+        snapshot_sha256=fixture["snapshot_sha256"],
+        changes=[],
+        graph=complete,
+        representation_ids=["REP_SYNTH_MISSING"],
+        applicability_after={"SYN_OBL_TRACE": "ACTIVE"},
+        mandatory_obligations=["SYN_OBL_TRACE"],
+        covered_obligations=["SYN_OBL_TRACE"],
+        change_inventory_verified=True,
+    )
+    assert result.representations[0].status is ImpactStatus.UNRESOLVED
+    assert "REPRESENTATION_MISSING_FROM_GRAPH" in result.representations[0].reason_codes
+
+
+def test_missing_active_obligation_node_cannot_prove_no_impact() -> None:
+    fixture = load_synthetic_fixture()
+    graph_payload = copy.deepcopy(fixture["trace_graph"])
+    graph_payload["nodes"] = [row for row in graph_payload["nodes"] if row["id"] != "SYN_OBL_TRACE"]
+    graph_payload["edges"] = [
+        row
+        for row in graph_payload["edges"]
+        if row["source_id"] != "SYN_OBL_TRACE" and row["target_id"] != "SYN_OBL_TRACE"
+    ]
+    graph = replace(parse_contextual_graph(graph_payload), inventory_complete_verified=True)
+    result = analyze_impact(
+        architecture_before_sha=fixture["architecture_before_sha"],
+        architecture_after_sha=fixture["architecture_after_sha"],
+        policy_source_revision=fixture["policy_source_revision"],
+        policy_bundle_sha256=fixture["policy_bundle_sha256"],
+        ruleset_sha256=fixture["ruleset_sha256"],
+        snapshot_sha256=fixture["snapshot_sha256"],
+        changes=[],
+        graph=graph,
+        source_digests={
+            source_id: fixture["source_sha256"]
+            for source_id in (
+                "SYN_SOURCE_CATALOG",
+                "SYN_SOURCE_CONFIG",
+                "SYN_SOURCE_ARTIFACT",
+                "SYN_SOURCE_POLICY",
+                "SYN_SOURCE_FACT",
+            )
+        },
+        representation_ids=["REP_SYNTH_TRACE"],
+        applicability_after={"SYN_OBL_TRACE": "ACTIVE"},
+        mandatory_obligations=["SYN_OBL_TRACE"],
+        covered_obligations=["SYN_OBL_TRACE"],
+        change_inventory_verified=True,
+    )
+    assert result.representations[0].status is ImpactStatus.UNRESOLVED
+    assert "ACTIVE_OBLIGATION_MISSING_FROM_GRAPH:SYN_OBL_TRACE" in result.unresolved_links
+
+
+@pytest.mark.parametrize(
+    ("mutation", "reason_prefix"),
+    [
+        ("scope", "TRACE_NODE_SCOPE_UNVERIFIED:"),
+        ("source_refs", "TRACE_NODE_SOURCE_PROVENANCE_UNVERIFIED:"),
+    ],
+)
+def test_complete_graph_nodes_must_match_bundle_scope_and_pinned_sources(
+    mutation: str, reason_prefix: str
+) -> None:
+    fixture = load_synthetic_fixture()
+    graph_payload = copy.deepcopy(fixture["trace_graph"])
+    if mutation == "scope":
+        graph_payload["nodes"][0]["scope"] = "service:other"
+    else:
+        graph_payload["nodes"][0]["source_refs"] = ["SYN_SOURCE_UNPINNED"]
+    graph = replace(parse_contextual_graph(graph_payload), inventory_complete_verified=True)
+    result = analyze_impact(
+        architecture_before_sha=fixture["architecture_before_sha"],
+        architecture_after_sha=fixture["architecture_after_sha"],
+        policy_source_revision=fixture["policy_source_revision"],
+        policy_bundle_sha256=fixture["policy_bundle_sha256"],
+        ruleset_sha256=fixture["ruleset_sha256"],
+        snapshot_sha256=fixture["snapshot_sha256"],
+        changes=[],
+        graph=graph,
+        source_digests={
+            source_id: fixture["source_sha256"]
+            for source_id in (
+                "SYN_SOURCE_CATALOG",
+                "SYN_SOURCE_CONFIG",
+                "SYN_SOURCE_ARTIFACT",
+                "SYN_SOURCE_POLICY",
+                "SYN_SOURCE_FACT",
+            )
+        },
+        representation_ids=["REP_SYNTH_TRACE"],
+        applicability_after={"SYN_OBL_TRACE": "ACTIVE"},
+        mandatory_obligations=["SYN_OBL_TRACE"],
+        covered_obligations=["SYN_OBL_TRACE"],
+        change_inventory_verified=True,
+    )
+    assert result.representations[0].status is ImpactStatus.UNRESOLVED
+    assert any(reason.startswith(reason_prefix) for reason in result.unresolved_links)
+
+
+def test_complete_typed_graph_proves_only_unrelated_change_has_no_impact() -> None:
+    fixture = load_synthetic_fixture()
+    graph_payload = copy.deepcopy(fixture["trace_graph"])
+    graph_payload["nodes"].append(
+        {
+            "id": "SYN_FACT_UNRELATED",
+            "kind": "fact",
+            "scope": "service:synth",
+            "version": "fixture:1",
+            "source_refs": ["SYN_SOURCE_FACT"],
+        }
+    )
+    complete = replace(parse_contextual_graph(graph_payload), inventory_complete_verified=True)
+    result = analyze_impact(
+        architecture_before_sha=fixture["architecture_before_sha"],
+        architecture_after_sha=fixture["architecture_after_sha"],
+        policy_source_revision=fixture["policy_source_revision"],
+        policy_bundle_sha256=fixture["policy_bundle_sha256"],
+        ruleset_sha256=fixture["ruleset_sha256"],
+        snapshot_sha256=fixture["snapshot_sha256"],
+        changes=[
+            ChangeRecord(
+                "change:unrelated",
+                "fact",
+                "SYN_FACT_UNRELATED",
+                ChangeKind.VALUE_CHANGED,
+                old_scope="service:synth",
+                new_scope="service:synth",
+                old_version="fixture:1",
+                new_version="fixture:1",
+                evidence_refs=("SYN_SOURCE_FACT",),
+            )
+        ],
+        graph=complete,
+        representation_ids=["REP_SYNTH_TRACE"],
+        applicability_after={"SYN_OBL_TRACE": "ACTIVE"},
+        mandatory_obligations=["SYN_OBL_TRACE"],
+        covered_obligations=["SYN_OBL_TRACE"],
+        change_inventory_verified=True,
+    )
+    assert result.representations[0].status is ImpactStatus.NOT_AFFECTED_WITH_PROOF
+
+
 def test_irrelevant_isolated_component_does_not_change_existing_impact() -> None:
     fixture = load_synthetic_fixture()
     baseline = copy.deepcopy(fixture["trace_graph"])
@@ -306,7 +606,7 @@ def test_irrelevant_isolated_component_does_not_change_existing_impact() -> None
                 "change:fact", "fact", "SYN_FACT_CAPABILITY_BOUNDARY", ChangeKind.VALUE_CHANGED
             )
         ],
-        graph=parse_trace_graph(baseline),
+        graph=parse_contextual_graph(baseline),
         representation_ids=["REP_SYNTH_TRACE"],
         applicability_after={"SYN_OBL_TRACE": "ACTIVE"},
         mandatory_obligations=[],
@@ -324,7 +624,7 @@ def test_irrelevant_isolated_component_does_not_change_existing_impact() -> None
                 "change:fact", "fact", "SYN_FACT_CAPABILITY_BOUNDARY", ChangeKind.VALUE_CHANGED
             )
         ],
-        graph=parse_trace_graph(expanded),
+        graph=parse_contextual_graph(expanded),
         representation_ids=["REP_SYNTH_TRACE"],
         applicability_after={"SYN_OBL_TRACE": "ACTIVE"},
         mandatory_obligations=[],
@@ -354,6 +654,6 @@ def test_input_permutations_preserve_graph_and_impact_digests() -> None:
         mandatory_obligations=["SYN_OBL_TRACE"],
         covered_obligations=["SYN_OBL_TRACE"],
     )
-    left = analyze_impact(changes=[change], graph=parse_trace_graph(graph), **values)
-    right = analyze_impact(changes=[change], graph=parse_trace_graph(reversed_graph), **values)
+    left = analyze_impact(changes=[change], graph=parse_contextual_graph(graph), **values)
+    right = analyze_impact(changes=[change], graph=parse_contextual_graph(reversed_graph), **values)
     assert left.assessment_sha256 == right.assessment_sha256

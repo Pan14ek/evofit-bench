@@ -24,6 +24,9 @@ Do not report integration success as G1/G4 or sample-level significance. The SPE
 The integration tests also reject caller-claimed VERIFIED_V3 provenance and
 detect nested input mutation after the strict V3 verifier returns a bundle;
 these checks do not replace a positive approved V3 production-input path.
+Coverage regressions also ensure stale or colliding pair evidence cannot
+satisfy mandatory obligations. Governance regressions bind publication to an
+unchanged decision digest and rollback to the exact revalidated configuration.
 
 ## Verification and further reading
 
