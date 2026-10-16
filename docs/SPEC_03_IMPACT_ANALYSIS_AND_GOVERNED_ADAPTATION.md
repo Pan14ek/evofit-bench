@@ -97,3 +97,100 @@ If not proven, report NOT_DEMONSTRATED with separate INVALID/UNKNOWN/missing rea
 ### 1.3 Boundaries for α and θ
 
 Keep α and θ in formal Φ, but **do not implement generalized automatic weight or threshold optimization** in core v1. `adjust` is permitted only if an externally legitimate, exact-parameter, versioned bounded soft-adjustment rule exists; never relax H or redefine intent. An approved context-dependent threshold rule evaluated at a new context is not automatically a new configuration version. Record manuscript RQ2's weight/threshold part as untested until separately implemented and validated.
+
+## 2. Method P — procedure and decision semantics
+
+### 2.1 Preflight and typed differences
+
+Consume verified and allowlisted SPEC 01 Snapshot/source manifest, SPEC 02 applicability (before and after if adequately proven), current Φ, complete obligation catalog, traceability, common evaluator capabilities and method-authorized evidence. Bind architecture SHAs, policy revision, ruleset hash, common input digest and evaluation time. Invalid manifest, integrity, schema, allowlist or cross-source binding produces **INPUT_REJECTED**, not a fitness REJECT. Well-formed but unverified policy, absence/completeness or evaluator evidence produces **HOLD**.
+
+Build a typed difference for architectural facts: ADDED, REMOVED, VALUE_CHANGED, SCOPE_CHANGED, VERSION_CHANGED, UNCHANGED or INDETERMINATE, retaining predicate, subject, scope, old/new values or hashes and evidence references. A missing row from an incomplete source is **not** proven removed. Build policy difference separately (mandates, exceptions, retirement, conditional rules, authority, effective scope/time and closure); policy-only changes may occur with identical architecture SHA. Compare applicability for **every** obligation in the catalog; unknown before-state is not fabricated.
+
+Normalize all independent inputs and outputs into stable ID ordering. Reject or preserve ambiguity on contradictory duplicate identities; never last-write-wins.
+
+### 2.2 Typed, criterion-centric impact
+
+Create a graph with typed nodes for architectural fact/element, normative policy, obligation, criterion, representation, evaluator and evidence contract. Type, scope, version and provenance constrain edges. Valid paths may connect changed fact/policy to obligation, then criterion and representation. The A0 graph is partial, and absence of its link is not proof of no impact.
+
+\[
+Seed = Map(\Delta Z \cup \Delta \Pi \cup \Delta Q,G_T)
+\]
+\[
+I = Representations(Reach_{typed}(Seed,G_T))
+    \cup Uncovered(Q^{ACTIVE}_{after}) \cup UnresolvedLinks .
+\]
+
+Produce separate classifications PROVEN_AFFECTED, POSSIBLY_AFFECTED, NOT_AFFECTED_WITH_PROOF and UNRESOLVED, each with causal paths/reasons. Reachability means **requires reassessment**, not automatically invalid or replace. Missing coverage of an ACTIVE q must be found even when q does not occur in trace graph. No architecture change does not excuse a new policy requirement. Reordering graph rows or adding unrelated independent nodes cannot invent impacts.
+
+### 2.3 Exact representation–obligation semantic validity
+
+For every relevant pair (r,q), verify exact criterion intent, normative scope, stage/context, evaluator artifact availability, target resolution, non-vacuous inspected subjects, evidence contract, revision/time, origin and pair-specific semantics. Output method-side VALID / INVALID / UNKNOWN with stable reasons and references. A field named covers, a zero exit code or a metric name is insufficient. Missing proof gives UNKNOWN; known incompatibility gives INVALID. Keep evaluator execution, actual architectural compliance and capability to *monitor* q distinct.
+
+**Do not feed independent scorer-produced verdicts to P.** P may derive its own bounded self-assessment using only admissible method input and independently sourced admissible test evidence. The official reference verifier evaluates only **after** an independently sealed prediction.
+
+### 2.4 Deterministic operations
+
+| Operation | Strict precondition | Effect / if impossible |
+| --- | --- | --- |
+| RETAIN | No justified change; or positive validity after potential impact | Preserve representation; unresolved mandatory pairs still force HOLD. |
+| REPLACE | Old r provably semantically inadequate; a real, digest-pinned executable successor covers *all remaining mandatory links* | Materialize successor, preserve parent/history; otherwise HOLD/NEEDS_IMPLEMENTATION. |
+| ADD | q provably ACTIVE, mandatory coverage absent, real evaluator/template available | Legacy prediction targets the **obligation**; candidate adds verifiable new representation. Missing template: HOLD. |
+| DEACTIVATE | Verified normative INACTIVE plus no ACTIVE/UNKNOWN mandatory obligation depending on r, including unresolved links | Deactivate r without erasing history; otherwise forbidden. |
+| ADJUST | Explicit authorized versioned and bounded soft-parameter rule, no weakening of H or intent | Only supported authorized adjustment; no automatic weight/threshold optimization in v1. |
+
+A shared r linked to two q cannot be deactivated merely because one becomes inactive. A replacement may not discard another still-necessary q. Multiple valid r can cover one q, counted once using pair evidence.
+
+Only **actually materializable** operations may enter feasible-candidate selection. At current baseline the common capability inventory has no generic candidate templates. It is therefore legitimate for a real ADD/REPLACE to remain HOLD/NEEDS_IMPLEMENTATION; inventing checker code, a prepared reference checker, or oracle-inspired templates is forbidden. Synthetic tests may supply isolated independently constructed generic checker artifacts clearly labelled TEST_ONLY.
+
+Proposed deterministic choice among fully evidenced feasible candidates is lexicographic: (non-retain operation count, known additional evaluator cost, canonical operation/artifact IDs). A versioned cost model and resource/search budget must be supplied; unknown cost does **not** mean zero. Budget exhaustion => HOLD/BUDGET_EXHAUSTED, not an optimality claim.
+
+**Open compatibility question:** frozen v1 prediction allows ADD on an obligation ID, although one new evaluator may cover several q. Proposed development owner = lexicographically first positively ACTIVE uncovered q the evaluator actually covers, with separate pair links for others. Before any measured execution, independently review compatibility with the unchanged scorer rather than tailoring to DA01.
+
+### 2.5 Materialization, governance and result precedence
+
+Assemble full candidate Φ with unique stable representation IDs, hashed evaluator artifacts, parent configuration path/digest, changes, stages/scopes/coverage links and source provenance. Run existing validate_candidate and all semantic/hard/missing-coverage checks. candidate_validation.status=valid means a local validation, **not** ACCEPT.
+
+New **additive DEVELOPMENT output** contracts (do not edit legacy v1 schemas): p_impact_assessment_v1, p_pair_assessment_v1, p_adaptation_trace_v1 and p_governance_decision_v1. Their JSON Schemas must be strict, identity/version-bound, hash-bound and reason-coded. Governance decision includes method/algorithm versions, original and target SHAs, policy source/ruleset/digest/as-of, parent/candidate hashes, affected objects, evidence refs, blocking obligations/pairs, invariant and cost verdicts, result and unresolved reasons.
+
+Decision precedence:
+
+1. **INPUT_REJECTED** on invalid/tampered/prohibited method input; no candidate, no counted algorithm result.
+2. **REJECT** an individual candidate with a proven hard, provenance, unauthorized parameter or cost violation. Rejection of *one* candidate does not preclude considering another feasible candidate.
+3. **HOLD** when essential obligation applicability, semantic coverage, evaluator materialization, trusted policy/completeness or known cost is unresolved, or search budget exhausted. No candidate publication.
+4. **ACCEPT** only when a complete candidate is materialized and all required hard, mandatory coverage, semantic, evidence, provenance and cost checks are **positively verified**; no residual mandatory uncertainty. A no-op ACCEPT likewise requires positive target validity, not mere absence of observed changes.
+
+The old prediction-v1 and candidate-v1 outputs must be produced only through explicit compatible adapters and validated with existing validators; a HOLD diagnostic must not masquerade as a successful v1 prediction.
+
+### 2.6 Versioning and safe rollback
+
+Use an append-only version/event log: PROPOSED, VALIDATED, ACCEPTED, REJECTED, HELD, ROLLED_BACK, ROLLBACK_BLOCKED, with parent/child hashes, architecture and policy versions, operations, reasons, evidence and timestamps. Canonical semantic outputs must be deterministic for equal input and algorithm version; timestamps/seals reside outside the deterministic content digest.
+
+Rollback to an earlier Φ is **conditional on revalidating it against the current architecture/policy/obligations/evidence**. If unsafe or unknown, return ROLLBACK_BLOCKED/HOLD, not an asserted successful restoration. Detect source/policy changes between validation and atomic write-once publication; abort publication on stale context.
+
+### 2.7 Orchestration pseudocode
+
+    ctx = SPEC01_VERIFY_BUNDLE_AND_BIND_ALL_REVISIONS(input)
+    if ctx.invalid: return INPUT_REJECTED
+    before = SPEC02_ASSESS_BEFORE(ctx)
+    after  = SPEC02_ASSESS_AFTER(ctx)
+    delta = TYPED_DIFF_FACTS_POLICIES_OBLIGATIONS(ctx, before, after)
+    graph = VALIDATE_TYPED_TRACEABILITY(ctx.traceability, ctx.catalog)
+    impact = CONSERVATIVE_IMPACT(delta, graph, after)
+    pairs = ASSESS_METHOD_SIDE_PAIR_SEMANTICS(ctx, after, impact)
+    deficits = REQUIRED_MANDATORY_CONTROL_GAPS(after, pairs, authorized_stage_contract)
+    options = ENUMERATE_ONLY_JUSTIFIED_MATERIALIZABLE_OPERATIONS(impact, deficits)
+    for cand in DETERMINISTIC_BOUNDED_FEASIBLE_CANDIDATES(options, ctx.cost_rules):
+        checks = INDEPENDENT_METHOD_SIDE_CANDIDATE_VALIDATION(cand, ctx)
+        if checks.all_required_positive:
+            return ACCEPT_WITH_PROVENANCE_AND_V1_PROJECTION(cand)
+        record_candidate_failure(checks)
+    if exhaustively_proven_infeasible: return REJECT_WITH_REASONS
+    return HOLD_WITH_UNRESOLVED_REASONS
+
+This is proposed research pseudocode, not an assertion that the remaining tie/cost/decision ambiguities are already independently approved.
+
+## 3. Planned implementation and compatibility
+
+Recommended single-purpose modules under experiments/execution/tooling/: p_impact.py (typed diff/graph), p_semantic.py (method-side exact-pair assessment), p_operations.py (finite operation choice), p_candidate.py (actual candidate/version/compatibility), p_governance.py (invariants/decisions/rollback), p_adaptation.py (orchestration). Integrate p_interface.py only once the DEVELOPMENT method passes documented tests; a readiness flag must **not** suggest G1/G4 cleared.
+
+New output schemas should be additive, strict, and covered by semantic validators (not just JSON Schema). Preserve original V1/V2/V3 input allowlists, scorer, prediction/candidate schemas, archived A0 evaluator, and B1/P common fact/policy bytes. Do not add files to the restricted pilot-policy source path. Keep relevant CONTEXT.md and docs accurate.
