@@ -4,14 +4,14 @@ These are **maintained navigation documents**, not replacements for the versione
 
 | Document | What it answers |
 | --- | --- |
-| [RESEARCH_CONTEXT.md](RESEARCH_CONTEXT.md) | **Why** the dissertation study exists, the core mathematical model, what P should prove, and open methodology decisions. |
+| [RESEARCH_CONTEXT.md](RESEARCH_CONTEXT.md) | **Why** the dissertation study exists; mathematical model, scientific hypotheses, method P, manuscript–protocol RQ crosswalk, validity threats, contribution limits and open decisions. |
 | [DOMAIN.md](DOMAIN.md) | What are the application's business domain and the separate research domain? |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | What architecture is actually implemented, and what is still only planned? |
 | [EXPERIMENT.md](EXPERIMENT.md) | What is being compared, how are observations and oracle isolated, and which approval gates apply? |
 | [TECHNOLOGY.md](TECHNOLOGY.md) | Which tools are *actually used*, how is the environment run, and which tools are merely future options? |
 | [TESTING.md](TESTING.md) | What test categories, requirement-to-test traceability and pre-merge checks are expected? |
 
-## Local context guide
+**Research reading order for AI agents:** read [`RESEARCH_CONTEXT.md`](RESEARCH_CONTEXT.md) before making scientific claims or beginning SPEC 03, then consult [`EXPERIMENT.md`](EXPERIMENT.md) and the exact DA01 protocol for operational definitions. The manuscript's RQ3/RQ4 and the executable protocol's RQ3/RQ4 are **not interchangeable**; the discrepancy is documented, not resolved by this documentation change.\n\n## Local context guide
 
 The root [`../CONTEXT.md`](../CONTEXT.md) and each eligible tracked subdirectory's `CONTEXT.md` describe local responsibilities, conventions and constraints. See [`../AGENTS.md`](../AGENTS.md) for the **explicit root-to-leaf reading order**; these files are not automatically loaded by every AI agent. The `docs/` directory is intentionally exempt because its documents provide the centralized research and engineering narrative. The strict V3 policy source `experiments/execution/policy-pilot/v1/source/` and its descendants are also exempt: their file allowlist rejects any unexpected `CONTEXT.md`. The parent `experiments/execution/policy-pilot/v1/CONTEXT.md` supplies local context without weakening input integrity. See also [GitHub's community discussion of this pattern](https://github.com/orgs/community/discussions/191257).
 
