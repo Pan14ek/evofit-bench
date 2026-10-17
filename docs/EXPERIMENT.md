@@ -25,7 +25,7 @@ Source of the DA01 description: `../experiments/scenarios/DA01/scenario.yaml`. *
 
 - **B0**: frozen original A0 fitness configuration; no adaptation. Independently evaluate whether representations remain applicable/non-vacuous in the new state.
 - **B1**: documented *human* manual procedure using an approved checklist and common normative inputs. No synthetic B1 response may be called a human result.
-- **P**: proposed automatic method. Receives the same admissible common inputs as B1 and, per its allowed profile, an A0 traceability artifact. SPEC 01 validated inputs and SPEC 02 applicability are implemented; the complete P algorithm and measured B1/P comparison remain **NOT READY**.
+- **P**: automatic method under DEVELOPMENT. Receives the same admissible common inputs as B1 and, per its allowed profile, an A0 traceability artifact. A generic SPEC 03 pipeline now exists with synthetic regression evidence, including TEST_ONLY no-op/ADD ACCEPT after PR #10. Independent method freeze, production authority, real B1, and measured comparison remain **NOT READY**.
 
 A0 has versioned fitness elements for performance (Locust test and Prometheus runtime), reliability (pytest integration and Prometheus runtime), and architecture compliance (frozen Import Linter CI control). A declaration `representation.covers` is **not** proof of post-change coverage. RQ2 demands an independently valid evaluator execution plus a valid obligation-specific semantic verdict for each `(representation_id, obligation_id)` pair.
 
@@ -59,5 +59,5 @@ Generated run files go under ignored `experiments/results/<run-id>/`. Curated ev
 
 ## Next scientific milestone
 
-SPEC 03 must define/implement generalizable **Impact Analysis → valid candidate configuration/operation choices → governed accept/reject/rollback**, with explicit handling of blocked/UNKNOWN decisions and a versioned contract. After implementation and synthetic regression, G1/G4 review and independent sealed/scored comparisons are still separate milestones.
+The SPEC 03 DEVELOPMENT pipeline now defines and implements generic impact analysis, candidate/operation choices, governance, and conditional rollback checks. The next scientific milestone is independent method/protocol review and resolution of the open decisions, followed by separate G1 freeze and G4 authorization before any measured comparison. Do not treat DEVELOPMENT implementation or synthetic regression as those approvals.
 

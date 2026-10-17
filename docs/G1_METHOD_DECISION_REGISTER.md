@@ -7,6 +7,31 @@ protocol. It records unresolved choices; it does not approve them, amend a
 frozen contract, authorize a measured run, or supply a policy authority.
 Every decision below is pending. No reviewer names or signatures are recorded.
 
+**Review package source baseline:** prepared G1 branch commit
+02c1654f457fd1cf685fd449b552d6e35701ea54, based on main
+740c60aeece6e424c56ba081eacc079dc0f16d74 after PR #10 merged.
+
+## Review package
+
+- [Method P specification](G1_METHOD_SPECIFICATION.md) — model, implementation
+  status, invariants, governance, and limitations.
+- [DA01 preregistration draft](DA01_PREREGISTRATION_DRAFT.md) — RQ crosswalk,
+  candidate outcomes/hypotheses, failure handling, and analysis boundaries.
+- [B0/B1/P comparability plan](B1_P_COMPARABILITY_PLAN.md) — fairness,
+  information parity, human procedure, time, evaluator access, and stop rules.
+- [Independent G1 review checklist](G1_REVIEW_CHECKLIST.md) — reviewer lanes,
+  evidence index, and separate G4 gate.
+
+## Status legend
+
+**SOURCE** means stated by a current repository contract, code path, or recorded
+test report. **PROPOSED** means an unapproved method or study choice.
+**UNKNOWN** means available evidence is insufficient or conflicting.
+**PENDING_INDEPENDENT_REVIEW** and **PENDING_EXTERNAL_AUTHORITY** identify
+decisions that this documentation cannot approve. **DEFERRED_FUTURE_RESEARCH**
+keeps work outside the core method. A passing synthetic test is source evidence
+about software behavior, not a measured result or independent approval.
+
 ## Decision status
 
 | Decision | Review state |
@@ -294,10 +319,29 @@ runtime/cloud performance improvements.
 | --- | --- | --- |
 | G0 — architecture and inputs frozen | PASS as recorded for the existing Phase A inputs | The current change-path audit is limited to DEVELOPMENT code, tests, schemas, and descriptive docs; it is not an independent byte-parity audit of frozen artifacts. |
 | G1 — methodological/protocol freeze | **INCOMPLETE** | OPEN-01…OPEN-09 require independent decisions; OPEN-10 is deferred. This draft records no approvals. |
-| G2 — isolation audit | Existing Phase A evidence recorded; current branch probe pending | Prior local digest-pinned probe evidence is in [READINESS](../experiments/execution/da01/READINESS.md). This branch's Docker probe status is reported separately in the implementation traceability report. |
-| G3 — synthetic rehearsal | Engineering-only, partial for SPEC 03 positive acceptance | S03R tests exercise strict TEST_ONLY paths. No accepted V3 no-op or ADD output is claimed because exact before-state applicability remains unresolved. |
+| G2 — isolation audit | Phase A and current-branch DEVELOPMENT synthetic probes PASS locally; measured-environment audit remains pending | [READINESS](../experiments/execution/da01/READINESS.md) records the prior digest-pinned local probe PASS and historical CI probe SKIPPED because the image was unavailable. At PR #11 head `b2a6a8d`, the selected synthetic isolation test passed locally (`1 passed in 4.53s`, image `sha256:5a2dc0c42e8ef06560a3d61c077b66c8ee66f0f3fba7252fec1a5af34e234f27`). Both [push CI](https://github.com/Pan14ek/evofit-bench/actions/runs/38945054120) and [PR CI](https://github.com/Pan14ek/evofit-bench/actions/runs/38945185030) passed `make development-quality`; their pytest commands included the selected test, but aggregate `200 passed, 1 skipped` does not identify its individual CI result. Neither result is independent validation of the selected measured environment/runtime. |
+| G3 — synthetic rehearsal | Engineering-only PASS for the recorded SPEC 03 DEVELOPMENT suite | The final PR #10 traceability report records TEST_ONLY V3 no-op and authorized-descriptor ADD cases reaching governance ACCEPT with separate scoped before/after closure claims. These synthetic regressions do not establish production authority, method approval, or measured outcomes. |
 | G4 — measured-run authorization | **NOT AUTHORIZED** | No B0/B1/P DA01 run is authorized by this register or its tests. |
 
 `experiments/execution/tooling/p_interface.py` remains `NOT_READY`. Independent
 review and separate explicit authorization are required before any measured
 DA01 experiment.
+
+## Decision-to-review-document crosswalk
+
+| Decision | Method specification | Preregistration | Comparability plan | Review checklist |
+| --- | --- | --- | --- | --- |
+| OPEN-01 / M-01 | Boundary | Cadence remains unresolved | Alternatives and decision record | Fairness lane |
+| OPEN-02 / M-02 / M-06 | Claim boundary | RQ crosswalk, endpoints, analysis | — | Outcome/statistics lane |
+| OPEN-03 / M-04 | Stage/denominator boundary | DA01 denominator preserved | — | Limitations lane |
+| OPEN-04 | Authority preconditions | Custody boundary | Trust and completeness stop rules | External-authority lane |
+| OPEN-05 / M-03 | Artifact preconditions | Capability source | Evaluator parity and P-only rules execution | Evaluator lane |
+| OPEN-06 | Bounded deterministic choice | Estimand/cost pending | Time/cost budget pending | Method and statistics lanes |
+| OPEN-07 | Compliance/validity distinction | Failure table | Independent checking | Frozen-scoring lane |
+| OPEN-08 | Operation and V1 compatibility | Operation metric boundary | Candidate verification | Frozen-scoring lane |
+| OPEN-09 | Isolation invariant | Freeze/seal custody | Holdout and sealing | Isolation lane |
+| OPEN-10 / M-05 | α/θ deferred | No DA01 α/θ claim | — | Limitations lane |
+
+The M-01…M-06 source descriptions remain in
+[RESEARCH_CONTEXT §10](RESEARCH_CONTEXT.md#10-open-methodological-discrepancies--do-not-silently-choose);
+the review package does not resolve them.

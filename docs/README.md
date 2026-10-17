@@ -12,6 +12,11 @@ These are **maintained navigation documents**, not replacements for the versione
 | [TESTING.md](TESTING.md) | What test categories, requirement-to-test traceability and pre-merge checks are expected? |
 | [SPEC_03_IMPACT_ANALYSIS_AND_GOVERNED_ADAPTATION.md](SPEC_03_IMPACT_ANALYSIS_AND_GOVERNED_ADAPTATION.md) | **DRAFT** scientific/engineering SPEC 03: Impact, semantic validity, governed operations, rollback and complete SPEC 01–03 test traceability. Not frozen G1. |
 | [SPEC_03_AGENT_IMPLEMENTATION_PROMPT.md](SPEC_03_AGENT_IMPLEMENTATION_PROMPT.md) | Implementation-agent prompt for a **separate** DEVELOPMENT PR, without measured DA01 or oracle access. |
+| [G1_METHOD_SPECIFICATION.md](G1_METHOD_SPECIFICATION.md) | Review draft for the current SPEC 03 DEVELOPMENT method; not an independent freeze or measured-method approval. |
+| [DA01_PREREGISTRATION_DRAFT.md](DA01_PREREGISTRATION_DRAFT.md) | Proposed DA01 RQ1/RQ2 preregistration; does not amend the frozen protocol or authorize a run. |
+| [B1_P_COMPARABILITY_PLAN.md](B1_P_COMPARABILITY_PLAN.md) | B0/B1/P fairness plan with the B1 cadence decision left open. |
+| [G1_REVIEW_CHECKLIST.md](G1_REVIEW_CHECKLIST.md) | Independent G1 review evidence index and separate G4 authorization checklist. |
+| [G1_METHOD_DECISION_REGISTER.md](G1_METHOD_DECISION_REGISTER.md) | OPEN-01…OPEN-10 and M-01…M-06 decision docket and current gate status. |
 
 **Research reading order for AI agents:** read [`RESEARCH_CONTEXT.md`](RESEARCH_CONTEXT.md) before making scientific claims or beginning SPEC 03, then consult [`EXPERIMENT.md`](EXPERIMENT.md) and the exact DA01 protocol for operational definitions. The manuscript's RQ3/RQ4 and the executable protocol's RQ3/RQ4 are **not interchangeable**; the discrepancy is documented, not resolved by this documentation change.
 
