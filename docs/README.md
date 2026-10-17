@@ -15,6 +15,7 @@ These are **maintained navigation documents**, not replacements for the versione
 | [G1_METHOD_SPECIFICATION.md](G1_METHOD_SPECIFICATION.md) | Review draft for the current SPEC 03 DEVELOPMENT method; not an independent freeze or measured-method approval. |
 | [DA01_PREREGISTRATION_DRAFT.md](DA01_PREREGISTRATION_DRAFT.md) | Proposed DA01 RQ1/RQ2 preregistration; does not amend the frozen protocol or authorize a run. |
 | [B1_P_COMPARABILITY_PLAN.md](B1_P_COMPARABILITY_PLAN.md) | B0/B1/P fairness plan with the B1 cadence decision left open. |
+| [G1 Workstream 03 brief](g1/workstreams/03_AUTHORITY_CAPABILITY_COST_BRIEF.md) | Proposed policy-authority, evaluator-capability/parity, and adaptation-cost analysis for OPEN-04/05/06. |
 | [G1_REVIEW_CHECKLIST.md](G1_REVIEW_CHECKLIST.md) | Independent G1 review evidence index and separate G4 authorization checklist. |
 | [G1_METHOD_DECISION_REGISTER.md](G1_METHOD_DECISION_REGISTER.md) | OPEN-01…OPEN-10 and M-01…M-06 decision docket and current gate status. |
 
