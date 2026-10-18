@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:exp04-evidence-verifier-config-v1",
+  "title": "EXP-04 external evidence verifier configuration",
+  "description": "TEST_ONLY adapter for externally provisioned test keys; this format cannot assert production authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "verifier_id", "trust_scope", "algorithm", "key_file", "key_file_sha256"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "verifier_id": {"type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$"},
+    "trust_scope": {"const": "TEST_ONLY"},
+    "algorithm": {"const": "hmac-sha256"},
+    "key_file": {"type": "string", "pattern": "^/[^\u0000]+$"},
+    "key_file_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

@@ -18,7 +18,12 @@ import yaml
 from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError, ProtocolError
 from experiments.execution.tooling.hashing import pretty_json_bytes, sha256_bytes
-from experiments.execution.tooling.p_adaptation import run_adaptation, verify_v3_p_bundle
+from experiments.execution.tooling.p_adaptation import (
+    _verify_adaptation_evidence,
+    run_adaptation,
+    verify_v3_p_bundle,
+)
+from experiments.execution.tooling.p_adaptation_evidence import VerifiedAdaptationEvidence
 from experiments.execution.tooling.p_applicability import EvidenceLedger
 from scripts import exp02_fitness_evidence as exp02
 from scripts.exp01_evidence_contract import BUNDLE_FILENAME, _safe_relative_path, validate_bundle
@@ -36,6 +41,56 @@ STAGE_TRANSLATIONS = {"ci_test": "ci", "runtime": "runtime"}
 def _utc_now() -> str:
     """Return a stable UTC timestamp string for this integration artifact."""
     return datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def verify_method_p_input(
+    p_input_dir: Path,
+    *,
+    trust_context: Any | None = None,
+) -> Any:
+    """Verify an explicitly supplied V3 bundle through the existing EXP-03 entrypoint."""
+    return verify_v3_p_bundle(
+        p_input_dir,
+        evidence_ledger=EvidenceLedger({}, {}, {}),
+        trust_context=trust_context,
+    )
+
+
+def verify_method_p_evidence_sidecar(
+    p_bundle: Any,
+    evidence_context: Mapping[str, Any],
+) -> VerifiedAdaptationEvidence | None:
+    """Verify an external sidecar against the registered V3 bundle and verifier registry."""
+    policy_revision = str(p_bundle.manifest.get("policy_source_revision", ""))
+    policy_digest = str(p_bundle.manifest.get("policy_bundle_sha256", ""))
+    return _verify_adaptation_evidence(
+        p_bundle,
+        evidence_context,
+        policy_revision=policy_revision,
+        policy_digest=policy_digest,
+    )
+
+
+def run_verified_method_p(
+    p_bundle: Any,
+    *,
+    evidence_context: Mapping[str, Any] | None = None,
+) -> tuple[Any, VerifiedAdaptationEvidence | None]:
+    """Run the existing P engine only after any supplied sidecar verifies.
+
+    An unavailable verifier produces the ordinary no-sidecar P result. Invalid
+    sidecars raise the existing contract error and are never passed downstream.
+    """
+    verified_evidence = (
+        verify_method_p_evidence_sidecar(p_bundle, evidence_context)
+        if evidence_context is not None
+        else None
+    )
+    result = run_adaptation(
+        p_bundle,
+        evidence_context=evidence_context if verified_evidence is not None else None,
+    )
+    return result, verified_evidence
 
 
 def _artifact_bytes(run_dir: Path, reference: Mapping[str, Any]) -> bytes:

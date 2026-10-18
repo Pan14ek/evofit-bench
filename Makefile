@@ -21,6 +21,7 @@ DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_exp01_evidence.py \
 	tests/unit/test_exp02_fitness_evidence.py \
 	tests/integration/test_exp03_method_bridge.py \
+	tests/integration/test_exp04_evidence_admission.py \
 	tests/unit/test_da01_inputs_and_isolation.py::test_container_negative_probes_cannot_reach_oracle_history_network_or_other_output \
 	tests/integration/test_p_applicability_v3.py \
 	tests/integration/test_p_governed_adaptation_v1.py

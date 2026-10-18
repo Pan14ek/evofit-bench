@@ -1,4 +1,4 @@
-# Verification and validation strategy (SPEC 01–03)
+# Verification and validation strategy (SPEC 01–04)
 
 **Purpose:** give coding agents an explicit, auditable test plan. The SPEC 01/02 table below remains the regression map. The complete SPEC 03 requirement and test status, exact test names, fixture provenance, hashes, commands and blockers are recorded in [`SPEC_03_IMPLEMENTATION_TRACEABILITY.md`](SPEC_03_IMPLEMENTATION_TRACEABILITY.md).
 
@@ -129,6 +129,55 @@ See [`experiments/execution/EXP03_METHOD_INTEGRATION.md`](../experiments/executi
 for the command contract and interpretation.
 
 Run the focused suite with `uv run python -m pytest -q --no-cov -p no:cacheprovider tests/integration/test_exp03_method_bridge.py`. `make development-quality` includes it in the hosted `development-quality` job and also runs existing TEST_ONLY V3 positive scenarios. EXP-03 does not alter `P_ALGORITHM_STATUS=NOT_READY`, G1/G4, frozen A0/DA01 files, or measured-run authorization.
+
+## EXP-04 verified EXP-02 evidence admission
+
+EXP-04 adds a versioned admission manifest and trace around the existing
+EXP-03/V3 boundary. It validates original EXP-02 artifacts, then requires
+exact representation, obligation, intent, evaluator, metric/unit, lifecycle,
+revision, scope, source-artifact, and metric-observation-contract bindings.
+The current A0 V3 representation catalog does not provide those A0.1
+bindings, so the checked-in path reports `mapping_unresolved`. A verifier
+signature and a digest-valid artifact are distinct: only the existing V3
+adaptation-evidence registry can verify a sidecar, and this EXP-04 CLI's
+external key-file adapter is restricted to `TEST_ONLY`. No local config can
+declare production authority.
+
+The manifest preserves the verified EXP-02 execution verdict and compliance
+observation separately from P's pair validity. A signed observation may enter
+P only when exact bindings and existing V3 verifier checks succeed. It never
+acts as pair semantic proof; positive pair proof remains subject to separate
+G1/G4 authorization. Readback revalidates EXP-01/02 and V3 input references,
+verifier scope, the signed sidecar, generated trace, per-pair consumption,
+and output digests. The run never asserts `Coverage_P` or `Coverage_ref`,
+emits a prediction, or changes `P_ALGORITHM_STATUS=NOT_READY`.
+
+| Requirement | Expected behavior | Test owner | Status |
+| --- | --- | --- | --- |
+| EXP04-01 | Preserve source run, evaluator/config/raw-output digests, metric values, execution verdict, and the EXP-02 compliance observation. | `test_validated_observation_keeps_provenance_and_separates_compliance` | Implemented; digest-valid EXP-02 fixtures |
+| EXP04-02 | Keep conforming and nonconforming observations distinct while exact P mappings remain unresolved and P evidence consumption stays false. | `test_validated_observation_keeps_provenance_and_separates_compliance` | Implemented; fixture observations |
+| EXP04-03 | Reject revision, evaluator, scope, stage, criterion intent, metric/unit, source artifact, and observation-contract mismatches. | `test_architecture_revision_mismatch_stays_unresolved`, `test_strict_mapping_rejects_individual_identity_mismatches` | Implemented; adversarial mappings |
+| EXP04-04 | Preserve unverified runtime application identity as an admission blocker. | `test_runtime_source_identity_must_be_verified` | Implemented; changed binding fixture |
+| EXP04-05 | Missing verifier authority stays unavailable; an invalid signature is rejected through the existing V3 verifier; the file adapter is digest-pinned and TEST_ONLY. | `test_missing_or_invalid_external_verifier_never_consumes_sidecar`, `test_cli_verifier_configuration_is_pinned_and_test_only` | Implemented; TEST_ONLY V3 verifier fixture |
+| EXP04-06 | Verified evaluator execution without exact-pair semantic proof remains UNKNOWN/HOLD. | `test_test_only_verified_evaluator_execution_without_pair_proof_is_not_valid` | Implemented; separately authored TEST_ONLY evidence |
+| EXP04-07 | An externally supplied TEST_ONLY observation enters the existing V3 calculation only after V3 verification; compliance and adequacy remain separate. | `test_test_only_verified_evaluator_execution_without_pair_proof_is_not_valid`, `test_noncompliance_and_evaluator_inadequacy_are_independent` | Implemented; synthetic verification and pair fixtures |
+| EXP04-08 | Digest-valid but contradictory admission statuses fail readback. | `test_digest_valid_contradictory_admission_manifest_fails_readback` | Implemented; resealed negative artifact |
+| EXP04-09 | Never assert positive `Coverage_ref`, measured DA01 prediction, or unauthorized ACCEPT from EXP-04. | `test_validated_observation_keeps_provenance_and_separates_compliance` | Implemented; DEVELOPMENT boundary |
+| EXP04-10 | Preserve the existing TEST_ONLY positive V3 path without turning it into production authority. | `test_existing_test_only_positive_p_path_remains_available` and existing V3 suite | Implemented; TEST_ONLY only |
+
+Run the focused suite with:
+
+```bash
+uv run python -m pytest -q --no-cov -p no:cacheprovider tests/integration/test_exp04_evidence_admission.py
+```
+
+`make development-quality` includes this suite in hosted DEVELOPMENT CI.
+The local result artifacts described in the EXP-04 operational guide are
+separate DEVELOPMENT observations and do not establish scientific readiness.
+See
+[`experiments/execution/EXP04_EVIDENCE_ADMISSION.md`](../experiments/execution/EXP04_EVIDENCE_ADMISSION.md)
+for explicit invocation, output validation, and the present A0-to-V3 binding
+blockers.
 
 ## Pre-merge Definition of Done for implementation SPECs
 

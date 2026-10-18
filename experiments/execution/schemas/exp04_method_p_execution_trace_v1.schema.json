@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:exp04-method-p-execution-trace-v1",
+  "title": "EXP-04 trace from the existing Method P development pipeline",
+  "description": "The existing P result with separate evaluator-evidence admission state; EXP-02 observations never become semantic proof.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "trace_type", "input_bundle_sha256", "input_manifest_sha256",
+    "policy_source_revision", "policy_bundle_sha256", "snapshot_validation", "architecture",
+    "before_applicability", "after_applicability", "impact_assessment", "current_pairs",
+    "candidate_pairs", "current_coverage", "candidate_coverage", "operation_plan",
+    "candidate_configuration", "candidate_sha256", "governance", "candidate_v1",
+    "prediction_v1", "adaptation_evidence_trust_scope",
+    "exp02_observations_used_as_semantic_pair_evidence", "exp02_evidence_admission_status",
+    "exp02_evidence_admitted_to_p_calculations", "adaptation_evidence_sidecar_supplied",
+    "unresolved_prerequisites"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "trace_type": {"const": "development_method_p_execution_with_exp04_admission"},
+    "input_bundle_sha256": {"$ref": "#/$defs/sha256"},
+    "input_manifest_sha256": {"$ref": "#/$defs/sha256"},
+    "policy_source_revision": {"type": "string", "minLength": 1},
+    "policy_bundle_sha256": {"$ref": "#/$defs/sha256"},
+    "snapshot_validation": {"type": "object"},
+    "architecture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["before_commit", "after_commit"],
+      "properties": {
+        "before_commit": {"$ref": "#/$defs/sha1"},
+        "after_commit": {"$ref": "#/$defs/sha1"}
+      }
+    },
+    "before_applicability": {"type": "object"},
+    "after_applicability": {"type": "object"},
+    "impact_assessment": {"type": "object"},
+    "current_pairs": {"type": "array", "items": {"type": "object"}},
+    "candidate_pairs": {"type": "array", "items": {"type": "object"}},
+    "current_coverage": {"type": "object"},
+    "candidate_coverage": {"anyOf": [{"type": "object"}, {"type": "null"}]},
+    "operation_plan": {"type": "object"},
+    "candidate_configuration": {"anyOf": [{"type": "object"}, {"type": "null"}]},
+    "candidate_sha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+    "governance": {"type": "object"},
+    "candidate_v1": {"type": "null"},
+    "prediction_v1": {"type": "null"},
+    "adaptation_evidence_trust_scope": {"type": ["string", "null"]},
+    "exp02_observations_used_as_semantic_pair_evidence": {"const": false},
+    "exp02_evidence_admission_status": {"enum": ["not_admitted", "admitted_execution_evidence"]},
+    "exp02_evidence_admitted_to_p_calculations": {"type": "boolean"},
+    "adaptation_evidence_sidecar_supplied": {"type": "boolean"},
+    "unresolved_prerequisites": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

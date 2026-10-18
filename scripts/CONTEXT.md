@@ -19,10 +19,11 @@ Seed/reset, metrics capture, workload runners, method prep and reproducibility t
 - `exp01_evidence_runtime.py`
 - `exp02_fitness_evidence.py`
 - `exp03_method_bridge.py`
+- `exp04_evidence_admission.py`
 - `finalize_run.py`
 - `prometheus_snapshot.py`
 
-This is a selected list (22 direct tracked files), not a complete source inventory.
+This is a selected list, not a complete source inventory.
 
 ## Established conventions
 
@@ -41,6 +42,15 @@ for referenced inputs and checks manifest-derived fields against the exact P
 trace. `EXP02_EVIDENCE_NOT_ADMITTED_TO_METHOD_P` is an explicit blocker;
 `completed_with_hold` does not mean EXP-02 evidence drove adaptation. Do not
 promote this diagnostic bridge to measured evidence or P readiness.
+
+EXP-04 adds a versioned strict-mapping admission manifest and wraps the same
+V3 verifier and P execution path. It records validated observation, mapping,
+authority, and consumption states separately. The current A0.1-to-V3
+canonical mapping is unresolved, so actual EXP-02 observations remain
+diagnostic and P runs without them. The optional file verifier is TEST_ONLY;
+production authority must come from an externally provisioned verifier
+registered at the existing V3 trust boundary. Readback revalidates all
+source, sidecar, trace, and generated-output references.
 
 ## Verification and further reading
 

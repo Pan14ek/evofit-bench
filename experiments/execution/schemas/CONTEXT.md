@@ -30,8 +30,11 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `p_adaptation_evidence_v2.schema.json`
 - `exp03_method_integration_v1.schema.json`
 - `exp03_method_p_execution_trace_v1.schema.json`
+- `exp04_evidence_admission_v1.schema.json`
+- `exp04_method_p_execution_trace_v1.schema.json`
+- `exp04_evidence_verifier_config_v1.schema.json`
 
-This is a selected list (19 direct tracked files), not a complete source inventory.
+This is a selected list, not a complete source inventory.
 
 ## Established conventions
 
@@ -52,6 +55,13 @@ validation and records that EXP-02 evidence is not admitted to P calculations.
 Readback cross-checks manifest fields against the serialized existing V3
 verifier/adaptation trace; these schemas grant no semantic proof, coverage,
 policy authority, or measured prediction.
+
+The EXP-04 manifest and trace schemas retain EXP-02 execution/compliance
+observations separately from exact V3 bindings, sidecar authority, semantic
+pair proof, and actual P evidence consumption. The CLI verifier-config schema
+is TEST_ONLY and cannot assert production authority. These contracts do not
+establish canonical A0.1-to-V3 mappings, positive coverage, or research
+readiness.
 
 ## Verification and further reading
 
