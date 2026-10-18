@@ -13,6 +13,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_da01_execution.py`
 - `test_da01_inputs_and_isolation.py`
 - `test_experiment_evidence.py`
+- `test_exp01_evidence.py`
 - `test_fault_state.py`
 - `test_p_applicability_policies_v1.py`
 - `test_p_applicability_ruleset_v1.py`
@@ -24,7 +25,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_p_adaptation_evidence_v1.py`
 - `test_g1_method_decision_register.py`
 
-This is a selected list (13 direct tracked files), not a complete source inventory.
+This is a selected list (14 direct tracked files), not a complete source inventory.
 
 ## Established conventions
 

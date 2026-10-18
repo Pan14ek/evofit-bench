@@ -19,3 +19,18 @@ The canonical machine-readable obligation identities, criteria, intents, and def
 `runtime_metrics.csv` samples application-process CPU seconds, resident memory, and virtual memory from `/metrics` at the configured interval. A run fails unless the sampler exits successfully, collects at least 90% of expected samples, and has valid timestamps, positive RSS, and a non-decreasing CPU counter. `process_start_time_seconds` must match in `metrics_before.txt` and `metrics_after.txt`. `summary.json` derives CPU delta, memory start/end/max, and business 5xx rate from process samples and start/end counter snapshots. Missing required metrics fail the run; no collector-process resource usage is treated as application evidence.
 
 `metadata.json` records the Git SHA and dirty state, fitness YAML version and exact-byte SHA-256, logical seed fingerprint, workload profile ID and exact-byte SHA-256, application/runtime environment, database version, Docker image ID where available, and fault configuration. Copies of the workload and seed fingerprint accompany the run. Fault controls are process-local, explicit, disabled by default, and should be reset after each fault experiment. These are raw A0 evidence, not scientific conclusions or adaptation decisions.
+
+## EXP-01 A0.1 DEVELOPMENT evidence
+
+`make exp01-smoke` starts the worktree's local Docker Compose app and PostgreSQL services without resetting the database, then runs the versioned DEVELOPMENT collector. It writes a unique bundle to `experiments/results/<run-id>/evidence_bundle.json`. The direct command for an already running app is:
+
+```bash
+uv run python -m scripts.exp01_evidence \
+  --architecture-state A0_1_CAPABILITY_MODULES \
+  --base-url http://localhost:8000 \
+  --run-id exp01-dev-smoke
+```
+
+The collector runs Import Linter with `architecture/acceptance/importlinter.toml`, makes a read-only Docker Compose observation, checks readiness, samples `/metrics` and process resources, and sends a fixed set of read-only loopback requests. It preserves raw outputs and exact input digests. `--base-url` only accepts unauthenticated loopback HTTP endpoints. Existing run directories are never overwritten.
+
+The checked-in fitness YAML is still declared for `A0_MONOLITH`; the bundle records its digest and marks it mismatched for A0.1. Import Linter execution, container counts, and runtime metrics do not establish `Coverage_P`, `Coverage_ref`, architectural compliance, G1/G4, or measured DA01 results. Missing stages remain explicit and make the bundle incomplete. Exit code 0 means collection is complete and the engineering architecture check passed; 1 means the architecture check detected a violation; 2 means one or more stages could not produce available evidence.

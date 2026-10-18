@@ -9,7 +9,7 @@ Experiment scenario and result schema contracts.
 
 ## Local landmarks
 
-- `README.md`
+- `development_evidence_bundle_v1.schema.json`
 - `ground_truth.schema.json`
 - `result.schema.json`
 - `scenario.schema.json`
@@ -20,7 +20,7 @@ Version contract changes and validate all related cases.
 
 ## Constraints and known gaps
 
-Structural schema pass does not imply trustworthy evidence.
+Structural schema pass does not imply trustworthy evidence. The EXP-01 contract is DEVELOPMENT-only and fixes coverage claims to not assessed/not established.
 
 ## Verification and further reading
 

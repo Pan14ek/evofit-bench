@@ -34,7 +34,8 @@ CI tests `tests/unit/test_context_documents.py` check complete tracked-directory
 
 - The **A0_MONOLITH** starting point is a frozen research baseline. The current `main` application code is the **A0_1_CAPABILITY_MODULES** capability-oriented monolith from DA01, still **one deployable application process, one PostgreSQL database, synchronous calls and no broker**. See `ARCHITECTURE.md` and the state manifest.
 - SPEC 01 (versioned architecture-policy Snapshot v1.1, APA/FV validation, B1/P V2 candidate exports) and SPEC 02 (AR-DSL, evidence-aware `ACTIVE/INACTIVE/UNKNOWN` assessment, separately pinned V3 candidate policy source) are implemented as **development/synthetic** components.
-- Full P impact analysis, operation selection, candidate generation and governed acceptance/rollback are **not implemented**. `experiments/execution/tooling/p_interface.py` reports `P_ALGORITHM_STATUS = NOT_READY`.
+- SPEC 03 DEVELOPMENT implementation exists for typed impact analysis, exact-pair semantic assessment, operation planning, candidate construction, governance, and synthetic tests. Measured Method P remains **NOT READY**: `experiments/execution/tooling/p_interface.py` reports `P_ALGORITHM_STATUS = NOT_READY`; G1 remains INCOMPLETE and G4 NOT AUTHORIZED.
+- The next priority is implementation and experimental validation according to §5 of the monograph. EXP-01 is the A0.1 DEVELOPMENT evidence pipeline; its execution records do not establish `Coverage_P`, `Coverage_ref`, G1/G4, or measured DA01 results.
 - The policy pilot under `experiments/execution/policy-pilot/v1/` contains **DRAFT** policies, **OPEN** registry, and no production trust anchors. It is not a sealed approved authority or independent oracle.
 - No measured B0/B1/P DA01 comparison has been authorized or reported by the existing Phase A protocol.
 

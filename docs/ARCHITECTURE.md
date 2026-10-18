@@ -76,6 +76,8 @@ flowchart TD
 | `experiments/execution/da01/` | Protocol, scoring rules, readiness and isolation |
 | `experiments/execution/schemas/` | Contracts for method inputs, candidates, evidence and results |
 | `experiments/execution/tooling/` | Research tooling, validator, exporters, applicability, sealer, scorer |
+| `scripts/exp01_evidence.py` | A0.1-only DEVELOPMENT evidence collection across engineering acceptance, local Compose observation, and runtime telemetry |
+| `experiments/schemas/development_evidence_bundle_v1.schema.json` | Strict DEVELOPMENT evidence bundle schema; execution records are not coverage verdicts |
 | `experiments/execution/policy-pilot/v1/` | **Draft-only** charter/registry/conditions |
 | `experiments/evidence/` | Curated experimental evidence |
 | `experiments/results/` | Generated, untracked run outputs |
@@ -86,4 +88,6 @@ flowchart TD
 ## SPEC 03 DEVELOPMENT and review boundaries
 
 The DEVELOPMENT implementation depends on verified, pinned method inputs and `ApplicabilityAssessment`, not scenario oracle answers. Preserve the separation of **candidate generation** and **independent validation**. Fail closed on invalid inputs; carry UNKNOWN/HOLD through to governance (do not fabricate `retain` or remove obligations to make a scorer happy). Maintain byte-compatible old V1 and SPEC 01 V2 as well as explicitly versioned V3 compatibility. Synthetic tests and TEST_ONLY ACCEPT do not establish G1, G4, production authority, or measured readiness. See the [G1 method specification](G1_METHOD_SPECIFICATION.md) and [PR #10 implementation traceability](SPEC_03_IMPLEMENTATION_TRACEABILITY.md).
+
+EXP-01 adds a separate A0.1 DEVELOPMENT evidence runner. It invokes the current engineering Import Linter configuration, samples existing app metrics, and optionally observes the current worktree's Compose containers. Its output is versioned and digest-checked; it never maps evaluator execution to positive `Coverage_P` or `Coverage_ref`. See [the EXP-01 run instructions and evidence limits](../experiments/README.md#exp-01-a01-development-evidence).
 
