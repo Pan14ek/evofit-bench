@@ -13,6 +13,7 @@ Business API/DB integration, SPEC02 V3 synthetic pipeline, and SPEC03 synthetic 
 - `test_api_flows.py`
 - `test_p_applicability_v3.py`
 - `test_p_governed_adaptation_v1.py`
+- `test_exp03_method_bridge.py`
 
 ## Established conventions
 
@@ -35,6 +36,13 @@ these checks do not replace a positive approved V3 production-input path.
 Coverage regressions also ensure stale or colliding pair evidence cannot
 satisfy mandatory obligations. Governance regressions bind publication to an
 unchanged decision digest and rollback to the exact revalidated configuration.
+
+`test_exp03_method_bridge.py` binds EXP-02 contract artifacts to an explicit
+V3 input exported from the DRAFT/OPEN policy pilot, then calls
+`verify_v3_p_bundle()` and `run_adaptation()` without an evidence sidecar.
+Its expected HOLD/UNKNOWN results keep this path separate from TEST_ONLY
+positive fixtures; the suite also checks revision mismatch, artifact
+tampering, incomplete mappings, and output digest readback.
 
 ## Verification and further reading
 

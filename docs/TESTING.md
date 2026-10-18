@@ -76,6 +76,51 @@ The A0.1 DEVELOPMENT configuration is a manually established reference, validate
 
 Run the focused suite with `uv run python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_exp02_fitness_evidence.py`. `make development-quality` runs it in the hosted `development-quality` job through `development-regression-test`. The optional isolated DEVELOPMENT smoke is `COMPOSE_PROJECT_NAME=evofit-exp02-smoke make exp01-smoke`; it uses the explicit `fitness/configs/a0_1-capability-modules.dev.yaml` selection. Runtime application source binding remains unverified without authoritative source-to-image provenance.
 
+## EXP-03 EXP-02 to existing Method P integration
+
+EXP-03 validates an existing EXP-01 v1.2 bundle and its recomputed EXP-02
+representation evidence, then preserves the original evaluator and input
+artifact references in a versioned integration manifest. When an explicit V3
+bundle is supplied, the bridge uses `verify_v3_p_bundle()` followed by
+`run_adaptation()` with an empty evidence ledger and no adaptation evidence
+sidecar. The checked-in DRAFT/OPEN policy-pilot source is sufficient to
+exercise that path, but it correctly leaves policy authority and applicability
+unresolved and cannot produce an ACCEPT.
+
+| Requirement | Expected behavior | Test owner | Status |
+| --- | --- | --- | --- |
+| EXP03-01 | Validate EXP-01/02 artifacts and preserve run, configuration, source revision, evaluator IDs and original digests. | `test_original_evaluator_artifact_references_survive_unchanged`; digest-valid EXP-02 fixture. | Implemented; integration contract test |
+| EXP03-02 | Translate only explicit `ci_test → ci` and `runtime → runtime` stages; unsupported stages and unrepresented scopes stay ineligible. | `test_unsupported_stage_and_unrepresented_scope_fail_closed`; actual V3 representation catalog. | Implemented; integration negative test |
+| EXP03-03 | Keep missing evaluator/metric, invalid evidence, and unverified runtime identity unresolved. | `test_missing_evaluator_or_metric_remains_unresolved`, `test_modified_representation_evidence_is_rejected`, `test_unverified_runtime_identity_never_becomes_semantic_pair_proof`. | Implemented; integration negative tests |
+| EXP03-04 | Keep evaluator execution and observed compliance separate, including actual noncompliance. | `test_actual_evaluator_noncompliance_is_separate_from_pair_validity`. | Implemented; integration test |
+| EXP03-05 | Block incompatible V3 after revisions and reject contradictory source/evaluator/canonical-pair bindings. | `test_incompatible_architecture_revision_blocks_method_p_execution`, `test_conflicting_source_revision_is_rejected_before_packaging`, `test_contradictory_evaluator_binding_is_rejected`, `test_duplicate_canonical_pair_binding_is_rejected`. | Implemented; integration negative tests |
+| EXP03-06 | Execute the existing verified V3 Method P pipeline for the supported A0→A0.1 delta; no EXP-02 observation becomes pair proof. | `test_real_exp02_run_executes_existing_p_pipeline_and_preserves_hold`, `test_missing_policy_authority_and_exact_pair_proof_produce_unknown_hold`. | Implemented; actual verifier/adaptation path, DRAFT/OPEN policy source |
+| EXP03-07 | Keep `Coverage_P`, `Coverage_ref`, and measured DA01 prediction unclaimed; require no oracle/scorer artifact. | `test_integration_does_not_emit_measured_da01_prediction`, `test_no_private_oracle_or_scorer_artifacts_are_required`. | Implemented; integration boundary tests |
+| EXP03-08 | Read back generated artifacts and verify manifest and trace digests; report absent V3 input explicitly. | `test_complete_integration_artifact_round_trips_and_checks_digests`, `test_no_v3_input_is_reported_as_an_explicit_blocker`. | Implemented; integration artifact tests |
+| EXP03-09 | Keep existing TEST_ONLY positive V3 scenarios unchanged and covered by hosted DEVELOPMENT regression. | Existing `test_v3_synthetic_noop_accepts_with_independent_before_after_closure_claims` and `test_v3_synthetic_add_uses_authorized_descriptor_and_accepts_with_scoped_closure_claims` in `test_p_applicability_v3.py`. | Existing TEST_ONLY tests; run separately from real-evidence HOLD path |
+
+Prepare any V3 input through the existing `package_policy_source_v3()` and
+`export_method_inputs_v3()` APIs. Pass the policy source, before/after source
+revisions, and registry `as_of` explicitly. The method input directory must
+be outside the repository and must not be discovered from protected materials.
+Then run the bridge into a unique output directory:
+
+```bash
+uv run python -m scripts.exp03_method_bridge \
+  --exp02-run-dir experiments/results/<exp02-run-id> \
+  --p-input-dir /private/tmp/<prepared-v3-method-input> \
+  --output-dir experiments/results/<unique-exp03-run-id>
+```
+
+If no P input is supplied, EXP-03 writes the validated EXP-02 linkage and a
+machine-readable `P_V3_INPUT_REQUIRED` blocker. A verified V3 input produces a
+trace with verifier status, before/after revisions, impact, pair and coverage
+assessments, operation plan, governance decision, and unresolved prerequisites.
+See [`experiments/execution/EXP03_METHOD_INTEGRATION.md`](../experiments/execution/EXP03_METHOD_INTEGRATION.md)
+for the command contract and interpretation.
+
+Run the focused suite with `uv run python -m pytest -q --no-cov -p no:cacheprovider tests/integration/test_exp03_method_bridge.py`. `make development-quality` includes it in the hosted `development-quality` job and also runs existing TEST_ONLY V3 positive scenarios. EXP-03 does not alter `P_ALGORITHM_STATUS=NOT_READY`, G1/G4, frozen A0/DA01 files, or measured-run authorization.
+
 ## Pre-merge Definition of Done for implementation SPECs
 
 1. Formalize the feature's observable contract (inputs, outputs, invalid/unknown/halt semantics, provenance fields and version).

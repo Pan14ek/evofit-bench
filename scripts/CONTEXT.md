@@ -18,10 +18,11 @@ Seed/reset, metrics capture, workload runners, method prep and reproducibility t
 - `exp01_evidence_contract.py`
 - `exp01_evidence_runtime.py`
 - `exp02_fitness_evidence.py`
+- `exp03_method_bridge.py`
 - `finalize_run.py`
 - `prometheus_snapshot.py`
 
-This is a selected list (21 direct tracked files), not a complete source inventory.
+This is a selected list (22 direct tracked files), not a complete source inventory.
 
 ## Established conventions
 
@@ -30,6 +31,13 @@ Run on disposable databases; fail clearly if required telemetry/provenance missi
 ## Constraints and known gaps
 
 EXP-01/02 are A0.1 DEVELOPMENT-only. EXP-01 records the selected manual fitness reference, existing Import Linter/runtime results, and the existing module-structure test; EXP-02 binds exact result artifacts to configured representations and recomputes packaged evidence from the selected configuration and validated evaluator records. HTTP collection is bounded to loopback and missing/reset telemetry stays explicit. Runtime `source_revision` identifies the collector; the separate source-binding record captures read-only Docker endpoint/container/image identity when available. A binding mismatch invalidates the runtime record; unverified binding can preserve observations but cannot establish revision-bound semantic coverage. OCI revision labels are unauthenticated, so the current collector cannot emit verified source-revision binding. Never map execution to positive coverage, fabricate logs, ignore invalid samples or run destructive commands on real data.
+
+EXP-03 validates the original EXP-01/02 bundle, retains its exact artifact
+references, and calls the verified V3 Method P path only for an explicitly
+supplied bundle. It never passes EXP-02 observations as semantic pair proof or
+supplies an adaptation sidecar. HOLD, UNKNOWN, or an explicit blocker is an
+expected DEVELOPMENT result; do not promote it to measured evidence or P
+readiness.
 
 ## Verification and further reading
 
