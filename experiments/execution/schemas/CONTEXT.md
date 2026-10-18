@@ -28,8 +28,10 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `p_cost_model_v1.schema.json`
 - `p_adaptation_evidence_v1.schema.json`
 - `p_adaptation_evidence_v2.schema.json`
+- `exp03_method_integration_v1.schema.json`
+- `exp03_method_p_execution_trace_v1.schema.json`
 
-This is a selected list (17 direct tracked files), not a complete source inventory.
+This is a selected list (19 direct tracked files), not a complete source inventory.
 
 ## Established conventions
 
@@ -43,6 +45,13 @@ be verified independently; Snapshot v1.1 and the V2 exporter retain their
 single-claim contract. Adaptation evidence V2 is an additive sidecar schema for full-template descriptor
 authorization; it does not reinterpret V1 signed evidence. Do not weaken frozen
 DA01 prediction or scorer schemas to force a fit.
+
+The EXP-03 manifest and execution-trace schemas are DEVELOPMENT-only. Version
+1.1.0 distinguishes source-contract validation from independent semantic
+validation and records that EXP-02 evidence is not admitted to P calculations.
+Readback cross-checks manifest fields against the serialized existing V3
+verifier/adaptation trace; these schemas grant no semantic proof, coverage,
+policy authority, or measured prediction.
 
 ## Verification and further reading
 
