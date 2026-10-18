@@ -104,20 +104,20 @@ The notation Δ_g is a model-level label, not a claim that the implementation de
 
 Let **G_T** be the typed trace graph, **S⁺/S?** verified/uncertain seeds, and **P⁺/P?** verified/possible graph paths. Let **π_ℛ** project graph nodes to the declared representation universe. Define:
 
-    ℛ_t⁺ = π_ℛ(P⁺)       proven affected representation subset
-    ℛ_t? = π_ℛ(P?)       possibly affected representation subset
-    U_(t+1) = currently mandatory, ACTIVE obligations not demonstrated covered
-    L? = unresolved links, mappings, provenance/context, or inventory diagnostics
+    𝓡⁺ₜ = π_𝓡(P⁺)       proven affected representation subset
+    𝓡?ₜ = π_𝓡(P?)       possibly affected representation subset
+    Uₜ₊₁ = currently mandatory, ACTIVE obligations not demonstrated covered
+    L?ₜ = unresolved links, mappings, provenance/context, or inventory diagnostics
 
 Then impact is a product of distinct result domains:
 
-    I_t = ⟨ℛ_t⁺, ℛ_t?, U_(t+1), L?⟩
+    Iₜ = ⟨Impact_𝓡(𝓡⁺ₜ, 𝓡?ₜ), Uₜ₊₁, L?ₜ⟩
 
-The full configuration representation set **ℛ_t** is not the same as either impacted subset. Incomplete or unresolved traceability cannot prove no impact; missing edges remain uncertain. Uncovered obligations are derived separately from exact-pair coverage and applicability, not inferred solely from graph reachability.
+Here **Impact_𝓡** is the pair of affected representation subsets (proven and possible); **Uₜ₊₁** is the set of uncovered mandatory, ACTIVE obligations; and **L?ₜ** is the set of unresolved trace-link, mapping, provenance/context, or inventory diagnostics. The full configuration representation set **𝓡ₜ** is not the same as either impacted subset. Incomplete or unresolved traceability cannot prove no impact; missing edges remain uncertain. Uncovered obligations are derived separately from exact-pair coverage and applicability, not inferred solely from graph reachability. This definition matches [G1_METHOD_SPECIFICATION.md §5](../G1_METHOD_SPECIFICATION.md#5-typed-differences-and-conservative-impact).
 
 ### 3.3 Coverage predicates and implementation boundary
 
-For frozen DA01, an obligation q is covered when at least one active representation has valid evaluator execution and a valid, cited, exact pair verdict for (r,q) at the target architecture revision. Each obligation is counted once against the full private required-obligation denominator; a representation may support several obligations only with separate pair proofs. The denominator, at-least-one pair rule, and score are controlled by frozen DA01 sources.
+Distinguish **Coverage_P**, P's own reported coverage assessment based on its internal pair/execution judgments and declared inputs, from **Coverage_ref**, the result determined by an independent experimental reference/evidence path. Coverage_P is a method output/diagnostic: a P-side `VALID` judgment cannot independently verify itself or be presented as reference evidence. The frozen DA01 score predicate uses valid evaluator-execution evidence and a valid, cited exact-pair record for (r,q) at the target architecture revision, once per obligation over the complete private required-obligation denominator. The pair record is a Phase A contract, not a trusted reference-run attestation; independent evaluator/evidence verification remains a deferred G4 requirement. Therefore Coverage_ref requires independent verification of execution and pair evidence under the frozen DA01 validity/scoring rules; P's verdict or scorer output alone is not independent proof. P does not receive the private denominator or reference verdicts, and multiple obligations require separate pair proofs. No authorized Coverage_ref result currently exists.
 
 For a later lifecycle-wide protocol only, a candidate generalization is an approved, verified, nonempty required-stage registry S(q,A) and:
 
@@ -243,7 +243,7 @@ The labels below classify the issue; “contradiction” means two applicable se
 | C7 / OPEN-07 | **Contract compatibility contradiction** | P internal pair model can treat an adequate completed nonzero monitor as VALID pair + NON_COMPLIANT architecture; frozen DA01 says nonzero evaluator exit is EXECUTION_FAILURE. | Same event can change RQ2 coverage. Frozen rule governs DA01; no compatibility claim for this case until independent future versioned decision. Do not edit checker. |
 | C8 / OPEN-08 | **Contract compatibility blocker** | V1 target identity is single typed target; one ADD payload may cover multiple q; planner selects lexical owner. | Owner, grouped predictions, and prospective eligibility each affect operation/scoring semantics. No answer-specific exclusion or scorer rewrite. Block if unambiguous mapping cannot be demonstrated. |
 | C9 / OPEN-09 / G2 / TT-P03-43 | External/independence evidence gap | No real freeze/custody/seal roles or selected-environment audit; exact-byte parity not independently verified. | G1 cannot close on proposed procedure alone; G4 remains separately unauthorized. |
-| D1 | Documentary drift | [docs/README.md](../README.md) still says full P impact/governed adaptation are not implemented, while current method spec, traceability, and code describe synthetic DEVELOPMENT implementation; [AGENTS.md](../../AGENTS.md) repeats the stale sentence. | This integration updates the permitted README only. AGENTS.md is outside the authorized edit list and remains unchanged; report its stale sentence for a later owner-authorized documentation correction. |
+| D1 | Documentary drift | [docs/README.md](../README.md) has been updated in this PR to distinguish the synthetic DEVELOPMENT implementation from measured readiness. Only root [AGENTS.md](../../AGENTS.md) retains the stale statement that full P impact/governed adaptation are not implemented. | The README correction is included here. Root AGENTS.md remains unchanged as required and can be corrected in the next implementation-focused PR. |
 
 ### M-discrepancy crosswalk
 
@@ -269,7 +269,7 @@ The following is a candidate protocol skeleton for review; it does not amend the
 ### Candidate hypotheses and outcomes
 
 - **Affected-target and operation identification:** P may improve the frozen executable RQ1 target metrics relative to B0 and B1. Candidate reports include affected-target precision/recall/F1 and normalized operation accuracy. Report target-level counts and metrics exactly as the frozen scorer defines them; preserve out-of-universe decisions and protocol violations.
-- **Mandatory coverage:** P may improve independently verified coverage under the frozen exact-pair rule relative to B0 and B1. Report the complete denominator, covered count, UNKNOWN/invalid/missing pair reasons, and evidence limits; no inferred denominator reduction.
+- **Mandatory coverage:** P may improve independently verified **Coverage_ref** under the frozen exact-pair rule relative to B0 and B1. Report P's **Coverage_P** separately as a method diagnostic; never substitute it for Coverage_ref. Report the complete reference denominator, covered count, UNKNOWN/invalid/missing pair reasons, and evidence limits; no inferred denominator reduction.
 - **Cost:** any benefit claim is conditional on a separately approved cost boundary. Report human active time, P computation/adaptation, candidate construction, evaluator execution, validation, resources and search completion as distinct fields; do not invent a weighted sum.
 - **Diagnostics:** operation accuracy, validity failures, abstention/HOLD, protocol violations, evidence completeness, and reviewer-visible reasons remain available. Their role in the confirmatory endpoint family is OPEN-02.
 
@@ -362,19 +362,18 @@ No matter how many unit cases pass, they do not establish the later evidence lev
 
 ## 11. Prioritized next actions
 
-| Order | Purpose / scientific necessity | Required evidence and preconditions | Owner/reviewer role | Completion criterion | Suggested future boundary |
-| --- | --- | --- | --- | --- | --- |
-| 1 | Decide OPEN-07/08 semantics because they can change RQ2 coverage and RQ1 operation scoring. | Public contract-level examples; frozen protocol/schema analysis; no private answer inspection. Keep DA01 sources frozen. | Independent formal-methods and scoring-contract reviewers. | Written versioned disposition identifying DA01 behavior and any future contract/version. | Documentation decision PR; any later contract change is a separate versioned PR/protocol. |
-| 2 | Establish OPEN-04/05 applicability/evaluator legitimacy and fairness. | Authentic authority, trust anchors, completeness, evaluator artifacts/adequacy, equal availability, treatment/estimand. | External policy/evaluator authorities and experimental-fairness reviewer. | Exact authorized inventory and source-bound evidence, with unresolved items explicit. | Separate authority/evaluator onboarding; no TEST_ONLY promotion. |
-| 3 | Freeze OPEN-01/02/06 study definitions. | OPEN-05 inventory; OPEN-07/08 scoring boundary; cadence, endpoint hierarchy, cost units/search, stop/missingness rules. | Experimental-methods reviewer, statistician, cost reviewer. | Versioned preregistration mapping manuscript/executable RQs and fixing descriptive DA01 reporting plus future design. | Preregistration-only PR; no experiment until separate authorization. |
-| 4 | Make OPEN-09 operational; audit isolation. | Approved roles, conflicts/exposure, algorithm and protocol source pin, input inventory, seal/custody, selected measured environment. | Research-integrity lead, custodian, independent auditor. | Recorded environment-specific G2 result and authorized custody/freeze procedures. | Separate controlled audit package; TT-P03-43 only after authorization. |
-| 5 | Record G1 only after review. | Completed decisions and evidence above; authentic independent identities, dates, findings, version hashes. | Independent G1 decision authority. | G1 status changed only by genuine recorded decision; no inference from checklist completion. | Separate G1 decision record. |
-| 6 | Request G4 only for an exact run. | G1 record; applicable G0–G3 and authority/evaluator/B1/custody evidence; exact run scope. | Authorized G4 decision-maker. | Explicit run-specific authorization before any measured B0/B1/P. | Separate G4/run authorization PR or record. |
-| 7 | Keep extensions outside current claim. | For OPEN-03/10, separately scoped requirements, versioning, reviewer, and evidence. | Future-study method owner and reviewers. | New version/protocol with nonempty authorized stage registry or α/θ research boundary. | Future research proposal; no current DA01 change. |
+The established monograph is the scientific basis; its model, method, research objectives, and B0/B1/P direction are defined. The next primary objective is to implement and experimentally evaluate the method according to §5. Reuse the versioned [architecture-evolution scenarios](../../experiments/design/ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md), integrate executable fitness functions across CI/CD, deployment, and runtime, implement controlled degradations with reproducible evidence, and complete P with real evaluator artifacts. DA01 remains a frozen experimental case, not the scientific boundary of the dissertation. Resolve further theoretical questions only when a concrete implementation or authorized-experiment blocker requires it.
+
+This priority does not change any gate or authorize a measured run. G1 remains **INCOMPLETE**, G4 remains **NOT AUTHORIZED**, and P remains **NOT_READY**.
+
+| Order | Next execution priority | Required evidence and preconditions | Boundary |
+| --- | --- | --- | --- |
+| 1 | Implement the planned evolution scenarios and end-to-end fitness controls across CI/CD, deployment, and runtime; add controlled degradations, reproducible evidence collection, and real-evaluator integration for P. | Reuse the V1 scenario contract; preserve DA01 and its protected artifacts; validate the implementation with synthetic engineering evidence and report remaining evaluator/authority gaps. | Implementation-focused work; no DA01 contract or gate changes. Clarify theory only for concrete blockers. |
+| 2 | Prepare and execute independent B0/B1/P comparisons, then analyze detection quality, mandatory **Coverage_ref**, semantic consistency, and operational overhead. | Complete applicable G1/G4 and run-specific authorization, independent B1/fairness and evaluator evidence, preregistered outcomes, custody/sealing, and selected-environment isolation prerequisites. Keep **Coverage_P** separate from independently scored **Coverage_ref**. | No measurement before authorization; DA01 remains frozen and supports only its defined case scope. |
 
 ## 12. Open questions for the human researcher
 
-These decisions require the research owner and independent reviewers; Codex cannot approve them:
+These items remain in the existing decision docket; they do not initiate another broad review cycle. Resolve an item when it blocks concrete implementation or is required for an appropriately authorized experiment. Codex cannot approve independent decisions or experimental gates:
 
 1. Should the dissertation's current DA01 comparator be explicitly limited to post-change B1, or must the planned scientific claim await a separate periodic-review arm?
 2. Should DA01 present affected-target F1 and verified mandatory coverage as co-primary candidates or select a hierarchy, and how should manuscript and executable RQ labels be reconciled without replacing either source?

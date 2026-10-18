@@ -39,6 +39,10 @@ Prepared against `main` at `ca8d9781401f74297d7d47f68aa978557ca58e98` (18 Oct 20
 - No production policy or evaluator authority is available; measured B0/B1/P comparisons are neither authorized nor reported. The measured P interface remains `P_ALGORITHM_STATUS = NOT_READY`; G1 remains INCOMPLETE and G4 NOT AUTHORIZED.
 - Experimental Authority Charter/Registry under `policy-pilot/v1`: design-stage, DRAFT/OPEN; production authority and completeness verification remain missing.
 
+### Next research priority
+
+The established monograph is EvoFitBench's scientific basis; its model, method, objectives, and B0/B1/P direction are already defined. The next primary objective is implementation and experimental evaluation according to §5: reuse [`ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md`](../experiments/design/ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md), integrate executable fitness functions across CI/CD, deployment, and runtime, add controlled degradations and reproducible evidence, and complete P with real evaluator artifacts. Conduct independent B0/B1/P comparisons and analyze detection quality, mandatory coverage, semantic consistency, and operational overhead only under the applicable authorization. DA01 remains a frozen case within the dissertation's wider scope; further theory clarification should follow concrete implementation or experimental blockers. See the [prioritized next actions](g1/G1_INTEGRATION_DECISION_MATRIX.md#11-prioritized-next-actions).
+
 The older root [AGENTS.md](../AGENTS.md) still says full P impact analysis and governed adaptation are not implemented. That handbook statement is stale relative to the current DEVELOPMENT implementation and traceability sources; it remains unmodified in this documentation review. See the [G1 integration inconsistency register](g1/G1_INTEGRATION_DECISION_MATRIX.md).
 
 Research rationale comes from the author's working monograph, summarized in [RESEARCH_CONTEXT.md](RESEARCH_CONTEXT.md). It is **proposed science**, not the source of authority for frozen protocol details or verified results.
