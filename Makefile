@@ -18,6 +18,7 @@ DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_p_adaptation_evidence_v1.py \
 	tests/unit/test_g1_method_decision_register.py \
 	tests/unit/test_context_documents.py \
+	tests/unit/test_exp01_evidence.py \
 	tests/unit/test_da01_inputs_and_isolation.py::test_container_negative_probes_cannot_reach_oracle_history_network_or_other_output \
 	tests/integration/test_p_applicability_v3.py \
 	tests/integration/test_p_governed_adaptation_v1.py
@@ -63,6 +64,7 @@ development-regression-test:
 	$(UV) run python -m pytest -q --no-cov -p no:cacheprovider \
 		$(foreach test,$(DEVELOPMENT_PROTECTED_TESTS),--ignore=$(test)) \
 		$(DEVELOPMENT_REGRESSION_TESTS)
+	$(UV) run python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_exp01_evidence.py
 
 development-lint:
 	$(UV) run ruff check . \

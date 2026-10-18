@@ -137,6 +137,7 @@ def _record(
         "execution_verdict": "not_run",
         "scope": scope,
         "source_revision": source_revision,
+        "source_binding": None,
         "configuration_artifact": configuration_artifact,
         "input_artifacts": input_artifacts,
         "raw_output_artifacts": [],
@@ -569,7 +570,7 @@ def collect_evidence(
         "complete" if all(record["status"] == "available" for record in records) else "incomplete"
     )
     bundle = {
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "run_id": run_id,
         "bundle_status": bundle_status,
         "created_at_utc": _utc_now().isoformat(),

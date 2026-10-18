@@ -28,7 +28,7 @@ Run on disposable databases; fail clearly if required telemetry/provenance missi
 
 ## Constraints and known gaps
 
-EXP-01 is A0.1 DEVELOPMENT-only, uses the engineering acceptance configuration, bounds HTTP collection to loopback, and keeps missing/reset telemetry explicit. Never map execution to positive coverage, fabricate logs, ignore invalid samples or run destructive commands on real data.
+EXP-01 is A0.1 DEVELOPMENT-only, uses the engineering acceptance configuration, bounds HTTP collection to loopback, and keeps missing/reset telemetry explicit. Runtime `source_revision` identifies the collector; the separate source-binding record captures read-only Docker endpoint/container/image identity when available. OCI revision labels are unauthenticated, so the current collector cannot emit verified source-revision binding. Never map execution to positive coverage, fabricate logs, ignore invalid samples or run destructive commands on real data.
 
 ## Verification and further reading
 

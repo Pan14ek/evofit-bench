@@ -5,6 +5,8 @@ import hashlib
 import ipaddress
 import json
 import math
+import re
+import shutil
 import subprocess  # nosec B404
 import sys
 from datetime import UTC, datetime
@@ -23,12 +25,295 @@ BUSINESS_REQUESTS = 6
 MAX_ACTIVITY_SECONDS = 30.0
 MAX_SAMPLE_INTERVAL_SECONDS = 5.0
 MAX_SNAPSHOT_AGE_SECONDS = 60.0
+SOURCE_REVISION_PATTERN = re.compile(r"^[0-9a-f]{40}$")
+COMPOSE_CONTAINER_ID_PATTERN = re.compile(r"^[0-9a-f]{12,64}$")
+DOCKER_OBJECT_ID_PATTERN = re.compile(r"^(?:sha256:)?[0-9a-f]{64}$")
 COUNTER_LABELS = {
     "http_requests_total": {"method", "path", "traffic_class"},
     "http_responses_total": {"method", "path", "status_class", "traffic_class"},
     "business_operation_failures_total": {"operation"},
     "business_rule_rejections_total": {"operation", "reason"},
 }
+
+
+def _docker_json_rows(output: str) -> list[dict[str, Any]]:
+    """Parse Compose JSON output without retaining fields beyond the caller's allowlist."""
+    if not output.strip():
+        return []
+    try:
+        parsed: Any = json.loads(output)
+    except json.JSONDecodeError:
+        try:
+            parsed = [json.loads(line) for line in output.splitlines() if line.strip()]
+        except json.JSONDecodeError as error:
+            raise ValueError("Docker Compose returned malformed JSON") from error
+    rows = parsed if isinstance(parsed, list) else [parsed]
+    if not all(isinstance(row, dict) for row in rows):
+        raise ValueError("Docker Compose JSON rows must be objects")
+    return rows
+
+
+def _local_host_binding(host_ip: str) -> bool:
+    """Accept Docker host bindings that can serve the validated loopback request."""
+    if not host_ip:
+        return True
+    try:
+        address = ipaddress.ip_address(host_ip)
+        return address.is_loopback or address.is_unspecified
+    except ValueError:
+        return False
+
+
+def _docker_target_observation(base_url: str) -> dict[str, Any]:
+    """Read Compose/container/image identity and map the endpoint's published port."""
+    parsed_url = urlsplit(base_url)
+    endpoint_port = parsed_url.port or 80
+    docker_path = shutil.which("docker")
+    empty_observation = {
+        "observation_status": "unavailable",
+        "endpoint_port": endpoint_port,
+        "app_container_count": 0,
+        "endpoint_candidate_count": 0,
+        "endpoint_container": None,
+        "reason": "Docker target identity was unavailable.",
+    }
+    if docker_path is None:
+        return {**empty_observation, "reason": "Docker is not available on PATH."}
+
+    try:
+        compose_result = subprocess.run(  # noqa: S603  # nosec B603 -- fixed read-only command, no shell
+            [docker_path, "compose", "ps", "--format", "json"],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=8,
+        )
+        if compose_result.returncode != 0:
+            return {**empty_observation, "reason": "Docker Compose target listing failed."}
+        rows = _docker_json_rows(compose_result.stdout)
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return {**empty_observation, "reason": "Docker Compose target listing was unusable."}
+
+    app_rows = [
+        row
+        for row in rows
+        if (row.get("Service") or row.get("service")) == "app"
+        and str(row.get("State") or row.get("state") or "").lower() == "running"
+    ]
+    targets: list[dict[str, Any]] = []
+    container_format = "{{.Id}}\n{{.Image}}\n{{.Config.Image}}\n{{json .NetworkSettings.Ports}}"
+    image_format = '{{.Id}}\n{{index .Config.Labels "org.opencontainers.image.revision"}}'
+    for row in app_rows[:8]:
+        short_id = row.get("ID") or row.get("Id") or row.get("id")
+        if not isinstance(short_id, str) or not COMPOSE_CONTAINER_ID_PATTERN.fullmatch(short_id):
+            continue
+        try:
+            inspect_result = subprocess.run(  # noqa: S603  # nosec B603 -- fixed allowlisted Docker format, no shell
+                [docker_path, "inspect", "--format", container_format, short_id],
+                cwd=ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=8,
+            )
+        except (OSError, subprocess.SubprocessError):
+            continue
+        if inspect_result.returncode != 0:
+            continue
+        lines = inspect_result.stdout.rstrip("\n").splitlines()
+        if len(lines) < 4:
+            continue
+        container_id, image_id, image_reference, port_json = lines[:4]
+        if not re.fullmatch(r"[0-9a-f]{64}", container_id):
+            continue
+        if not DOCKER_OBJECT_ID_PATTERN.fullmatch(image_id):
+            continue
+        image_id = image_id if image_id.startswith("sha256:") else f"sha256:{image_id}"
+        try:
+            port_map = json.loads(port_json)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(port_map, dict):
+            continue
+
+        published_ports: list[dict[str, Any]] = []
+        for container_port, bindings in port_map.items():
+            port_and_protocol = container_port.split("/", maxsplit=1)
+            if len(port_and_protocol) != 2 or port_and_protocol[1] != "tcp":
+                continue
+            if not port_and_protocol[0].isdigit() or not isinstance(bindings, list):
+                continue
+            for binding in bindings:
+                if not isinstance(binding, dict):
+                    continue
+                host_ip = binding.get("HostIp")
+                host_port = binding.get("HostPort")
+                if not isinstance(host_ip, str) or not isinstance(host_port, str):
+                    continue
+                if not host_port.isdigit():
+                    continue
+                published_ports.append(
+                    {
+                        "host_ip": host_ip,
+                        "published_port": int(host_port),
+                        "target_port": int(port_and_protocol[0]),
+                        "protocol": "tcp",
+                    }
+                )
+
+        revision_label: str | None = None
+        try:
+            image_result = subprocess.run(  # noqa: S603  # nosec B603 -- read-only allowlisted image metadata, no shell
+                [docker_path, "image", "inspect", "--format", image_format, image_id],
+                cwd=ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=8,
+            )
+            image_lines = image_result.stdout.rstrip("\n").splitlines()
+            if (
+                image_result.returncode == 0
+                and len(image_lines) >= 2
+                and image_lines[0] == image_id
+                and SOURCE_REVISION_PATTERN.fullmatch(image_lines[1])
+            ):
+                revision_label = image_lines[1]
+        except (OSError, subprocess.SubprocessError):
+            pass
+
+        targets.append(
+            {
+                "service": "app",
+                "state": "running",
+                "container_id": container_id,
+                "image_id": image_id,
+                "image_reference": image_reference
+                if image_reference and image_reference != "<no value>"
+                else None,
+                "published_ports": sorted(
+                    published_ports,
+                    key=lambda item: (
+                        item["published_port"],
+                        item["target_port"],
+                        item["host_ip"],
+                    ),
+                ),
+                "observed_application_revision": revision_label,
+            }
+        )
+
+    matching_targets = [
+        target
+        for target in targets
+        if any(
+            port["published_port"] == endpoint_port and _local_host_binding(port["host_ip"])
+            for port in target["published_ports"]
+        )
+    ]
+    return {
+        "observation_status": "available",
+        "endpoint_port": endpoint_port,
+        "app_container_count": len(app_rows),
+        "endpoint_candidate_count": len(matching_targets),
+        "endpoint_container": matching_targets[0] if len(matching_targets) == 1 else None,
+        "reason": None
+        if len(matching_targets) == 1
+        else "No unique running Compose app container publishes the requested loopback port.",
+    }
+
+
+def assess_runtime_source_binding(
+    collector_source_revision: str,
+    before: dict[str, Any] | None,
+    after: dict[str, Any] | None,
+    endpoint_port: int,
+) -> dict[str, Any]:
+    """Classify target identity without treating local HEAD or OCI labels as authority."""
+    if not SOURCE_REVISION_PATTERN.fullmatch(collector_source_revision):
+        raise ValueError("collector source revision must be a full lowercase Git SHA")
+    before = before or {}
+    after = after or {}
+    before_target = before.get("endpoint_container")
+    after_target = after.get("endpoint_container")
+    identity_stable: bool | None = None
+    if isinstance(before_target, dict) and isinstance(after_target, dict):
+        identity_stable = before_target == after_target
+
+    if identity_stable is False:
+        endpoint_status = "mismatch"
+    elif (
+        identity_stable is True
+        and isinstance(after_target, dict)
+        and after_target.get("service") == "app"
+        and after_target.get("state") == "running"
+        and isinstance(after_target.get("container_id"), str)
+        and isinstance(after_target.get("image_id"), str)
+        and after.get("endpoint_port") == endpoint_port
+        and any(
+            port.get("published_port") == endpoint_port
+            and _local_host_binding(str(port.get("host_ip", "")))
+            for port in after_target.get("published_ports", [])
+            if isinstance(port, dict)
+        )
+    ):
+        endpoint_status = "verified"
+    else:
+        endpoint_status = "unverified"
+
+    observed_revision = (
+        after_target.get("observed_application_revision")
+        if endpoint_status == "verified" and isinstance(after_target, dict)
+        else None
+    )
+    if endpoint_status == "mismatch":
+        status = "mismatch"
+        reason = (
+            "The endpoint resolved to different Docker container or image identities "
+            "during collection."
+        )
+    elif endpoint_status == "verified" and observed_revision is not None:
+        if observed_revision != collector_source_revision:
+            status = "mismatch"
+            reason = (
+                "The mapped image OCI revision label differs from the collector revision; "
+                "the label is an unauthenticated claim."
+            )
+        else:
+            status = "unverified"
+            reason = (
+                "The endpoint stayed bound to one Docker app container, but a matching OCI "
+                "revision label is not authoritative source-to-image provenance."
+            )
+    elif endpoint_status == "verified":
+        status = "unverified"
+        reason = (
+            "The endpoint stayed bound to one Docker app container, but no application "
+            "revision label or authoritative source-to-image provenance was available."
+        )
+    else:
+        status = "unverified"
+        reason = "The endpoint could not be bound to one stable Docker app container."
+
+    return {
+        "status": status,
+        "collector_source_revision": collector_source_revision,
+        "observed_application_revision": observed_revision,
+        "revision_observation_source": "oci_image_label" if observed_revision else "none",
+        "revision_authority": "unverified",
+        "endpoint_binding_status": endpoint_status,
+        "endpoint_port": endpoint_port,
+        "container_id": after_target.get("container_id")
+        if isinstance(after_target, dict)
+        else None,
+        "image_id": after_target.get("image_id") if isinstance(after_target, dict) else None,
+        "image_reference": after_target.get("image_reference")
+        if isinstance(after_target, dict)
+        else None,
+        "identity_stable": identity_stable,
+        "reason": reason,
+    }
 
 
 def _executable_sha256(executable: str) -> str | None:
@@ -270,6 +555,7 @@ def _base_record(
         "execution_verdict": "not_run",
         "scope": "Local A0.1 application process and bounded HTTP activity on loopback.",
         "source_revision": source_revision,
+        "source_binding": None,
         "configuration_artifact": None,
         "input_artifacts": [],
         "raw_output_artifacts": [],
@@ -302,6 +588,10 @@ def collect_runtime_evidence(
 
     started = utc_now()
     record = _base_record(run_id=run_id, source_revision=source_revision, started=started)
+    endpoint_port = urlsplit(base_url).port or 80
+    record["source_binding"] = assess_runtime_source_binding(
+        source_revision, None, None, endpoint_port
+    )
     record["input_artifacts"] = input_artifacts
     record["evaluator_version"] = _distribution_version("prometheus-client")
     record["command"] = [
@@ -366,9 +656,14 @@ def collect_runtime_evidence(
             record["limitations"].append(
                 "The application readiness endpoint did not establish a usable local runtime."
             )
+            record["limitations"].append(
+                "Runtime application source binding is unverified because the endpoint was not "
+                "collected and no authoritative source-to-image provenance was available."
+            )
             _finish_record(record, started)
             return record
 
+        target_identity_before = _docker_target_observation(base_url)
         before_response, before_time, before_error = _fetch_metrics(client, metrics_url)
         if before_error:
             record["errors"].append(before_error)
@@ -508,6 +803,31 @@ def collect_runtime_evidence(
                     role="raw_metrics",
                 )
             )
+        target_identity_after = _docker_target_observation(base_url)
+        identity_observation = {
+            "before_runtime_collection": target_identity_before,
+            "after_runtime_collection": target_identity_after,
+        }
+        record["raw_output_artifacts"].append(
+            write_artifact(
+                run_dir,
+                "raw/runtime_target_identity.json",
+                json.dumps(
+                    identity_observation,
+                    indent=2,
+                    sort_keys=True,
+                    allow_nan=False,
+                ).encode("utf-8"),
+                media_type="application/json",
+                role="target_identity_observation",
+            )
+        )
+        record["source_binding"] = assess_runtime_source_binding(
+            source_revision,
+            target_identity_before,
+            target_identity_after,
+            endpoint_port,
+        )
 
     metrics_result: dict[str, Any] = {}
     invalid_values: list[dict[str, Any]] = []
@@ -695,6 +1015,10 @@ def collect_runtime_evidence(
     )
     record["limitations"].append(
         "Histogram bucket evidence is preserved; p50, p95, and p99 are not asserted."
+    )
+    record["limitations"].append(
+        "Runtime source revision remains unverified without authoritative source-to-image "
+        "provenance; Docker identity and OCI labels are execution-context observations only."
     )
     if runtime_sample_status == "available" and record["evaluator_version"] is None:
         record["status"] = "inconclusive"

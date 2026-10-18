@@ -133,6 +133,36 @@ def _validate_schema(bundle: dict[str, Any]) -> None:
         raise ValueError(f"evidence bundle schema violation at {location}: {first.message}")
 
 
+def _validate_runtime_source_binding(binding: dict[str, Any], collector_revision: str) -> None:
+    """Reject unsupported verification claims and inconsistent target identity states."""
+    if binding["status"] == "verified":
+        raise ValueError(
+            "runtime source binding cannot be verified without authoritative "
+            "source-to-image provenance"
+        )
+    if binding["collector_source_revision"] != collector_revision:
+        raise ValueError("runtime collector source revision differs from the bundle revision")
+
+    endpoint_status = binding["endpoint_binding_status"]
+    observed_revision = binding["observed_application_revision"]
+    identity_stable = binding["identity_stable"]
+    if identity_stable is False and endpoint_status != "mismatch":
+        raise ValueError("runtime endpoint identity changed but was not marked as a mismatch")
+    if endpoint_status == "verified":
+        if identity_stable is not True or not binding["container_id"] or not binding["image_id"]:
+            raise ValueError("verified endpoint binding requires stable container and image IDs")
+    elif observed_revision is not None:
+        raise ValueError("an application revision label is not bound to the observed endpoint")
+
+    mismatch_observed = endpoint_status == "mismatch" or (
+        endpoint_status == "verified"
+        and observed_revision is not None
+        and observed_revision != collector_revision
+    )
+    if mismatch_observed != (binding["status"] == "mismatch"):
+        raise ValueError("runtime source binding status does not match the observed identity")
+
+
 def validate_bundle(run_dir: Path) -> dict[str, Any]:
     """Read back and fail closed on malformed, cross-revision, or tampered bundles."""
     if run_dir.is_symlink() or not run_dir.is_dir():
@@ -166,6 +196,14 @@ def validate_bundle(run_dir: Path) -> dict[str, Any]:
             raise ValueError("stage record run-id differs from the bundle run-id")
         if record["source_revision"] != source_revision:
             raise ValueError("stage record source revision differs from the bundle revision")
+        if record["lifecycle_stage"] == "runtime":
+            binding = record.get("source_binding")
+            if bundle["schema_version"] == "1.1.0" and not isinstance(binding, dict):
+                raise ValueError("runtime record is missing its source binding")
+            if isinstance(binding, dict):
+                _validate_runtime_source_binding(binding, source_revision)
+        elif record.get("source_binding") is not None:
+            raise ValueError("source binding is only valid on the runtime record")
         started = datetime.fromisoformat(record["started_at_utc"].replace("Z", "+00:00"))
         ended = datetime.fromisoformat(record["ended_at_utc"].replace("Z", "+00:00"))
         if ended < started:

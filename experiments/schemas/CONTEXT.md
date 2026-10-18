@@ -20,7 +20,7 @@ Version contract changes and validate all related cases.
 
 ## Constraints and known gaps
 
-Structural schema pass does not imply trustworthy evidence. The EXP-01 contract is DEVELOPMENT-only and fixes coverage claims to not assessed/not established.
+Structural schema pass does not imply trustworthy evidence. EXP-01 bundle schema 1.1 records source-binding status separately from collector revision and rejects verified source binding without authoritative provenance; legacy 1.0 bundles remain readable without a source-binding claim. The contract is DEVELOPMENT-only and fixes coverage claims to not assessed/not established.
 
 ## Verification and further reading
 

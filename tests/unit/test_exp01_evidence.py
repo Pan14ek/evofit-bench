@@ -19,6 +19,49 @@ from scripts.prometheus_snapshot import parse_snapshot
 SOURCE_SHA = "a" * 40
 
 
+def _source_binding(source_revision: str) -> dict[str, Any]:
+    return {
+        "status": "unverified",
+        "collector_source_revision": source_revision,
+        "observed_application_revision": None,
+        "revision_observation_source": "none",
+        "revision_authority": "unverified",
+        "endpoint_binding_status": "unverified",
+        "endpoint_port": 8000,
+        "container_id": None,
+        "image_id": None,
+        "image_reference": None,
+        "identity_stable": None,
+        "reason": "No authoritative target source identity is available.",
+    }
+
+
+def _target_observation(application_revision: str | None) -> dict[str, Any]:
+    return {
+        "observation_status": "available",
+        "endpoint_port": 8000,
+        "app_container_count": 1,
+        "endpoint_candidate_count": 1,
+        "endpoint_container": {
+            "service": "app",
+            "state": "running",
+            "container_id": "1" * 64,
+            "image_id": f"sha256:{'2' * 64}",
+            "image_reference": "evofit-bench-app:latest",
+            "published_ports": [
+                {
+                    "host_ip": "127.0.0.1",
+                    "published_port": 8000,
+                    "target_port": 8000,
+                    "protocol": "tcp",
+                }
+            ],
+            "observed_application_revision": application_revision,
+        },
+        "reason": None,
+    }
+
+
 def _write_input(run_dir: Path, name: str, content: bytes) -> dict[str, Any]:
     return contract.write_artifact(
         run_dir,
@@ -63,6 +106,7 @@ def _valid_record(
         "execution_verdict": "passed" if stage == "ci_test" else "inconclusive",
         "scope": f"controlled {stage} fixture",
         "source_revision": source_revision,
+        "source_binding": _source_binding(source_revision) if stage == "runtime" else None,
         "configuration_artifact": configuration,
         "input_artifacts": [],
         "raw_output_artifacts": [raw],
@@ -85,7 +129,7 @@ def _valid_bundle(run_dir: Path) -> dict[str, Any]:
         _valid_record(run_dir, "runtime", SOURCE_SHA),
     ]
     return {
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "run_id": run_dir.name,
         "bundle_status": "complete",
         "created_at_utc": datetime(2026, 10, 18, 0, 0, tzinfo=UTC).isoformat(),
@@ -147,6 +191,109 @@ def test_runtime_url_rejects_remote_or_unbounded_endpoints(url: str) -> None:
 @pytest.mark.parametrize("url", ["http://localhost:8000", "http://127.0.0.1", "http://[::1]:8000/"])
 def test_runtime_url_accepts_loopback_only(url: str) -> None:
     assert runtime.validate_local_base_url(url).startswith("http://")
+
+
+def test_runtime_missing_target_identity_stays_unverified() -> None:
+    binding = runtime.assess_runtime_source_binding(SOURCE_SHA, None, None, 8000)
+
+    assert binding["status"] == "unverified"
+    assert binding["endpoint_binding_status"] == "unverified"
+    assert binding["collector_source_revision"] == SOURCE_SHA
+    assert binding["observed_application_revision"] is None
+    assert binding["container_id"] is None
+
+
+def test_runtime_mismatched_target_revision_is_not_bound_to_collector() -> None:
+    target = _target_observation("b" * 40)
+
+    binding = runtime.assess_runtime_source_binding(SOURCE_SHA, target, target, 8000)
+
+    assert binding["endpoint_binding_status"] == "verified"
+    assert binding["status"] == "mismatch"
+    assert binding["collector_source_revision"] == SOURCE_SHA
+    assert binding["observed_application_revision"] == "b" * 40
+    assert binding["revision_authority"] == "unverified"
+
+
+def test_runtime_changed_target_container_is_a_mismatch() -> None:
+    before = _target_observation(SOURCE_SHA)
+    after = _target_observation(SOURCE_SHA)
+    after["endpoint_container"]["container_id"] = "3" * 64
+    after["endpoint_container"]["image_id"] = f"sha256:{'4' * 64}"
+
+    binding = runtime.assess_runtime_source_binding(SOURCE_SHA, before, after, 8000)
+
+    assert binding["status"] == "mismatch"
+    assert binding["endpoint_binding_status"] == "mismatch"
+    assert binding["identity_stable"] is False
+    assert binding["observed_application_revision"] is None
+
+
+def test_matching_oci_revision_label_does_not_verify_source_binding() -> None:
+    target = _target_observation(SOURCE_SHA)
+
+    binding = runtime.assess_runtime_source_binding(SOURCE_SHA, target, target, 8000)
+
+    assert binding["endpoint_binding_status"] == "verified"
+    assert binding["status"] == "unverified"
+    assert "not authoritative" in binding["reason"]
+
+
+def test_missing_application_revision_label_stays_unverified_with_bound_endpoint() -> None:
+    target = _target_observation(None)
+
+    binding = runtime.assess_runtime_source_binding(SOURCE_SHA, target, target, 8000)
+
+    assert binding["endpoint_binding_status"] == "verified"
+    assert binding["status"] == "unverified"
+    assert "no application revision label" in binding["reason"]
+
+
+def test_docker_target_observation_binds_published_loopback_port(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    docker = tmp_path / "docker"
+    docker.write_text("docker fixture", encoding="utf-8")
+    container_id = "1" * 64
+    image_id = f"sha256:{'2' * 64}"
+    commands: list[list[str]] = []
+    completed = [
+        subprocess.CompletedProcess(
+            ["docker"],
+            0,
+            json.dumps({"ID": container_id[:12], "Service": "app", "State": "running"}),
+            "",
+        ),
+        subprocess.CompletedProcess(
+            ["docker"],
+            0,
+            f"{container_id}\n{image_id}\nevofit-bench-app:latest\n"
+            '{"8000/tcp":[{"HostIp":"127.0.0.1","HostPort":"8000"}]}\n',
+            "",
+        ),
+        subprocess.CompletedProcess(["docker"], 0, f"{image_id}\n{SOURCE_SHA}\n", ""),
+    ]
+
+    def run(command: list[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        commands.append(command)
+        assert kwargs["check"] is False
+        assert kwargs["timeout"] <= 8
+        assert "shell" not in kwargs
+        return completed.pop(0)
+
+    monkeypatch.setattr("scripts.exp01_evidence_runtime.shutil.which", lambda _: str(docker))
+    monkeypatch.setattr("scripts.exp01_evidence_runtime.subprocess.run", run)
+
+    observation = runtime._docker_target_observation("http://localhost:8000")
+
+    assert observation["observation_status"] == "available"
+    assert observation["endpoint_candidate_count"] == 1
+    assert observation["endpoint_container"]["container_id"] == container_id
+    assert observation["endpoint_container"]["image_id"] == image_id
+    assert observation["endpoint_container"]["observed_application_revision"] == SOURCE_SHA
+    assert commands[0][1:] == ["compose", "ps", "--format", "json"]
+    assert commands[1][1:3] == ["inspect", "--format"]
+    assert commands[2][1:4] == ["image", "inspect", "--format"]
 
 
 def test_exact_digest_is_reproducible_and_a0_config_is_explicitly_mismatched(
@@ -545,6 +692,8 @@ def test_runtime_adapter_collects_live_records_without_claiming_coverage(
     monkeypatch.setattr("scripts.exp01_evidence_runtime.httpx.Client", Client)
     monkeypatch.setattr("scripts.exp01_evidence_runtime.subprocess.Popen", Sampler)
     monkeypatch.setattr(runtime, "_distribution_version", lambda _: "0.21.0")
+    target_identity = _target_observation(SOURCE_SHA)
+    monkeypatch.setattr(runtime, "_docker_target_observation", lambda _: target_identity)
 
     result = runtime.collect_runtime_evidence(
         run_dir,
@@ -560,6 +709,9 @@ def test_runtime_adapter_collects_live_records_without_claiming_coverage(
     assert result["exit_status"] == 0
     assert result["executable_sha256"] == contract.sha256_bytes(Path(sys.executable).read_bytes())
     assert result["measurements"]["runtime_sampling"]["sample_count"] == 6
+    assert result["source_revision"] == SOURCE_SHA
+    assert result["source_binding"]["status"] == "unverified"
+    assert result["source_binding"]["endpoint_binding_status"] == "verified"
     assert (
         result["measurements"]["metrics"]["counters"]["http_requests_total_business"]["value"] == 5
     )
@@ -569,6 +721,9 @@ def test_runtime_adapter_collects_live_records_without_claiming_coverage(
     )
     assert result["measurements"]["metrics"]["histogram"]["quantiles"] is None
     assert any(item["role"] == "runtime_samples" for item in result["raw_output_artifacts"])
+    assert any(
+        item["role"] == "target_identity_observation" for item in result["raw_output_artifacts"]
+    )
 
 
 def test_runtime_readiness_failure_is_an_explicit_not_run_outcome(
@@ -606,6 +761,7 @@ def test_runtime_readiness_failure_is_an_explicit_not_run_outcome(
     assert result["status"] == "missing"
     assert result["execution_verdict"] == "not_run"
     assert result["measurements"]["runtime_sampling"]["status"] == "not_run"
+    assert result["source_binding"]["status"] == "unverified"
     assert result["raw_output_artifacts"][0]["role"] == "readiness"
 
 
@@ -619,6 +775,21 @@ def test_bundle_round_trips_schema_and_all_artifact_digests(tmp_path: Path) -> N
     assert validated["bundle_status"] == "complete"
     assert len(validated["artifact_inventory"]) == 8
     assert contract.validate_bundle(run_dir)["coverage_claims"]["Coverage_ref"] == "not_established"
+
+
+def test_bundle_v1_0_remains_readable_without_source_binding(tmp_path: Path) -> None:
+    run_dir = tmp_path / "legacy-v1-bundle"
+    bundle = _valid_bundle(run_dir)
+    bundle["schema_version"] = "1.0.0"
+    for record in bundle["records"]:
+        record.pop("source_binding")
+
+    _, validated = contract.write_bundle(run_dir, bundle)
+
+    assert validated["schema_version"] == "1.0.0"
+    assert "source_binding" not in next(
+        record for record in validated["records"] if record["lifecycle_stage"] == "runtime"
+    )
 
 
 def test_bundle_detects_corrupted_artifact_digest(tmp_path: Path) -> None:
@@ -683,6 +854,17 @@ def test_bundle_cannot_claim_coverage_ref(tmp_path: Path) -> None:
     bundle["coverage_claims"]["Coverage_ref"] = "established"
     with pytest.raises(ValueError, match="schema violation"):
         contract.write_bundle(run_dir, bundle)
+
+
+def test_bundle_rejects_promotion_of_unverified_runtime_binding(tmp_path: Path) -> None:
+    run_dir = tmp_path / "promoted-source-binding"
+    bundle = _valid_bundle(run_dir)
+    contract.write_bundle(run_dir, bundle)
+    bundle["records"][2]["source_binding"]["status"] = "verified"
+    (run_dir / contract.BUNDLE_FILENAME).write_text(json.dumps(bundle), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="cannot be verified"):
+        contract.validate_bundle(run_dir)
 
 
 def test_runtime_inputs_do_not_include_private_or_scorer_sources() -> None:

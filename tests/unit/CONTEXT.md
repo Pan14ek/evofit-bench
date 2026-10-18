@@ -40,7 +40,9 @@ status; it cannot approve a decision.
 
 ## Constraints and known gaps
 
-Current coverage gate reports app-only coverage, not research-tool or requirement completeness. SPEC03 fixtures are synthetic and explicitly TEST_ONLY.
+Current coverage gate reports app-only coverage, not research-tool or requirement completeness. EXP-01 source-binding cases use synthetic Docker identity observations; a passing fixture does not supply authoritative source-to-image provenance. SPEC03 fixtures are synthetic and explicitly TEST_ONLY.
+
+`tests/unit/test_exp01_evidence.py` is included in `DEVELOPMENT_REGRESSION_TESTS` and is also run once more by `make development-regression-test` to expose its individual result in hosted logs.
 
 ## Verification and further reading
 
