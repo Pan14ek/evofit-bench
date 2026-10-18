@@ -19,3 +19,20 @@ The canonical machine-readable obligation identities, criteria, intents, and def
 `runtime_metrics.csv` samples application-process CPU seconds, resident memory, and virtual memory from `/metrics` at the configured interval. A run fails unless the sampler exits successfully, collects at least 90% of expected samples, and has valid timestamps, positive RSS, and a non-decreasing CPU counter. `process_start_time_seconds` must match in `metrics_before.txt` and `metrics_after.txt`. `summary.json` derives CPU delta, memory start/end/max, and business 5xx rate from process samples and start/end counter snapshots. Missing required metrics fail the run; no collector-process resource usage is treated as application evidence.
 
 `metadata.json` records the Git SHA and dirty state, fitness YAML version and exact-byte SHA-256, logical seed fingerprint, workload profile ID and exact-byte SHA-256, application/runtime environment, database version, Docker image ID where available, and fault configuration. Copies of the workload and seed fingerprint accompany the run. Fault controls are process-local, explicit, disabled by default, and should be reset after each fault experiment. These are raw A0 evidence, not scientific conclusions or adaptation decisions.
+
+## EXP-01 A0.1 DEVELOPMENT evidence
+
+`make exp01-smoke` starts the worktree's local Docker Compose app and PostgreSQL services without resetting the database, then runs the versioned DEVELOPMENT collector. It writes a unique bundle to `experiments/results/<run-id>/evidence_bundle.json`. The direct command for an already running app is:
+
+```bash
+uv run python -m scripts.exp01_evidence \
+  --architecture-state A0_1_CAPABILITY_MODULES \
+  --base-url http://localhost:8000 \
+  --run-id exp01-dev-smoke
+```
+
+The collector runs Import Linter with `architecture/acceptance/importlinter.toml`, makes read-only Docker Compose and container/image observations, checks readiness, samples `/metrics` and process resources, and sends a fixed set of read-only loopback requests. It preserves sanitized target identity observations and exact input digests. `--base-url` only accepts unauthenticated loopback HTTP endpoints. Existing run directories are never overwritten.
+
+Evidence bundle schema 1.1 distinguishes the collector's Git revision from the observed application identity. Schema 1.0 bundles remain readable for compatibility, but their source binding is unknown and must not be inferred from the collector revision. When Docker is available, the runtime record captures container and image IDs before and after sampling and checks whether the requested host port maps to one stable Compose `app` container. A different observed revision label or changed target identity is `mismatch`; missing target identity remains `unverified`. A matching `org.opencontainers.image.revision` label remains an unauthenticated claim, so source binding is still `unverified`. Schema 1.1 validation rejects `verified` source binding because this DEVELOPMENT pipeline has no authoritative source-to-image provenance verifier. Docker identity, runtime metrics, and collector Git HEAD do not by themselves prove which source revision produced the serving application.
+
+The checked-in fitness YAML is still declared for `A0_MONOLITH`; the bundle records its digest and marks it mismatched for A0.1. Import Linter execution, container counts, and runtime metrics do not establish `Coverage_P`, `Coverage_ref`, architectural compliance, G1/G4, or measured DA01 results. Missing stages remain explicit and make the bundle incomplete. Exit code 0 means collection is complete and the engineering architecture check passed; 1 means the architecture check detected a violation; 2 means one or more stages could not produce available evidence.

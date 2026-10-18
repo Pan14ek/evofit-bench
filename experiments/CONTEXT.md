@@ -11,6 +11,8 @@ Scientific protocol, scenarios, execution, curated evidence and run results.
 
 - `A0_FINAL_VALIDATION_REPORT.md`
 - `README.md`
+- `schemas/development_evidence_bundle_v1.schema.json`
+- `results/` (ignored generated run outputs)
 
 ## Established conventions
 
@@ -18,7 +20,7 @@ Read experiments/design/ and execution/da01/ canonical research rules.
 
 ## Constraints and known gaps
 
-Never treat a code merge as G4 authorization or a single scenario as many independent samples.
+EXP-01 output is DEVELOPMENT execution evidence, not Coverage_P, Coverage_ref, or measured DA01 evidence. Runtime bundles distinguish collector revision from observed Docker target identity; without authoritative source-to-image provenance, source binding remains unverified. Never treat a code merge as G4 authorization or a single scenario as many independent samples.
 
 ## Verification and further reading
 

@@ -43,6 +43,24 @@ A test described in a specification must have a stable requirement ID, fixture p
 
 The exact assertions and PASS/SKIP counts come from running the suites, never this table. The SPEC 03 report expands its 14 requirements into all 48 required rows and records which rows are blocked by absent approved positive-path inputs.
 
+## EXP-01 DEVELOPMENT evidence pipeline
+
+The new evidence collector is an engineering data path. Its bundle cannot establish semantic fitness coverage or measured research outcomes.
+
+| Requirement | Expected behavior | Unit tests / fixture provenance | Status |
+| --- | --- | --- | --- |
+| EXP01-01 | Run IDs and target URLs are bounded to safe path components and loopback HTTP. | `test_run_id_*`, `test_runtime_url_*`; literal input cases. | Implemented; synthetic unit tests |
+| EXP01-02 | Bundle schema, run identity, source revision, and artifact digests validate; corruption and cross-revision references fail. | `test_bundle_round_trips_schema_and_all_artifact_digests`, `test_bundle_detects_corrupted_artifact_digest`, `test_bundle_rejects_wrong_architecture_and_cross_revision_evidence`; local temporary artifacts. | Implemented; synthetic unit tests |
+| EXP01-03 | Import Linter records actual executable/version, config digest, duration, exit status, and raw outputs; violations remain distinct from execution errors. | `test_import_linter_*`; controlled `CompletedProcess` output fixtures. | Implemented; adapter behavior mocked |
+| EXP01-04 | Prometheus samples preserve business/operational labels, reject non-finite or incompatible samples, and never turn a reset into a valid rate. | `test_realistic_prometheus_samples_*`, `test_nonfinite_values_*`, `test_counter_decrease_*`; in-memory exposition fixtures. | Implemented; synthetic unit tests |
+| EXP01-05 | Runtime collection records readiness, bounded read-only traffic, process sampling, histogram buckets, and explicit missing/stale evidence. | `test_runtime_source_binding_controls_bundle_and_cli_outcome`, `test_stale_snapshot_interval_*`; mocked local client and sampler plus CSV fixtures. | Implemented; adapter behavior mocked |
+| EXP01-06 | Compose observations preserve actual service container counts while process and communication semantics remain NOT_OBSERVED. | `test_compose_observation_*`; controlled Docker command responses. | Implemented; adapter behavior mocked |
+| EXP01-07 | Missing evaluator/runtime evidence, wrong architecture, and existing run directories cannot produce positive coverage or overwrite results. | `test_import_linter_missing_*`, `test_runtime_readiness_failure_*`, `test_missing_evaluator_*`, `test_existing_run_directory_*`. | Implemented; synthetic unit tests |
+| EXP01-08 | Runtime inputs do not require private ground truth, scorer, or another method's output. | `test_runtime_inputs_do_not_include_private_or_scorer_sources`; checked-in source/config allowlist. | Implemented; source-contract test |
+| EXP01-09 | Collector Git identity is separate from observed application identity; read-only Docker metadata binds the loopback endpoint to a stable container/image when available. Missing identity stays unverified, observed revision disagreement is mismatch, and no unauthenticated label can establish verified source binding. A mismatch invalidates runtime evidence, prevents a complete bundle, and gives the CLI a nonzero exit; unverified binding remains acceptable when metrics are valid. Schema 1.0 remains readable as legacy evidence without a source-binding claim. | `test_docker_target_observation_binds_published_loopback_port`, `test_runtime_missing_target_identity_stays_unverified`, `test_runtime_mismatched_target_revision_is_not_bound_to_collector`, `test_runtime_changed_target_container_is_a_mismatch`, `test_matching_oci_revision_label_does_not_verify_source_binding`, `test_missing_application_revision_label_stays_unverified_with_bound_endpoint`, `test_runtime_source_binding_controls_bundle_and_cli_outcome`, `test_bundle_rejects_available_runtime_with_mismatched_source_binding`, `test_bundle_rejects_promotion_of_unverified_runtime_binding`, `test_bundle_v1_0_remains_readable_without_source_binding`; in-memory Docker metadata fixtures. | Implemented for DEVELOPMENT; revision-bound verification unavailable without authoritative source-to-image provenance |
+
+Run the focused suite with `uv run python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_exp01_evidence.py`. `make development-regression-test` also runs this module separately after the allowlisted regression command so hosted logs show its exact test count. The optional live path is `make exp01-smoke`; it is separate from unit tests and must be reported as blocked if Compose, the database, or a ready app is unavailable.
+
 ## Pre-merge Definition of Done for implementation SPECs
 
 1. Formalize the feature's observable contract (inputs, outputs, invalid/unknown/halt semantics, provenance fields and version).

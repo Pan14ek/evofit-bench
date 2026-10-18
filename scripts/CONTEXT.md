@@ -14,10 +14,13 @@ Seed/reset, metrics capture, workload runners, method prep and reproducibility t
 - `da01_contracts.py`
 - `da01_execution.py`
 - `export_metrics.py`
+- `exp01_evidence.py`
+- `exp01_evidence_contract.py`
+- `exp01_evidence_runtime.py`
 - `finalize_run.py`
 - `prometheus_snapshot.py`
 
-This is a selected list (18 direct tracked files), not a complete source inventory.
+This is a selected list (21 direct tracked files), not a complete source inventory.
 
 ## Established conventions
 
@@ -25,7 +28,7 @@ Run on disposable databases; fail clearly if required telemetry/provenance missi
 
 ## Constraints and known gaps
 
-Never fabricate logs, ignore invalid samples or run destructive commands on real data.
+EXP-01 is A0.1 DEVELOPMENT-only, uses the engineering acceptance configuration, bounds HTTP collection to loopback, and keeps missing/reset telemetry explicit. Runtime `source_revision` identifies the collector; the separate source-binding record captures read-only Docker endpoint/container/image identity when available. A binding mismatch invalidates the runtime record and prevents a complete bundle; unverified binding remains acceptable when metrics are valid. OCI revision labels are unauthenticated, so the current collector cannot emit verified source-revision binding. Never map execution to positive coverage, fabricate logs, ignore invalid samples or run destructive commands on real data.
 
 ## Verification and further reading
 

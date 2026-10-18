@@ -25,7 +25,7 @@ Follow AGENTS.md, docs/RESEARCH_CONTEXT.md and the context chain before editing;
 
 ## Constraints and known gaps
 
-Original A0 source is frozen; current app is A0.1. SPEC01/02 are development candidates; complete P and measured comparisons are not ready.
+Original A0 source and DA01 contracts are frozen; current app is A0.1. SPEC01/02/03 include DEVELOPMENT implementation and synthetic checks, but measured P remains NOT_READY and G1/G4 remain unapproved. EXP-01 records engineering evidence only and does not establish positive coverage; its runtime source revision identifies the collector, while application identity remains unverified without authoritative source-to-image provenance.
 
 ## Verification and further reading
 

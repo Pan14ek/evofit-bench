@@ -4,6 +4,7 @@ RUN_ID ?= $(shell date -u +%Y%m%dT%H%M%SZ)
 PROFILE ?= a0-smoke-v1
 DURATION ?= 30
 RUN_STARTED_AT_UTC ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+EXP01_RUN_ID ?= exp01-dev-$(shell date -u +%Y%m%dT%H%M%SZ)
 DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_p_input_contract_v11.py \
 	tests/unit/test_p_input_authority_validation.py \
@@ -17,6 +18,7 @@ DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_p_adaptation_evidence_v1.py \
 	tests/unit/test_g1_method_decision_register.py \
 	tests/unit/test_context_documents.py \
+	tests/unit/test_exp01_evidence.py \
 	tests/unit/test_da01_inputs_and_isolation.py::test_container_negative_probes_cannot_reach_oracle_history_network_or_other_output \
 	tests/integration/test_p_applicability_v3.py \
 	tests/integration/test_p_governed_adaptation_v1.py
@@ -25,7 +27,7 @@ DEVELOPMENT_PROTECTED_TESTS = \
 	tests/unit/test_da01_execution.py \
 	tests/unit/test_research_schema_foundation.py
 
-.PHONY: install run test test-unit test-integration development-regression-test development-lint development-typecheck development-quality lint typecheck security architecture-test quality migration-test db-upgrade seed seed-fingerprint reset wait-ready load-smoke load-baseline experiment-reset export-metrics metadata
+.PHONY: install run test test-unit test-integration development-regression-test development-lint development-typecheck development-quality lint typecheck security architecture-test quality migration-test db-upgrade seed seed-fingerprint reset wait-ready load-smoke load-baseline exp01-smoke experiment-reset export-metrics metadata
 
 install:
 	$(UV) sync --extra dev
@@ -62,6 +64,7 @@ development-regression-test:
 	$(UV) run python -m pytest -q --no-cov -p no:cacheprovider \
 		$(foreach test,$(DEVELOPMENT_PROTECTED_TESTS),--ignore=$(test)) \
 		$(DEVELOPMENT_REGRESSION_TESTS)
+	$(UV) run python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_exp01_evidence.py
 
 development-lint:
 	$(UV) run ruff check . \
@@ -109,6 +112,10 @@ load-baseline:
 	$(MAKE) wait-ready
 	$(UV) run python -m scripts.run_load_experiment --run-id $(RUN_ID) --profile load/profiles/a0-baseline-v1.yaml --url $(BASE_URL)
 	@docker compose logs --no-color --since=125s app > experiments/results/$(RUN_ID)/logs/app.log 2>/dev/null || true
+
+exp01-smoke:
+	docker compose up -d --build --wait
+	$(UV) run python -m scripts.exp01_evidence --architecture-state A0_1_CAPABILITY_MODULES --base-url $(BASE_URL) --run-id $(EXP01_RUN_ID)
 
 experiment-reset:
 	docker compose up -d postgres

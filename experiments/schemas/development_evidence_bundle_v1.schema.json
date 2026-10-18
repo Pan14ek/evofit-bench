@@ -1,0 +1,292 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/development-evidence-bundle-v1.schema.json",
+  "title": "EvoFitBench EXP-01 DEVELOPMENT evidence bundle v1",
+  "description": "Execution provenance only; v1.1 adds runtime target source binding. This contract does not establish fitness coverage or scientific authorization.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "bundle_status",
+    "created_at_utc",
+    "source_revision",
+    "architecture",
+    "fitness_configuration",
+    "execution_context",
+    "supported_stages",
+    "input_artifacts",
+    "artifact_inventory",
+    "records",
+    "coverage_claims",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {"enum": ["1.0.0", "1.1.0"]},
+    "run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"},
+    "bundle_status": {"enum": ["complete", "incomplete"]},
+    "created_at_utc": {"type": "string", "format": "date-time"},
+    "source_revision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commit_sha", "git_dirty"],
+      "properties": {
+        "commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "git_dirty": {"type": "boolean"}
+      }
+    },
+    "architecture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "manifest_artifact"],
+      "properties": {
+        "state": {"const": "A0_1_CAPABILITY_MODULES"},
+        "manifest_artifact": {"$ref": "#/$defs/artifact"}
+      }
+    },
+    "fitness_configuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "declared_architecture_state",
+        "configuration_version",
+        "configuration_artifact",
+        "applicable_to_target",
+        "reason"
+      ],
+      "properties": {
+        "status": {"const": "mismatch"},
+        "declared_architecture_state": {"const": "A0_MONOLITH"},
+        "configuration_version": {"type": "string", "minLength": 1},
+        "configuration_artifact": {"$ref": "#/$defs/artifact"},
+        "applicable_to_target": {"const": false},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    },
+    "execution_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["python_version", "platform", "base_url", "schema_artifact"],
+      "properties": {
+        "python_version": {"type": "string", "minLength": 1},
+        "platform": {"type": "string", "minLength": 1},
+        "base_url": {"type": "string", "minLength": 1},
+        "schema_artifact": {"$ref": "#/$defs/artifact"}
+      }
+    },
+    "supported_stages": {
+      "const": ["ci_test", "deployment", "runtime"]
+    },
+    "input_artifacts": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/artifact"}
+    },
+    "artifact_inventory": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/artifact"}
+    },
+    "records": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {"$ref": "#/$defs/record"}
+    },
+    "coverage_claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["Coverage_P", "Coverage_ref", "measured_results"],
+      "properties": {
+        "Coverage_P": {"const": "not_assessed"},
+        "Coverage_ref": {"const": "not_established"},
+        "measured_results": {"const": "not_run"}
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"schema_version": {"const": "1.1.0"}}},
+      "then": {
+        "properties": {
+          "records": {
+            "items": {
+              "required": ["source_binding"],
+              "allOf": [
+                {
+                  "if": {"properties": {"lifecycle_stage": {"const": "runtime"}}},
+                  "then": {
+                    "properties": {
+                      "source_binding": {"$ref": "#/$defs/source_binding"}
+                    }
+                  },
+                  "else": {
+                    "properties": {"source_binding": {"type": "null"}}
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "size_bytes", "media_type", "role", "source_path"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "media_type": {"type": "string", "minLength": 1},
+        "role": {"type": "string", "minLength": 1},
+        "source_path": {"type": ["string", "null"]}
+      }
+    },
+    "source_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "collector_source_revision",
+        "observed_application_revision",
+        "revision_observation_source",
+        "revision_authority",
+        "endpoint_binding_status",
+        "endpoint_port",
+        "container_id",
+        "image_id",
+        "image_reference",
+        "identity_stable",
+        "reason"
+      ],
+      "properties": {
+        "status": {"enum": ["verified", "unverified", "mismatch"]},
+        "collector_source_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "observed_application_revision": {
+          "oneOf": [
+            {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+            {"type": "null"}
+          ]
+        },
+        "revision_observation_source": {"enum": ["none", "oci_image_label"]},
+        "revision_authority": {"const": "unverified"},
+        "endpoint_binding_status": {"enum": ["verified", "unverified", "mismatch"]},
+        "endpoint_port": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "container_id": {
+          "oneOf": [
+            {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            {"type": "null"}
+          ]
+        },
+        "image_id": {
+          "oneOf": [
+            {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+            {"type": "null"}
+          ]
+        },
+        "image_reference": {
+          "oneOf": [
+            {"type": "string", "maxLength": 256},
+            {"type": "null"}
+          ]
+        },
+        "identity_stable": {"type": ["boolean", "null"]},
+        "reason": {"type": "string", "minLength": 1}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"endpoint_binding_status": {"const": "verified"}}},
+          "then": {
+            "properties": {
+              "container_id": {"type": "string"},
+              "image_id": {"type": "string"},
+              "identity_stable": {"const": true}
+            }
+          }
+        }
+      ]
+    },
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record_id",
+        "run_id",
+        "lifecycle_stage",
+        "status",
+        "evaluator_name",
+        "evaluator_version",
+        "executable",
+        "executable_sha256",
+        "command",
+        "started_at_utc",
+        "ended_at_utc",
+        "duration_seconds",
+        "exit_status",
+        "execution_verdict",
+        "scope",
+        "source_revision",
+        "configuration_artifact",
+        "input_artifacts",
+        "raw_output_artifacts",
+        "measurements",
+        "errors",
+        "limitations"
+      ],
+      "properties": {
+        "record_id": {"type": "string", "minLength": 1},
+        "run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"},
+        "lifecycle_stage": {"enum": ["ci_test", "deployment", "runtime"]},
+        "status": {"enum": ["available", "missing", "invalid", "skipped", "inconclusive"]},
+        "evaluator_name": {"type": "string", "minLength": 1},
+        "evaluator_version": {"type": ["string", "null"]},
+        "executable": {"type": ["string", "null"]},
+        "executable_sha256": {"oneOf": [{"type": "string", "pattern": "^[0-9a-f]{64}$"}, {"type": "null"}]},
+        "command": {"type": "array", "items": {"type": "string"}},
+        "started_at_utc": {"type": "string", "format": "date-time"},
+        "ended_at_utc": {"type": "string", "format": "date-time"},
+        "duration_seconds": {"type": "number", "minimum": 0},
+        "exit_status": {"type": ["integer", "null"]},
+        "execution_verdict": {
+          "enum": [
+            "passed",
+            "violations_detected",
+            "execution_failure",
+            "no_usable_evidence",
+            "not_observed",
+            "not_run",
+            "inconclusive"
+          ]
+        },
+        "scope": {"type": "string", "minLength": 1},
+        "source_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "source_binding": {
+          "oneOf": [
+            {"$ref": "#/$defs/source_binding"},
+            {"type": "null"}
+          ]
+        },
+        "configuration_artifact": {"oneOf": [{"$ref": "#/$defs/artifact"}, {"type": "null"}]},
+        "input_artifacts": {"type": "array", "items": {"$ref": "#/$defs/artifact"}},
+        "raw_output_artifacts": {"type": "array", "items": {"$ref": "#/$defs/artifact"}},
+        "measurements": {"type": "object"},
+        "errors": {"type": "array", "items": {"type": "string"}},
+        "limitations": {"type": "array", "items": {"type": "string"}}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "available"}}},
+          "then": {"properties": {"raw_output_artifacts": {"minItems": 1}}}
+        }
+      ]
+    }
+  }
+}
