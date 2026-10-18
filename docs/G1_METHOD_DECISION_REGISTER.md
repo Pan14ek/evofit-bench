@@ -11,8 +11,17 @@ Every decision below is pending. No reviewer names or signatures are recorded.
 02c1654f457fd1cf685fd449b552d6e35701ea54, based on main
 740c60aeece6e424c56ba081eacc079dc0f16d74 after PR #10 merged.
 
+This is the historical baseline of the original register. The consolidated
+review analyzes merged workstreams PR #12–#15 at
+ca8d9781401f74297d7d47f68aa978557ca58e98; see the [G1 integration decision
+matrix](g1/G1_INTEGRATION_DECISION_MATRIX.md). Canonical statuses below remain
+unchanged until genuine independent decisions are recorded.
+
 ## Review package
 
+- [Integrated decision matrix](g1/G1_INTEGRATION_DECISION_MATRIX.md) — cross-workstream
+  source map, formal-model reconciliation, OPEN-01…OPEN-09 analysis, blockers,
+  dependencies, and proposed next actions; not an approval.
 - [Method P specification](G1_METHOD_SPECIFICATION.md) — model, implementation
   status, invariants, governance, and limitations.
 - [DA01 preregistration draft](DA01_PREREGISTRATION_DRAFT.md) — RQ crosswalk,

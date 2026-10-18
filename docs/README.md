@@ -15,7 +15,11 @@ These are **maintained navigation documents**, not replacements for the versione
 | [G1_METHOD_SPECIFICATION.md](G1_METHOD_SPECIFICATION.md) | Review draft for the current SPEC 03 DEVELOPMENT method; not an independent freeze or measured-method approval. |
 | [DA01_PREREGISTRATION_DRAFT.md](DA01_PREREGISTRATION_DRAFT.md) | Proposed DA01 RQ1/RQ2 preregistration; does not amend the frozen protocol or authorize a run. |
 | [B1_P_COMPARABILITY_PLAN.md](B1_P_COMPARABILITY_PLAN.md) | B0/B1/P fairness plan with the B1 cadence decision left open. |
+| [G1 integration decision matrix](g1/G1_INTEGRATION_DECISION_MATRIX.md) | Consolidated OPEN-01…OPEN-09 analysis, formal model, DA01 compatibility findings, dependencies and readiness limits; proposal only. |
+| [G1 Workstream 01 brief](g1/workstreams/01_RESEARCH_DESIGN_BRIEF.md) | Research design, RQ/endpoints and B1 cadence analysis for OPEN-01/02. |
+| [G1 Workstream 02 brief](g1/workstreams/02_METHOD_COMPATIBILITY_BRIEF.md) | Formal method and frozen-scoring compatibility analysis for OPEN-03/07/08. |
 | [G1 Workstream 03 brief](g1/workstreams/03_AUTHORITY_CAPABILITY_COST_BRIEF.md) | Proposed policy-authority, evaluator-capability/parity, and adaptation-cost analysis for OPEN-04/05/06. |
+| [G1 Workstream 04 brief](g1/workstreams/04_HOLDOUT_ISOLATION_REVIEW_BRIEF.md) | Research independence, custody, G2, and TT-P03-43 evidence boundaries for OPEN-09. |
 | [G1_REVIEW_CHECKLIST.md](G1_REVIEW_CHECKLIST.md) | Independent G1 review evidence index and separate G4 authorization checklist. |
 | [G1_METHOD_DECISION_REGISTER.md](G1_METHOD_DECISION_REGISTER.md) | OPEN-01…OPEN-10 and M-01…M-06 decision docket and current gate status. |
 
@@ -27,13 +31,19 @@ The root [`../CONTEXT.md`](../CONTEXT.md) and each eligible tracked subdirectory
 
 ## State at documentation baseline
 
-Prepared against `main` after merged PR #5, commit `32172d7acd31a7a0210bdb64f8472d722a702d29` (16 Oct 2026). This is a snapshot of documentation review, **not** a frozen scientific protocol or claim that future HEAD will be unchanged.
+Prepared against `main` at `ca8d9781401f74297d7d47f68aa978557ca58e98` (18 Oct 2026), containing merged G1 workstreams PR #12–#15. This is a documentation snapshot, **not** a frozen scientific protocol or claim that future HEAD will be unchanged.
 
 - Frozen original architecture: `A0_MONOLITH`.
 - Current code organization after DA01: `A0_1_CAPABILITY_MODULES`, still one FastAPI/Uvicorn process and one PostgreSQL database.
-- Implemented research infrastructure: Phase A preparation, SPEC 01 and SPEC 02 development candidates.
-- Not implemented: full P Impact Analysis, governed adaptation and measured B0/B1/P comparisons.
+- Implemented research infrastructure: Phase A preparation and SPEC 01/02/03 DEVELOPMENT pipelines, including typed impact, exact-pair assessment, operation planning, candidate validation, and synthetic TEST_ONLY governance flows.
+- No production policy or evaluator authority is available; measured B0/B1/P comparisons are neither authorized nor reported. The measured P interface remains `P_ALGORITHM_STATUS = NOT_READY`; G1 remains INCOMPLETE and G4 NOT AUTHORIZED.
 - Experimental Authority Charter/Registry under `policy-pilot/v1`: design-stage, DRAFT/OPEN; production authority and completeness verification remain missing.
+
+### Next research priority
+
+The established monograph is EvoFitBench's scientific basis; its model, method, objectives, and B0/B1/P direction are already defined. The next primary objective is implementation and experimental evaluation according to §5: reuse [`ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md`](../experiments/design/ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md), integrate executable fitness functions across CI/CD, deployment, and runtime, add controlled degradations and reproducible evidence, and complete P with real evaluator artifacts. Conduct independent B0/B1/P comparisons and analyze detection quality, mandatory coverage, semantic consistency, and operational overhead only under the applicable authorization. DA01 remains a frozen case within the dissertation's wider scope; further theory clarification should follow concrete implementation or experimental blockers. See the [prioritized next actions](g1/G1_INTEGRATION_DECISION_MATRIX.md#11-prioritized-next-actions).
+
+The older root [AGENTS.md](../AGENTS.md) still says full P impact analysis and governed adaptation are not implemented. That handbook statement is stale relative to the current DEVELOPMENT implementation and traceability sources; it remains unmodified in this documentation review. See the [G1 integration inconsistency register](g1/G1_INTEGRATION_DECISION_MATRIX.md).
 
 Research rationale comes from the author's working monograph, summarized in [RESEARCH_CONTEXT.md](RESEARCH_CONTEXT.md). It is **proposed science**, not the source of authority for frozen protocol details or verified results.
 

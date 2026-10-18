@@ -10,6 +10,8 @@
 
 Reviewers should record evidence and limitations, decide the open questions assigned to their role, and state whether a claim is supported, unsupported, or needs revision. A document link or passing test is not independent scientific approval. Do not fill an approval field for another reviewer or infer institutional authority.
 
+Use the [G1 integration decision matrix](g1/G1_INTEGRATION_DECISION_MATRIX.md) as the consolidated source crosswalk and proposal index. It does not replace this checklist or the frozen DA01 contracts, and it does not close any OPEN item.
+
 Permitted review outcomes include **NOT_REVIEWED**, **EVIDENCE_INCOMPLETE**, **PENDING_INDEPENDENT_REVIEW**, **PENDING_EXTERNAL_AUTHORITY**, **PROPOSED**, and **DEFERRED_WITH_LIMITATION**. **APPROVED** is a future template state only and is not used in this package.
 
 ## 2. Gate summary
@@ -52,7 +54,7 @@ For each line, fill the blank status, evidence note, and independent approval re
 | OPEN-04 | Provide authentic authority, trust anchors, and completeness proof | [Comparability](B1_P_COMPARABILITY_PLAN.md), this checklist | PENDING_EXTERNAL_AUTHORITY |
 | OPEN-05 / M-03 | Approve real evaluator artifacts and B1/P capability parity | [Comparability](B1_P_COMPARABILITY_PLAN.md), this checklist | PENDING_EXTERNAL_AUTHORITY |
 | OPEN-06 | Set cost units, bounded search, budget and ties | [Method](G1_METHOD_SPECIFICATION.md), [preregistration](DA01_PREREGISTRATION_DRAFT.md) | PENDING_INDEPENDENT_REVIEW |
-| OPEN-07 | Reconcile compliance violation vs monitor invalidity with frozen scoring | [Method](G1_METHOD_SPECIFICATION.md), [preregistration](DA01_PREREGISTRATION_DRAFT.md) | PENDING_INDEPENDENT_REVIEW |
+| OPEN-07 | Decide future monitor/compliance semantics while frozen DA01 treats nonzero exit as EXECUTION_FAILURE | [Method](G1_METHOD_SPECIFICATION.md), [preregistration](DA01_PREREGISTRATION_DRAFT.md), [integration analysis](g1/G1_INTEGRATION_DECISION_MATRIX.md) | PENDING_INDEPENDENT_REVIEW |
 | OPEN-08 | Resolve multi-obligation ADD under single-target frozen operation identity | [Method](G1_METHOD_SPECIFICATION.md), [preregistration](DA01_PREREGISTRATION_DRAFT.md) | PENDING_INDEPENDENT_REVIEW |
 | OPEN-09 | Establish independent algorithm freeze, holdout custody and sealing | [Preregistration](DA01_PREREGISTRATION_DRAFT.md), this checklist | PENDING_INDEPENDENT_REVIEW |
 | OPEN-10 / M-05 | Keep α/θ adaptation separate from core P v1 | [Method](G1_METHOD_SPECIFICATION.md), this checklist | DEFERRED_WITH_LIMITATION |
@@ -67,7 +69,8 @@ For each line, fill the blank status, evidence note, and independent approval re
 | Current P DEVELOPMENT implementation | [P module map](../experiments/execution/P_GOVERNED_ADAPTATION_V1.md), [SPEC 03 source map](SPEC_03_IMPLEMENTATION_TRACEABILITY.md) | Engineering source/report | Synthetic TEST_ONLY proof only |
 | Synthetic governance accept behavior | [PR #10 traceability](SPEC_03_IMPLEMENTATION_TRACEABILITY.md), including S03R-04/05 and no-op/ADD cases | Historical DEVELOPMENT regression report | Not measured, not production-authorized, not independently approved |
 | G0–G4 and measured status | [READINESS](../experiments/execution/da01/READINESS.md), [P status](../experiments/execution/da01/P_ALGORITHM_STATUS.md) | Current repository readiness report | Does not advance itself by checklist completion |
-| Open decisions and scientific discrepancies | [Decision register](G1_METHOD_DECISION_REGISTER.md), [RESEARCH_CONTEXT M-01…M-06](RESEARCH_CONTEXT.md#10-open-methodological-discrepancies--do-not-silently-choose) | Pending docket | Independent outcomes are absent |
+| Integrated workstream analysis | [G1 integration decision matrix](g1/G1_INTEGRATION_DECISION_MATRIX.md) | Source-based review synthesis | Recommendations are proposals; no decision is approved |
+| Open decisions and scientific discrepancies | [Decision register](G1_METHOD_DECISION_REGISTER.md), [RESEARCH_CONTEXT M-01…M-06](RESEARCH_CONTEXT.md#10-open-methodological-discrepancies--do-not-silently-choose), [integration matrix](g1/G1_INTEGRATION_DECISION_MATRIX.md) | Pending docket | Independent outcomes are absent |
 | Safe synthetic code evidence | [SPEC 03 traceability](SPEC_03_IMPLEMENTATION_TRACEABILITY.md); safe unit/integration paths listed there | Test report | Tests establish code properties only |
 | Protected/frozen scope | Changed-path diff and status audit recorded in the delivery report | Local audit | Not independent byte-parity verification; TT-P03-43 remains blocked |
 

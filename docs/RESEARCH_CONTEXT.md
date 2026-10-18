@@ -245,6 +245,8 @@ See `AGENTS.md`, `docs/TESTING.md`, `experiments/execution/da01/INPUT_ISOLATION.
 
 `P_ALGORITHM_STATUS = NOT_READY` is the measured-interface/readiness status, not a claim that no DEVELOPMENT algorithm code exists. The current synthetic pipeline and its limits are recorded in [P_GOVERNED_ADAPTATION_V1.md](../experiments/execution/P_GOVERNED_ADAPTATION_V1.md) and [SPEC_03_IMPLEMENTATION_TRACEABILITY.md](SPEC_03_IMPLEMENTATION_TRACEABILITY.md). The manuscript's dated §4.2 status describes an earlier working state and must not override the later merged repo commits.
 
+The consolidated [G1 integration decision matrix](g1/G1_INTEGRATION_DECISION_MATRIX.md) cross-references the four merged workstreams and records proposed OPEN-01…OPEN-09 dispositions, source/implementation boundaries, and unresolved DA01 compatibility issues. It is a review aid, not a decision or readiness change.
+
 ### What can count as a contribution — and what cannot
 
 | Level | Examples in this project | Evidence needed |

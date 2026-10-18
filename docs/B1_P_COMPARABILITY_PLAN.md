@@ -16,6 +16,8 @@ Compare three responses to the same before/after architecture and post-change as
 
 The [DA01 protocol](../experiments/execution/da01/PROTOCOL.md) and [input isolation contract](../experiments/execution/da01/INPUT_ISOLATION.md) control the current scope. This draft does not authorize execution. No human session is simulated. TEST_ONLY evaluators, policies, signatures, and synthetic ACCEPT cases are engineering test fixtures, not production authority or a fair production capability inventory.
 
+See the [G1 integration decision matrix](g1/G1_INTEGRATION_DECISION_MATRIX.md) for the consolidated OPEN-01…OPEN-09 analysis and dependencies. In particular, OPEN-07/08 remain compatibility issues against frozen validity and operation-scoring contracts; this comparability plan does not resolve them.
+
 ## 2. Comparison matrix
 
 | Dimension | B0 | B1 | P | Parity or review requirement |
@@ -43,6 +45,8 @@ For each arm, freeze the same before/after architecture source SHAs, allowed str
 
 Do not supply any method with the scenario answer, expected affected targets or operations, private required-obligation answer set, independent scorer/reference rules, another method’s output, engineering acceptance configuration, Git metadata/history/remotes, or network access.
 
+If a reviewed design supplies precomputed evaluator results to B1 and P, declare them as admissible method input, hash and scope them, and state that the estimand is adaptation conditional on shared evaluations. Shared method evidence must never include oracle labels, expected operations, private reference-checker verdicts, post-seal scores, or another method’s confidential output.
+
 ### Method-specific information
 
 - B0 keeps the original A0 configuration unchanged; its operation list is empty. Its old evaluator may be stale, vacuous, or unsuitable for the target and must be independently assessed.
@@ -50,6 +54,8 @@ Do not supply any method with the scenario answer, expected affected targets or 
 - P may receive the same common bundle plus the explicitly permitted A0 traceability graph and its pinned general algorithm. This P-only input must be disclosed, hashed, and reviewed as part of the causal contrast.
 
 The B1/P normative-source issue remains open. The source implementation provides identical normative/condition catalog bytes to B1 and P while P alone executes the rulebook. Reviewers must decide whether readable rule parity, execution parity, or another predeclared treatment defines fairness. No resolution is made here.
+
+Evaluator execution inside each arm and precomputed common evaluator evidence estimate different treatments. The former includes evaluator execution in each method's work and cost; the latter tests adaptation given shared evaluation results. Independent reference scoring remains outside all method inputs.
 
 ## 4. Architecture, policy, and evaluator identity
 
