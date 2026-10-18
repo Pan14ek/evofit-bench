@@ -289,6 +289,81 @@ def test_real_evaluator_records_map_to_representation_evidence(tmp_path: Path) -
     assert exp02.validate_representation_evidence(run_dir, validated)["run_id"] == RUN_ID
 
 
+@pytest.mark.parametrize(
+    "tampering",
+    [
+        "metric_value",
+        "metric_status",
+        "compliance_status",
+        "execution_status",
+        "execution_verdict",
+        "runtime_source_binding_status",
+        "unresolved_mapping_removed",
+        "unresolved_mapping_added",
+        "unresolved_mapping_contradicted",
+        "derived_scope_status",
+        "derived_limitation",
+    ],
+)
+def test_digest_valid_derived_evidence_tampering_is_rejected(
+    tmp_path: Path, tampering: str
+) -> None:
+    run_dir, bundle, evidence = _build_evidence(tmp_path)
+    by_id = {item["representation_id"]: item for item in evidence["representations"]}
+    module_structure = by_id["REP_A01_ARCH_MODULE_STRUCTURE_CI"]
+
+    if tampering == "metric_value":
+        module_structure["metrics"][0]["value"] = 42
+    elif tampering == "metric_status":
+        module_structure["metrics"][0]["status"] = "missing"
+        module_structure["metrics"][0]["value"] = None
+    elif tampering == "compliance_status":
+        module_structure["compliance_observation"]["status"] = "nonconforming"
+    elif tampering == "execution_status":
+        module_structure["evaluator_execution"]["status"] = "missing"
+    elif tampering == "execution_verdict":
+        module_structure["evaluator_execution"]["execution_verdict"] = "violations_detected"
+    elif tampering == "runtime_source_binding_status":
+        runtime_item = by_id["REP_A01_PERF_HTTP_DURATION_RUNTIME"]
+        runtime_item["evaluator_execution"]["runtime_source_binding_status"] = "verified"
+    elif tampering == "unresolved_mapping_removed":
+        evidence["unresolved_mappings"].pop()
+    elif tampering == "unresolved_mapping_added":
+        evidence["unresolved_mappings"].append(
+            {
+                "representation_id": "REP_A01_ARCH_MODULE_STRUCTURE_CI",
+                "status": "missing_metric",
+                "reason": "Injected unresolved mapping.",
+            }
+        )
+    elif tampering == "unresolved_mapping_contradicted":
+        evidence["unresolved_mappings"][0]["reason"] = "Contradictory unresolved reason."
+    elif tampering == "derived_scope_status":
+        module_structure["scope_binding_status"] = "unknown"
+    else:
+        module_structure["limitations"].append("Injected derived limitation.")
+
+    evidence_bytes = (json.dumps(evidence, indent=2, sort_keys=True) + "\n").encode()
+    reference = contract.write_artifact(
+        run_dir,
+        exp02.REPRESENTATION_EVIDENCE_FILENAME,
+        evidence_bytes,
+        media_type="application/json",
+        role="fitness_representation_evidence",
+    )
+    bundle["fitness_representation_evidence"] = reference
+    assert exp02._verify_artifact(run_dir, reference) == evidence_bytes
+
+    with pytest.raises(
+        ValueError,
+        match=(
+            "representation evidence does not match its selected "
+            "configuration and evaluator records"
+        ),
+    ):
+        contract.write_bundle(run_dir, bundle)
+
+
 def test_missing_evaluator_or_metric_remains_explicit(tmp_path: Path) -> None:
     run_dir, bundle, configuration_bytes = _valid_bundle(tmp_path)
     bundle["records"] = [

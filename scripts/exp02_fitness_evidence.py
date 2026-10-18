@@ -582,6 +582,12 @@ def validate_representation_evidence(run_dir: Path, bundle: dict[str, Any]) -> d
             and record.get("configuration_artifact") != expected_configuration_artifact
         ):
             raise ValueError(f"representation evaluator artifact conflicts: {representation_id}")
+    expected_evidence = build_representation_evidence(bundle, run_dir, configuration_bytes)
+    if evidence != expected_evidence:
+        raise ValueError(
+            "representation evidence does not match its selected "
+            "configuration and evaluator records"
+        )
     return evidence
 
 
