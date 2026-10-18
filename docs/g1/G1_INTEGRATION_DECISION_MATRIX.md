@@ -364,7 +364,7 @@ No matter how many unit cases pass, they do not establish the later evidence lev
 
 The established monograph is the scientific basis; its model, method, research objectives, and B0/B1/P direction are defined. The next primary objective is to implement and experimentally evaluate the method according to §5. Reuse the versioned [architecture-evolution scenarios](../../experiments/design/ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md), integrate executable fitness functions across CI/CD, deployment, and runtime, implement controlled degradations with reproducible evidence, and complete P with real evaluator artifacts. DA01 remains a frozen experimental case, not the scientific boundary of the dissertation. Resolve further theoretical questions only when a concrete implementation or authorized-experiment blocker requires it.
 
-This priority does not change any gate or authorize a measured run. G1 remains **INCOMPLETE**, G4 remains **NOT AUTHORIZED**, and P remains **NOT_READY**.
+This closes the current methodological documentation-consolidation phase; it does not close G1 or authorize a measured run. G1 remains **INCOMPLETE**, G4 remains **NOT AUTHORIZED**, and P remains **NOT_READY**.
 
 | Order | Next execution priority | Required evidence and preconditions | Boundary |
 | --- | --- | --- | --- |
