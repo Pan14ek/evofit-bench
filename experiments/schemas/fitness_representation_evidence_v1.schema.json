@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/fitness-representation-evidence-v1.schema.json",
+  "title": "EXP-02 DEVELOPMENT fitness representation evidence v1",
+  "description": "Digest-linked evaluator execution observations. This schema does not establish independent semantic coverage or measured Method P results.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "evidence_type",
+    "run_id",
+    "exp01_bundle_schema_version",
+    "source_revision",
+    "architecture_state",
+    "fitness_configuration",
+    "supported_stages",
+    "representations",
+    "unresolved_mappings",
+    "coverage_claims",
+    "limitations"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "evidence_type": {"const": "development_representation_execution"},
+    "run_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"},
+    "exp01_bundle_schema_version": {"enum": ["1.2.0"]},
+    "source_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "architecture_state": {"const": "A0_1_CAPABILITY_MODULES"},
+    "fitness_configuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "configuration_id",
+        "configuration_version",
+        "configuration_sha256",
+        "configuration_artifact",
+        "provenance_status"
+      ],
+      "properties": {
+        "configuration_id": {"const": "A0_1_CAPABILITY_MODULES_DEVELOPMENT_REFERENCE"},
+        "configuration_version": {"type": "string", "minLength": 1},
+        "configuration_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "configuration_artifact": {"$ref": "#/$defs/artifact"},
+        "provenance_status": {"const": "manual_development_reference"}
+      }
+    },
+    "supported_stages": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"enum": ["ci_test", "deployment", "runtime"]}
+    },
+    "representations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/representation"}
+    },
+    "unresolved_mappings": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/unresolved_mapping"}
+    },
+    "coverage_claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["Coverage_P", "Coverage_ref", "semantic_validity"],
+      "properties": {
+        "Coverage_P": {"const": "not_assessed"},
+        "Coverage_ref": {"const": "not_established"},
+        "semantic_validity": {"const": "not_independently_validated"}
+      }
+    },
+    "limitations": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+  },
+  "$defs": {
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "size_bytes", "media_type", "role", "source_path"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "media_type": {"type": "string", "minLength": 1},
+        "role": {"type": "string", "minLength": 1},
+        "source_path": {"type": ["string", "null"]}
+      }
+    },
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "unit", "status", "source_metric_names", "value"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "unit": {"type": "string", "minLength": 1},
+        "status": {"enum": ["available", "missing", "invalid", "unsupported"]},
+        "source_metric_names": {"type": "array", "items": {"type": "string"}},
+        "value": {},
+        "limitations": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "representation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "representation_id",
+        "criterion_id",
+        "declared_obligations",
+        "lifecycle_stage",
+        "evaluator_id",
+        "evaluator_execution",
+        "compliance_observation",
+        "scope_binding_status",
+        "applicability_status",
+        "semantic_fitness_validity",
+        "independent_coverage",
+        "metrics",
+        "evidence_references",
+        "limitations"
+      ],
+      "properties": {
+        "representation_id": {"type": "string", "pattern": "^REP_[A-Z0-9_]+$"},
+        "criterion_id": {"type": "string", "minLength": 1},
+        "declared_obligations": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "lifecycle_stage": {"enum": ["ci_test", "deployment", "runtime"]},
+        "evaluator_id": {"type": "string", "pattern": "^EV_[A-Z0-9_]+$"},
+        "evaluator_execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "record_id", "evaluator_name", "execution_verdict", "source_revision"],
+          "properties": {
+            "status": {"enum": ["available", "missing", "invalid", "inconclusive", "unsupported"]},
+            "record_id": {"type": "string", "minLength": 1},
+            "evaluator_name": {"type": "string", "minLength": 1},
+            "execution_verdict": {
+              "enum": ["passed", "violations_detected", "execution_failure", "no_usable_evidence", "not_observed", "not_run", "inconclusive"]
+            },
+            "source_revision": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}$"},
+            "runtime_source_binding_status": {"enum": ["verified", "unverified", "mismatch", "not_applicable", "not_observed"]}
+          }
+        },
+        "compliance_observation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "basis"],
+          "properties": {
+            "status": {"enum": ["conforming", "nonconforming", "not_assessed", "unknown"]},
+            "basis": {"type": "string", "minLength": 1}
+          }
+        },
+        "scope_binding_status": {"enum": ["matched", "mismatch", "unknown"]},
+        "applicability_status": {"const": "not_independently_assessed"},
+        "semantic_fitness_validity": {"const": "not_independently_validated"},
+        "independent_coverage": {"const": "not_established"},
+        "metrics": {"type": "array", "items": {"$ref": "#/$defs/metric"}},
+        "evidence_references": {"type": "array", "items": {"$ref": "#/$defs/artifact"}},
+        "limitations": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "unresolved_mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["representation_id", "status", "reason"],
+      "properties": {
+        "representation_id": {"type": "string", "pattern": "^REP_[A-Z0-9_]+$"},
+        "status": {"enum": ["missing_evaluator", "missing_metric", "invalid_evidence", "unverified_source_identity", "scope_unverified"]},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

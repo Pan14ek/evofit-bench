@@ -25,19 +25,38 @@ from scripts.exp01_evidence_contract import (
     write_bundle,
 )
 from scripts.exp01_evidence_runtime import collect_runtime_evidence, validate_local_base_url
+from scripts.exp02_fitness_evidence import (
+    FITNESS_CONFIGURATION_PATH,
+    REPRESENTATION_EVIDENCE_FILENAME,
+    build_representation_evidence,
+    load_fitness_configuration,
+)
 
 ARCHITECTURE_STATE = "A0_1_CAPABILITY_MODULES"
 ARCHITECTURE_MANIFEST = "architecture/states/A0_1_CAPABILITY_MODULES.yaml"
 ARCHITECTURE_ACCEPTANCE = "architecture/acceptance/importlinter.toml"
 HISTORICAL_FITNESS_CONFIG = "fitness/configs/a0-monolith.yaml"
+FITNESS_OBLIGATION_CATALOG = "fitness/catalog/architectural-obligations.yaml"
+FITNESS_ELEMENTS_CATALOG = "fitness/catalog/a0-fitness-elements.yaml"
+FITNESS_CONFIGURATION_SCHEMA = "fitness/configs/a0_1-capability-modules.dev.schema.json"
+REPRESENTATION_EVIDENCE_SCHEMA = (
+    "experiments/schemas/fitness_representation_evidence_v1.schema.json"
+)
 COMPOSE_CONFIG = "docker-compose.yml"
 RUNNER_EXECUTABLE = sys.executable
 SUPPORTED_INPUTS = (
     ARCHITECTURE_MANIFEST,
     ARCHITECTURE_ACCEPTANCE,
     HISTORICAL_FITNESS_CONFIG,
+    FITNESS_OBLIGATION_CATALOG,
+    FITNESS_ELEMENTS_CATALOG,
+    FITNESS_CONFIGURATION_PATH,
+    FITNESS_CONFIGURATION_SCHEMA,
+    REPRESENTATION_EVIDENCE_SCHEMA,
     COMPOSE_CONFIG,
     "experiments/schemas/development_evidence_bundle_v1.schema.json",
+    "tests/architecture/test_module_structure.py",
+    "scripts/exp02_fitness_evidence.py",
     "app/observability/metrics.py",
     "scripts/prometheus_snapshot.py",
     "scripts/runtime_validation.py",
@@ -47,6 +66,11 @@ SUPPORTED_INPUTS = (
     "scripts/exp01_evidence_runtime.py",
 )
 VIOLATION_OUTPUT = re.compile(r"found\s+\d+\s+broken contract", re.IGNORECASE)
+VIOLATION_COUNT_OUTPUT = re.compile(r"found\s+(\d+)\s+broken contracts?", re.IGNORECASE)
+PYTEST_SUMMARY = re.compile(
+    r"(?:(\d+) passed)?(?:,?\s*(\d+) failed)?"
+    r"(?:,?\s*(\d+) skipped)?\s+in\s+[0-9.]+s"
+)
 IMPORT_LINTER_ENTRYPOINT = "import importlinter.cli as c; c.lint_imports_command()"
 
 
@@ -113,6 +137,7 @@ def _record(
     evaluator_name: str,
     source_revision: str,
     scope: str,
+    scope_id: str,
     started: datetime,
     executable: str | None,
     version: str | None,
@@ -136,6 +161,7 @@ def _record(
         "exit_status": None,
         "execution_verdict": "not_run",
         "scope": scope,
+        "scope_id": scope_id,
         "source_revision": source_revision,
         "source_binding": None,
         "configuration_artifact": configuration_artifact,
@@ -178,6 +204,7 @@ def run_architecture_acceptance(
             "Current A0.1 engineering acceptance contracts in "
             "architecture/acceptance/importlinter.toml."
         ),
+        scope_id="architecture.internal_dependencies",
         started=started,
         executable=executable,
         version=version,
@@ -240,6 +267,8 @@ def run_architecture_acceptance(
         ),
     ]
     output = f"{stdout}\n{stderr}".strip()
+    violation_count = VIOLATION_COUNT_OUTPUT.search(output)
+    dependency_rule_violations = int(violation_count.group(1)) if violation_count else None
     if record["status"] == "invalid":
         pass
     elif (
@@ -253,6 +282,7 @@ def run_architecture_acceptance(
     ):
         record["status"] = "available"
         record["execution_verdict"] = "passed"
+        dependency_rule_violations = 0
     elif record["exit_status"] != 0 and VIOLATION_OUTPUT.search(output):
         record["status"] = "available"
         record["execution_verdict"] = "violations_detected"
@@ -275,9 +305,130 @@ def run_architecture_acceptance(
         "stderr_sha256": sha256_bytes(stderr.encode("utf-8")),
         "stdout_bytes": len(stdout.encode("utf-8")),
         "stderr_bytes": len(stderr.encode("utf-8")),
+        "dependency_rule_violations": dependency_rule_violations,
         "configuration_sha256": config_artifact["sha256"],
         "version_source": "importlib.metadata distribution metadata in the runner environment",
         "executable_sha256": record["executable_sha256"],
+    }
+    _finish_record(record, started, monotonic_started)
+    return record
+
+
+def run_module_structure_acceptance(
+    run_dir: Path,
+    run_id: str,
+    source_revision: str,
+    input_artifacts: list[dict[str, Any]],
+    manifest_artifact: dict[str, Any],
+) -> dict[str, Any]:
+    """Execute the existing A0.1 capability-module structure test."""
+    started = _utc_now()
+    monotonic_started = time.monotonic()
+    executable = RUNNER_EXECUTABLE
+    version = _distribution_version("pytest")
+    command = [
+        executable,
+        "-m",
+        "pytest",
+        "-q",
+        "--no-header",
+        "tests/architecture/test_module_structure.py",
+    ]
+    record = _record(
+        record_id="exp02-ci-module-structure-v1",
+        run_id=run_id,
+        stage="ci_test",
+        evaluator_name="pytest-architecture-module-structure",
+        source_revision=source_revision,
+        scope="The exact A0.1 capability module manifest and required source file structure.",
+        scope_id="architecture.capability_modules",
+        started=started,
+        executable=executable,
+        version=version,
+        command=command,
+        configuration_artifact=manifest_artifact,
+        input_artifacts=input_artifacts,
+    )
+    if not Path(executable).is_file() or version is None:
+        record["status"] = "missing"
+        record["execution_verdict"] = "execution_failure"
+        record["errors"].append("pytest runner executable or package is unavailable")
+        record["limitations"].append("No module-structure test execution was performed.")
+        _finish_record(record, started, monotonic_started)
+        return record
+
+    try:
+        result = subprocess.run(  # noqa: S603  # nosec B603 -- fixed test target and no shell
+            command,
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=120,
+        )
+        stdout = result.stdout
+        stderr = result.stderr
+        record["exit_status"] = result.returncode
+    except (OSError, subprocess.TimeoutExpired) as error:
+        stdout_value = error.stdout if isinstance(error, subprocess.TimeoutExpired) else ""
+        stderr_value = error.stderr if isinstance(error, subprocess.TimeoutExpired) else str(error)
+        stdout = (
+            stdout_value.decode("utf-8", errors="replace")
+            if isinstance(stdout_value, bytes)
+            else stdout_value or ""
+        )
+        stderr = (
+            stderr_value.decode("utf-8", errors="replace")
+            if isinstance(stderr_value, bytes)
+            else stderr_value or ""
+        )
+        record["status"] = "invalid"
+        record["execution_verdict"] = "execution_failure"
+        record["errors"].append(f"module-structure test could not complete: {type(error).__name__}")
+    record["raw_output_artifacts"] = [
+        write_artifact(
+            run_dir,
+            "raw/module_structure.stdout.txt",
+            stdout.encode("utf-8"),
+            media_type="text/plain",
+            role="stdout",
+        ),
+        write_artifact(
+            run_dir,
+            "raw/module_structure.stderr.txt",
+            stderr.encode("utf-8"),
+            media_type="text/plain",
+            role="stderr",
+        ),
+    ]
+    summary_counts: dict[str, int] = {}
+    for count, label in re.findall(r"\b(\d+)\s+(passed|failed|skipped|error|errors)\b", stdout):
+        summary_counts[label.rstrip("s")] = int(count)
+    failures = summary_counts.get("failed", 0)
+    errors = summary_counts.get("error", 0)
+    if record["status"] == "invalid":
+        pass
+    elif record["exit_status"] == 0 and summary_counts.get("passed", 0) > 0 and failures == 0:
+        record["status"] = "available"
+        record["execution_verdict"] = "passed"
+    elif record["exit_status"] == 1 and failures > 0 and errors == 0:
+        record["status"] = "available"
+        record["execution_verdict"] = "violations_detected"
+    elif record["exit_status"] == 0:
+        record["status"] = "inconclusive"
+        record["execution_verdict"] = "no_usable_evidence"
+        record["errors"].append("pytest returned success without a recognized test summary")
+    else:
+        record["status"] = "invalid"
+        record["execution_verdict"] = "execution_failure"
+        record["errors"].append("pytest did not produce an interpretable module-structure result")
+    record["measurements"] = {
+        "module_structure_test_failures": failures if summary_counts else None,
+        "tests_passed": summary_counts.get("passed"),
+        "tests_failed": summary_counts.get("failed"),
+        "tests_skipped": summary_counts.get("skipped"),
+        "stdout_sha256": sha256_bytes(stdout.encode("utf-8")),
+        "stderr_sha256": sha256_bytes(stderr.encode("utf-8")),
     }
     _finish_record(record, started, monotonic_started)
     return record
@@ -339,6 +490,7 @@ def collect_deployment_observation(
         evaluator_name="docker-compose-read-only-observer",
         source_revision=source_revision,
         scope="Running containers visible to the local Docker Compose project in this worktree.",
+        scope_id="deployment.compose_observation",
         started=started,
         executable=executable,
         version=None,
@@ -510,6 +662,7 @@ def collect_evidence(
     architecture_state: str,
     base_url: str,
     run_id: str,
+    fitness_configuration_path: str = FITNESS_CONFIGURATION_PATH,
     runtime_duration_seconds: float = 3.0,
     sample_interval_seconds: float = 0.5,
     skip_deployment_observation: bool = False,
@@ -518,6 +671,8 @@ def collect_evidence(
     run_id = validate_run_id(run_id)
     if architecture_state != ARCHITECTURE_STATE:
         raise ValueError(f"unsupported architecture state: {architecture_state}")
+    if fitness_configuration_path != FITNESS_CONFIGURATION_PATH:
+        raise ValueError("unsupported fitness configuration path")
     base_url = validate_local_base_url(base_url)
     architecture = _load_architecture_manifest()
     source_revision = _git_revision()
@@ -530,7 +685,9 @@ def collect_evidence(
     by_source = {reference["source_path"]: reference for reference in inputs}
     manifest_ref = by_source[ARCHITECTURE_MANIFEST]
     schema_ref = by_source["experiments/schemas/development_evidence_bundle_v1.schema.json"]
-    ci_inputs = [by_source[ARCHITECTURE_MANIFEST], by_source[ARCHITECTURE_ACCEPTANCE], schema_ref]
+    acceptance_ref = by_source[ARCHITECTURE_ACCEPTANCE]
+    structure_test_ref = by_source["tests/architecture/test_module_structure.py"]
+    ci_inputs = [manifest_ref, acceptance_ref, structure_test_ref, schema_ref]
     deployment_inputs = [manifest_ref, by_source[COMPOSE_CONFIG], schema_ref]
     runtime_inputs = [
         manifest_ref,
@@ -541,12 +698,19 @@ def collect_evidence(
         by_source["scripts/exp01_evidence_runtime.py"],
         schema_ref,
     ]
-    ci_record = run_architecture_acceptance(
+    import_linter_record = run_architecture_acceptance(
         run_dir,
         run_id,
         source_revision["commit_sha"],
         ci_inputs,
-        by_source[ARCHITECTURE_ACCEPTANCE],
+        acceptance_ref,
+    )
+    module_structure_record = run_module_structure_acceptance(
+        run_dir,
+        run_id,
+        source_revision["commit_sha"],
+        [manifest_ref, structure_test_ref, schema_ref],
+        manifest_ref,
     )
     deployment_record = collect_deployment_observation(
         run_dir,
@@ -565,12 +729,12 @@ def collect_evidence(
         duration_seconds=runtime_duration_seconds,
         interval_seconds=sample_interval_seconds,
     )
-    records = [ci_record, deployment_record, runtime_record]
+    records = [import_linter_record, module_structure_record, deployment_record, runtime_record]
     bundle_status = (
         "complete" if all(record["status"] == "available" for record in records) else "incomplete"
     )
     bundle = {
-        "schema_version": "1.1.0",
+        "schema_version": "1.2.0",
         "run_id": run_id,
         "bundle_status": bundle_status,
         "created_at_utc": _utc_now().isoformat(),
@@ -579,7 +743,9 @@ def collect_evidence(
             "state": architecture_state,
             "manifest_artifact": manifest_ref,
         },
-        "fitness_configuration": _fitness_configuration_from_source(by_source),
+        "fitness_configuration": _selected_fitness_configuration_from_source(
+            by_source, fitness_configuration_path
+        ),
         "execution_context": {
             "python_version": platform.python_version(),
             "platform": platform.platform(),
@@ -601,8 +767,12 @@ def collect_evidence(
                 "normative compliance or positive semantic coverage."
             ),
             (
-                "No A0.1 fitness configuration is declared; the captured A0 configuration is "
-                "explicitly mismatched and not applied."
+                "The selected A0.1 configuration is a manually established DEVELOPMENT "
+                "reference, not a P or B1 adaptation."
+            ),
+            (
+                "Runtime observations retain unverified application source identity when "
+                "authoritative source-to-image provenance is unavailable."
             ),
             "Coverage_P is not assessed and independent Coverage_ref is not established.",
             (
@@ -611,7 +781,52 @@ def collect_evidence(
             ),
         ],
     }
+    configuration_bytes = (ROOT / fitness_configuration_path).read_bytes()
+    representation_evidence = build_representation_evidence(bundle, run_dir, configuration_bytes)
+    representation_evidence_bytes = (
+        json.dumps(representation_evidence, indent=2, sort_keys=True, allow_nan=False) + "\n"
+    ).encode("utf-8")
+    bundle["fitness_representation_evidence"] = write_artifact(
+        run_dir,
+        REPRESENTATION_EVIDENCE_FILENAME,
+        representation_evidence_bytes,
+        media_type="application/json",
+        role="fitness_representation_evidence",
+    )
     return write_bundle(run_dir, bundle)
+
+
+def _selected_fitness_configuration_from_source(
+    inputs_by_source: dict[str | None, dict[str, Any]], configuration_path: str
+) -> dict[str, Any]:
+    """Bind the selected configuration identity to its exact copied source bytes."""
+    reference = inputs_by_source.get(configuration_path)
+    if reference is None:
+        raise ValueError("selected fitness configuration is not a copied input artifact")
+    source_bytes = (ROOT / configuration_path).read_bytes()
+    catalog_reference = inputs_by_source.get(FITNESS_OBLIGATION_CATALOG)
+    schema_reference = inputs_by_source.get(FITNESS_CONFIGURATION_SCHEMA)
+    if catalog_reference is None or schema_reference is None:
+        raise ValueError("fitness configuration validation inputs are not copied artifacts")
+    catalog_bytes = (ROOT / FITNESS_OBLIGATION_CATALOG).read_bytes()
+    schema_bytes = (ROOT / FITNESS_CONFIGURATION_SCHEMA).read_bytes()
+    if catalog_reference["sha256"] != sha256_bytes(catalog_bytes) or schema_reference[
+        "sha256"
+    ] != sha256_bytes(schema_bytes):
+        raise ValueError("fitness configuration validation artifact digest is inconsistent")
+    configuration = load_fitness_configuration(source_bytes, catalog_bytes, schema_bytes)
+    digest = sha256_bytes(source_bytes)
+    if reference["sha256"] != digest or reference["size_bytes"] != len(source_bytes):
+        raise ValueError("selected fitness configuration artifact digest is inconsistent")
+    return {
+        "status": "selected",
+        "declared_architecture_state": configuration["architecture_state"],
+        "configuration_version": configuration["configuration_version"],
+        "configuration_sha256": digest,
+        "configuration_artifact": reference,
+        "applicable_to_target": True,
+        "provenance_status": "manual_development_reference",
+    }
 
 
 def _fitness_configuration_from_source(
@@ -637,6 +852,11 @@ def main(argv: list[str] | None = None) -> int:
     """Run the development evidence collection CLI."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--architecture-state", required=True, choices=[ARCHITECTURE_STATE])
+    parser.add_argument(
+        "--fitness-config",
+        choices=[FITNESS_CONFIGURATION_PATH],
+        default=FITNESS_CONFIGURATION_PATH,
+    )
     parser.add_argument("--base-url", default="http://localhost:8000")
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--runtime-duration-seconds", type=float, default=3.0)
@@ -648,6 +868,7 @@ def main(argv: list[str] | None = None) -> int:
             architecture_state=args.architecture_state,
             base_url=args.base_url,
             run_id=args.run_id,
+            fitness_configuration_path=args.fitness_config,
             runtime_duration_seconds=args.runtime_duration_seconds,
             sample_interval_seconds=args.sample_interval_seconds,
             skip_deployment_observation=args.skip_deployment_observation,
@@ -660,25 +881,26 @@ def main(argv: list[str] | None = None) -> int:
         "bundle_path": str(bundle_path),
         "bundle_sha256": hashlib.sha256(bundle_path.read_bytes()).hexdigest(),
         "bundle_status": bundle["bundle_status"],
-        "stage_results": {
-            record["lifecycle_stage"]: {
+        "evaluator_results": [
+            {
+                "record_id": record["record_id"],
+                "lifecycle_stage": record["lifecycle_stage"],
                 "status": record["status"],
                 "execution_verdict": record["execution_verdict"],
                 "exit_status": record["exit_status"],
             }
             for record in bundle["records"]
-        },
+        ],
         "coverage_P": bundle["coverage_claims"]["Coverage_P"],
         "coverage_ref": bundle["coverage_claims"]["Coverage_ref"],
     }
     print(json.dumps(summary, indent=2, sort_keys=True))
     if bundle["bundle_status"] != "complete":
         return 2
-    if (
-        next(record for record in bundle["records"] if record["lifecycle_stage"] == "ci_test")[
-            "execution_verdict"
-        ]
-        != "passed"
+    if any(
+        record["lifecycle_stage"] == "ci_test"
+        and (record["status"] != "available" or record["execution_verdict"] != "passed")
+        for record in bundle["records"]
     ):
         return 1
     return 0

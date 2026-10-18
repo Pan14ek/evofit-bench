@@ -100,6 +100,9 @@ def _artifact_references(bundle: dict[str, Any]) -> list[dict[str, Any]]:
             bundle["execution_context"]["schema_artifact"],
         ]
     )
+    representation_evidence = bundle.get("fitness_representation_evidence")
+    if representation_evidence is not None:
+        references.append(representation_evidence)
     for record in bundle["records"]:
         for field in ("configuration_artifact", "input_artifacts", "raw_output_artifacts"):
             value = record[field]
@@ -180,8 +183,16 @@ def validate_bundle(run_dir: Path) -> dict[str, Any]:
     if bundle["run_id"] != run_dir.name:
         raise ValueError("bundle run-id does not match its output directory")
     stage_list = [record["lifecycle_stage"] for record in bundle["records"]]
-    if sorted(stage_list) != sorted(EXPECTED_STAGES):
-        raise ValueError("bundle must contain exactly one record for each supported stage")
+    if bundle["schema_version"] in {"1.0.0", "1.1.0"}:
+        if sorted(stage_list) != sorted(EXPECTED_STAGES):
+            raise ValueError(
+                "legacy bundle must contain exactly one record for each supported stage"
+            )
+    elif not set(EXPECTED_STAGES).issubset(stage_list):
+        raise ValueError("bundle must contain at least one record for each supported stage")
+    record_ids = [record["record_id"] for record in bundle["records"]]
+    if len(record_ids) != len(set(record_ids)):
+        raise ValueError("bundle contains duplicate evaluator record identities")
     expected_status = (
         "complete"
         if all(record["status"] == "available" for record in bundle["records"])
@@ -191,6 +202,26 @@ def validate_bundle(run_dir: Path) -> dict[str, Any]:
         raise ValueError("bundle status does not match stage evidence availability")
 
     source_revision = bundle["source_revision"]["commit_sha"]
+    if bundle["schema_version"] == "1.2.0":
+        selected_configuration = bundle["fitness_configuration"]
+        if selected_configuration["declared_architecture_state"] != bundle["architecture"]["state"]:
+            raise ValueError(
+                "selected fitness configuration architecture conflicts with the bundle"
+            )
+        if (
+            selected_configuration["configuration_sha256"]
+            != selected_configuration["configuration_artifact"]["sha256"]
+        ):
+            raise ValueError("selected fitness configuration digest conflicts with its artifact")
+        schema_reference = bundle["execution_context"]["schema_artifact"]
+        if schema_reference[
+            "source_path"
+        ] != "experiments/schemas/development_evidence_bundle_v1.schema.json" or schema_reference[
+            "sha256"
+        ] != sha256_bytes(SCHEMA_PATH.read_bytes()):
+            raise ValueError(
+                "EXP-01 bundle schema artifact does not match the schema used for validation"
+            )
     for record in bundle["records"]:
         if record["run_id"] != bundle["run_id"]:
             raise ValueError("stage record run-id differs from the bundle run-id")
@@ -240,6 +271,10 @@ def validate_bundle(run_dir: Path) -> dict[str, Any]:
     for reference in _artifact_references(bundle):
         if inventory.get(reference["path"]) != reference:
             raise ValueError(f"artifact reference digest mismatch: {reference['path']}")
+    if bundle["schema_version"] == "1.2.0":
+        from scripts.exp02_fitness_evidence import validate_representation_evidence
+
+        validate_representation_evidence(run_dir, bundle)
     return bundle
 
 

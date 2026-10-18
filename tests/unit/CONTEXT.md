@@ -14,6 +14,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_da01_inputs_and_isolation.py`
 - `test_experiment_evidence.py`
 - `test_exp01_evidence.py`
+- `test_exp02_fitness_evidence.py`
 - `test_fault_state.py`
 - `test_p_applicability_policies_v1.py`
 - `test_p_applicability_ruleset_v1.py`
@@ -42,7 +43,7 @@ status; it cannot approve a decision.
 
 Current coverage gate reports app-only coverage, not research-tool or requirement completeness. EXP-01 source-binding cases use synthetic Docker identity observations; a passing fixture does not supply authoritative source-to-image provenance. SPEC03 fixtures are synthetic and explicitly TEST_ONLY.
 
-`tests/unit/test_exp01_evidence.py` is included in `DEVELOPMENT_REGRESSION_TESTS` and is also run once more by `make development-regression-test` to expose its individual result in hosted logs.
+`tests/unit/test_exp01_evidence.py` and `tests/unit/test_exp02_fitness_evidence.py` are included in `DEVELOPMENT_REGRESSION_TESTS` and run again individually by `make development-regression-test` to expose their test counts in hosted logs. EXP-02 fixtures use digest-bound evaluator records, check that digest-valid derived-evidence tampering is rejected, and never provide independent coverage.
 
 ## Verification and further reading
 

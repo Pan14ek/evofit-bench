@@ -5,19 +5,21 @@
 
 ## Responsibility
 
-A0 fitness configuration and provisional threshold/metric settings.
+A0 baseline and A0.1 DEVELOPMENT reference fitness configurations, with explicit metric and threshold status.
 
 ## Local landmarks
 
 - `a0-monolith.yaml`
+- `a0_1-capability-modules.dev.yaml`
+- `a0_1-capability-modules.dev.schema.json`
 
 ## Established conventions
 
-B0 uses unchanged frozen config; candidate adaptations require new versions.
+B0 uses unchanged frozen config; the A0.1 DEVELOPMENT reference was established manually and is not a P or B1 adaptation result.
 
 ## Constraints and known gaps
 
-Do not rewrite baseline simply to make coverage appear restored.
+Do not rewrite the A0 baseline, infer coverage from declared obligation links, or configure unsupported thresholds.
 
 ## Verification and further reading
 

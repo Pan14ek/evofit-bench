@@ -19,6 +19,7 @@ DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_g1_method_decision_register.py \
 	tests/unit/test_context_documents.py \
 	tests/unit/test_exp01_evidence.py \
+	tests/unit/test_exp02_fitness_evidence.py \
 	tests/unit/test_da01_inputs_and_isolation.py::test_container_negative_probes_cannot_reach_oracle_history_network_or_other_output \
 	tests/integration/test_p_applicability_v3.py \
 	tests/integration/test_p_governed_adaptation_v1.py
@@ -65,6 +66,7 @@ development-regression-test:
 		$(foreach test,$(DEVELOPMENT_PROTECTED_TESTS),--ignore=$(test)) \
 		$(DEVELOPMENT_REGRESSION_TESTS)
 	$(UV) run python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_exp01_evidence.py
+	$(UV) run python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_exp02_fitness_evidence.py
 
 development-lint:
 	$(UV) run ruff check . \
@@ -115,7 +117,7 @@ load-baseline:
 
 exp01-smoke:
 	docker compose up -d --build --wait
-	$(UV) run python -m scripts.exp01_evidence --architecture-state A0_1_CAPABILITY_MODULES --base-url $(BASE_URL) --run-id $(EXP01_RUN_ID)
+	$(UV) run python -m scripts.exp01_evidence --architecture-state A0_1_CAPABILITY_MODULES --fitness-config fitness/configs/a0_1-capability-modules.dev.yaml --base-url $(BASE_URL) --run-id $(EXP01_RUN_ID)
 
 experiment-reset:
 	docker compose up -d postgres

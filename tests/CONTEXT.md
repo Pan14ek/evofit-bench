@@ -5,7 +5,7 @@
 
 ## Responsibility
 
-Python unit, architecture and PostgreSQL integration suites, including independent synthetic SPEC03 impact, exact-pair, operation, materialization, governance, provenance and rollback tests.
+Python unit, architecture and PostgreSQL integration suites, including EXP-01/02 evidence contracts and independent synthetic SPEC03 impact, exact-pair, operation, materialization, governance, provenance and rollback tests.
 
 ## Local landmarks
 

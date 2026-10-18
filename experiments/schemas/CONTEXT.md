@@ -10,6 +10,7 @@ Experiment scenario and result schema contracts.
 ## Local landmarks
 
 - `development_evidence_bundle_v1.schema.json`
+- `fitness_representation_evidence_v1.schema.json`
 - `ground_truth.schema.json`
 - `result.schema.json`
 - `scenario.schema.json`
@@ -20,7 +21,7 @@ Version contract changes and validate all related cases.
 
 ## Constraints and known gaps
 
-Structural schema pass does not imply trustworthy evidence. EXP-01 bundle schema 1.1 records source-binding status separately from collector revision and rejects verified source binding without authoritative provenance; legacy 1.0 bundles remain readable without a source-binding claim. The contract is DEVELOPMENT-only and fixes coverage claims to not assessed/not established.
+Structural schema pass does not imply trustworthy evidence. EXP-01 bundle schema 1.2 adds the selected manual A0.1 configuration, multiple evaluator records, and a digest-linked representation-evidence artifact; 1.0/1.1 remain readable. Source-binding status stays separate from collector revision, and verified runtime binding is rejected without authoritative provenance. Contracts are DEVELOPMENT-only and fix coverage claims to not assessed/not established.
 
 ## Verification and further reading
 
