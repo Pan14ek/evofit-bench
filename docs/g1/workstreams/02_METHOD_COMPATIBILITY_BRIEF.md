@@ -105,12 +105,12 @@ Lifecycle stage is part of representation context: the exact-pair proof binds th
 
 The frozen DA01 rule remains \(\operatorname{Covered}_{DA01}(q,A)=1\) iff there exists an active \(r\) with both an independently valid execution verdict \(\operatorname{ExecutionValid}_{DA01}(r,A)\) and an independently valid exact-pair verdict \(\operatorname{PairVerdictValid}_{DA01}(r,q,A,E_{r,q})\). The fixed complete required-obligation denominator, equal obligation weighting, and one-count-per-obligation rule remain in force; stage is checked as pair context, with no universal quantification over lifecycle stages.
 
-For this proposed future all-stage model, let \(A\) be the exact target architecture revision, \(\operatorname{scope}(r)\) the representation scope, and \(E_{r,q}\) the evidence for the exact representation-obligation pair. A stage is covered only when both independent validity conditions hold:
+For this proposed future all-stage model, let \(A\) be the exact target architecture revision, \(\mathcal{R}_{\mathrm{active}}(A)\) the complete active representation set for the candidate evaluated at \(A\), \(\operatorname{scope}(r)\) the representation scope, and \(E_{r,q}\) the evidence for the exact representation-obligation pair. A stage is covered only when both independent validity conditions hold:
 
 \[
 \begin{aligned}
 \operatorname{CoveredStage}(q,s,A)
-={}&\exists r\in\mathcal{R}_{\mathrm{active}}:\operatorname{stage}(r)=s\\
+={}&\exists r\in\mathcal{R}_{\mathrm{active}}(A):\operatorname{stage}(r)=s\\
 &\land\operatorname{ExecutionValid}(r,A,s,\operatorname{scope}(r))\\
 &\land\operatorname{PairVerdictValid}(r,q,A,s,\operatorname{scope}(r),E_{r,q})
 \end{aligned}
@@ -125,7 +125,7 @@ For this proposed future all-stage model, let \(A\) be the exact target architec
 \end{cases}
 \]
 
-Evaluate this conjunction with three-valued semantics: only an all-TRUE result counts as covered; a proven failing stage yields FALSE, and unresolved stage evidence yields UNKNOWN. Only TRUE contributes one covered obligation.
+Evaluate the existential and conjunction with three-valued semantics. Any active representation with both verdicts valid makes its stage TRUE. If no valid witness exists, a proven absence or failure makes that stage FALSE; unresolved representation inventory or evidence leaves it UNKNOWN. The all-stage result is TRUE only when every required stage is TRUE, FALSE when any required stage is FALSE, and UNKNOWN otherwise. Only TRUE contributes one covered obligation.
 
 Here \(\operatorname{ExecutionValid}\) is the independently verified evaluator/representation execution verdict for that representation, target revision, stage, and scope. \(\operatorname{PairVerdictValid}\) is the independently verified semantic/evidence verdict for the exact \((r,q)\) pair at those same bindings. The evidence and verdicts must identify the target architecture revision, stage, scope, representation, and obligation. Both conditions must be valid; the \texttt{covers} field alone does not establish coverage. One representation can satisfy a required stage only with sufficient execution and exact-pair evidence for that stage.
 
