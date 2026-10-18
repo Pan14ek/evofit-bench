@@ -10,6 +10,8 @@
 
 This draft prepares the existing DA01 executable RQ1/RQ2 procedure for review. The frozen [DA01 protocol](../experiments/execution/da01/PROTOCOL.md), [score rules](../experiments/execution/da01/SCORE_RULES.md), and [validity rules](../experiments/execution/da01/VALIDITY_RULES.md) control current operational definitions. This draft does not amend them, set G1, authorize a run, or claim an effect.
 
+See the [G1 integration decision matrix](g1/G1_INTEGRATION_DECISION_MATRIX.md) for the consolidated source/proposal crosswalk and OPEN-01…OPEN-09 compatibility analysis. Its recommendations remain unapproved.
+
 DA01 is one independently designed architecture transition. It supports descriptive case reporting only. Requests, evaluator invocations, obligations, pair rows, and repeated measurements of this same transition are not independent architecture trials. DA01 cannot by itself establish population significance, cloud/runtime benefit, or generalization.
 
 ## 2. Manuscript and executable RQ crosswalk
@@ -78,7 +80,7 @@ Do not collapse method decision status, evaluator execution, infrastructure, pro
 | UNKNOWN applicability | Record policy/fact/completeness references and scope; do not convert to INACTIVE | An unresolved mandatory obligation cannot be silently dropped; reviewer must approve exact scoring treatment |
 | Missing exact pair | Record MISSING_EVIDENCE and pair identity | Pair is not covered under frozen RQ2 |
 | Vacuous success | Record target-resolution/inspection evidence and VACUOUS_SUCCESS | Does not establish valid execution or coverage |
-| Architecture/compliance violation | Preserve the observed violation separately from monitor validity | OPEN-07 requires review against frozen reference verdict semantics |
+| Architecture/compliance violation | Preserve the observed violation separately from monitor validity; the frozen DA01 rule classifies a nonzero evaluator exit as EXECUTION_FAILURE | OPEN-07 blocks a shared coverage interpretation for this case; frozen reference semantics control DA01 and remain unchanged |
 | Evaluator execution failure | Preserve exit/error and artifact/evidence identity | No valid coverage; distinguish from infrastructure failure |
 | Infrastructure failure | Preserve environment, stage, and failure evidence | Do not score as a semantic pass; treatment in the estimand remains PENDING_INDEPENDENT_REVIEW |
 | Protocol violation / unknown target | Preserve diagnostic and derived protocol status | Do not suppress or normalize away the violation |
@@ -123,7 +125,7 @@ OPEN-04/05: production policy/evaluator authority, completeness proof, and B1/P 
 
 OPEN-06: cost units, search bound, budget handling, and tie rules.
 
-OPEN-07/08: compliance versus monitor-invalidity mapping and multi-obligation ADD compatibility with frozen scoring.
+OPEN-07/08: P-side compliance/monitor distinction versus frozen DA01 nonzero-exit EXECUTION_FAILURE, and multi-obligation ADD compatibility with frozen single-target scoring. See the [integration decision matrix](g1/G1_INTEGRATION_DECISION_MATRIX.md); no scorer or validity rule is changed here.
 
 OPEN-09: independent algorithm freeze, holdout custody, and sealing separation.
 

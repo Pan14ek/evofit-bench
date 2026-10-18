@@ -24,13 +24,13 @@ Engineering implementation, methodological specification, and scientific evidenc
 
 Let **Aₜ** be an architecture state identified by its source revision and verified structural observations. **ΔAₜ** is the typed difference between the before and after states. **Πₜ** is the versioned normative policy source; policy changes are represented separately as **ΔΠₜ**. Architecture facts, policy rules, observations, and evaluator outputs are not interchangeable.
 
-Let **Q** be the catalog of architectural obligations. For **q ∈ Q**, applicability asks whether an authorized normative rule requires control of q in a given state. It does not say whether the architecture complies.
+Let **Q** be the catalog of architectural obligations. For **q ∈ Q**, applicability asks whether an authorized normative rule requires control of q in a given state. It does not say whether the architecture complies. Use **Zₜ** for typed architecture facts and observations; reserve **F_fit** for an optional aggregate fitness function/value so that the architecture-fact inventory does not collide with fitness notation.
 
-Let **Cₜ** be stable criterion intents and hard constraints. A criterion records its intended property, scope, applicable obligation links, policy basis, version, provenance, and trace links. Let **Rₜ** be concrete fitness representations, indexed by lifecycle stage where specified. A representation identifies an evaluator or metric, target scope, execution policy, evidence contract, artifact identity, and the obligations it purports to cover.
+Let **Cₜ** be stable criterion intents and hard constraints. A criterion records its intended property, scope, applicable obligation links, policy basis, version, provenance, and trace links. Let **𝓡ₜ** be the complete set of concrete fitness representations in the configuration, indexed by lifecycle stage where specified. A representation identifies an evaluator or metric, target scope, execution policy, evidence contract, artifact identity, and the obligations it purports to cover. Impacted subsets of **𝓡ₜ** are denoted separately below.
 
 The versioned configuration model is:
 
-    Φₜ = ⟨Cₜ, Rₜ, αₜ, θₜ, Hₜ, vₜ⟩
+    Φₜ = ⟨Cₜ, 𝓡ₜ, αₜ, θₜ, Hₜ, vₜ⟩
 
 Here **αₜ** denotes optional weights, **θₜ** optional soft-threshold rules, **Hₜ** approved hard invariants, and **vₜ** configuration and provenance identity. The core adaptation described here does not optimize or adapt α or θ. Any later change to them is outside core P v1 and is deferred under OPEN-10.
 
@@ -95,26 +95,27 @@ For a policy-only revision with the same architecture SHA, the policy delta is s
 
 The impact result contains three different domains, so it is a product, not a union of graph nodes, obligations, and trace-link diagnostics:
 
-    Δ_A = Diff(Fₜ,Fₜ₊₁) ⊆ ChangeFact
+    Δ_Z = Diff(Zₜ,Zₜ₊₁) ⊆ ChangeFact
     Δ_Π = Diff(Πₜ,Πₜ₊₁) ⊆ ChangePolicy
-    Δ = Δ_A ⊎ Δ_Π ⊎ Δ_Q                 (typed change sum; see implementation note)
+    Δ_g = Diff(g(Kₜ),g(Kₜ₊₁))             (conceptual applicability-state change)
+    Δ = Δ_Z ⊎ Δ_Π ⊎ Δ_g
     S⁺, S? = Map(Δ, G_T)                 (verified and uncertain change seeds)
     P⁺ = Reach⁺_G_T(S⁺)
     P? = Reach_G_T(S⁺ ∪ S?) \ P⁺
-    R⁺ = π_R(P⁺);  R? = π_R(P?)
+    𝓡⁺ₜ = π_𝓡(P⁺); 𝓡?ₜ = π_𝓡(P?)
     Uₜ₊₁ = {q ∈ Q | mandatory(q) ∧ applicableₜ₊₁(q)=ACTIVE ∧ q ∉ Coveredₜ₊₁}
     L?ₜ = unresolved trace-link, mapping, provenance, or inventory diagnostics
-    Iₜ = ⟨Impact_R(R⁺, R?), Uₜ₊₁, L?ₜ⟩
+    Iₜ = ⟨Impact_𝓡(𝓡⁺ₜ, 𝓡?ₜ), Uₜ₊₁, L?ₜ⟩
 
-`ChangeFact` and `ChangePolicy` are disjoint typed record domains. `Δ_Q` denotes a conceptual obligation/applicability change domain in the general model; it is not an emitted change set in the current `p_impact.py` implementation. `F` is the supplied architecture-fact inventory, `π_R` projects graph nodes onto declared representation IDs, and `Q` is the obligation catalog. A change seeds its entity node only when the ID, context, and source provenance bind to a graph node. Unmapped, indeterminate, or unverified changes are retained as unresolved/uncertain input, not silently dropped.
+ChangeFact and ChangePolicy are disjoint typed record domains. Δ_g is a conceptual name for an applicability-state difference, not a standalone ChangeObligation algebra or serialized change type. In the current orchestration, [diff_snapshot()](../experiments/execution/tooling/p_impact.py) emits fact and policy ChangeRecord values; [run_adaptation()](../experiments/execution/tooling/p_adaptation.py) appends _diff_applicability() results as ordinary ChangeRecord values (entity kind obligation, with before/after status in version fields) before calling analyze_impact(). Thus applicability changes are included in the analyzed change sequence, even though no separate algebraic runtime type exists. Z is the typed architecture-fact inventory; π_𝓡 projects graph nodes onto declared representation IDs. A change seeds its entity node only when the ID, context, and source provenance bind to a graph node. Unmapped, indeterminate, or unverified changes are retained as unresolved/uncertain input, not silently dropped.
 
-`Reach⁺` traverses typed edges whose scope, endpoint versions, and source references are verified. `Reach` traverses the declared typed graph to retain possible paths through unverified edges. `P⁺` and `P?` are path domains; `R⁺` and `R?` are representation-ID sets. A reachable representation requires reassessment; reachability alone does not establish semantic invalidity.
+`Reach⁺` traverses typed edges whose scope, endpoint versions, and source references are verified. `Reach` traverses the declared typed graph to retain possible paths through unverified edges. `P⁺` and `P?` are path domains; `𝓡⁺ₜ` and `𝓡?ₜ` are affected subsets of the full configuration representation set `𝓡ₜ`. A reachable representation requires reassessment; reachability alone does not establish semantic invalidity.
 
 `Uₜ₊₁` is computed independently from graph reachability: it contains currently mandatory, positively applicable obligations not demonstrated covered by the after-state pair assessment. The impact assessment records these separately. Operation planning independently derives remaining uncovered active mandatory obligations from coverage and may select `ADD` only when a suitable materializable template and its required authorization/cost evidence exist; otherwise it holds. Thus a missing graph edge cannot suppress an ADD candidate for a proven uncovered obligation, and an ADD candidate is not itself an accepted adaptation.
 
 `L?ₜ` is a set of diagnostic identifiers/reason codes for unresolved graph links, missing mappings, provenance/context failures, or incomplete inventory. The tuple **Iₜ** keeps this diagnostic domain separate from affected representation IDs and uncovered obligation IDs. The serialized [`ImpactAssessment`](../experiments/execution/tooling/p_impact.py) correspondingly has separate `representations`, `uncovered_obligations`, and `unresolved_links` fields.
 
-**Implementation boundary.** SPEC 03 and the equations above provide the typed method abstraction. In the current code, [`diff_snapshot()` and `analyze_impact()`](../experiments/execution/tooling/p_impact.py) emit fact/policy changes and derive `uncovered_obligations`; no `Δ_Q` records are produced. [`run_adaptation()`](../experiments/execution/tooling/p_adaptation.py) passes impact and coverage into the operation planner, which derives its own remaining uncovered set. The code binds change seeds to nodes, tracks verified and possible paths separately, projects paths to declared representations, and emits the three separate result domains. It does not serialize these mathematical sets or a generic `Δ_Q` object.
+**Implementation boundary.** SPEC 03 and the equations above provide the typed method abstraction. The serialized assessment separates representations, uncovered_obligations, and unresolved_links; it does not serialize the mathematical sets as such. Fact/policy changes originate in diff_snapshot(), applicability-state ChangeRecord values are appended by run_adaptation() via _diff_applicability(), and analyze_impact() analyzes the combined sequence. No generic ChangeObligation algebra is implemented. Operation planning receives impact and coverage and derives its remaining uncovered set separately.
 
 Each representation receives one conservative impact state:
 
@@ -137,7 +138,7 @@ For later approved method contracts, mandatory coverage is complete only when ea
 
 OPEN-03/M-04 remain unresolved: a general lifecycle-stage registry is not approved. Do not add multi-stage obligations to the frozen DA01 denominator. DA01 RQ2 uses its existing private complete required-obligation denominator and exact-pair rule; Method P inputs do not receive the private denominator or expected pairs.
 
-OPEN-07 remains unresolved: a true architecture noncompliance and invalid/unavailable monitoring can lead to different interpretations under the frozen reference verdict rules. This draft preserves their separate reporting and does not change scorer semantics.
+OPEN-07 is a direct compatibility blocker for the nonzero-exit case. DEVELOPMENT pair assessment can return `PairStatus=VALID` with `compliance_status=NON_COMPLIANT` when adequate completed evidence has no other unresolved reason. Frozen DA01 `VALIDITY_RULES.md` treats a nonzero evaluator exit as `EXECUTION_FAILURE`; the frozen reference rule controls DA01 coverage. This draft does not change the checker or scorer. A later orthogonal execution/monitor-validity and compliance contract requires independent review and versioning before it can govern another protocol. See the [G1 integration decision matrix](g1/G1_INTEGRATION_DECISION_MATRIX.md).
 
 ## 7. Operation choice and candidate construction
 
