@@ -11,6 +11,26 @@ This is an engineering integration path. It does not establish `Coverage_P`,
 `Coverage_ref`, scientific effectiveness, a measured B0/B1/P result, or G1/G4
 approval. `P_ALGORITHM_STATUS` remains `NOT_READY`.
 
+## Evidence-consumption boundary
+
+The manifest's `evidence_flow` object distinguishes EXP-02 contract
+validation, representation mapping, independent V3 input verification,
+Method P execution, and evidence admission. The EXP-02 source artifacts are
+revalidated with the existing EXP-01/02 contracts; this verifies their
+references and derived bundle consistency, not independent semantic validity.
+The manifest records `artifact_validation_status` as
+`validated_by_exp01_exp02_contracts` and keeps
+`independent_semantic_validation_status` at `not_independently_validated`.
+
+The current bridge does **not** pass EXP-02 observations into
+`run_adaptation()`. It supplies no adaptation evidence sidecar or trust
+context, and the V3 bundle is verified with an empty evidence ledger. The
+machine-readable status is `exp02_evidence_admission_status: not_admitted`,
+with blocker `EXP02_EVIDENCE_NOT_ADMITTED_TO_METHOD_P`. A
+`completed_with_hold` result means that the verified V3 Method P pipeline ran
+and governance returned HOLD; it does not mean EXP-02 evidence drove an
+adaptation. No semantic proof provider or alternate Method P engine is used.
+
 ## Inputs and validation
 
 `--exp02-run-dir` must point to an existing EXP-01 bundle using schema 1.2.0
@@ -107,16 +127,17 @@ run, and exit code 1 means the input/output contract was rejected.
 Each output directory contains:
 
 - `integration_manifest.json` and its SHA-256 sidecar, with input references,
-  mapping statuses, P execution state, blockers, governance result, and
-  reproducibility metadata.
+  mapping statuses, the explicit evidence-flow boundary, P execution state,
+  blockers, governance result, and reproducibility metadata.
 - `method_p_trace.json` when the verified V3 pipeline ran. It serializes the
   existing applicability, impact, pair, coverage, operation, candidate, and
   governance results with unresolved prerequisite reason codes.
 
-The manifest and trace have separate versioned schemas in `schemas/`. The
-writer stages a new directory, validates it, and reads it back to verify the
-exact output inventory and digests before returning success. Never reuse an
-existing output directory.
+The manifest and trace use schema version 1.1.0 in `schemas/`. Readback
+re-runs the existing EXP-01/02 validators and V3 verifier for referenced
+inputs, verifies generated digests, and checks that the manifest's derived
+fields agree with the exact P trace. Keep the referenced input directories
+available when validating an output. Never reuse an existing output directory.
 
 ## Current supported result
 
@@ -131,7 +152,10 @@ the actual `verify_v3_p_bundle()` and `run_adaptation()` path. Its DRAFT/OPEN
 policy input leaves policy authority and facts unresolved; without exact-pair
 proof, applicability, mandatory classification, and cost authority, governance
 returns HOLD and coverage remains UNKNOWN. EXP-02 observations remain separate
-from semantic pair proof. No measured prediction or coverage claim is emitted.
+from semantic pair proof and are not admitted to P calculations. The
+`completed_with_hold` status is therefore a verified diagnostic bridge, not
+evidence-driven adaptation. No measured prediction or coverage claim is
+emitted.
 
 Current mapping limitations are recorded rather than repaired by inference:
 the A0.1 module-structure obligation has no corresponding P representation;

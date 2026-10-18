@@ -29,6 +29,7 @@ MANIFEST_DIGEST_FILENAME = "integration_manifest.sha256"
 P_TRACE_FILENAME = "method_p_trace.json"
 INTEGRATION_SCHEMA = "exp03_method_integration_v1.schema.json"
 TRACE_SCHEMA = "exp03_method_p_execution_trace_v1.schema.json"
+EXP02_ADMISSION_BLOCKER = "EXP02_EVIDENCE_NOT_ADMITTED_TO_METHOD_P"
 STAGE_TRANSLATIONS = {"ci_test": "ci", "runtime": "runtime"}
 
 
@@ -294,10 +295,12 @@ def _a0_frozen_revision(p_bundle: Any) -> str | None:
 
 def _adaptation_trace(p_bundle: Any, result: Any) -> dict[str, Any]:
     """Serialize the existing Method P result without adding a second decision engine."""
+    input_manifest_bytes = (p_bundle.root / "method_input_v3.json").read_bytes()
     return {
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "trace_type": "development_method_p_execution",
         "input_bundle_sha256": p_bundle.manifest["bundle_sha256"],
+        "input_manifest_sha256": sha256_bytes(input_manifest_bytes),
         "policy_source_revision": p_bundle.manifest["policy_source_revision"],
         "policy_bundle_sha256": p_bundle.manifest["policy_bundle_sha256"],
         "snapshot_validation": p_bundle.snapshot_validation.to_dict(),
@@ -324,6 +327,8 @@ def _adaptation_trace(p_bundle: Any, result: Any) -> dict[str, Any]:
         "prediction_v1": dict(result.prediction_v1) if result.prediction_v1 is not None else None,
         "adaptation_evidence_trust_scope": result.evidence_trust_scope,
         "exp02_observations_used_as_semantic_pair_evidence": False,
+        "exp02_evidence_admission_status": "not_admitted",
+        "exp02_evidence_admitted_to_p_calculations": False,
         "adaptation_evidence_sidecar_supplied": False,
         "unresolved_prerequisites": sorted(
             set(result.governance.to_dict()["reason_codes"])
@@ -356,30 +361,29 @@ def _load_exp02(
     return bundle, evidence, configuration, bundle_bytes
 
 
-def build_integration_artifact(
-    exp02_run_dir: Path,
-    *,
-    p_input_dir: Path | None = None,
-    invocation: Sequence[str] | None = None,
-) -> tuple[dict[str, Any], dict[str, Any] | None]:
-    """Validate EXP-02, optionally run verified V3 Method P, and build its manifest."""
-    bundle, evidence, configuration, bundle_bytes = _load_exp02(exp02_run_dir)
-    run_dir = exp02_run_dir.resolve(strict=True)
+def _exp02_input_payload(
+    run_dir: Path,
+    bundle: Mapping[str, Any],
+    evidence: Mapping[str, Any],
+    bundle_bytes: bytes,
+) -> dict[str, Any]:
+    """Serialize validated EXP-02 references without implying semantic proof."""
     representation_reference = bundle["fitness_representation_evidence"]
-    bundle_reference = {
-        "path": BUNDLE_FILENAME,
-        "sha256": sha256_bytes(bundle_bytes),
-        "size_bytes": len(bundle_bytes),
-        "media_type": "application/json",
-        "role": "exp01_evidence_bundle",
-        "source_path": None,
-    }
-    exp02_input = {
-        "run_directory": str(run_dir),
+    return {
+        "run_directory": str(run_dir.resolve(strict=True)),
         "run_id": str(bundle["run_id"]),
         "bundle_schema_version": str(bundle["schema_version"]),
         "bundle_status": str(bundle["bundle_status"]),
-        "bundle_reference": bundle_reference,
+        "artifact_validation_status": "validated_by_exp01_exp02_contracts",
+        "independent_semantic_validation_status": "not_independently_validated",
+        "bundle_reference": {
+            "path": BUNDLE_FILENAME,
+            "sha256": sha256_bytes(bundle_bytes),
+            "size_bytes": len(bundle_bytes),
+            "media_type": "application/json",
+            "role": "exp01_evidence_bundle",
+            "source_path": None,
+        },
         "representation_evidence_reference": dict(representation_reference),
         "source_revision": str(evidence["source_revision"]),
         "architecture_state": str(evidence["architecture_state"]),
@@ -412,7 +416,20 @@ def build_integration_artifact(
         "limitations": sorted(set(str(value) for value in evidence["limitations"])),
     }
 
+
+def build_integration_artifact(
+    exp02_run_dir: Path,
+    *,
+    p_input_dir: Path | None = None,
+    invocation: Sequence[str] | None = None,
+) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    """Validate EXP-02, optionally run verified V3 Method P, and build its manifest."""
+    bundle, evidence, configuration, bundle_bytes = _load_exp02(exp02_run_dir)
+    run_dir = exp02_run_dir.resolve(strict=True)
+    exp02_input = _exp02_input_payload(run_dir, bundle, evidence, bundle_bytes)
+
     p_input_status = "not_supplied"
+    p_verification_status = "not_supplied"
     p_manifest_sha: str | None = None
     p_manifest_reference: dict[str, Any] | None = None
     p_bundle_sha: str | None = None
@@ -424,7 +441,13 @@ def build_integration_artifact(
     p_reason_codes: list[str] = []
     p_trace: dict[str, Any] | None = None
     p_representations: Sequence[Mapping[str, Any]] | None = None
-    blockers: list[dict[str, str]] = []
+    blockers: list[dict[str, str]] = [
+        _blocker(
+            EXP02_ADMISSION_BLOCKER,
+            "EXP-02 evidence is validated and mapped for diagnostics but is not admitted "
+            "to Method P calculations by the current V3 trust and sidecar contracts.",
+        )
+    ]
     verified_p_bundle: Any | None = None
 
     if p_input_dir is None:
@@ -437,6 +460,7 @@ def build_integration_artifact(
     else:
         if p_input_dir.is_symlink():
             p_input_status = "rejected"
+            p_verification_status = "rejected"
             blockers.append(_blocker("P_V3_INPUT_REJECTED", "The P input root is a symlink."))
         else:
             try:
@@ -446,9 +470,11 @@ def build_integration_artifact(
                 )
             except (OSError, ValueError, ProtocolError, ContractValidationError) as error:
                 p_input_status = "rejected"
+                p_verification_status = "rejected"
                 blockers.append(_blocker("P_V3_INPUT_REJECTED", str(error)))
             else:
                 p_input_status = "verified"
+                p_verification_status = "verified"
                 p_bundle_sha = str(verified_p_bundle.manifest["bundle_sha256"])
                 manifest_path = verified_p_bundle.root / "method_input_v3.json"
                 p_manifest_bytes = manifest_path.read_bytes()
@@ -539,7 +565,7 @@ def build_integration_artifact(
     if p_trace is not None:
         validate_payload(TRACE_SCHEMA, p_trace)
     manifest: dict[str, Any] = {
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "artifact_type": "exp03_method_integration",
         "integration_status": integration_status,
         "created_at_utc": _utc_now(),
@@ -553,6 +579,14 @@ def build_integration_artifact(
             "invocation": list(invocation or sys.argv),
         },
         "exp02_input": exp02_input,
+        "evidence_flow": {
+            "exp02_contract_validation_status": "validated",
+            "representation_mapping_status": "generated",
+            "method_p_input_verification_status": p_verification_status,
+            "method_p_execution_status": p_execution_status,
+            "exp02_evidence_admission_status": "not_admitted",
+            "admission_blocker_code": EXP02_ADMISSION_BLOCKER,
+        },
         "representation_mappings": mappings,
         "coverage_claims": {
             "Coverage_P": "not_assessed",
@@ -602,6 +636,7 @@ def validate_integration_output(output_dir: Path) -> dict[str, Any]:
     validate_payload(INTEGRATION_SCHEMA, parsed)
 
     declared: dict[str, Mapping[str, Any]] = {}
+    trace_payload: dict[str, Any] | None = None
     for reference in parsed["artifact_inventory"]:
         relative = PurePosixPath(str(reference["path"]))
         if relative.is_absolute() or ".." in relative.parts or str(reference["path"]) in declared:
@@ -622,6 +657,9 @@ def validate_integration_output(output_dir: Path) -> dict[str, Any]:
             except json.JSONDecodeError as error:
                 raise ValueError("EXP-03 Method P trace is invalid JSON") from error
             validate_payload(TRACE_SCHEMA, trace)
+            if not isinstance(trace, dict):
+                raise ValueError("EXP-03 Method P trace must be an object")
+            trace_payload = trace
         declared[relative.as_posix()] = reference
     actual = {
         path.relative_to(root).as_posix()
@@ -636,7 +674,174 @@ def validate_integration_output(output_dir: Path) -> dict[str, Any]:
     expected_digest_line = f"{sha256_bytes(manifest_bytes)}  {MANIFEST_FILENAME}\n"
     if digest_path.read_text(encoding="ascii") != expected_digest_line:
         raise ValueError("EXP-03 manifest digest file does not match the manifest")
+    _validate_exp02_source_references(parsed)
+    _validate_v3_input_reference(parsed)
+    _validate_manifest_trace_consistency(parsed, declared, trace_payload)
     return cast(dict[str, Any], parsed)
+
+
+def _validate_exp02_source_references(manifest: Mapping[str, Any]) -> None:
+    """Re-run the EXP-01/02 contracts before treating input digests as validated refs."""
+    exp02_input = manifest["exp02_input"]
+    source_dir = Path(str(exp02_input["run_directory"]))
+    try:
+        bundle, evidence, _, bundle_bytes = _load_exp02(source_dir)
+        expected = _exp02_input_payload(
+            source_dir.resolve(strict=True), bundle, evidence, bundle_bytes
+        )
+    except (OSError, ValueError, ProtocolError, ContractValidationError) as error:
+        raise ValueError("EXP-03 referenced EXP-02 source failed contract revalidation") from error
+    if exp02_input != expected:
+        raise ValueError("EXP-03 EXP-02 source references disagree with validated source artifacts")
+
+
+def _validate_v3_input_reference(manifest: Mapping[str, Any]) -> None:
+    """Re-run the existing V3 verifier for an input claimed as independently verified."""
+    method_p = manifest["method_p"]
+    evidence_flow = manifest["evidence_flow"]
+    verification_status = evidence_flow["method_p_input_verification_status"]
+    expected_status = {
+        "not_supplied": "not_supplied",
+        "rejected": "rejected",
+        "verified": "verified",
+        "incompatible": "verified",
+    }[method_p["input_status"]]
+    if verification_status != expected_status:
+        raise ValueError(
+            "EXP-03 evidence-flow V3 verification status disagrees with Method P input status"
+        )
+    if verification_status != "verified":
+        if (
+            method_p["input_bundle_sha256"] is not None
+            or method_p["input_manifest_sha256"] is not None
+            or method_p["input_manifest_reference"] is not None
+        ):
+            raise ValueError("EXP-03 unverified V3 input cannot carry verified input references")
+        return
+
+    input_dir = Path(str(method_p["input_directory"]))
+    try:
+        p_bundle = verify_v3_p_bundle(input_dir, evidence_ledger=EvidenceLedger({}, {}, {}))
+        manifest_bytes = (p_bundle.root / "method_input_v3.json").read_bytes()
+    except (OSError, ValueError, ProtocolError, ContractValidationError) as error:
+        raise ValueError(
+            "EXP-03 referenced V3 Method P input failed verifier revalidation"
+        ) from error
+    expected_reference = {
+        "path": "method_input_v3.json",
+        "sha256": sha256_bytes(manifest_bytes),
+        "size_bytes": len(manifest_bytes),
+        "media_type": "application/json",
+        "role": "method_p_v3_input_manifest",
+        "source_path": None,
+    }
+    if (
+        method_p["input_bundle_sha256"] != p_bundle.manifest["bundle_sha256"]
+        or method_p["input_manifest_sha256"] != expected_reference["sha256"]
+        or method_p["input_manifest_reference"] != expected_reference
+        or method_p["architecture_before_sha"] != p_bundle.snapshot["architecture"]["before_commit"]
+        or method_p["architecture_after_sha"] != p_bundle.snapshot["architecture"]["after_commit"]
+    ):
+        raise ValueError("EXP-03 V3 Method P input references disagree with the verified bundle")
+
+
+def _validate_manifest_trace_consistency(
+    manifest: Mapping[str, Any],
+    declared: Mapping[str, Mapping[str, Any]],
+    trace: Mapping[str, Any] | None,
+) -> None:
+    """Reject digest-valid outputs whose manifest and execution trace disagree."""
+    method_p = manifest["method_p"]
+    evidence_flow = manifest["evidence_flow"]
+    trace_references = [
+        reference
+        for reference in manifest["artifact_inventory"]
+        if reference["role"] == "method_p_trace"
+    ]
+    if len(manifest["artifact_inventory"]) != len(trace_references) or len(trace_references) > 1:
+        raise ValueError("EXP-03 artifact inventory contains an unexpected generated artifact")
+    execution_completed = method_p["execution_status"] == "completed"
+    if execution_completed != (trace is not None and len(trace_references) == 1):
+        raise ValueError("EXP-03 trace presence disagrees with Method P execution status")
+    if execution_completed:
+        trace_reference = trace_references[0]
+        if method_p["trace_reference"] != trace_reference:
+            raise ValueError("EXP-03 manifest and Method P trace disagree: trace reference")
+    elif method_p["trace_reference"] is not None:
+        raise ValueError("EXP-03 trace reference exists without a completed Method P execution")
+
+    blocker_codes = {item["code"] for item in manifest["blockers"]}
+    if evidence_flow["admission_blocker_code"] != EXP02_ADMISSION_BLOCKER:
+        raise ValueError("EXP-03 EXP-02 evidence admission blocker is missing or invalid")
+    if EXP02_ADMISSION_BLOCKER not in blocker_codes:
+        raise ValueError("EXP-03 EXP-02 evidence admission blocker is absent from blockers")
+    if evidence_flow["exp02_evidence_admission_status"] != "not_admitted":
+        raise ValueError("EXP-03 cannot claim EXP-02 evidence was admitted to Method P")
+    if evidence_flow["method_p_execution_status"] != method_p["execution_status"]:
+        raise ValueError("EXP-03 evidence-flow execution status disagrees with Method P")
+    expected_input_verification = {
+        "not_supplied": "not_supplied",
+        "rejected": "rejected",
+        "verified": "verified",
+        "incompatible": "verified",
+    }[method_p["input_status"]]
+    if evidence_flow["method_p_input_verification_status"] != expected_input_verification:
+        raise ValueError("EXP-03 evidence-flow V3 verification status disagrees with Method P")
+
+    expected_integration_status: str | None
+    if trace is None:
+        if method_p["governance_result"] != "not_run":
+            raise ValueError("EXP-03 governance result exists without a Method P trace")
+        if method_p["reason_codes"] or method_p["prediction_v1_emitted"]:
+            raise ValueError("EXP-03 P-derived output claims exist without a Method P trace")
+        expected_integration_status = "blocked"
+    else:
+        if trace["input_bundle_sha256"] != method_p["input_bundle_sha256"]:
+            raise ValueError("EXP-03 manifest and Method P trace disagree: input bundle identity")
+        if trace["input_manifest_sha256"] != method_p["input_manifest_sha256"]:
+            raise ValueError("EXP-03 manifest and Method P trace disagree: input manifest identity")
+        if trace["architecture"]["before_commit"] != method_p["architecture_before_sha"]:
+            raise ValueError(
+                "EXP-03 manifest and Method P trace disagree: before architecture revision"
+            )
+        if trace["architecture"]["after_commit"] != method_p["architecture_after_sha"]:
+            raise ValueError(
+                "EXP-03 manifest and Method P trace disagree: after architecture revision"
+            )
+        governance = trace["governance"]
+        operation_plan = trace["operation_plan"]
+        governance_reasons = governance["reason_codes"]
+        operation_reasons = operation_plan["hold_reasons"] + operation_plan["reject_reasons"]
+        expected_reasons = sorted(set(governance_reasons) | set(operation_reasons))
+        if trace["unresolved_prerequisites"] != expected_reasons:
+            raise ValueError(
+                "EXP-03 governance/operation-plan reasons disagree with unresolved prerequisites"
+            )
+        if method_p["reason_codes"] != expected_reasons:
+            raise ValueError("EXP-03 manifest and Method P trace disagree: reason codes")
+        if method_p["governance_result"] != governance["result"]:
+            raise ValueError("EXP-03 manifest and Method P trace disagree: governance result")
+        if method_p["prediction_v1_emitted"] != (trace["prediction_v1"] is not None):
+            raise ValueError(
+                "EXP-03 manifest and Method P trace disagree: prediction emission status"
+            )
+        if (
+            trace["exp02_evidence_admission_status"] != "not_admitted"
+            or trace["exp02_evidence_admitted_to_p_calculations"] is not False
+            or trace["exp02_observations_used_as_semantic_pair_evidence"] is not False
+        ):
+            raise ValueError("EXP-03 trace misrepresents EXP-02 evidence admission")
+        expected_integration_status = {
+            "ACCEPT": "completed",
+            "HOLD": "completed_with_hold",
+            "REJECT": "completed_with_reject",
+        }.get(str(governance["result"]))
+        if expected_integration_status is None:
+            raise ValueError("EXP-03 completed trace has an unsupported governance outcome")
+    if manifest["integration_status"] != expected_integration_status:
+        raise ValueError(
+            "EXP-03 integration status disagrees with Method P execution/governance outcome"
+        )
 
 
 def write_integration_run(
@@ -701,6 +906,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     summary = {
         "status": manifest["integration_status"],
+        "evidence_flow": manifest["evidence_flow"],
         "run_id": manifest["exp02_input"]["run_id"],
         "mapped_candidate_count": sum(
             item["mapping_status"] == "candidate_only"

@@ -43,6 +43,11 @@ V3 input exported from the DRAFT/OPEN policy pilot, then calls
 Its expected HOLD/UNKNOWN results keep this path separate from TEST_ONLY
 positive fixtures; the suite also checks revision mismatch, artifact
 tampering, incomplete mappings, and output digest readback.
+Digest-valid manifest/trace disagreements and false source-reference claims
+must fail readback. The evaluator-observation regression intentionally shows
+that changing valid EXP-02 observations does not affect Method P governance;
+this records the current evidence-consumption limitation, not successful
+evidence-driven adaptation.
 
 ## Verification and further reading
 

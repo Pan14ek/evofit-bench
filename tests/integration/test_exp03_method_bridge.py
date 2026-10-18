@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 
+from experiments.execution.tooling.hashing import pretty_json_bytes
 from experiments.execution.tooling.p_adaptation import verify_v3_p_bundle
 from experiments.execution.tooling.p_applicability import EvidenceLedger
 from experiments.execution.tooling.p_policy_source_v3 import (
@@ -116,6 +117,39 @@ def _mapping_by_obligation(manifest: dict[str, Any], obligation: str) -> dict[st
     )
 
 
+def _reseal_output(
+    output_dir: Path,
+    *,
+    mutate_manifest: Any | None = None,
+    mutate_trace: Any | None = None,
+) -> None:
+    """Apply a fixture mutation and recompute every affected output digest."""
+    manifest_path = output_dir / MANIFEST_FILENAME
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if mutate_trace is not None:
+        trace_path = output_dir / P_TRACE_FILENAME
+        trace = json.loads(trace_path.read_text(encoding="utf-8"))
+        mutate_trace(trace)
+        trace_bytes = pretty_json_bytes(trace)
+        trace_path.write_bytes(trace_bytes)
+        trace_reference = next(
+            reference
+            for reference in manifest["artifact_inventory"]
+            if reference["role"] == "method_p_trace"
+        )
+        trace_reference["sha256"] = contract.sha256_bytes(trace_bytes)
+        trace_reference["size_bytes"] = len(trace_bytes)
+        manifest["method_p"]["trace_reference"] = copy.deepcopy(trace_reference)
+    if mutate_manifest is not None:
+        mutate_manifest(manifest)
+    manifest_bytes = pretty_json_bytes(manifest)
+    manifest_path.write_bytes(manifest_bytes)
+    digest = contract.sha256_bytes(manifest_bytes)
+    (output_dir / "integration_manifest.sha256").write_text(
+        f"{digest}  {MANIFEST_FILENAME}\n", encoding="ascii"
+    )
+
+
 def test_real_exp02_run_executes_existing_p_pipeline_and_preserves_hold(
     tmp_path: Path, p_input_dir: Path
 ) -> None:
@@ -136,7 +170,26 @@ def test_real_exp02_run_executes_existing_p_pipeline_and_preserves_hold(
     assert manifest["method_p"]["execution_status"] == "completed"
     assert manifest["method_p"]["governance_result"] == "HOLD"
     assert manifest["method_p"]["prediction_v1_emitted"] is False
+    assert manifest["evidence_flow"] == {
+        "exp02_contract_validation_status": "validated",
+        "representation_mapping_status": "generated",
+        "method_p_input_verification_status": "verified",
+        "method_p_execution_status": "completed",
+        "exp02_evidence_admission_status": "not_admitted",
+        "admission_blocker_code": "EXP02_EVIDENCE_NOT_ADMITTED_TO_METHOD_P",
+    }
+    assert manifest["exp02_input"]["artifact_validation_status"] == (
+        "validated_by_exp01_exp02_contracts"
+    )
+    assert manifest["exp02_input"]["independent_semantic_validation_status"] == (
+        "not_independently_validated"
+    )
+    assert any(
+        item["code"] == "EXP02_EVIDENCE_NOT_ADMITTED_TO_METHOD_P" for item in manifest["blockers"]
+    )
     assert trace["exp02_observations_used_as_semantic_pair_evidence"] is False
+    assert trace["exp02_evidence_admission_status"] == "not_admitted"
+    assert trace["exp02_evidence_admitted_to_p_calculations"] is False
     assert trace["adaptation_evidence_sidecar_supplied"] is False
     assert trace["prediction_v1"] is None
     assert trace["current_coverage"]["status"] == "UNKNOWN"
@@ -270,6 +323,43 @@ def test_actual_evaluator_noncompliance_is_separate_from_pair_validity(
     assert layering["semantic_pair_proof_status"] == "not_supplied"
 
 
+def test_exp02_observation_changes_do_not_change_method_p_governance(
+    tmp_path: Path, p_input_dir: Path
+) -> None:
+    """Document the current limitation: validated EXP-02 evidence is not consumed by P."""
+    baseline_run, _ = _write_exp02_run(tmp_path / "baseline")
+    changed_run, _ = _write_exp02_run(tmp_path / "changed", noncompliant_layering=True)
+
+    baseline_manifest, baseline_trace = build_integration_artifact(
+        baseline_run, p_input_dir=p_input_dir
+    )
+    changed_manifest, changed_trace = build_integration_artifact(
+        changed_run, p_input_dir=p_input_dir
+    )
+
+    assert baseline_trace is not None
+    assert changed_trace is not None
+    assert (
+        _mapping_by_obligation(baseline_manifest, "AC_LAYERING")["compliance_observation"]["status"]
+        == "conforming"
+    )
+    assert (
+        _mapping_by_obligation(changed_manifest, "AC_LAYERING")["compliance_observation"]["status"]
+        == "nonconforming"
+    )
+    assert (
+        baseline_manifest["method_p"]["input_bundle_sha256"]
+        == changed_manifest["method_p"]["input_bundle_sha256"]
+    )
+    assert baseline_trace["governance"] == changed_trace["governance"]
+    assert (
+        baseline_manifest["method_p"]["governance_result"]
+        == changed_manifest["method_p"]["governance_result"]
+    )
+    assert baseline_manifest["evidence_flow"]["exp02_evidence_admission_status"] == ("not_admitted")
+    assert changed_manifest["coverage_claims"]["Coverage_ref"] == "not_established"
+
+
 def test_unsupported_stage_and_unrepresented_scope_fail_closed(
     tmp_path: Path, p_input_dir: Path
 ) -> None:
@@ -358,6 +448,59 @@ def test_complete_integration_artifact_round_trips_and_checks_digests(
     assert trace_reference["path"] == P_TRACE_FILENAME
     (output_dir / P_TRACE_FILENAME).write_bytes(b"tampered")
     with pytest.raises(ValueError, match="output digest mismatch"):
+        validate_integration_output(output_dir)
+
+
+@pytest.mark.parametrize(
+    ("mutate_manifest", "mutate_trace"),
+    [
+        (
+            None,
+            lambda trace: trace.__setitem__("input_bundle_sha256", "0" * 64),
+        ),
+        (
+            None,
+            lambda trace: trace["architecture"].__setitem__("after_commit", "0" * 40),
+        ),
+        (lambda manifest: manifest["method_p"].__setitem__("governance_result", "ACCEPT"), None),
+        (
+            lambda manifest: manifest["method_p"]["reason_codes"].pop(),
+            None,
+        ),
+        (lambda manifest: manifest["method_p"].__setitem__("trace_reference", None), None),
+        (lambda manifest: manifest.__setitem__("integration_status", "completed"), None),
+    ],
+)
+def test_digest_valid_cross_artifact_mismatches_fail_closed(
+    tmp_path: Path,
+    p_input_dir: Path,
+    mutate_manifest: Any | None,
+    mutate_trace: Any | None,
+) -> None:
+    """A recomputed manifest/trace digest cannot hide inconsistent derived values."""
+    run_dir, _ = _write_exp02_run(tmp_path)
+    output_dir = tmp_path / "digest-valid-mismatch"
+    write_integration_run(run_dir, output_dir, p_input_dir=p_input_dir)
+    _reseal_output(output_dir, mutate_manifest=mutate_manifest, mutate_trace=mutate_trace)
+
+    with pytest.raises(ValueError, match="EXP-03"):
+        validate_integration_output(output_dir)
+
+
+def test_digest_valid_source_reference_mismatch_fails_contract_revalidation(
+    tmp_path: Path, p_input_dir: Path
+) -> None:
+    run_dir, _ = _write_exp02_run(tmp_path)
+    output_dir = tmp_path / "source-reference-mismatch"
+    write_integration_run(run_dir, output_dir, p_input_dir=p_input_dir)
+    _reseal_output(
+        output_dir,
+        mutate_manifest=lambda manifest: manifest["exp02_input"]["input_artifacts"][0].__setitem__(
+            "sha256", "f" * 64
+        ),
+    )
+
+    with pytest.raises(ValueError, match="EXP-03 EXP-02 source references disagree"):
         validate_integration_output(output_dir)
 
 

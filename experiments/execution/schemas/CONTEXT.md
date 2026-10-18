@@ -46,10 +46,12 @@ single-claim contract. Adaptation evidence V2 is an additive sidecar schema for 
 authorization; it does not reinterpret V1 signed evidence. Do not weaken frozen
 DA01 prediction or scorer schemas to force a fit.
 
-The EXP-03 manifest and execution-trace schemas are DEVELOPMENT-only. They
-bind validated EXP-02 references and serialized results from the existing V3
-verifier/adaptation path; neither schema grants semantic proof, coverage,
-policy authority, or a measured prediction.
+The EXP-03 manifest and execution-trace schemas are DEVELOPMENT-only. Version
+1.1.0 distinguishes source-contract validation from independent semantic
+validation and records that EXP-02 evidence is not admitted to P calculations.
+Readback cross-checks manifest fields against the serialized existing V3
+verifier/adaptation trace; these schemas grant no semantic proof, coverage,
+policy authority, or measured prediction.
 
 ## Verification and further reading
 

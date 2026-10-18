@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:evofitbench:exp03-method-p-execution-trace-v1",
+  "$id": "urn:evofitbench:exp03-method-p-execution-trace-v1-1",
   "title": "EXP-03 DEVELOPMENT trace from the existing Method P pipeline",
   "description": "Serialized output from verify_v3_p_bundle() and run_adaptation(); EXP-02 observations are never injected as pair proof.",
   "type": "object",
@@ -9,6 +9,7 @@
     "schema_version",
     "trace_type",
     "input_bundle_sha256",
+    "input_manifest_sha256",
     "policy_source_revision",
     "policy_bundle_sha256",
     "snapshot_validation",
@@ -28,13 +29,16 @@
     "prediction_v1",
     "adaptation_evidence_trust_scope",
     "exp02_observations_used_as_semantic_pair_evidence",
+    "exp02_evidence_admission_status",
+    "exp02_evidence_admitted_to_p_calculations",
     "adaptation_evidence_sidecar_supplied",
     "unresolved_prerequisites"
   ],
   "properties": {
-    "schema_version": {"const": "1.0.0"},
+    "schema_version": {"const": "1.1.0"},
     "trace_type": {"const": "development_method_p_execution"},
     "input_bundle_sha256": {"$ref": "#/$defs/sha256"},
+    "input_manifest_sha256": {"$ref": "#/$defs/sha256"},
     "policy_source_revision": {"type": "string", "minLength": 1},
     "policy_bundle_sha256": {"$ref": "#/$defs/sha256"},
     "snapshot_validation": {"type": "object"},
@@ -62,6 +66,8 @@
     "prediction_v1": {"anyOf": [{"type": "object"}, {"type": "null"}]},
     "adaptation_evidence_trust_scope": {"type": ["string", "null"]},
     "exp02_observations_used_as_semantic_pair_evidence": {"const": false},
+    "exp02_evidence_admission_status": {"const": "not_admitted"},
+    "exp02_evidence_admitted_to_p_calculations": {"const": false},
     "adaptation_evidence_sidecar_supplied": {"const": false},
     "unresolved_prerequisites": {"type": "array", "items": {"type": "string"}}
   },

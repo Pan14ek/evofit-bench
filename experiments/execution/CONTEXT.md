@@ -42,8 +42,11 @@ The EXP-03 bridge in `scripts/exp03_method_bridge.py` reads validated EXP-02
 artifacts and optionally executes the verified V3 pipeline. EXP-02 execution
 and compliance observations remain separate from semantic pair proof. The
 bridge supplies no trust context or evidence sidecar, so the DRAFT/OPEN pilot
-path remains UNKNOWN/HOLD. See `EXP03_METHOD_INTEGRATION.md` for preparation,
-commands, output fields, and constraints.
+path remains UNKNOWN/HOLD, and the machine-readable output states that EXP-02
+evidence is not admitted to P calculations. Its v1.1.0 readback revalidates
+referenced source inputs and cross-checks manifest fields against the P trace.
+See `EXP03_METHOD_INTEGRATION.md` for preparation, commands, output fields,
+and constraints.
 
 ## Verification and further reading
 

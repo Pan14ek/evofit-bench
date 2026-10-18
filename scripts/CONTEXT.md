@@ -36,8 +36,11 @@ EXP-03 validates the original EXP-01/02 bundle, retains its exact artifact
 references, and calls the verified V3 Method P path only for an explicitly
 supplied bundle. It never passes EXP-02 observations as semantic pair proof or
 supplies an adaptation sidecar. HOLD, UNKNOWN, or an explicit blocker is an
-expected DEVELOPMENT result; do not promote it to measured evidence or P
-readiness.
+expected DEVELOPMENT result. Readback re-runs the EXP-01/02 and V3 validators
+for referenced inputs and checks manifest-derived fields against the exact P
+trace. `EXP02_EVIDENCE_NOT_ADMITTED_TO_METHOD_P` is an explicit blocker;
+`completed_with_hold` does not mean EXP-02 evidence drove adaptation. Do not
+promote this diagnostic bridge to measured evidence or P readiness.
 
 ## Verification and further reading
 

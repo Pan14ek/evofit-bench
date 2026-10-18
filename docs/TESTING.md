@@ -83,21 +83,24 @@ representation evidence, then preserves the original evaluator and input
 artifact references in a versioned integration manifest. When an explicit V3
 bundle is supplied, the bridge uses `verify_v3_p_bundle()` followed by
 `run_adaptation()` with an empty evidence ledger and no adaptation evidence
-sidecar. The checked-in DRAFT/OPEN policy-pilot source is sufficient to
+sidecar. EXP-02 evidence is validated and mapped for diagnostics but is not
+admitted to P calculations; the output names this boundary explicitly. The
+checked-in DRAFT/OPEN policy-pilot source is sufficient to
 exercise that path, but it correctly leaves policy authority and applicability
 unresolved and cannot produce an ACCEPT.
 
 | Requirement | Expected behavior | Test owner | Status |
 | --- | --- | --- | --- |
-| EXP03-01 | Validate EXP-01/02 artifacts and preserve run, configuration, source revision, evaluator IDs and original digests. | `test_original_evaluator_artifact_references_survive_unchanged`; digest-valid EXP-02 fixture. | Implemented; integration contract test |
+| EXP03-01 | Validate EXP-01/02 artifacts, revalidate referenced source artifacts on readback, and preserve run, configuration, source revision, evaluator IDs and original digests without claiming semantic validation. | `test_original_evaluator_artifact_references_survive_unchanged`, `test_digest_valid_source_reference_mismatch_fails_contract_revalidation`; digest-valid EXP-02 fixtures. | Implemented; integration contract tests |
 | EXP03-02 | Translate only explicit `ci_test → ci` and `runtime → runtime` stages; unsupported stages and unrepresented scopes stay ineligible. | `test_unsupported_stage_and_unrepresented_scope_fail_closed`; actual V3 representation catalog. | Implemented; integration negative test |
 | EXP03-03 | Keep missing evaluator/metric, invalid evidence, and unverified runtime identity unresolved. | `test_missing_evaluator_or_metric_remains_unresolved`, `test_modified_representation_evidence_is_rejected`, `test_unverified_runtime_identity_never_becomes_semantic_pair_proof`. | Implemented; integration negative tests |
 | EXP03-04 | Keep evaluator execution and observed compliance separate, including actual noncompliance. | `test_actual_evaluator_noncompliance_is_separate_from_pair_validity`. | Implemented; integration test |
 | EXP03-05 | Block incompatible V3 after revisions and reject contradictory source/evaluator/canonical-pair bindings. | `test_incompatible_architecture_revision_blocks_method_p_execution`, `test_conflicting_source_revision_is_rejected_before_packaging`, `test_contradictory_evaluator_binding_is_rejected`, `test_duplicate_canonical_pair_binding_is_rejected`. | Implemented; integration negative tests |
-| EXP03-06 | Execute the existing verified V3 Method P pipeline for the supported A0→A0.1 delta; no EXP-02 observation becomes pair proof. | `test_real_exp02_run_executes_existing_p_pipeline_and_preserves_hold`, `test_missing_policy_authority_and_exact_pair_proof_produce_unknown_hold`. | Implemented; actual verifier/adaptation path, DRAFT/OPEN policy source |
+| EXP03-06 | Execute the existing verified V3 Method P pipeline for the supported A0→A0.1 delta; no EXP-02 observation becomes pair proof or enters P calculations. | `test_real_exp02_run_executes_existing_p_pipeline_and_preserves_hold`, `test_missing_policy_authority_and_exact_pair_proof_produce_unknown_hold`, `test_exp02_observation_changes_do_not_change_method_p_governance`. | Implemented; actual verifier/adaptation path, DRAFT/OPEN policy source; evidence-consumption limitation explicit |
 | EXP03-07 | Keep `Coverage_P`, `Coverage_ref`, and measured DA01 prediction unclaimed; require no oracle/scorer artifact. | `test_integration_does_not_emit_measured_da01_prediction`, `test_no_private_oracle_or_scorer_artifacts_are_required`. | Implemented; integration boundary tests |
-| EXP03-08 | Read back generated artifacts and verify manifest and trace digests; report absent V3 input explicitly. | `test_complete_integration_artifact_round_trips_and_checks_digests`, `test_no_v3_input_is_reported_as_an_explicit_blocker`. | Implemented; integration artifact tests |
+| EXP03-08 | Read back generated artifacts, revalidate referenced inputs, cross-check manifest-derived fields against the exact P trace, and report absent V3 input explicitly. Digest-valid inconsistencies fail closed. | `test_complete_integration_artifact_round_trips_and_checks_digests`, `test_digest_valid_cross_artifact_mismatches_fail_closed`, `test_no_v3_input_is_reported_as_an_explicit_blocker`. | Implemented; integration artifact tests |
 | EXP03-09 | Keep existing TEST_ONLY positive V3 scenarios unchanged and covered by hosted DEVELOPMENT regression. | Existing `test_v3_synthetic_noop_accepts_with_independent_before_after_closure_claims` and `test_v3_synthetic_add_uses_authorized_descriptor_and_accepts_with_scoped_closure_claims` in `test_p_applicability_v3.py`. | Existing TEST_ONLY tests; run separately from real-evidence HOLD path |
+| EXP03-10 | Report EXP-02 contract validation, mapping, V3 verification, P execution, and P evidence admission as separate states; `completed_with_hold` does not imply evidence-driven adaptation. | `test_real_exp02_run_executes_existing_p_pipeline_and_preserves_hold`, `test_exp02_observation_changes_do_not_change_method_p_governance`. | Implemented; admission remains `not_admitted` by design |
 
 Prepare any V3 input through the existing `package_policy_source_v3()` and
 `export_method_inputs_v3()` APIs. Pass the policy source, before/after source
@@ -113,9 +116,15 @@ uv run python -m scripts.exp03_method_bridge \
 ```
 
 If no P input is supplied, EXP-03 writes the validated EXP-02 linkage and a
-machine-readable `P_V3_INPUT_REQUIRED` blocker. A verified V3 input produces a
-trace with verifier status, before/after revisions, impact, pair and coverage
-assessments, operation plan, governance decision, and unresolved prerequisites.
+machine-readable `P_V3_INPUT_REQUIRED` blocker. The manifest also reports
+`EXP02_EVIDENCE_NOT_ADMITTED_TO_METHOD_P` because EXP-02 observations are not
+supplied to `run_adaptation()`. A verified V3 input produces a trace with
+before/after revisions, impact, pair and coverage assessments, operation
+plan, governance decision, and unresolved prerequisites. A
+`completed_with_hold` status reports the existing P decision only; it does
+not mean that EXP-02 evidence drove adaptation. Readback reruns source
+validators and the V3 verifier, so those referenced input directories must
+remain available.
 See [`experiments/execution/EXP03_METHOD_INTEGRATION.md`](../experiments/execution/EXP03_METHOD_INTEGRATION.md)
 for the command contract and interpretation.
 
