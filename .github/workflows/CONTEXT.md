@@ -26,6 +26,11 @@ validation against the disposable PostgreSQL service. It excludes
 checking, and pytest discovery. Do not skip other tests to get a green run;
 unavailable Docker isolation probes remain unresolved.
 
+The workflow fetches complete Git history because the verified V3 exporter
+binds architecture snapshots to historical source commits, including frozen
+A0. A shallow checkout prevents those source-bound integration tests from
+running and is not equivalent evidence.
+
 ## Verification and further reading
 
 Consult the original source files and nearest relevant tests, then `docs/README.md` for repository-wide architecture, experiment, stack and verification references. Reproduce the safe CI job with `make development-quality` and a **disposable** PostgreSQL database. When a context summary conflicts with source code, a reviewed manifest or a frozen scientific protocol, **report the conflict**; do not silently reinterpret research rules.
