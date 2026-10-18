@@ -61,6 +61,21 @@ The new evidence collector is an engineering data path. Its bundle cannot establ
 
 Run the focused suite with `uv run python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_exp01_evidence.py`. `make development-regression-test` also runs this module separately after the allowlisted regression command so hosted logs show its exact test count. The optional live path is `make exp01-smoke`; it is separate from unit tests and must be reported as blocked if Compose, the database, or a ready app is unavailable.
 
+## EXP-02 A0.1 fitness representation evidence
+
+The A0.1 DEVELOPMENT configuration is a manually established reference, validated by `fitness/configs/a0_1-capability-modules.dev.schema.json`. The EXP-01 runner emits bundle schema 1.2.0, adds the existing module-structure test as an evaluator record, and packages the EXP-02 adapter output. The adapter verifies exact configuration and evaluator artifact digests and keeps evaluator execution, compliance observations, scope, applicability, semantic validity, and independent coverage separate.
+
+| Requirement | Expected behavior | Test owner | Status |
+| --- | --- | --- | --- |
+| EXP02-01 | A0.1 configuration validates, links catalog obligation IDs, records manual DEVELOPMENT provenance, and cannot claim P/B1 authorship. | `test_a01_fitness_configuration_validates_as_manual_development_reference`, `test_configuration_rejects_a0_identity_mismatch` | Synthetic contract tests |
+| EXP02-02 | Evaluator outputs bind by run, revision, evaluator, stage, scope, configuration and raw artifact identity; conflicting identities fail closed. | `test_configuration_and_evaluator_artifact_digests_are_verified`, `test_conflicting_evaluator_stage_scope_or_identity_is_rejected`, `test_conflicting_source_revision_is_rejected` | Synthetic contract tests |
+| EXP02-03 | Existing module-structure, Import Linter, and runtime outputs map to configured representations; a functioning architecture evaluator can report noncompliance. | `test_real_evaluator_records_map_to_representation_evidence`, `test_noncompliant_architecture_result_is_not_hidden_by_execution_success` | Synthetic adapter tests; optional live smoke |
+| EXP02-04 | Missing evaluator/metric, invalid evidence, scope mismatch, and unverified application identity remain explicit and cannot become positive semantic coverage. | `test_missing_evaluator_or_metric_remains_explicit`, `test_invalid_or_stale_runtime_record_never_yields_available_metrics`, `test_unverified_application_identity_is_preserved_as_unknown` | Synthetic adapter tests |
+| EXP02-05 | EXP-01 bundle schema 1.0/1.1 remains readable; v1.2 links its versioned representation-evidence artifact. | `test_legacy_exp01_schema_versions_1_0_and_1_1_remain_readable`, `test_real_evaluator_records_map_to_representation_evidence` | Schema/contract tests |
+| EXP02-06 | Method inputs remain isolated from oracle/scorer sources; `Coverage_P` and `Coverage_ref` remain unclaimed. | `test_exp02_inputs_remain_isolated_from_oracle_and_scorer_sources`, `test_representation_schema_rejects_unearned_coverage_claim` | Source/negative tests |
+
+Run the focused suite with `uv run python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_exp02_fitness_evidence.py`. `make development-quality` runs it in the hosted `development-quality` job through `development-regression-test`. The optional isolated DEVELOPMENT smoke is `COMPOSE_PROJECT_NAME=evofit-exp02-smoke make exp01-smoke`; it uses the explicit `fitness/configs/a0_1-capability-modules.dev.yaml` selection. Runtime application source binding remains unverified without authoritative source-to-image provenance.
+
 ## Pre-merge Definition of Done for implementation SPECs
 
 1. Formalize the feature's observable contract (inputs, outputs, invalid/unknown/halt semantics, provenance fields and version).

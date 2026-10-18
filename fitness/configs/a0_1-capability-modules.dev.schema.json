@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/fitness/a0_1-capability-modules-dev-v1.schema.json",
+  "title": "A0.1 capability modules DEVELOPMENT fitness configuration v1",
+  "description": "A manually established engineering reference. It is not a P or B1 adaptation result and does not claim semantic coverage.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "configuration_id",
+    "configuration_version",
+    "architecture_state",
+    "status",
+    "provenance",
+    "supported_stages",
+    "criteria",
+    "representations"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "configuration_id": {"const": "A0_1_CAPABILITY_MODULES_DEVELOPMENT_REFERENCE"},
+    "configuration_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "architecture_state": {"const": "A0_1_CAPABILITY_MODULES"},
+    "status": {"const": "development_reference"},
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "established_by",
+        "source_configuration",
+        "source_architecture_state",
+        "source_obligation_catalog",
+        "method_p_adaptation",
+        "b1_adaptation",
+        "rationale"
+      ],
+      "properties": {
+        "established_by": {"const": "manual"},
+        "source_configuration": {"const": "fitness/configs/a0-monolith.yaml"},
+        "source_architecture_state": {"const": "architecture/states/A0_1_CAPABILITY_MODULES.yaml"},
+        "source_obligation_catalog": {"const": "fitness/catalog/architectural-obligations.yaml"},
+        "method_p_adaptation": {"const": false},
+        "b1_adaptation": {"const": false},
+        "rationale": {"type": "string", "minLength": 20}
+      }
+    },
+    "supported_stages": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"enum": ["ci_test", "deployment", "runtime"]}
+    },
+    "criteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/criterion"}
+    },
+    "representations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/representation"}
+    }
+  },
+  "$defs": {
+    "criterion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "intent"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "intent": {"type": "string", "minLength": 10}
+      }
+    },
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "unit", "evidence_path", "source_metric_names"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "unit": {"type": "string", "minLength": 1},
+        "evidence_path": {"type": "string", "pattern": "^measurements\\.[a-zA-Z0-9_.]+$"},
+        "source_metric_names": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "^[a-zA-Z_:][a-zA-Z0-9_:]*$"}
+        }
+      }
+    },
+    "representation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "criterion_id",
+        "intent",
+        "stage",
+        "evaluator",
+        "applicability",
+        "declared_obligations",
+        "execution_policy",
+        "evidence_requirements",
+        "threshold",
+        "limitations"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^REP_[A-Z0-9_]+$"},
+        "criterion_id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+        "intent": {"type": "string", "minLength": 10},
+        "stage": {"enum": ["ci_test", "deployment", "runtime"]},
+        "evaluator": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "record_id",
+            "name",
+            "scope_id",
+            "configuration_artifact_source",
+            "source_artifacts",
+            "compliance_mapping",
+            "metrics"
+          ],
+          "properties": {
+            "id": {"type": "string", "pattern": "^EV_[A-Z0-9_]+$"},
+            "record_id": {"type": "string", "minLength": 1},
+            "name": {"type": "string", "minLength": 1},
+            "scope_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.]+$"},
+            "configuration_artifact_source": {
+              "oneOf": [
+                {"type": "string", "pattern": "^(?!/)(?!.*\\\\)(?!.*(^|/)\\.\\.(/|$))[A-Za-z0-9_.\\-/]+$"},
+                {"type": "null"}
+              ]
+            },
+            "source_artifacts": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^(?!/)(?!.*\\\\)(?!.*(^|/)\\.\\.(/|$))[A-Za-z0-9_.\\-/]+$"
+              }
+            },
+            "compliance_mapping": {"enum": ["execution_verdict", "observe_only"]},
+            "metrics": {
+              "type": "array",
+              "minItems": 1,
+              "items": {"$ref": "#/$defs/metric"}
+            }
+          }
+        },
+        "applicability": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["architecture_states", "scopes", "architecture_elements"],
+          "properties": {
+            "architecture_states": {
+              "type": "array",
+              "minItems": 1,
+              "items": {"const": "A0_1_CAPABILITY_MODULES"}
+            },
+            "scopes": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+            "architecture_elements": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+          }
+        },
+        "declared_obligations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]+$"}
+        },
+        "execution_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["trigger", "command"],
+          "properties": {
+            "trigger": {"const": "explicit_development_evidence_run"},
+            "command": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+          }
+        },
+        "evidence_requirements": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "threshold": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "rationale"],
+          "properties": {
+            "status": {"const": "not_configured"},
+            "rationale": {"type": "string", "minLength": 10}
+          }
+        },
+        "limitations": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+      }
+    }
+  }
+}

@@ -1,0 +1,216 @@
+schema_version: "1.0.0"
+configuration_id: A0_1_CAPABILITY_MODULES_DEVELOPMENT_REFERENCE
+configuration_version: "1.0.0"
+architecture_state: A0_1_CAPABILITY_MODULES
+status: development_reference
+provenance:
+  established_by: manual
+  source_configuration: fitness/configs/a0-monolith.yaml
+  source_architecture_state: architecture/states/A0_1_CAPABILITY_MODULES.yaml
+  source_obligation_catalog: fitness/catalog/architectural-obligations.yaml
+  method_p_adaptation: false
+  b1_adaptation: false
+  rationale: >-
+    Manually established engineering reference for evaluating available A0.1
+    architecture and runtime evidence paths. It is not an adaptation result.
+supported_stages: [ci_test, runtime]
+
+criteria:
+  - id: architecture_compliance
+    intent: Capability module structure and declared internal layering are checked by executable evaluators.
+  - id: reliability
+    intent: Business HTTP failures and unexpected operation failures are observed through runtime counters.
+  - id: performance
+    intent: Available HTTP request duration histogram observations are retained without inferring quantiles.
+
+representations:
+  - id: REP_A01_ARCH_MODULE_STRUCTURE_CI
+    criterion_id: architecture_compliance
+    intent: Check the A0.1 capability module manifest against the existing architecture test.
+    stage: ci_test
+    evaluator:
+      id: EV_A01_MODULE_STRUCTURE_PYTEST
+      record_id: exp02-ci-module-structure-v1
+      name: pytest-architecture-module-structure
+      scope_id: architecture.capability_modules
+      configuration_artifact_source: architecture/states/A0_1_CAPABILITY_MODULES.yaml
+      source_artifacts:
+        - architecture/states/A0_1_CAPABILITY_MODULES.yaml
+        - tests/architecture/test_module_structure.py
+      compliance_mapping: execution_verdict
+      metrics:
+        - name: module_structure_test_failures
+          unit: tests
+          evidence_path: measurements.module_structure_test_failures
+          source_metric_names: []
+    applicability:
+      architecture_states: [A0_1_CAPABILITY_MODULES]
+      scopes: [app.modules]
+      architecture_elements: [capability_modules, shared_infrastructure]
+    declared_obligations: [AC_MODULE_STRUCTURE]
+    execution_policy:
+      trigger: explicit_development_evidence_run
+      command: [python, -m, pytest, -q, --no-header, tests/architecture/test_module_structure.py]
+    evidence_requirements:
+      - evaluator_record_matches_run_and_source_revision
+      - raw_stdout_and_stderr_are_digest_bound
+      - module_structure_test_result_is_preserved
+    threshold:
+      status: not_configured
+      rationale: No numeric threshold is required for this structural acceptance test.
+    limitations:
+      - A passing repository-authored architecture test is engineering evidence, not independent semantic coverage.
+
+  - id: REP_A01_ARCH_INTERNAL_LAYERING_CI
+    criterion_id: architecture_compliance
+    intent: Check current internal dependency constraints through the configured Import Linter contracts.
+    stage: ci_test
+    evaluator:
+      id: EV_A01_IMPORT_LINTER
+      record_id: exp01-ci-import-linter-v1
+      name: import-linter
+      scope_id: architecture.internal_dependencies
+      configuration_artifact_source: architecture/acceptance/importlinter.toml
+      source_artifacts:
+        - architecture/acceptance/importlinter.toml
+      compliance_mapping: execution_verdict
+      metrics:
+        - name: dependency_rule_violations
+          unit: contracts
+          evidence_path: measurements.dependency_rule_violations
+          source_metric_names: []
+    applicability:
+      architecture_states: [A0_1_CAPABILITY_MODULES]
+      scopes: [app.modules]
+      architecture_elements: [capability_module_internal_layers]
+    declared_obligations: [AC_LAYERING]
+    execution_policy:
+      trigger: explicit_development_evidence_run
+      command: [python, -m, importlinter]
+    evidence_requirements:
+      - evaluator_record_matches_run_and_source_revision
+      - import_linter_configuration_digest_is_preserved
+      - raw_stdout_and_stderr_are_digest_bound
+    threshold:
+      status: not_configured
+      rationale: Import Linter reports contract violations directly; no weighted score is defined.
+    limitations:
+      - This configuration does not claim public API, data ownership, or module graph governance.
+
+  - id: REP_A01_REL_HTTP_5XX_RUNTIME
+    criterion_id: reliability
+    intent: Preserve the observed interval delta for business HTTP 5xx responses.
+    stage: runtime
+    evaluator:
+      id: EV_EXP01_PROMETHEUS_RUNTIME
+      record_id: exp01-runtime-v1
+      name: prometheus-runtime-collector
+      scope_id: runtime.business_api
+      configuration_artifact_source: null
+      source_artifacts:
+        - app/observability/metrics.py
+        - scripts/exp01_evidence_runtime.py
+        - scripts/prometheus_snapshot.py
+      compliance_mapping: observe_only
+      metrics:
+        - name: http_responses_total_business_5xx
+          unit: responses
+          evidence_path: measurements.metrics.counters.http_responses_total_business_5xx.value
+          source_metric_names: [http_responses_total]
+    applicability:
+      architecture_states: [A0_1_CAPABILITY_MODULES]
+      scopes: [business_http_responses]
+      architecture_elements: [external_business_rest_api]
+    declared_obligations: [R_HTTP_5XX]
+    execution_policy:
+      trigger: explicit_development_evidence_run
+      command: [python, -m, scripts.exp01_evidence]
+    evidence_requirements:
+      - runtime_interval_and_counter_status_are_available
+      - application_source_binding_status_is_preserved
+    threshold:
+      status: not_configured
+      rationale: No authorized SLO or 5xx acceptance threshold is configured for EXP-02.
+    limitations:
+      - Runtime counters are observations and do not establish an obligation verdict.
+      - Application source identity remains unverified without authoritative source-to-image provenance.
+
+  - id: REP_A01_REL_BUSINESS_FAILURE_RUNTIME
+    criterion_id: reliability
+    intent: Preserve the observed interval delta for unexpected business operation failures.
+    stage: runtime
+    evaluator:
+      id: EV_EXP01_PROMETHEUS_RUNTIME
+      record_id: exp01-runtime-v1
+      name: prometheus-runtime-collector
+      scope_id: runtime.business_api
+      configuration_artifact_source: null
+      source_artifacts:
+        - app/observability/metrics.py
+        - scripts/exp01_evidence_runtime.py
+        - scripts/prometheus_snapshot.py
+      compliance_mapping: observe_only
+      metrics:
+        - name: business_operation_failures_total
+          unit: failures
+          evidence_path: measurements.metrics.counters.business_operation_failures_total.value
+          source_metric_names: [business_operation_failures_total]
+    applicability:
+      architecture_states: [A0_1_CAPABILITY_MODULES]
+      scopes: [core_business_operations]
+      architecture_elements: [business_operations]
+    declared_obligations: [R_BUSINESS_FAILURE]
+    execution_policy:
+      trigger: explicit_development_evidence_run
+      command: [python, -m, scripts.exp01_evidence]
+    evidence_requirements:
+      - runtime_interval_and_counter_status_are_available
+      - application_source_binding_status_is_preserved
+    threshold:
+      status: not_configured
+      rationale: No authorized business failure threshold is configured for EXP-02.
+    limitations:
+      - Read-only smoke traffic may not exercise every business operation.
+      - Application source identity remains unverified without authoritative source-to-image provenance.
+
+  - id: REP_A01_PERF_HTTP_DURATION_RUNTIME
+    criterion_id: performance
+    intent: Preserve available HTTP request-duration histogram observations without estimating quantiles.
+    stage: runtime
+    evaluator:
+      id: EV_EXP01_PROMETHEUS_RUNTIME
+      record_id: exp01-runtime-v1
+      name: prometheus-runtime-collector
+      scope_id: runtime.business_api
+      configuration_artifact_source: null
+      source_artifacts:
+        - app/observability/metrics.py
+        - scripts/exp01_evidence_runtime.py
+        - scripts/prometheus_snapshot.py
+      compliance_mapping: observe_only
+      metrics:
+        - name: http_request_duration_seconds_histogram
+          unit: bucket_count_sum_delta_series
+          evidence_path: measurements.metrics.histogram
+          source_metric_names:
+            - http_request_duration_seconds_bucket
+            - http_request_duration_seconds_count
+            - http_request_duration_seconds_sum
+    applicability:
+      architecture_states: [A0_1_CAPABILITY_MODULES]
+      scopes: [business_http_requests]
+      architecture_elements: [external_business_rest_api]
+    declared_obligations: [P_EXT_LATENCY]
+    execution_policy:
+      trigger: explicit_development_evidence_run
+      command: [python, -m, scripts.exp01_evidence]
+    evidence_requirements:
+      - raw_histogram_samples_and_interval_deltas_are_preserved
+      - quantiles_are_not_inferred_from_buckets
+      - application_source_binding_status_is_preserved
+    threshold:
+      status: not_configured
+      rationale: No latency SLO is authorized for this DEVELOPMENT reference configuration.
+    limitations:
+      - Histogram buckets are not p50, p95, or p99 latency values.
+      - Application source identity remains unverified without authoritative source-to-image provenance.

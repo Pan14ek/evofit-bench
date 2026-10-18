@@ -554,6 +554,7 @@ def _base_record(
         "exit_status": None,
         "execution_verdict": "not_run",
         "scope": "Local A0.1 application process and bounded HTTP activity on loopback.",
+        "scope_id": "runtime.business_api",
         "source_revision": source_revision,
         "source_binding": None,
         "configuration_artifact": None,

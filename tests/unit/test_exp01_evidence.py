@@ -14,6 +14,7 @@ import pytest
 from scripts import exp01_evidence
 from scripts import exp01_evidence_contract as contract
 from scripts import exp01_evidence_runtime as runtime
+from scripts import exp02_fitness_evidence as exp02
 from scripts.prometheus_snapshot import parse_snapshot
 
 SOURCE_SHA = "a" * 40
@@ -80,21 +81,27 @@ def _valid_record(
     *,
     status: str = "available",
     configuration: dict[str, Any] | None = None,
+    record_id: str | None = None,
+    evaluator_name: str | None = None,
+    scope_id: str | None = None,
+    measurements: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    effective_record_id = record_id or f"test-{stage}"
+    raw_path = f"raw/{stage}.txt" if record_id is None else f"raw/{effective_record_id}.txt"
     raw = contract.write_artifact(
         run_dir,
-        f"raw/{stage}.txt",
+        raw_path,
         f"raw {stage}\n".encode(),
         media_type="text/plain",
         role="stdout",
     )
     start = datetime(2026, 10, 18, tzinfo=UTC)
     return {
-        "record_id": f"test-{stage}",
+        "record_id": effective_record_id,
         "run_id": run_dir.name,
         "lifecycle_stage": stage,
         "status": status,
-        "evaluator_name": f"test-{stage}",
+        "evaluator_name": evaluator_name or f"test-{stage}",
         "evaluator_version": "1.2.3",
         "executable": "/usr/bin/example",
         "executable_sha256": None,
@@ -105,12 +112,18 @@ def _valid_record(
         "exit_status": 0,
         "execution_verdict": "passed" if stage == "ci_test" else "inconclusive",
         "scope": f"controlled {stage} fixture",
+        "scope_id": scope_id
+        or {
+            "ci_test": "architecture.internal_dependencies",
+            "deployment": "deployment.compose_observation",
+            "runtime": "runtime.business_api",
+        }[stage],
         "source_revision": source_revision,
         "source_binding": _source_binding(source_revision) if stage == "runtime" else None,
         "configuration_artifact": configuration,
         "input_artifacts": [],
         "raw_output_artifacts": [raw],
-        "measurements": {},
+        "measurements": measurements or {},
         "errors": [],
         "limitations": [],
     }
@@ -646,6 +659,16 @@ def test_runtime_source_binding_controls_bundle_and_cli_outcome(
     historical_config.write_text(
         "architecture_state: A0_MONOLITH\nconfiguration_version: 1\n", encoding="utf-8"
     )
+    selected_config = repository_root / exp02.FITNESS_CONFIGURATION_PATH
+    selected_config.parent.mkdir(parents=True, exist_ok=True)
+    selected_config.write_bytes((contract.ROOT / exp02.FITNESS_CONFIGURATION_PATH).read_bytes())
+    for source_path in (
+        exp01_evidence.FITNESS_OBLIGATION_CATALOG,
+        exp01_evidence.FITNESS_CONFIGURATION_SCHEMA,
+    ):
+        target = repository_root / source_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes((contract.ROOT / source_path).read_bytes())
     monkeypatch.setattr(exp01_evidence, "ROOT", repository_root)
     monkeypatch.setattr(exp01_evidence, "_load_architecture_manifest", yaml_state)
     monkeypatch.setattr("scripts.exp01_evidence.platform.platform", lambda: "test platform")
@@ -657,15 +680,8 @@ def test_runtime_source_binding_controls_bundle_and_cli_outcome(
 
     def copy_inputs(run_dir: Path) -> list[dict[str, Any]]:
         return [
-            contract.write_artifact(
-                run_dir,
-                f"inputs/source-{index:02}-{Path(source_path).name}",
-                f"synthetic input for {source_path}\n".encode(),
-                media_type="text/plain",
-                role="source_or_configuration",
-                source_path=source_path,
-            )
-            for index, source_path in enumerate(exp01_evidence.SUPPORTED_INPUTS)
+            contract.copy_input_artifact(run_dir, source_path, "source_or_configuration")
+            for source_path in exp01_evidence.SUPPORTED_INPUTS
         ]
 
     monkeypatch.setattr(exp01_evidence, "_copy_inputs", copy_inputs)
@@ -673,7 +689,28 @@ def test_runtime_source_binding_controls_bundle_and_cli_outcome(
         exp01_evidence,
         "run_architecture_acceptance",
         lambda run_dir, run_id, source_revision, inputs, configuration: _valid_record(
-            run_dir, "ci_test", source_revision, configuration=configuration
+            run_dir,
+            "ci_test",
+            source_revision,
+            configuration=configuration,
+            record_id="exp01-ci-import-linter-v1",
+            evaluator_name="import-linter",
+            scope_id="architecture.internal_dependencies",
+            measurements={"dependency_rule_violations": 0},
+        ),
+    )
+    monkeypatch.setattr(
+        exp01_evidence,
+        "run_module_structure_acceptance",
+        lambda run_dir, run_id, source_revision, inputs, manifest: _valid_record(
+            run_dir,
+            "ci_test",
+            source_revision,
+            configuration=manifest,
+            record_id="exp02-ci-module-structure-v1",
+            evaluator_name="pytest-architecture-module-structure",
+            scope_id="architecture.capability_modules",
+            measurements={"module_structure_test_failures": 0, "tests_passed": 1},
         ),
     )
     monkeypatch.setattr(
@@ -809,7 +846,10 @@ def test_runtime_source_binding_controls_bundle_and_cli_outcome(
         assert not any("source binding mismatch" in error for error in result["errors"])
     cli_summary = json.loads(capsys.readouterr().out)
     assert cli_summary["bundle_status"] == expected_bundle_status
-    assert cli_summary["stage_results"]["runtime"]["status"] == expected_runtime_status
+    runtime_summary = next(
+        item for item in cli_summary["evaluator_results"] if item["lifecycle_stage"] == "runtime"
+    )
+    assert runtime_summary["status"] == expected_runtime_status
 
 
 def test_runtime_readiness_failure_is_an_explicit_not_run_outcome(
