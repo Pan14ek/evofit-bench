@@ -202,6 +202,10 @@ def validate_bundle(run_dir: Path) -> dict[str, Any]:
                 raise ValueError("runtime record is missing its source binding")
             if isinstance(binding, dict):
                 _validate_runtime_source_binding(binding, source_revision)
+                if binding["status"] == "mismatch" and record["status"] == "available":
+                    raise ValueError(
+                        "runtime evidence cannot be available with a mismatched source binding"
+                    )
         elif record.get("source_binding") is not None:
             raise ValueError("source binding is only valid on the runtime record")
         started = datetime.fromisoformat(record["started_at_utc"].replace("Z", "+00:00"))

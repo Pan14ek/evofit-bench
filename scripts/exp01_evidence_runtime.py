@@ -1020,7 +1020,14 @@ def collect_runtime_evidence(
         "Runtime source revision remains unverified without authoritative source-to-image "
         "provenance; Docker identity and OCI labels are execution-context observations only."
     )
-    if runtime_sample_status == "available" and record["evaluator_version"] is None:
+    if record["source_binding"]["status"] == "mismatch":
+        record["status"] = "invalid"
+        record["execution_verdict"] = "no_usable_evidence"
+        record["errors"].append(
+            "runtime source binding mismatch: observed application identity is inconsistent "
+            "with the collector source revision"
+        )
+    elif runtime_sample_status == "available" and record["evaluator_version"] is None:
         record["status"] = "inconclusive"
         record["execution_verdict"] = "no_usable_evidence"
         record["errors"].append("prometheus-client version could not be established")

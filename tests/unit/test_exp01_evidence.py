@@ -616,11 +616,73 @@ def test_stale_snapshot_interval_is_rejected() -> None:
         )
 
 
-def test_runtime_adapter_collects_live_records_without_claiming_coverage(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+@pytest.mark.parametrize(
+    (
+        "application_revision",
+        "expected_binding_status",
+        "expected_runtime_status",
+        "expected_bundle_status",
+        "expected_cli_exit",
+    ),
+    [
+        ("b" * 40, "mismatch", "invalid", "incomplete", 2),
+        (SOURCE_SHA, "unverified", "available", "complete", 0),
+    ],
+)
+def test_runtime_source_binding_controls_bundle_and_cli_outcome(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    application_revision: str,
+    expected_binding_status: str,
+    expected_runtime_status: str,
+    expected_bundle_status: str,
+    expected_cli_exit: int,
 ) -> None:
-    run_dir = tmp_path / "runtime-run"
-    run_dir.mkdir()
+    repository_root = tmp_path / "repository"
+    repository_root.mkdir()
+    historical_config = repository_root / exp01_evidence.HISTORICAL_FITNESS_CONFIG
+    historical_config.parent.mkdir(parents=True)
+    historical_config.write_text(
+        "architecture_state: A0_MONOLITH\nconfiguration_version: 1\n", encoding="utf-8"
+    )
+    monkeypatch.setattr(exp01_evidence, "ROOT", repository_root)
+    monkeypatch.setattr(exp01_evidence, "_load_architecture_manifest", yaml_state)
+    monkeypatch.setattr("scripts.exp01_evidence.platform.platform", lambda: "test platform")
+    monkeypatch.setattr(
+        exp01_evidence,
+        "_git_revision",
+        lambda: {"commit_sha": SOURCE_SHA, "git_dirty": False},
+    )
+
+    def copy_inputs(run_dir: Path) -> list[dict[str, Any]]:
+        return [
+            contract.write_artifact(
+                run_dir,
+                f"inputs/source-{index:02}-{Path(source_path).name}",
+                f"synthetic input for {source_path}\n".encode(),
+                media_type="text/plain",
+                role="source_or_configuration",
+                source_path=source_path,
+            )
+            for index, source_path in enumerate(exp01_evidence.SUPPORTED_INPUTS)
+        ]
+
+    monkeypatch.setattr(exp01_evidence, "_copy_inputs", copy_inputs)
+    monkeypatch.setattr(
+        exp01_evidence,
+        "run_architecture_acceptance",
+        lambda run_dir, run_id, source_revision, inputs, configuration: _valid_record(
+            run_dir, "ci_test", source_revision, configuration=configuration
+        ),
+    )
+    monkeypatch.setattr(
+        exp01_evidence,
+        "collect_deployment_observation",
+        lambda run_dir, run_id, source_revision, inputs, architecture, *, skipped=False: (
+            _valid_record(run_dir, "deployment", source_revision)
+        ),
+    )
     before = _snapshot(cpu=10, requests=0, responses=0, histogram_count=0, histogram_bucket=0)
     after = _snapshot(cpu=12, requests=5, responses=5, histogram_count=5, histogram_bucket=3)
 
@@ -657,6 +719,7 @@ def test_runtime_adapter_collects_live_records_without_claiming_coverage(
 
     class Sampler:
         def __init__(self, command: list[str], **kwargs: Any) -> None:
+            assert "--output" in command, command
             output_path = Path(command[command.index("--output") + 1])
             start = datetime.now(UTC) + timedelta(milliseconds=2)
             fields = [
@@ -692,25 +755,30 @@ def test_runtime_adapter_collects_live_records_without_claiming_coverage(
     monkeypatch.setattr("scripts.exp01_evidence_runtime.httpx.Client", Client)
     monkeypatch.setattr("scripts.exp01_evidence_runtime.subprocess.Popen", Sampler)
     monkeypatch.setattr(runtime, "_distribution_version", lambda _: "0.21.0")
-    target_identity = _target_observation(SOURCE_SHA)
+    target_identity = _target_observation(application_revision)
     monkeypatch.setattr(runtime, "_docker_target_observation", lambda _: target_identity)
 
-    result = runtime.collect_runtime_evidence(
-        run_dir,
-        run_dir.name,
-        "http://localhost:8000",
-        SOURCE_SHA,
-        [],
-        duration_seconds=3,
-        interval_seconds=0.5,
+    exit_code = exp01_evidence.main(
+        [
+            "--architecture-state",
+            exp01_evidence.ARCHITECTURE_STATE,
+            "--run-id",
+            f"runtime-{expected_binding_status}",
+        ]
     )
 
-    assert result["status"] == "available"
+    run_dir = repository_root / "experiments/results" / f"runtime-{expected_binding_status}"
+    bundle = contract.validate_bundle(run_dir)
+    result = next(record for record in bundle["records"] if record["lifecycle_stage"] == "runtime")
+    assert exit_code == expected_cli_exit
+    assert bundle["bundle_status"] == expected_bundle_status
+    assert result["status"] == expected_runtime_status
     assert result["exit_status"] == 0
     assert result["executable_sha256"] == contract.sha256_bytes(Path(sys.executable).read_bytes())
+    assert result["measurements"]["runtime_sampling"]["status"] == "available"
     assert result["measurements"]["runtime_sampling"]["sample_count"] == 6
     assert result["source_revision"] == SOURCE_SHA
-    assert result["source_binding"]["status"] == "unverified"
+    assert result["source_binding"]["status"] == expected_binding_status
     assert result["source_binding"]["endpoint_binding_status"] == "verified"
     assert (
         result["measurements"]["metrics"]["counters"]["http_requests_total_business"]["value"] == 5
@@ -720,10 +788,28 @@ def test_runtime_adapter_collects_live_records_without_claiming_coverage(
         == "missing"
     )
     assert result["measurements"]["metrics"]["histogram"]["quantiles"] is None
+    assert any(item["role"] == "raw_metrics" for item in result["raw_output_artifacts"])
     assert any(item["role"] == "runtime_samples" for item in result["raw_output_artifacts"])
-    assert any(
-        item["role"] == "target_identity_observation" for item in result["raw_output_artifacts"]
+    identity_artifact = next(
+        item
+        for item in result["raw_output_artifacts"]
+        if item["role"] == "target_identity_observation"
     )
+    assert (
+        json.loads((run_dir / identity_artifact["path"]).read_text(encoding="utf-8"))[
+            "before_runtime_collection"
+        ]["endpoint_container"]["observed_application_revision"]
+        == application_revision
+    )
+    if expected_binding_status == "mismatch":
+        assert result["execution_verdict"] == "no_usable_evidence"
+        assert any("source binding mismatch" in error for error in result["errors"])
+    else:
+        assert result["execution_verdict"] == "passed"
+        assert not any("source binding mismatch" in error for error in result["errors"])
+    cli_summary = json.loads(capsys.readouterr().out)
+    assert cli_summary["bundle_status"] == expected_bundle_status
+    assert cli_summary["stage_results"]["runtime"]["status"] == expected_runtime_status
 
 
 def test_runtime_readiness_failure_is_an_explicit_not_run_outcome(
@@ -865,6 +951,22 @@ def test_bundle_rejects_promotion_of_unverified_runtime_binding(tmp_path: Path) 
 
     with pytest.raises(ValueError, match="cannot be verified"):
         contract.validate_bundle(run_dir)
+
+
+def test_bundle_rejects_available_runtime_with_mismatched_source_binding(tmp_path: Path) -> None:
+    run_dir = tmp_path / "promoted-mismatched-source-binding"
+    bundle = _valid_bundle(run_dir)
+    binding = bundle["records"][2]["source_binding"]
+    assert binding is not None
+    binding.update(
+        status="mismatch",
+        endpoint_binding_status="mismatch",
+        identity_stable=False,
+        reason="Endpoint identity changed during collection.",
+    )
+
+    with pytest.raises(ValueError, match="cannot be available with a mismatched source binding"):
+        contract.write_bundle(run_dir, bundle)
 
 
 def test_runtime_inputs_do_not_include_private_or_scorer_sources() -> None:
