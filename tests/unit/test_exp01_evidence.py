@@ -366,8 +366,15 @@ def test_import_linter_captures_real_exit_version_duration_and_raw_outputs(
     )
 
 
+@pytest.mark.parametrize(
+    "noncompliant_output",
+    [
+        "Import Linter has found 1 broken contract.\n",
+        "Users module internal layering BROKEN\nContracts: 4 kept, 1 broken.\n",
+    ],
+)
 def test_import_linter_nonzero_rule_finding_is_preserved_as_violation(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, noncompliant_output: str
 ) -> None:
     run_dir = tmp_path / "run"
     run_dir.mkdir()
@@ -384,9 +391,7 @@ def test_import_linter_nonzero_rule_finding_is_preserved_as_violation(
     monkeypatch.setattr(exp01_evidence, "_distribution_version", lambda _: "2.3.0")
     monkeypatch.setattr(
         "scripts.exp01_evidence.subprocess.run",
-        lambda *args, **kwargs: subprocess.CompletedProcess(
-            args[0], 1, "Import Linter has found 1 broken contract.\n", ""
-        ),
+        lambda *args, **kwargs: subprocess.CompletedProcess(args[0], 1, noncompliant_output, ""),
     )
 
     result = exp01_evidence.run_architecture_acceptance(
@@ -396,8 +401,9 @@ def test_import_linter_nonzero_rule_finding_is_preserved_as_violation(
     assert result["status"] == "available"
     assert result["execution_verdict"] == "violations_detected"
     assert result["exit_status"] == 1
+    assert result["measurements"]["dependency_rule_violations"] == 1
     stdout = next(item for item in result["raw_output_artifacts"] if item["role"] == "stdout")
-    assert b"found 1 broken contract" in (run_dir / stdout["path"]).read_bytes()
+    assert (run_dir / stdout["path"]).read_bytes() == noncompliant_output.encode("utf-8")
 
 
 def test_import_linter_missing_executable_is_not_positive_evidence(
