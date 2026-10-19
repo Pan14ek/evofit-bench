@@ -10,6 +10,9 @@ from app.modules.notifications.model import Notification
 
 def add_notification(session: Session, user_id: uuid.UUID, kind: str, message: str) -> Notification:
     """Persist a notification in the caller's transaction."""
+    from app.modules.notifications.api import router as notifications_api_router
+
+    _ = notifications_api_router
     notification = Notification(user_id=user_id, type=kind, message=message)
     session.add(notification)
     session.flush()
