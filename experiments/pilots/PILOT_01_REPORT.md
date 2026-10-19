@@ -80,7 +80,7 @@ The run directories are ignored by Git and retained locally under `experiments/r
 - `pilot01-s0-r01` through `pilot01-s0-r03`, with matching `-exp01` directories.
 - `pilot01-s1-r01` through `pilot01-s1-r03`, with matching `-exp01` directories.
 
-Every run manifest inventories the original stdout/stderr, Locust output, runtime metrics, EXP-01 bundle, EXP-02 representation evidence, selected inputs, and environment records by size and SHA-256. The result generator rechecks those inventories and reruns the EXP-01/02 validators before emitting the CSV and statistics.
+Every run manifest inventories the original stdout/stderr, Locust output, runtime metrics, EXP-01 bundle, EXP-02 representation evidence, selected inputs, and environment records by size and SHA-256. The result generator rechecks those inventories, reruns the EXP-01/02 validators, independently derives request/failure counts, latency percentiles and throughput from the Locust aggregate row, and derives CPU delta, maximum RSS and sample count from the process-metric CSV. It rejects any manifest value that disagrees with those raw records. Counts and RSS are exact; the documented absolute tolerances are 1e-9 ms for percentiles, 1e-12 requests/s for throughput, and 1e-9 seconds for CPU delta.
 
 The six runs used the following command shape from the PR worktree; each repetition value 1, 2, and 3 was run once per condition:
 
@@ -98,9 +98,9 @@ PYTHONDONTWRITEBYTECODE=1 /private/tmp/evofit-pilot01-main-env/bin/python \
   -m experiments.pilots.generate_pilot01_results
 ```
 
-Source revisions: S0 `5d285a04da00863088f8cd88a10afb3faaf02ddb`; S1 `ccbfb002e1fc71d9dcaadf11635d449b8a881cac`. S1's exact patch SHA-256 is `7f52e0239d27d089aa9e456821f341259982eeaecdaca44a85404eef8a1f56d8`. Config and workload digests are listed in §C and embedded per row in the CSV. Each run's full artifact digests are embedded in that CSV and the corresponding `run_manifest.json`.
+Source revisions: S0 `5d285a04da00863088f8cd88a10afb3faaf02ddb`; S1 `ccbfb002e1fc71d9dcaadf11635d449b8a881cac`. S1's exact patch SHA-256 is `7f52e0239d27d089aa9e456821f341259982eeaecdaca44a85404eef8a1f56d8`. The isolated remote branch `research/pilot01-s1-fault` now serves that exact S1 SHA, verified with `git ls-remote`; the commit was not recreated or rebased. Config and workload digests are listed in §C and embedded per row in the CSV. Each run's full artifact digests are embedded in that CSV and the corresponding `run_manifest.json`.
 
-A local export archive is stored at `experiments/results/pilot01-evidence-2026-10-19.tar.gz` (SHA-256 `bb38e48ed6161d2c44b2817d3a08349aca085efc9108cedf221879ef89bdc522`). It contains all twelve raw/evidence directories, supporting architecture logs, the result CSV/statistics, expectation, workload, runner/generator, and source patch. The archive and raw run directories are marked read-only after validation. This archive is local workspace storage, not durable external artifact storage. Verify its digest and list/extract it with:
+The original export archive is preserved at `experiments/results/pilot01-evidence-2026-10-19.tar.gz` (SHA-256 `bb38e48ed6161d2c44b2817d3a08349aca085efc9108cedf221879ef89bdc522`). It contains all twelve raw/evidence directories, supporting architecture logs, the original result CSV/statistics, expectation, workload, runner/generator snapshot, and source patch. Its six run manifests and all 342 inventoried artifact references validate. The archive extracts successfully and its bytes remain unchanged. It also contains 467 small macOS AppleDouble `._*` sidecars with FinderInfo metadata; they have no resource-fork payloads and no unrelated paths. The repository-linked draft release stores this same archive as a private asset; repository access is required for independent reviewers. The credential scan found no private keys or provider tokens. It found only the standard local Compose database development credentials copied from the tracked repository configuration. The archive’s bundled generator is its original snapshot; the current PR generator adds the raw-file cross-check described above. Verify its digest and list/extract it with:
 
 ```bash
 shasum -a 256 experiments/results/pilot01-evidence-2026-10-19.tar.gz
@@ -113,10 +113,11 @@ The committed S1 fault branch preserves the exact source revision independently 
 
 ### Verification status
 
-- Focused PILOT-01 tests: **PASS** — `PYTHONDONTWRITEBYTECODE=1 /private/tmp/evofit-pilot01-main-env/bin/python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_pilot01_results.py`; 3 passed.
-- Pilot Ruff check/format: **PASS** — all checks passed; the three pilot Python files were already formatted.
-- `make development-quality`: **PASS**, exit 0. Ruff check passed; Ruff format checked 248 files; Mypy passed for 105 source files; Bandit passed with existing comment-parser/`nosec` warnings; Import Linter kept five contracts and broke none; architecture tests reported 6 passed; disposable PostgreSQL 16 migration validation passed at `0001_a0_schema`; DEVELOPMENT regression selection reported 331 passed in 280.68 s; the separate EXP-01 and EXP-02 suites reported 49 and 30 passed. One existing Starlette/httpx deprecation warning was reported.
+- Focused PILOT-01 tests: **PASS** — `PYTHONDONTWRITEBYTECODE=1 /private/tmp/evofit-pilot01-main-env/bin/python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_pilot01_results.py`; 13 passed, including manifest tampering cases with valid raw-artifact digests.
+- Pilot Ruff check/format: **PASS** — all checks passed after formatting the new test fixture.
+- `make development-quality`: **PASS**, exit 0. Ruff check passed; Ruff format checked 248 files; Mypy passed for 105 source files; Bandit passed with existing comment-parser/`nosec` warnings; Import Linter kept five contracts and broke none; architecture tests reported 6 passed; disposable PostgreSQL 16.15 migration validation passed at `0001_a0_schema`; DEVELOPMENT regression selection reported 341 passed in 222.25 s; the separate EXP-01 and EXP-02 suites reported 49 and 30 passed. One existing Starlette/httpx deprecation warning was reported. An initial sandboxed attempt stopped when Import Linter could not write its cache; the successful rerun used the PR-worktree write approval and the dedicated disposable database.
 - The target excluded `tests/unit/test_da01_execution.py` and `tests/unit/test_research_schema_foundation.py` from pytest, Ruff check/format, and Mypy, as specified by the Makefile. They were not treated as passes.
+- Revalidation of all six runs from raw CSVs: **PASS**, zero manifest discrepancies. Regenerated `PILOT_01_RESULTS.csv` and `PILOT_01_DESCRIPTIVE_STATISTICS.json` are byte-identical to the original files; their SHA-256 digests are unchanged.
 - `git diff --check`: **PASS** before final commit.
 - S0 architecture check: **PASS**; S1 expected evaluator failure and separate architecture pytest outcomes are detailed in §D.1.
 - Frozen scientific files, private oracle/scorer, and measured DA01 inputs: **not accessed or changed**.
@@ -127,11 +128,15 @@ The quality command used a new disposable PostgreSQL database named `evofit` in 
 UV_PYTHON=/Users/oleksii_makieiev/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3 \
 UV_PROJECT_ENVIRONMENT=/private/tmp/evofit-pilot01-main-env \
 UV_CACHE_DIR=/private/tmp/evofit-pilot01-cache \
+RUFF_CACHE_DIR=/private/tmp/evofit-pilot01-ruff-cache \
+MYPY_CACHE_DIR=/private/tmp/evofit-pilot01-mypy-cache \
 PYTHONPATH=/private/tmp/evofit-pilot01-uv \
 PYTHONDONTWRITEBYTECODE=1 \
-TEST_DATABASE_URL=postgresql+psycopg://evofit:evofit@localhost:5432/evofit \
+TEST_DATABASE_URL=postgresql+psycopg://evofit:evofit@localhost:53785/evofit \
 make UV='python3 -m uv' development-quality
 ```
+
+The migration check used a new temporary container from `postgres:16.15` (`evofit-pilot01-devquality`) with a dynamically assigned localhost port. The container was stopped and removed after validation.
 
 This engineering validation does not advance G1/G4 or Method P readiness. The raw table SHA-256 is `d1a5c2b627b1293e0f82d7fb1d324e75b97e296345ec3696deed0128c471eb0b`; the descriptive-statistics JSON SHA-256 is `644f958bf1699215b4e7093b4da6fe49d9ce021e640c7dec60d1f0659cf5a4d3`.
 

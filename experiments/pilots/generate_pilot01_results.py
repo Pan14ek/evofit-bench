@@ -4,6 +4,7 @@ import argparse
 import csv
 import hashlib
 import json
+import math
 import re
 import statistics
 from pathlib import Path
@@ -30,6 +31,21 @@ NUMERIC_FIELDS = (
     "application_rss_max_bytes",
     "runtime_sample_count",
 )
+RUNTIME_EXACT_FIELDS = frozenset(
+    {
+        "request_count",
+        "failure_count",
+        "application_rss_max_bytes",
+        "sample_count",
+    }
+)
+RUNTIME_ABSOLUTE_TOLERANCES = {
+    "p50_ms": 1e-9,
+    "p95_ms": 1e-9,
+    "p99_ms": 1e-9,
+    "throughput_requests_per_second": 1e-12,
+    "application_cpu_seconds_delta": 1e-9,
+}
 CSV_FIELDS = (
     "experiment_id",
     "condition",
@@ -79,6 +95,123 @@ def verify_artifact_inventory(root: Path, references: list[dict[str, Any]]) -> N
             raise ValueError(f"artifact inventory digest mismatch: {relative}")
 
 
+def _finite_number(value: Any, field: str) -> float:
+    """Parse a finite numeric value from a raw measurement or manifest."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"runtime metric is not numeric: {field}")
+    number = float(value)
+    if not math.isfinite(number):
+        raise ValueError(f"runtime metric is not finite: {field}")
+    return number
+
+
+def _raw_locust_measurements(run_dir: Path) -> dict[str, int | float]:
+    """Read aggregate request counts, percentiles and throughput from Locust CSV."""
+    with (run_dir / "locust_stats.csv").open(newline="", encoding="utf-8") as source:
+        reader = csv.DictReader(source)
+        required = {
+            "Name",
+            "Request Count",
+            "Failure Count",
+            "Requests/s",
+            "50%",
+            "95%",
+            "99%",
+        }
+        if reader.fieldnames is None or not required.issubset(reader.fieldnames):
+            raise ValueError("Locust statistics are missing required aggregate columns")
+        aggregate_rows = [row for row in reader if row.get("Name") == "Aggregated"]
+    if len(aggregate_rows) != 1:
+        raise ValueError("Locust output must contain exactly one Aggregated statistics row")
+    aggregate = aggregate_rows[0]
+
+    def number(field: str) -> float:
+        value = aggregate.get(field)
+        try:
+            result = float(value) if value not in (None, "") else math.nan
+        except ValueError as error:
+            raise ValueError(f"Locust aggregate is not numeric: {field}") from error
+        if not math.isfinite(result) or result < 0:
+            raise ValueError(f"Locust aggregate is invalid: {field}")
+        return result
+
+    def count(field: str) -> int:
+        value = number(field)
+        if not value.is_integer():
+            raise ValueError(f"Locust aggregate count is not an integer: {field}")
+        return int(value)
+
+    return {
+        "request_count": count("Request Count"),
+        "failure_count": count("Failure Count"),
+        "p50_ms": number("50%"),
+        "p95_ms": number("95%"),
+        "p99_ms": number("99%"),
+        "throughput_requests_per_second": number("Requests/s"),
+    }
+
+
+def _raw_process_measurements(run_dir: Path) -> dict[str, int | float]:
+    """Derive CPU delta, peak RSS and sample count from saved process samples."""
+    with (run_dir / "runtime_metrics.csv").open(newline="", encoding="utf-8") as source:
+        reader = csv.DictReader(source)
+        required = {"process_cpu_seconds_total", "process_resident_memory_bytes"}
+        if reader.fieldnames is None or not required.issubset(reader.fieldnames):
+            raise ValueError("runtime metrics are missing required columns")
+        rows = list(reader)
+    if not rows:
+        raise ValueError("runtime metrics contain no samples")
+
+    cpu_values: list[float] = []
+    rss_values: list[int] = []
+    for row in rows:
+        cpu = row.get("process_cpu_seconds_total")
+        rss = row.get("process_resident_memory_bytes")
+        try:
+            cpu_value = float(cpu) if cpu not in (None, "") else math.nan
+            rss_value = float(rss) if rss not in (None, "") else math.nan
+        except ValueError as error:
+            raise ValueError("runtime process sample is not numeric") from error
+        if not math.isfinite(cpu_value) or cpu_value < 0:
+            raise ValueError("runtime CPU sample is invalid")
+        if not math.isfinite(rss_value) or rss_value < 0 or not rss_value.is_integer():
+            raise ValueError("runtime RSS sample is not a nonnegative integer")
+        cpu_values.append(cpu_value)
+        rss_values.append(int(rss_value))
+
+    cpu_delta = cpu_values[-1] - cpu_values[0]
+    if cpu_delta < 0:
+        raise ValueError("runtime CPU counter decreased across samples")
+    return {
+        "application_cpu_seconds_delta": cpu_delta,
+        "application_rss_max_bytes": max(rss_values),
+        "sample_count": len(rows),
+    }
+
+
+def cross_check_runtime_measurements(
+    run_dir: Path, manifest_runtime: dict[str, Any]
+) -> dict[str, int | float]:
+    """Cross-check manifest runtime values against independent raw CSV parsing.
+
+    Counts and RSS bytes must match exactly. Locust percentiles use an absolute
+    tolerance of 1e-9 ms, throughput 1e-12 requests/s, and CPU delta 1e-9 s.
+    """
+    raw = _raw_locust_measurements(run_dir) | _raw_process_measurements(run_dir)
+    for field in RUNTIME_EXACT_FIELDS:
+        expected = manifest_runtime.get(field)
+        if isinstance(expected, bool) or not isinstance(expected, int):
+            raise ValueError(f"manifest runtime metric is not an integer: {field}")
+        if raw[field] != expected:
+            raise ValueError(f"manifest runtime {field} conflicts with raw artifacts")
+    for field, tolerance in RUNTIME_ABSOLUTE_TOLERANCES.items():
+        expected = _finite_number(manifest_runtime.get(field), field)
+        actual = float(raw[field])
+        if not math.isclose(actual, expected, rel_tol=0.0, abs_tol=tolerance):
+            raise ValueError(f"manifest runtime {field} conflicts with raw artifacts")
+    return raw
+
+
 def _artifact_reference(root: Path, path: Path, role: str) -> dict[str, str]:
     """Return a compact path-and-digest reference for the table."""
     return {
@@ -102,6 +235,14 @@ def _measurement_row(root: Path, run_dir: Path) -> dict[str, Any]:
     if manifest["source_git_dirty"] is not False:
         raise ValueError("PILOT-01 evidence must come from a clean source worktree")
     verify_artifact_inventory(root, manifest["artifact_references"])
+    referenced_paths = {reference["path"] for reference in manifest["artifact_references"]}
+    required_raw_paths = {
+        (run_dir / "locust_stats.csv").relative_to(root).as_posix(),
+        (run_dir / "runtime_metrics.csv").relative_to(root).as_posix(),
+    }
+    if not required_raw_paths.issubset(referenced_paths):
+        raise ValueError("artifact inventory omits raw runtime measurement inputs")
+    runtime = cross_check_runtime_measurements(run_dir, manifest["runtime"])
 
     evidence_dir = run_dir.parent / manifest["exp01_run_id"]
     bundle = validate_bundle(evidence_dir)
@@ -144,7 +285,6 @@ def _measurement_row(root: Path, run_dir: Path) -> dict[str, Any]:
         _artifact_reference(root, run_dir / "runtime_metrics.csv", "runtime_metrics"),
         _artifact_reference(root, run_dir / "workload_profile.yaml", "workload_profile"),
     ]
-    runtime = manifest["runtime"]
     return {
         "experiment_id": manifest["experiment_id"],
         "condition": manifest["condition"],
