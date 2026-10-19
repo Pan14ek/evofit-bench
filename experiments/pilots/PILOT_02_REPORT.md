@@ -74,7 +74,11 @@ Governance returned HOLD. Recorded reasons: APPLICABILITY_UNKNOWN, CANDIDATE_NOT
 - Focused pilot and exact-pair tests: 19 passed.
 - EXP-03 bridge integration tests: 25 passed, 1 warning.
 - Governed adaptation integration tests: 5 passed, 1 warning.
-- make development-quality: passed using a fresh disposable PostgreSQL 16 database. Included lint (251 files formatted), mypy (106 source files), Bandit, architecture checks (6 passed), migration validation, the development regression suite (342 passed), EXP-01 unit tests (49 passed), and EXP-02 unit tests (30 passed). The Makefile's protected DA01 execution and research schema foundation tests were intentionally excluded. No hosted CI result is claimed.
+- make development-quality: passed using a fresh disposable PostgreSQL 16 database. Included lint (251 files formatted), mypy (106 source files), Bandit, architecture checks (6 passed), migration validation, the development regression suite (342 passed), EXP-01 unit tests (49 passed), and EXP-02 unit tests (30 passed). The Makefile's protected DA01 execution and research schema foundation tests were intentionally excluded.
+
+## Hosted CI
+
+Two GitHub Actions development-quality runs passed for code revision 8bda339894c1adddce9c77e011e3b00c33e9b360: [run 39316552803](https://github.com/Pan14ek/evofit-bench/actions/runs/39316552803) and [run 39316624260](https://github.com/Pan14ek/evofit-bench/actions/runs/39316624260). This follow-up records the results; it changes report text only.
 
 ## Research gates and limits
 
