@@ -65,13 +65,33 @@ executes. The manifest records:
   evaluator evidence was consumed by an exact current P pair;
 - P execution/governance state and unresolved prerequisites.
 
-`validated_observation` means EXP-01/02 contracts validated the observation.
-`mapping_unresolved` means at least one exact V3 identity binding is absent
-or different. `authority_missing` means the existing verifier registry did
-not verify the sidecar. `admitted_execution_evidence` requires exact mapping,
-verified external evidence, and actual evidence use by the existing P pair
-calculation. It does not mean semantic pair validity. `rejected` means a
-binding, signature, or authorization check failed.
+The additive DEVELOPMENT 1.1.0 manifest separates three decisions:
+`eligibility_status` records whether the validated observation has an exact,
+usable V3 mapping; `authorization_status` records whether the verified sidecar
+is authorized for this execution and preserves `TEST_ONLY` versus production
+scope; and `p_evidence_consumption_status` records whether the exact current P
+pair used that sidecar evidence. `admitted_execution_evidence` is only set
+when the trace's exact `(representation_id, obligation_id)` pair carries the
+canonical digest of the verified sidecar evidence. If the sidecar is authorized
+but that pair does not consume it, the row and trace say
+`authorized_but_unconsumed_evidence` and include
+`P_EVALUATOR_EVIDENCE_NOT_CONSUMED`.
+
+`TEST_ONLY` signatures may exercise this DEVELOPMENT execution boundary after
+the existing V3 verifier accepts them, but the manifest records
+`authorized_test_only` and `TEST_ONLY_EVIDENCE_NOT_RESEARCH_AUTHORITY`.
+This does not establish production/research authority or semantic pair proof.
+Positive sidecar pair proofs remain blocked by the separate G1/G4 boundary.
+`mapping_unresolved` means at least one exact V3 identity binding is absent or
+different. `authority_missing` means the existing verifier registry did not
+verify the sidecar. `rejected` means a binding, signature, or authorization
+check failed.
+
+Readback applies the same no-ACCEPT, no-prediction, and no-candidate-publication
+restrictions as artifact construction. It re-derives eligibility and
+authorization, then cross-checks exact pair digests, row and aggregate
+consumption states, the P trace, blockers, and overall completion status.
+Resealing the manifest and trace digests does not bypass those checks.
 
 Use `validate_admission_output(output_dir)` to read back a run. It reloads
 and validates the referenced EXP-01/02 and V3 inputs, verifies the sidecar

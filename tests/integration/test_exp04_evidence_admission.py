@@ -69,6 +69,32 @@ def _row(manifest: dict[str, Any], representation_id: str) -> dict[str, Any]:
     )
 
 
+def _reseal_manifest_and_trace(
+    output_dir: Path,
+    mutate: Any,
+) -> None:
+    manifest_path = output_dir / exp04.MANIFEST_FILENAME
+    trace_path = output_dir / exp04.P_TRACE_FILENAME
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    trace = json.loads(trace_path.read_text(encoding="utf-8"))
+    mutate(manifest, trace)
+    trace_bytes = pretty_json_bytes(trace)
+    trace_path.write_bytes(trace_bytes)
+    trace_reference = next(
+        item
+        for item in manifest["artifact_inventory"]
+        if item["role"] == "method_p_execution_trace"
+    )
+    trace_reference["sha256"] = sha256_bytes(trace_bytes)
+    trace_reference["size_bytes"] = len(trace_bytes)
+    manifest["method_p"]["trace_reference"] = copy.deepcopy(trace_reference)
+    manifest_bytes = pretty_json_bytes(manifest)
+    manifest_path.write_bytes(manifest_bytes)
+    (output_dir / exp04.MANIFEST_DIGEST_FILENAME).write_text(
+        f"{sha256_bytes(manifest_bytes)}  {exp04.MANIFEST_FILENAME}\n", encoding="ascii"
+    )
+
+
 def test_validated_observation_keeps_provenance_and_separates_compliance(
     tmp_path: Path, p_input_dir: Path
 ) -> None:
@@ -294,7 +320,190 @@ def test_digest_valid_contradictory_admission_manifest_fails_readback(
         f"{digest}  {exp04.MANIFEST_FILENAME}\n", encoding="ascii"
     )
 
-    with pytest.raises(ValueError, match="admission status contradicts"):
+    with pytest.raises(ValueError, match="admission and consumption disagree"):
+        exp04.validate_admission_output(output_dir)
+
+
+@pytest.mark.parametrize(
+    ("include_evaluator_evidence", "expected_status", "expected_consumption"),
+    [
+        pytest.param(
+            False,
+            "authorized_but_unconsumed_evidence",
+            "not_consumed",
+            id="authorized-but-unconsumed",
+        ),
+        pytest.param(
+            True,
+            "admitted_execution_evidence",
+            "consumed",
+            id="exact-pair-consumed",
+        ),
+    ],
+)
+def test_test_only_sidecar_admission_tracks_actual_pair_consumption(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    include_evaluator_evidence: bool,
+    expected_status: str,
+    expected_consumption: str,
+) -> None:
+    """An isolated TEST_ONLY sidecar's row status follows existing P pair consumption."""
+    run_dir, _ = _write_exp02_run(tmp_path / "exp02")
+    synthetic_root = tmp_path / "synthetic-p"
+    synthetic_root.mkdir()
+    p_bundle, trust_context, evaluator_artifact = _synthetic_positive_bundle(
+        synthetic_root, architecture_noop=True
+    )
+    sidecar = _positive_adaptation_sidecar(
+        p_bundle, trust_context, evaluator_artifact, synthetic_root
+    )
+    sidecar["payload"]["pair_proofs"] = []
+    if not include_evaluator_evidence:
+        sidecar["payload"]["evaluator_evidence"] = []
+        sidecar["payload"]["artifact_bytes"] = []
+    unsigned = {
+        key: value for key, value in sidecar.items() if key not in {"sidecar_sha256", "signature"}
+    }
+    sidecar_digest = sha256_bytes(canonical_json_bytes(unsigned))
+    sidecar["sidecar_sha256"] = sidecar_digest
+    sidecar["signature"] = hmac.new(
+        trust_context.adaptation_key, sidecar_digest.encode("ascii"), hashlib.sha256
+    ).hexdigest()
+    sidecar_path = tmp_path / "test-only-empty-evaluator-evidence.json"
+    sidecar_path.write_bytes(pretty_json_bytes(sidecar))
+
+    monkeypatch.setattr(
+        exp03,
+        "verify_method_p_input",
+        lambda _path, **_kwargs: p_bundle,
+    )
+    original_mapping = exp04._strict_representation_mappings
+
+    def isolated_test_mapping(**kwargs: Any) -> list[dict[str, Any]]:
+        rows = original_mapping(**kwargs)
+        row = next(
+            item
+            for item in rows
+            if item["exp02_representation_id"] == "REP_A01_ARCH_INTERNAL_LAYERING_CI"
+        )
+        row["target_p_representation_id"] = "REP_A0_ARCH_CI_LAYERING"
+        row["eligibility_status"] = "eligible"
+        row["admission_status"] = "validated_observation"
+        row["binding_checks"] = {
+            key: "not_applicable" if key == "runtime_source_identity" else "exact"
+            for key in row["binding_checks"]
+        }
+        row["reason_codes"] = []
+        return rows
+
+    monkeypatch.setattr(exp04, "_strict_representation_mappings", isolated_test_mapping)
+    monkeypatch.setattr(
+        exp04,
+        "_sidecar_observation_match",
+        lambda **_kwargs: (True, []),
+    )
+
+    manifest, _ = exp04.write_admission_run(
+        run_dir,
+        tmp_path / "exp04-test-only-empty-evidence",
+        p_input_dir=p_bundle.root,
+        evidence_sidecar_path=sidecar_path,
+        trust_context=trust_context,
+    )
+    admission = _row(manifest, "REP_A01_ARCH_INTERNAL_LAYERING_CI")
+    assert manifest["status"] == "completed_with_blockers"
+    assert admission["eligibility_status"] == "eligible"
+    assert admission["authorization_status"] == "authorized_test_only"
+    assert admission["admission_status"] == expected_status
+    assert admission["p_evidence_consumption_status"] == expected_consumption
+    assert manifest["method_p"]["evidence_consumption_status"] == expected_consumption
+    blocker_codes = {blocker["code"] for blocker in manifest["blockers"]}
+    assert ("P_EVALUATOR_EVIDENCE_NOT_CONSUMED" in blocker_codes) is (
+        expected_consumption == "not_consumed"
+    )
+    assert "TEST_ONLY_EVIDENCE_NOT_RESEARCH_AUTHORITY" in {
+        blocker["code"] for blocker in manifest["blockers"]
+    }
+    trace = json.loads(
+        (tmp_path / "exp04-test-only-empty-evidence" / exp04.P_TRACE_FILENAME).read_text(
+            encoding="utf-8"
+        )
+    )
+    assert trace["exp02_evidence_admission_status"] == expected_status
+    assert trace["exp02_evidence_admitted_to_p_calculations"] is (
+        expected_consumption == "consumed"
+    )
+    assert trace["adaptation_evidence_sidecar_supplied"] is True
+    assert trace["adaptation_evidence_trust_scope"] == "TEST_ONLY"
+
+
+def test_resealed_accept_in_manifest_and_trace_is_rejected(
+    tmp_path: Path, p_input_dir: Path
+) -> None:
+    run_dir, _ = _write_exp02_run(tmp_path)
+    output_dir = tmp_path / "exp04-resealed-accept"
+    exp04.write_admission_run(run_dir, output_dir, p_input_dir=p_input_dir)
+
+    def authorize_accept(manifest: dict[str, Any], trace: dict[str, Any]) -> None:
+        manifest["method_p"]["governance_result"] = "ACCEPT"
+        trace["governance"]["result"] = "ACCEPT"
+
+    _reseal_manifest_and_trace(output_dir, authorize_accept)
+    with pytest.raises((ValueError, ContractValidationError)):
+        exp04.validate_admission_output(output_dir)
+
+
+def test_resealed_prediction_and_candidate_publication_are_rejected(
+    tmp_path: Path, p_input_dir: Path
+) -> None:
+    run_dir, _ = _write_exp02_run(tmp_path)
+    output_dir = tmp_path / "exp04-resealed-publication"
+    exp04.write_admission_run(run_dir, output_dir, p_input_dir=p_input_dir)
+
+    def publish_unauthorized_outputs(manifest: dict[str, Any], trace: dict[str, Any]) -> None:
+        manifest["method_p"]["prediction_v1_emitted"] = True
+        trace["prediction_v1"] = {"prediction_id": "TEST_ONLY_FORBIDDEN"}
+        trace["candidate_v1"] = {"candidate_id": "TEST_ONLY_FORBIDDEN"}
+
+    _reseal_manifest_and_trace(output_dir, publish_unauthorized_outputs)
+    with pytest.raises((ValueError, ContractValidationError)):
+        exp04.validate_admission_output(output_dir)
+
+
+def test_resealed_completed_status_with_blockers_is_rejected(
+    tmp_path: Path, p_input_dir: Path
+) -> None:
+    run_dir, _ = _write_exp02_run(tmp_path)
+    output_dir = tmp_path / "exp04-resealed-completion"
+    exp04.write_admission_run(run_dir, output_dir, p_input_dir=p_input_dir)
+
+    def claim_completion(manifest: dict[str, Any], _trace: dict[str, Any]) -> None:
+        manifest["status"] = "completed"
+
+    _reseal_manifest_and_trace(output_dir, claim_completion)
+    with pytest.raises(ValueError, match="overall completion status contradicts"):
+        exp04.validate_admission_output(output_dir)
+
+
+def test_resealed_evidence_consumption_claim_without_sidecar_is_rejected(
+    tmp_path: Path, p_input_dir: Path
+) -> None:
+    run_dir, _ = _write_exp02_run(tmp_path)
+    output_dir = tmp_path / "exp04-resealed-consumption"
+    exp04.write_admission_run(run_dir, output_dir, p_input_dir=p_input_dir)
+
+    def claim_unverified_consumption(manifest: dict[str, Any], trace: dict[str, Any]) -> None:
+        manifest["method_p"]["evidence_consumption_status"] = "consumed"
+        trace["exp02_evidence_admission_status"] = "admitted_execution_evidence"
+        trace["exp02_evidence_admitted_to_p_calculations"] = True
+        trace["current_pairs"][0]["evaluator_evidence_sha256"] = "f" * 64
+        admission = manifest["representation_admissions"][0]
+        admission["admission_status"] = "admitted_execution_evidence"
+        admission["p_evidence_consumption_status"] = "consumed"
+
+    _reseal_manifest_and_trace(output_dir, claim_unverified_consumption)
+    with pytest.raises(ValueError, match="verified authorized sidecar pair"):
         exp04.validate_admission_output(output_dir)
 
 

@@ -44,13 +44,14 @@ trace. `EXP02_EVIDENCE_NOT_ADMITTED_TO_METHOD_P` is an explicit blocker;
 promote this diagnostic bridge to measured evidence or P readiness.
 
 EXP-04 adds a versioned strict-mapping admission manifest and wraps the same
-V3 verifier and P execution path. It records validated observation, mapping,
-authority, and consumption states separately. The current A0.1-to-V3
-canonical mapping is unresolved, so actual EXP-02 observations remain
-diagnostic and P runs without them. The optional file verifier is TEST_ONLY;
-production authority must come from an externally provisioned verifier
-registered at the existing V3 trust boundary. Readback revalidates all
-source, sidecar, trace, and generated-output references.
+V3 verifier and P execution path. Its 1.1.0 DEVELOPMENT schema records
+eligibility, authorization scope, and actual exact-pair consumption separately;
+admission is complete only when the current P trace consumes the matching
+sidecar evidence digest. A TEST_ONLY verifier can exercise this development
+path but adds a research-authority blocker. The current A0.1-to-V3 canonical
+mapping is unresolved, so actual EXP-02 observations remain diagnostic and P
+runs without them. Readback revalidates source, sidecar, trace and generated
+output references and rejects resealed cross-artifact contradictions.
 
 ## Verification and further reading
 

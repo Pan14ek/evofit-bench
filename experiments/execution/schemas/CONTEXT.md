@@ -58,10 +58,13 @@ policy authority, or measured prediction.
 
 The EXP-04 manifest and trace schemas retain EXP-02 execution/compliance
 observations separately from exact V3 bindings, sidecar authority, semantic
-pair proof, and actual P evidence consumption. The CLI verifier-config schema
-is TEST_ONLY and cannot assert production authority. These contracts do not
-establish canonical A0.1-to-V3 mappings, positive coverage, or research
-readiness.
+pair proof, and actual P evidence consumption. Their additive DEVELOPMENT
+1.1.0 extension separates eligibility, authorization scope, and exact-pair
+consumption, and includes an authorized-but-unconsumed state. Readback enforces
+construction-time governance and publication restrictions after digest
+resealing. The CLI verifier-config schema is TEST_ONLY and cannot assert
+research authority. These contracts do not establish canonical A0.1-to-V3
+mappings, positive coverage, or research readiness.
 
 ## Verification and further reading
 

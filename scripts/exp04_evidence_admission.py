@@ -521,6 +521,10 @@ def _strict_representation_mappings(
                     "criterion_intent": str(criterion.get("intent", "")),
                     "obligation_id": obligation_id,
                     "observation_status": "validated_observation",
+                    "eligibility_status": (
+                        "eligible" if admission_status == "validated_observation" else "ineligible"
+                    ),
+                    "authorization_status": "not_authorized",
                     "admission_status": admission_status,
                     "exp02_evaluator": {
                         "id": str(observation["evaluator_id"]),
@@ -574,7 +578,7 @@ def _sidecar_observation_match(
     eligible = [
         row
         for row in admissions
-        if row.get("admission_status") == "validated_observation"
+        if row.get("eligibility_status") == "eligible"
         and row.get("target_p_representation_id") is not None
     ]
     reasons: list[str] = []
@@ -693,6 +697,50 @@ def _pair_proof_status(
     return "not_supplied"
 
 
+_AUTHORIZED_EXECUTION_STATES = {"authorized_test_only", "authorized_production"}
+
+
+def _sidecar_evidence_digests(
+    verified: VerifiedAdaptationEvidence | None,
+) -> dict[tuple[str, str], str]:
+    """Index verified evaluator evidence by its exact pair and canonical bytes."""
+    if verified is None:
+        return {}
+    result: dict[tuple[str, str], str] = {}
+    for row in thaw_verified_payload(verified).get("evaluator_evidence", []):
+        if not isinstance(row, Mapping) or not isinstance(row.get("evidence"), Mapping):
+            continue
+        key = (str(row.get("representation_id", "")), str(row.get("obligation_id", "")))
+        result[key] = sha256_bytes(canonical_json_bytes(dict(row["evidence"])))
+    return result
+
+
+def _finalize_admission_rows(
+    admissions: Sequence[dict[str, Any]],
+    *,
+    p_execution_status: str,
+    consumed_pair_keys: set[tuple[str, str]],
+) -> bool:
+    """Set row admission only from exact pair consumption by the P execution trace."""
+    any_consumed = False
+    for admission in admissions:
+        target_representation = admission["target_p_representation_id"]
+        key = (str(target_representation or ""), str(admission["obligation_id"]))
+        authorized = admission["authorization_status"] in _AUTHORIZED_EXECUTION_STATES
+        consumed = authorized and key in consumed_pair_keys
+        if p_execution_status == "not_run":
+            admission["p_evidence_consumption_status"] = "not_attempted"
+        else:
+            admission["p_evidence_consumption_status"] = "consumed" if consumed else "not_consumed"
+        if authorized:
+            admission["admission_status"] = (
+                "admitted_execution_evidence" if consumed else "authorized_but_unconsumed_evidence"
+            )
+        if consumed:
+            any_consumed = True
+    return any_consumed
+
+
 def _trace_from_result(
     p_bundle: VerifiedPBundle,
     result: Any,
@@ -701,10 +749,14 @@ def _trace_from_result(
     sidecar_supplied: bool,
 ) -> dict[str, Any]:
     trace = exp03._adaptation_trace(p_bundle, result)
-    trace["schema_version"] = "1.0.0"
+    trace["schema_version"] = "1.1.0"
     trace["trace_type"] = "development_method_p_execution_with_exp04_admission"
     trace["exp02_evidence_admission_status"] = (
-        "admitted_execution_evidence" if evidence_admitted else "not_admitted"
+        "admitted_execution_evidence"
+        if evidence_admitted
+        else "authorized_but_unconsumed_evidence"
+        if sidecar_supplied
+        else "not_admitted"
     )
     trace["exp02_evidence_admitted_to_p_calculations"] = evidence_admitted
     trace["exp02_observations_used_as_semantic_pair_evidence"] = False
@@ -831,9 +883,6 @@ def build_admission_artifact(
             run_dir=exp02_dir,
             exp02_bundle=exp02_bundle,
         )
-        if verified_sidecar.trust_scope != "PRODUCTION":
-            sidecar_matches = False
-            sidecar_match_reasons.append("TEST_ONLY_EVIDENCE_CANNOT_AUTHORIZE_EXP04_ADMISSION")
         signed_pair_proofs = thaw_verified_payload(verified_sidecar).get("pair_proofs", [])
         if any(
             isinstance(row, Mapping) and row.get("status") == "VALID" for row in signed_pair_proofs
@@ -855,27 +904,37 @@ def build_admission_artifact(
             str(admission["obligation_id"]),
         )
         if evidence_verification_status == "rejected":
+            admission["authorization_status"] = "rejected"
             admission["admission_status"] = "rejected"
             admission["reason_codes"] = sorted(
                 set(admission["reason_codes"]) | {"EXTERNAL_AUTHORIZATION_REJECTED"}
             )
-        elif admission["admission_status"] != "validated_observation":
+        elif admission["eligibility_status"] != "eligible":
+            admission["authorization_status"] = "not_authorized"
             admission["admission_status"] = "mapping_unresolved"
         elif verified_sidecar is None:
+            admission["authorization_status"] = "not_authorized"
             admission["admission_status"] = "authority_missing"
             admission["reason_codes"] = sorted(
                 set(admission["reason_codes"]) | {"EXTERNAL_VERIFIER_AUTHORITY_MISSING"}
             )
         elif not sidecar_matches:
+            admission["authorization_status"] = "rejected"
             admission["admission_status"] = "rejected"
             admission["reason_codes"] = sorted(
                 set(admission["reason_codes"]) | set(sidecar_match_reasons)
             )
         else:
-            admission["admission_status"] = "admitted_execution_evidence"
+            admission["authorization_status"] = (
+                "authorized_test_only"
+                if verified_sidecar.trust_scope == "TEST_ONLY"
+                else "authorized_production"
+            )
+            admission["admission_status"] = "authorized_but_unconsumed_evidence"
 
     if verified_sidecar is not None and not any(
-        row["admission_status"] == "admitted_execution_evidence" for row in admissions
+        row["authorization_status"] in {"authorized_test_only", "authorized_production"}
+        for row in admissions
     ):
         blockers.append(
             {
@@ -883,6 +942,16 @@ def build_admission_artifact(
                 "details": (
                     "V3 verified the sidecar, but the current V3 representation and evaluator "
                     "evidence contracts do not bind the A0.1 EXP-02 observations exactly."
+                ),
+            }
+        )
+    if verified_sidecar is not None and verified_sidecar.trust_scope == "TEST_ONLY":
+        blockers.append(
+            {
+                "code": "TEST_ONLY_EVIDENCE_NOT_RESEARCH_AUTHORITY",
+                "details": (
+                    "The TEST_ONLY verifier may exercise the DEVELOPMENT execution path but "
+                    "does not establish research authority."
                 ),
             }
         )
@@ -906,7 +975,10 @@ def build_admission_artifact(
         should_pass_sidecar = (
             verified_sidecar is not None
             and sidecar_matches
-            and any(row["admission_status"] == "admitted_execution_evidence" for row in admissions)
+            and any(
+                row["authorization_status"] in {"authorized_test_only", "authorized_production"}
+                for row in admissions
+            )
         )
         result, used_sidecar = exp03.run_verified_method_p(
             p_bundle,
@@ -914,7 +986,11 @@ def build_admission_artifact(
         )
         p_execution_status = "completed"
         governance_result = result.governance.result.value
-        if governance_result == "ACCEPT" or result.prediction_v1 is not None:
+        if (
+            governance_result == "ACCEPT"
+            or result.prediction_v1 is not None
+            or result.candidate_v1 is not None
+        ):
             raise ProtocolError("EXP04_UNAUTHORIZED_ACCEPT_OR_PREDICTION_BLOCKED")
         p_trace = _trace_from_result(
             p_bundle,
@@ -926,16 +1002,30 @@ def build_admission_artifact(
             (str(row["representation_id"]), str(row["obligation_id"])): row
             for row in p_trace["current_pairs"]
         }
+        sidecar_evidence_digests = (
+            _sidecar_evidence_digests(verified_sidecar) if should_pass_sidecar else {}
+        )
+        authorized_pair_keys = {
+            (str(row["target_p_representation_id"]), str(row["obligation_id"]))
+            for row in admissions
+            if row["authorization_status"] in {"authorized_test_only", "authorized_production"}
+        }
         consumed_pairs = {
             key
             for key, pair in p_pairs.items()
-            if pair.get("evaluator_evidence_sha256") is not None
+            if key in authorized_pair_keys
+            and pair.get("evaluator_evidence_sha256") is not None
+            and pair.get("evaluator_evidence_sha256") == sidecar_evidence_digests.get(key)
         }
         evidence_consumed = bool(
             should_pass_sidecar and used_sidecar is not None and consumed_pairs
         )
         p_trace["exp02_evidence_admission_status"] = (
-            "admitted_execution_evidence" if evidence_consumed else "not_admitted"
+            "admitted_execution_evidence"
+            if evidence_consumed
+            else "authorized_but_unconsumed_evidence"
+            if should_pass_sidecar and used_sidecar is not None
+            else "not_admitted"
         )
         p_trace["exp02_evidence_admitted_to_p_calculations"] = evidence_consumed
         validate_payload(TRACE_SCHEMA, p_trace)
@@ -949,15 +1039,11 @@ def build_admission_artifact(
                     ),
                 }
             )
-        for admission in admissions:
-            key = (
-                str(admission["target_p_representation_id"] or ""),
-                str(admission["obligation_id"]),
-            )
-            if evidence_consumed and key in consumed_pairs:
-                admission["p_evidence_consumption_status"] = "consumed"
-            else:
-                admission["p_evidence_consumption_status"] = "not_consumed"
+        _finalize_admission_rows(
+            admissions,
+            p_execution_status=p_execution_status,
+            consumed_pair_keys=consumed_pairs if evidence_consumed else set(),
+        )
         if governance_result in {"HOLD", "REJECT"}:
             for code in p_trace["unresolved_prerequisites"]:
                 blockers.append(
@@ -1005,6 +1091,13 @@ def build_admission_artifact(
             ),
         }
     )
+    if governance_result in {"HOLD", "REJECT"} and not blockers:
+        blockers.append(
+            {
+                "code": "METHOD_P_GOVERNANCE_NOT_ACCEPTED",
+                "details": f"The current EXP-04 DEVELOPMENT profile reports {governance_result}.",
+            }
+        )
     status = (
         "rejected"
         if evidence_verification_status == "rejected" or p_status == "rejected"
@@ -1015,7 +1108,7 @@ def build_admission_artifact(
         else "completed"
     )
     manifest = {
-        "schema_version": "1.0.0",
+        "schema_version": "1.1.0",
         "artifact_type": ARTIFACT_TYPE,
         "status": status,
         "created_at_utc": _utc_now(),
@@ -1311,9 +1404,6 @@ def validate_admission_output(
             run_dir=exp02_dir,
             exp02_bundle=bundle,
         )
-        if readback_verified.trust_scope != "PRODUCTION":
-            expected_sidecar_match = False
-            expected_sidecar_reasons.append("TEST_ONLY_EVIDENCE_CANNOT_AUTHORIZE_EXP04_ADMISSION")
         signed_pair_proofs = thaw_verified_payload(readback_verified).get("pair_proofs", [])
         if any(
             isinstance(row, Mapping) and row.get("status") == "VALID" for row in signed_pair_proofs
@@ -1323,12 +1413,15 @@ def validate_admission_output(
                 "POSITIVE_SEMANTIC_PROOF_REQUIRES_SEPARATE_G1_G4_AUTHORIZATION"
             )
     evidence_status = manifest["external_evidence"]["verification_status"]
+    expected_authorization_by_key: dict[tuple[str, str], str] = {}
+    expected_admission_by_key: dict[tuple[str, str], str] = {}
     for key, expected in expected_by_key.items():
         stored = stored_by_key[key]
         for field_name in (
             "criterion_id",
             "criterion_intent",
             "observation_status",
+            "eligibility_status",
             "exp02_evaluator",
             "execution",
             "scope",
@@ -1346,33 +1439,67 @@ def validate_admission_output(
             str(expected["obligation_id"]),
         ):
             raise ValueError("EXP-04 semantic proof status disagrees with the verified sidecar")
-        expected_admission_status = str(expected["admission_status"])
         expected_reason_codes = set(expected["reason_codes"])
         if evidence_status == "rejected":
+            expected_authorization_status = "rejected"
             expected_admission_status = "rejected"
             expected_reason_codes.add("EXTERNAL_AUTHORIZATION_REJECTED")
-        elif expected_admission_status != "validated_observation":
+        elif expected["eligibility_status"] != "eligible":
+            expected_authorization_status = "not_authorized"
             expected_admission_status = "mapping_unresolved"
         elif readback_verified is None:
+            expected_authorization_status = "not_authorized"
             expected_admission_status = "authority_missing"
             expected_reason_codes.add("EXTERNAL_VERIFIER_AUTHORITY_MISSING")
         elif not expected_sidecar_match:
+            expected_authorization_status = "rejected"
             expected_admission_status = "rejected"
             expected_reason_codes.update(expected_sidecar_reasons)
         else:
-            expected_admission_status = "admitted_execution_evidence"
-        if stored["admission_status"] != expected_admission_status:
-            raise ValueError("EXP-04 admission status contradicts verified inputs and authority")
+            expected_authorization_status = (
+                "authorized_test_only"
+                if readback_verified.trust_scope == "TEST_ONLY"
+                else "authorized_production"
+            )
+            expected_admission_status = "authorized_but_unconsumed_evidence"
+        if stored["authorization_status"] != expected_authorization_status:
+            raise ValueError(
+                "EXP-04 authorization status contradicts verified inputs and authority"
+            )
         if set(stored["reason_codes"]) != expected_reason_codes:
             raise ValueError("EXP-04 admission reasons contradict verified inputs and authority")
+        expected_authorization_by_key[key] = expected_authorization_status
+        expected_admission_by_key[key] = expected_admission_status
+
+    method_p = manifest["method_p"]
+    expected_sidecar_supplied = False
+    consumed_pairs: set[tuple[str, str]] = set()
     if trace is None:
         if (
-            manifest["method_p"]["execution_status"] != "not_run"
-            or manifest["method_p"]["trace_reference"] is not None
+            manifest["p_input"]["status"] == "verified"
+            or method_p["execution_status"] != "not_run"
+            or method_p["trace_reference"] is not None
+            or method_p["evidence_consumption_status"] != "not_consumed"
+            or method_p["governance_result"] != "not_run"
+            or method_p["input_bundle_sha256"] is not None
+            or method_p["architecture_before_sha"] is not None
+            or method_p["architecture_after_sha"] is not None
+            or method_p["adaptation_evidence_trust_scope"] is not None
+            or method_p["prediction_v1_emitted"] is not False
         ):
-            raise ValueError("EXP-04 Method P execution status disagrees with trace presence")
+            raise ValueError("EXP-04 Method P execution state contradicts missing trace")
+        for key, admission in stored_by_key.items():
+            expected_admission_status = expected_admission_by_key[key]
+            if expected_authorization_by_key[key] in _AUTHORIZED_EXECUTION_STATES:
+                expected_admission_status = "authorized_but_unconsumed_evidence"
+            if (
+                admission["p_evidence_consumption_status"] != "not_attempted"
+                or admission["admission_status"] != expected_admission_status
+            ):
+                raise ValueError("EXP-04 admission status contradicts missing P execution")
     else:
-        method_p = manifest["method_p"]
+        if p_bundle is None:
+            raise ValueError("EXP-04 Method P trace has no verified V3 input bundle")
         trace_reference = next(
             (
                 reference
@@ -1383,60 +1510,165 @@ def validate_admission_output(
         )
         if (
             method_p["execution_status"] != "completed"
+            or manifest["p_input"]["status"] != "verified"
             or method_p["trace_reference"] != trace_reference
             or trace["input_bundle_sha256"] != method_p["input_bundle_sha256"]
+            or trace["input_bundle_sha256"] != p_bundle.manifest["bundle_sha256"]
             or trace["architecture"]["before_commit"] != method_p["architecture_before_sha"]
             or trace["architecture"]["after_commit"] != method_p["architecture_after_sha"]
-            or trace["exp02_evidence_admitted_to_p_calculations"]
-            != (method_p["evidence_consumption_status"] == "consumed")
+            or trace["architecture"]["before_commit"]
+            != p_bundle.snapshot["architecture"]["before_commit"]
+            or trace["architecture"]["after_commit"]
+            != p_bundle.snapshot["architecture"]["after_commit"]
             or trace["exp02_observations_used_as_semantic_pair_evidence"] is not False
             or trace["prediction_v1"] is not None
             or trace["candidate_v1"] is not None
             or trace["adaptation_evidence_trust_scope"]
             != method_p["adaptation_evidence_trust_scope"]
+            or method_p["prediction_v1_emitted"] is not False
         ):
             raise ValueError("EXP-04 manifest and Method P trace disagree")
-        if method_p["governance_result"] != trace["governance"]["result"]:
+        if (
+            method_p["governance_result"] == "ACCEPT"
+            or trace["governance"].get("result") == "ACCEPT"
+            or method_p["governance_result"] not in {"HOLD", "REJECT"}
+            or method_p["governance_result"] != trace["governance"].get("result")
+        ):
             raise ValueError("EXP-04 governance result disagrees with Method P trace")
-        trace_pairs = {
-            (str(row["representation_id"]), str(row["obligation_id"])): row
-            for row in trace["current_pairs"]
+        expected_sidecar_supplied = bool(
+            readback_verified is not None
+            and expected_sidecar_match
+            and any(
+                value in _AUTHORIZED_EXECUTION_STATES
+                for value in expected_authorization_by_key.values()
+            )
+        )
+        if trace["adaptation_evidence_sidecar_supplied"] != expected_sidecar_supplied:
+            raise ValueError(
+                "EXP-04 Method P sidecar execution state contradicts verified authority"
+            )
+        expected_trace_trust_scope = (
+            readback_verified.trust_scope
+            if expected_sidecar_supplied and readback_verified
+            else None
+        )
+        if trace["adaptation_evidence_trust_scope"] != expected_trace_trust_scope:
+            raise ValueError("EXP-04 Method P trace trust scope contradicts supplied sidecar")
+
+        trace_pairs: dict[tuple[str, str], Mapping[str, Any]] = {}
+        for pair in trace["current_pairs"]:
+            key = (str(pair["representation_id"]), str(pair["obligation_id"]))
+            if key in trace_pairs:
+                raise ValueError("EXP-04 Method P trace contains duplicate exact pairs")
+            trace_pairs[key] = pair
+        sidecar_evidence_digests = (
+            _sidecar_evidence_digests(readback_verified)
+            if readback_verified is not None
+            and expected_sidecar_match
+            and expected_sidecar_supplied
+            else {}
+        )
+        authorized_pair_keys = {
+            (str(stored_by_key[key]["target_p_representation_id"]), str(key[1]))
+            for key, status in expected_authorization_by_key.items()
+            if status in _AUTHORIZED_EXECUTION_STATES
+            and stored_by_key[key]["target_p_representation_id"] is not None
         }
-        sidecar_evidence_rows: dict[tuple[str, str], Mapping[str, Any]] = {}
-        if readback_verified is not None and expected_sidecar_match:
-            for row in thaw_verified_payload(readback_verified).get("evaluator_evidence", []):
-                if isinstance(row, Mapping) and isinstance(row.get("evidence"), Mapping):
-                    sidecar_evidence_rows[
-                        (str(row["representation_id"]), str(row["obligation_id"]))
-                    ] = row["evidence"]
         for key, pair in trace_pairs.items():
             evidence_digest = pair.get("evaluator_evidence_sha256")
             if evidence_digest is None:
                 continue
-            sidecar_evidence = sidecar_evidence_rows.get(key)
+            expected_digest = sidecar_evidence_digests.get(key)
             if (
-                sidecar_evidence is None
-                or sha256_bytes(canonical_json_bytes(dict(sidecar_evidence))) != evidence_digest
+                not expected_sidecar_supplied
+                or key not in authorized_pair_keys
+                or expected_digest is None
+                or expected_digest != evidence_digest
             ):
                 raise ValueError(
-                    "EXP-04 Method P trace evidence is not bound to the verified sidecar"
+                    "EXP-04 Method P trace evidence is not bound to a verified authorized "
+                    "sidecar pair"
                 )
-        for admission in manifest["representation_admissions"]:
-            pair = trace_pairs.get(
-                (
-                    str(admission["target_p_representation_id"] or ""),
-                    str(admission["obligation_id"]),
+            consumed_pairs.add(key)
+        if method_p["evidence_consumption_status"] != (
+            "consumed" if consumed_pairs else "not_consumed"
+        ):
+            raise ValueError(
+                "EXP-04 Method P evidence-consumption status lacks exact verified pairs"
+            )
+        expected_trace_admission_status = (
+            "admitted_execution_evidence"
+            if consumed_pairs
+            else "authorized_but_unconsumed_evidence"
+            if trace["adaptation_evidence_sidecar_supplied"]
+            else "not_admitted"
+        )
+        if (
+            trace["exp02_evidence_admitted_to_p_calculations"] is not bool(consumed_pairs)
+            or trace["exp02_evidence_admission_status"] != expected_trace_admission_status
+        ):
+            raise ValueError("EXP-04 trace admission state contradicts exact pair consumption")
+        for key, admission in stored_by_key.items():
+            target_representation = admission["target_p_representation_id"]
+            pair_key = (str(target_representation or ""), str(key[1]))
+            authorized = expected_authorization_by_key[key] in _AUTHORIZED_EXECUTION_STATES
+            pair_consumed = authorized and pair_key in consumed_pairs
+            expected_consumption = "consumed" if pair_consumed else "not_consumed"
+            expected_admission_status = expected_admission_by_key[key]
+            if authorized:
+                expected_admission_status = (
+                    "admitted_execution_evidence"
+                    if pair_consumed
+                    else "authorized_but_unconsumed_evidence"
                 )
+            if (
+                admission["p_evidence_consumption_status"] != expected_consumption
+                or admission["admission_status"] != expected_admission_status
+            ):
+                raise ValueError("EXP-04 per-representation admission and consumption disagree")
+
+    blocker_codes = {item["code"] for item in manifest["blockers"]}
+    if any(row["admission_status"] == "mapping_unresolved" for row in stored_by_key.values()) and (
+        "P_CANONICAL_MAPPING_UNRESOLVED" not in blocker_codes
+    ):
+        raise ValueError("EXP-04 mapping status is missing its required blocker")
+    if evidence_status == "authority_missing" and (
+        "EXTERNAL_VERIFIER_AUTHORITY_MISSING" not in blocker_codes
+    ):
+        raise ValueError("EXP-04 authority status is missing its required blocker")
+    if expected_sidecar_supplied:
+        if not consumed_pairs and "P_EVALUATOR_EVIDENCE_NOT_CONSUMED" not in blocker_codes:
+            raise ValueError("EXP-04 authorized but unused evidence is missing its blocker")
+    if (
+        readback_verified is not None
+        and readback_verified.trust_scope == "TEST_ONLY"
+        and ("TEST_ONLY_EVIDENCE_NOT_RESEARCH_AUTHORITY" not in blocker_codes)
+    ):
+        raise ValueError("EXP-04 TEST_ONLY evidence is missing its research-authority blocker")
+    if method_p["execution_status"] == "completed" and (
+        method_p["governance_result"] in {"HOLD", "REJECT"} and not manifest["blockers"]
+    ):
+        raise ValueError("EXP-04 non-ACCEPT governance result is missing its blocker")
+
+    rejected = evidence_status == "rejected" or manifest["p_input"]["status"] == "rejected"
+    if rejected:
+        expected_overall_status = "rejected"
+    elif method_p["execution_status"] == "not_run":
+        expected_overall_status = "blocked"
+    else:
+        requires_blocker = bool(manifest["blockers"]) or (
+            method_p["governance_result"] in {"HOLD", "REJECT"}
+            or any(
+                row["admission_status"] != "admitted_execution_evidence"
+                for row in manifest["representation_admissions"]
             )
-            expected_consumption = (
-                "consumed"
-                if method_p["evidence_consumption_status"] == "consumed"
-                and pair is not None
-                and pair.get("evaluator_evidence_sha256")
-                else "not_consumed"
-            )
-            if admission["p_evidence_consumption_status"] != expected_consumption:
-                raise ValueError("EXP-04 per-representation evidence consumption is inconsistent")
+            or method_p["evidence_consumption_status"] != "consumed"
+        )
+        expected_overall_status = "completed_with_blockers" if requires_blocker else "completed"
+    if manifest["status"] != expected_overall_status:
+        raise ValueError(
+            "EXP-04 overall completion status contradicts blockers and execution state"
+        )
     if manifest["coverage_claims"] != {
         "Coverage_P": "not_assessed",
         "Coverage_ref": "not_established",

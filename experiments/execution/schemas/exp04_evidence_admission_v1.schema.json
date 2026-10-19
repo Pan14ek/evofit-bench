@@ -11,7 +11,7 @@
     "coverage_claims", "blockers", "unresolved_prerequisites", "artifact_inventory"
   ],
   "properties": {
-    "schema_version": {"const": "1.0.0"},
+    "schema_version": {"const": "1.1.0"},
     "artifact_type": {"const": "exp04_verified_evaluator_evidence_admission"},
     "status": {"enum": ["completed", "completed_with_blockers", "blocked", "rejected"]},
     "created_at_utc": {"type": "string", "format": "date-time"},
@@ -177,7 +177,7 @@
       "additionalProperties": false,
       "required": [
         "exp02_representation_id", "criterion_id", "criterion_intent", "obligation_id",
-        "observation_status", "admission_status", "exp02_evaluator", "execution", "scope",
+        "observation_status", "eligibility_status", "authorization_status", "admission_status", "exp02_evaluator", "execution", "scope",
         "metrics", "observed_compliance", "target_p_representation_id",
         "candidate_p_representation_ids", "binding_checks",
         "external_semantic_proof_status", "p_evidence_consumption_status", "reason_codes"
@@ -188,7 +188,9 @@
         "criterion_intent": {"type": "string", "minLength": 1},
         "obligation_id": {"type": "string", "minLength": 1},
         "observation_status": {"const": "validated_observation"},
-        "admission_status": {"enum": ["validated_observation", "mapping_unresolved", "authority_missing", "admitted_execution_evidence", "rejected"]},
+        "eligibility_status": {"enum": ["eligible", "ineligible"]},
+        "authorization_status": {"enum": ["not_authorized", "authorized_test_only", "authorized_production", "rejected"]},
+        "admission_status": {"enum": ["validated_observation", "mapping_unresolved", "authority_missing", "authorized_but_unconsumed_evidence", "admitted_execution_evidence", "rejected"]},
         "exp02_evaluator": {
           "type": "object",
           "additionalProperties": false,

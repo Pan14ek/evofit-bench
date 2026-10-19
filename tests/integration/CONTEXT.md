@@ -53,12 +53,13 @@ this records the current evidence-consumption limitation, not successful
 evidence-driven adaptation.
 
 `test_exp04_evidence_admission.py` adds strict candidate identity checks,
-source-revision mismatch cases, signature and missing-authority cases, and a
-TEST_ONLY V3 sidecar path with execution evidence but no pair proof. It also
-reseals a contradictory manifest to verify that readback re-derives
-admission status. A conforming and a nonconforming digest-valid fixture keep
-observed compliance distinct from P validity; none of these fixtures is a
-measured evaluator run or production authority.
+source-revision mismatch cases, signature and missing-authority cases, and
+TEST_ONLY V3 sidecar cases. The 1.1.0 cases distinguish eligibility,
+authorization scope, and exact-pair consumption, including an authorized but
+unconsumed sidecar. Digest-resealed manifest/trace attacks cover unauthorized
+ACCEPT and unsupported consumption claims. A conforming and a nonconforming
+digest-valid fixture keep observed compliance distinct from P validity; none
+of these fixtures is a measured evaluator run or production authority.
 
 ## Verification and further reading
 

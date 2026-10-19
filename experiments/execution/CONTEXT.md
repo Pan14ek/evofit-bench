@@ -54,11 +54,13 @@ and constraints.
 
 EXP-04 records each EXP-02 observation and checks all P identity dimensions
 before it can reach the V3 evaluator-evidence path. It reuses the V3 verifier
-registry and `run_adaptation()`; it adds no semantic verifier. The current
-A0.1-to-V3 mapping and runtime source identity stay unresolved, so ordinary
-runs execute P without EXP-02 evidence. The CLI file-verifier adapter is
-TEST_ONLY. See `EXP04_EVIDENCE_ADMISSION.md` for the explicit command,
-readback contract, and unresolved requirements.
+registry and `run_adaptation()`; it adds no semantic verifier. Manifest/trace
+schema 1.1.0 separates mapping eligibility, execution authorization scope, and
+actual exact-pair consumption. TEST_ONLY evidence can exercise DEVELOPMENT
+execution but cannot establish research authority. The current A0.1-to-V3
+mapping and runtime source identity stay unresolved, so ordinary runs execute
+P without EXP-02 evidence. See `EXP04_EVIDENCE_ADMISSION.md` for the readback
+contract and unresolved requirements.
 
 ## Verification and further reading
 

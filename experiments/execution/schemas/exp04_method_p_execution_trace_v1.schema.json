@@ -17,7 +17,7 @@
     "unresolved_prerequisites"
   ],
   "properties": {
-    "schema_version": {"const": "1.0.0"},
+    "schema_version": {"const": "1.1.0"},
     "trace_type": {"const": "development_method_p_execution_with_exp04_admission"},
     "input_bundle_sha256": {"$ref": "#/$defs/sha256"},
     "input_manifest_sha256": {"$ref": "#/$defs/sha256"},
@@ -48,7 +48,7 @@
     "prediction_v1": {"type": "null"},
     "adaptation_evidence_trust_scope": {"type": ["string", "null"]},
     "exp02_observations_used_as_semantic_pair_evidence": {"const": false},
-    "exp02_evidence_admission_status": {"enum": ["not_admitted", "admitted_execution_evidence"]},
+    "exp02_evidence_admission_status": {"enum": ["not_admitted", "authorized_but_unconsumed_evidence", "admitted_execution_evidence"]},
     "exp02_evidence_admitted_to_p_calculations": {"type": "boolean"},
     "adaptation_evidence_sidecar_supplied": {"type": "boolean"},
     "unresolved_prerequisites": {"type": "array", "items": {"type": "string"}}
