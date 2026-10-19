@@ -472,7 +472,7 @@ def run_pilot(exp02_run_dir: Path, output_dir: Path) -> dict[str, Any]:
             "algorithm_status": "NOT_READY",
             "computation_duration_ns": adaptation_duration_ns,
             "governance_result": result.governance.result.value,
-            "governance_reason_codes": list(result.governance.reason_codes),
+            "governance_reason_codes": result.governance.to_dict()["reason_codes"],
             "after_applicability": result.after_applicability.to_dict(),
             "current_pairs": [item.to_dict() for item in result.current_pairs],
             "operation_plan": result.operation_plan.to_dict(),
