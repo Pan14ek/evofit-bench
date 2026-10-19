@@ -10,3 +10,16 @@ Adaptation computation time,Not applicable,174096417 ns (0.174096417 s; run_adap
 Evaluator time,124764583 ns (0.124764583 s); inconclusive,Not measured; candidate validation failed,Not applicable
 Candidate validation,Not applicable,Failed: ACTIVE_EVALUATOR_ARTIFACT_UNAVAILABLE,Pending
 Governance decision,Not applicable,HOLD,Pending
+TEST_ONLY continuation run,Fresh A0.1 B0 evaluation on source a6b18480aa60eee2e0274a8da3f5a4f62e35193b,Existing Method P V3 on the same source under explicitly declared TEST_ONLY assumptions,Not an independent assessment
+TEST_ONLY target applicability,Not independently established,"Before INACTIVE; after ACTIVE for AC_LAYERING and AC_MODULE_STRUCTURE under TEST_ONLY assumptions",Not established independently
+Continuation EXP-02 evidence,"Not applicable; B0 uses its unchanged frozen evaluator","Validated bundle 521a320a03c1aa4566156c474bcdcdb1f1a122b6c3dece73b0e1c3f2da58beec; incomplete; 5 representation rows; 3 unresolved mappings",Coverage_P not assessed; Coverage_ref not established
+Continuation B0 evaluator,Inconclusive; exit 1; app.repositories absent; broken-contract count not reported,"P profile Import Linter pass: 5 kept, 0 broken; module structure pass: 1 test",Execution only; not semantic proof
+Continuation Method P operations,Not applicable,"REPLACE REP_A0_ARCH_CI_LAYERING; ADD AC_MODULE_STRUCTURE; 1 TEST_ONLY planning unit each",TEST_ONLY operations; not independent reference judgments
+Continuation candidate,Not applicable,"Materialized; SHA-256 971c2074f00de4fb1fe290d6786e58217047dcabd1db70284669555d75707954",Not accepted
+Continuation candidate validation,Not applicable,"Failed: ACTIVE_EVALUATOR_ARTIFACT_UNAVAILABLE on four active inherited non-target A0 representations",Unresolved
+Continuation candidate target pairs,Not applicable,"Both UNKNOWN; evaluator scope unknown and semantic proof missing",Independent pair validity pending
+Continuation coverage diagnostic,Not applicable,"Candidate coverage UNKNOWN; no numeric P coverage claimed",Denominator and exact-pair evidence not independently established
+Continuation Method P computation time,Not applicable,201084750 ns (0.201084750 s; run_adaptation only),Descriptive TEST_ONLY measurement
+Continuation evaluator execution time,83797667 ns (0.083797667 s); inconclusive,289808166 ns (0.289808166 s for two profile evaluator subprocesses),Different evaluator counts/configurations; not a controlled speedup estimate
+Continuation governance,Not applicable,"HOLD; includes candidate validation, impacted-retain, required-stage, and governance-proof blockers",No publication or acceptance
+Continuation evidence archive,Not applicable,"PILOT_02_RAW_EVIDENCE_CONTINUATION.zip; SHA-256 243111746f805f39f256622bed3e2fdf74b25a001f6f7dd1015ec4acbf8339d4",Original HOLD archive preserved separately
