@@ -33,6 +33,7 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `exp04_evidence_admission_v1.schema.json`
 - `exp04_method_p_execution_trace_v1.schema.json`
 - `exp04_evidence_verifier_config_v1.schema.json`
+- `pilot02_method_input_profile_v1.schema.json`
 
 This is a selected list, not a complete source inventory.
 
@@ -65,6 +66,14 @@ construction-time governance and publication restrictions after digest
 resealing. The CLI verifier-config schema is TEST_ONLY and cannot assert
 research authority. These contracts do not establish canonical A0.1-to-V3
 mappings, positive coverage, or research readiness.
+
+## PILOT-02 profile schema
+
+PILOT-02's profile schema pins exact A0.1 representation identities,
+translated stages, evaluator artifacts, and embedded byte digests. Evaluator
+evidence permits `inspected_edge_count: null` when a collector does not report
+an inspection count; this remains unresolved input and must not be serialized
+as a fabricated zero.
 
 ## Verification and further reading
 

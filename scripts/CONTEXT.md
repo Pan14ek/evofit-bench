@@ -20,6 +20,7 @@ Seed/reset, metrics capture, workload runners, method prep and reproducibility t
 - `exp02_fitness_evidence.py`
 - `exp03_method_bridge.py`
 - `exp04_evidence_admission.py`
+- `../experiments/pilots/run_pilot02_method_p.py`
 - `finalize_run.py`
 - `prometheus_snapshot.py`
 
@@ -52,6 +53,13 @@ path but adds a research-authority blocker. The current A0.1-to-V3 canonical
 mapping is unresolved, so actual EXP-02 observations remain diagnostic and P
 runs without them. Readback revalidates source, sidecar, trace and generated
 output references and rejects resealed cross-artifact contradictions.
+
+## PILOT-02 execution
+
+The PILOT-02 runner is a narrow pilot tool, not a replacement P entrypoint. It
+uses the existing V3 exporter/verifier and `run_adaptation()`, then performs
+separate exact-pair diagnostics from validated EXP-02 raw outputs without
+passing those observations into P calculations.
 
 ## Verification and further reading
 

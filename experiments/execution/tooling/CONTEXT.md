@@ -90,6 +90,18 @@ Use deterministic source hashes and method-input isolation; keep scorer oracle-s
 
 SPEC03 is a DEVELOPMENT implementation only. It uses SPEC02 applicability, exact-pair evidence, conservative impact, materialized templates, bounded deterministic operations, governance, provenance and conditional rollback. Do not use oracle/scorer inputs or claim G1/G4 readiness; unresolved authority, mandatory classifications, templates, costs, multi-stage contracts and method review produce HOLD or remain blockers.
 
+## PILOT-02 profile boundary
+
+PILOT-02 adds one pinned A0.1 architecture-compliance profile to the verified
+V3 capabilities path. The profile verifier checks the exact source
+configuration, obligation catalog, evaluator configuration/source bytes, and
+versioned profile definition before exposing candidate descriptors. Its
+post-run exact-pair diagnostics bind authentic EXP-02 stdout/stderr and retain
+unknown inspection scope and missing semantic proof. Those diagnostics are
+not passed into `run_adaptation()` and do not establish coverage or authority.
+The existing P algorithm continues to produce its own operations, candidate,
+and governance decision.
+
 ## Verification and further reading
 
 Consult the original source files and nearest relevant tests, then `docs/README.md` for repository-wide architecture, experiment, stack and verification references. DEVELOPMENT validation uses `make development-quality` with a **disposable** PostgreSQL database; the protected DA01 test modules are excluded. When a context summary conflicts with source code, a reviewed manifest or a frozen scientific protocol, **report the conflict**; do not silently reinterpret research rules.

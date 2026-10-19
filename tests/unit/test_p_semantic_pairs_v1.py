@@ -43,6 +43,20 @@ def test_zero_exit_without_resolved_inspected_subjects_is_vacuous() -> None:
     assert "VACUOUS_SUCCESS" in pair.reason_codes
 
 
+def test_unreported_inspection_scope_remains_unknown_without_invented_zero() -> None:
+    pair, *_ = make_valid_pair(
+        evidence_changes={
+            "configured_targets": [],
+            "resolved_targets": [],
+            "inspected_subjects": [],
+            "inspected_edge_count": None,
+        }
+    )
+    assert pair.status is PairStatus.UNKNOWN
+    assert "EVALUATOR_INSPECTION_SCOPE_UNKNOWN" in pair.reason_codes
+    assert "VACUOUS_SUCCESS" not in pair.reason_codes
+
+
 def test_wrong_stage_architecture_or_mapping_never_reuses_pair_proof() -> None:
     wrong_stage, *_ = make_valid_pair(evidence_changes={"stage_applicable": False})
     wrong_revision, *_ = make_valid_pair(

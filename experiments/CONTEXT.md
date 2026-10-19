@@ -15,7 +15,7 @@ Scientific protocol, scenarios, execution, curated evidence and run results.
 - `schemas/fitness_representation_evidence_v1.schema.json`
 - `execution/EXP04_EVIDENCE_ADMISSION.md`
 - `results/` (ignored generated run outputs)
-- `pilots/` contains the PILOT-01 report, manuscript subsection, generated table, and narrow evidence tools
+- `pilots/` contains PILOT-01 and PILOT-02 protocols, reports, manuscript subsections, generated tables, evidence archives, and narrow tools
 
 ## Established conventions
 
@@ -30,6 +30,14 @@ mapping, verifier authority, and semantic validity. Its current A0.1-to-V3
 mapping remains unresolved; outputs are DEVELOPMENT diagnostics and cannot
 establish coverage or authorize a measured run. See the execution guide for
 commands and output interpretation.
+
+## PILOT-02
+
+PILOT-02 exercises one versioned A0.1-to-P candidate profile for
+`AC_LAYERING` and `AC_MODULE_STRUCTURE`. Its exact-pair diagnostics are created
+after P execution from digest-validated EXP-02 outputs; they are not injected
+as P semantic proof. Report the restricted denominator as pending until
+independently approved, and never label it DA01 `Coverage_ref`.
 
 ## Verification and further reading
 

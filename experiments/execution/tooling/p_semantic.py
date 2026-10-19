@@ -299,6 +299,9 @@ def assess_pair(
     resolved = _string_set(evaluator_evidence.get("resolved_targets", []))
     inspected = _string_set(evaluator_evidence.get("inspected_subjects", []))
     missing = _string_set(evaluator_evidence.get("missing_targets", []))
+    inspection_scope_unknown = evaluator_evidence.get("inspected_edge_count") is None
+    if inspection_scope_unknown:
+        reasons.add("EVALUATOR_INSPECTION_SCOPE_UNKNOWN")
     if (
         infrastructure == "infrastructure_failure"
         or evaluator_evidence.get("process_exit_code") is None
@@ -307,7 +310,8 @@ def assess_pair(
     elif infrastructure != "completed":
         reasons.add("EVALUATOR_NOT_RUN")
     elif not configured or not resolved or not inspected:
-        reasons.add("VACUOUS_SUCCESS")
+        if not inspection_scope_unknown:
+            reasons.add("VACUOUS_SUCCESS")
     elif not resolved.issubset(configured) or missing:
         reasons.add("EVALUATOR_TARGET_RESOLUTION_MISMATCH")
     elif evaluator_evidence.get("stage_applicable") is False:

@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "profile_id": "PILOT_02_A0_1_ARCHITECTURE_COMPLIANCE_V1",
+  "profile_status": "DEVELOPMENT_UNFROZEN",
+  "architecture_before_sha": "b78b0967be937634b7762baccf5ac6892b279a73",
+  "architecture_source_sha": "3fdd5c68f8f60fad5757eefa66cc2aa8b24d9306",
+  "a0_1_source_basis_sha": "3fdd5c68f8f60fad5757eefa66cc2aa8b24d9306",
+  "a0_1_app_tree_sha": "cdff9a6c3cee870e1eca2a5f5f3eb3202b0b1f08",
+  "fitness_configuration_sha256": "3f8c952afd00f97f00b84955cc85fdf8dc5cbe32b52e65771773b8aa5a12fbad",
+  "fitness_configuration_artifact": {
+    "path": "fitness/configs/a0_1-capability-modules.dev.yaml",
+    "sha256": "3f8c952afd00f97f00b84955cc85fdf8dc5cbe32b52e65771773b8aa5a12fbad"
+  },
+  "obligation_catalog_sha256": "8c5bd8fffe3bdb2af8fb85f8d0012bc34673f72866e52daed99fab96f9763011",
+  "obligation_catalog_artifact": {
+    "path": "fitness/catalog/architectural-obligations.yaml",
+    "sha256": "8c5bd8fffe3bdb2af8fb85f8d0012bc34673f72866e52daed99fab96f9763011"
+  },
+  "criterion_id": "architecture_compliance",
+  "criterion_intent": "Capability module structure and declared internal layering are checked by executable evaluators.",
+  "stage_translation": {
+    "source_stage": "ci_test",
+    "method_stage": "ci",
+    "rule_id": "PILOT02_CI_TEST_TO_CI_V1"
+  },
+  "mappings": [
+    {
+      "source_representation_id": "REP_A01_ARCH_INTERNAL_LAYERING_CI",
+      "obligation_id": "AC_LAYERING",
+      "source_stage": "ci_test",
+      "source_evaluator_id": "EV_A01_IMPORT_LINTER",
+      "source_evaluator_name": "import-linter",
+      "source_scope_id": "architecture.internal_dependencies",
+      "architecture_scope": "app.modules",
+      "configuration_artifact": {
+        "path": "architecture/acceptance/importlinter.toml",
+        "sha256": "5e938273faa86b4584886e2ede5700b35b064d5e54fe04b0c3d1e50278c64eb0"
+      },
+      "evaluator_source_artifacts": [
+        {
+          "path": "architecture/acceptance/importlinter.toml",
+          "sha256": "5e938273faa86b4584886e2ede5700b35b064d5e54fe04b0c3d1e50278c64eb0"
+        }
+      ],
+      "metric": {
+        "name": "dependency_rule_violations",
+        "unit": "contracts",
+        "evidence_path": "measurements.dependency_rule_violations"
+      },
+      "candidate_template": {
+        "template_id": "PILOT02_TEMPLATE_LAYERING_V1",
+        "representation": {
+          "id": "REP_A01_ARCH_INTERNAL_LAYERING_CI",
+          "active": true,
+          "criterion": "architecture_compliance",
+          "stage": "ci",
+          "evaluator": "EV_A01_IMPORT_LINTER",
+          "evaluator_artifact": {
+            "path": "architecture/acceptance/importlinter.toml",
+            "sha256": "5e938273faa86b4584886e2ede5700b35b064d5e54fe04b0c3d1e50278c64eb0"
+          },
+          "covers": ["AC_LAYERING"],
+          "applicability_scope": {
+            "scope_id": "architecture.internal_dependencies",
+            "architecture_scope": "app.modules",
+            "architecture_state": "A0_1_CAPABILITY_MODULES"
+          },
+          "evidence_contract": {
+            "record_id": "exp01-ci-import-linter-v1",
+            "evaluator_id": "EV_A01_IMPORT_LINTER",
+            "evaluator_name": "import-linter",
+            "source_stage": "ci_test",
+            "method_stage": "ci",
+            "scope_id": "architecture.internal_dependencies",
+            "configuration_artifact_sha256": "5e938273faa86b4584886e2ede5700b35b064d5e54fe04b0c3d1e50278c64eb0",
+            "metric": {
+              "name": "dependency_rule_violations",
+              "unit": "contracts",
+              "evidence_path": "measurements.dependency_rule_violations"
+            },
+            "evidence_requirements": [
+              "record_matches_run_and_source_revision",
+              "raw_stdout_and_stderr_are_digest_bound",
+              "configuration_artifact_digest_is_exact"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "source_representation_id": "REP_A01_ARCH_MODULE_STRUCTURE_CI",
+      "obligation_id": "AC_MODULE_STRUCTURE",
+      "source_stage": "ci_test",
+      "source_evaluator_id": "EV_A01_MODULE_STRUCTURE_PYTEST",
+      "source_evaluator_name": "pytest-architecture-module-structure",
+      "source_scope_id": "architecture.capability_modules",
+      "architecture_scope": "app.modules",
+      "configuration_artifact": {
+        "path": "architecture/states/A0_1_CAPABILITY_MODULES.yaml",
+        "sha256": "e062c8cd0689116240bddcb4feacd5975dcf28c86a88cc11e29ebf03968d0aeb"
+      },
+      "evaluator_source_artifacts": [
+        {
+          "path": "architecture/states/A0_1_CAPABILITY_MODULES.yaml",
+          "sha256": "e062c8cd0689116240bddcb4feacd5975dcf28c86a88cc11e29ebf03968d0aeb"
+        },
+        {
+          "path": "tests/architecture/test_module_structure.py",
+          "sha256": "d1f7ae29a1c8ed5fb5a4e1c37df8c8c22bfe98a31e0fa85c8c32012c0d083f7c"
+        }
+      ],
+      "metric": {
+        "name": "module_structure_test_failures",
+        "unit": "tests",
+        "evidence_path": "measurements.module_structure_test_failures"
+      },
+      "candidate_template": {
+        "template_id": "PILOT02_TEMPLATE_MODULE_STRUCTURE_V1",
+        "representation": {
+          "id": "REP_A01_ARCH_MODULE_STRUCTURE_CI",
+          "active": true,
+          "criterion": "architecture_compliance",
+          "stage": "ci",
+          "evaluator": "EV_A01_MODULE_STRUCTURE_PYTEST",
+          "evaluator_artifact": {
+            "path": "tests/architecture/test_module_structure.py",
+            "sha256": "d1f7ae29a1c8ed5fb5a4e1c37df8c8c22bfe98a31e0fa85c8c32012c0d083f7c"
+          },
+          "covers": ["AC_MODULE_STRUCTURE"],
+          "applicability_scope": {
+            "scope_id": "architecture.capability_modules",
+            "architecture_scope": "app.modules",
+            "architecture_state": "A0_1_CAPABILITY_MODULES"
+          },
+          "evidence_contract": {
+            "record_id": "exp02-ci-module-structure-v1",
+            "evaluator_id": "EV_A01_MODULE_STRUCTURE_PYTEST",
+            "evaluator_name": "pytest-architecture-module-structure",
+            "source_stage": "ci_test",
+            "method_stage": "ci",
+            "scope_id": "architecture.capability_modules",
+            "configuration_artifact_sha256": "e062c8cd0689116240bddcb4feacd5975dcf28c86a88cc11e29ebf03968d0aeb",
+            "metric": {
+              "name": "module_structure_test_failures",
+              "unit": "tests",
+              "evidence_path": "measurements.module_structure_test_failures"
+            },
+            "evidence_requirements": [
+              "record_matches_run_and_source_revision",
+              "raw_stdout_and_stderr_are_digest_bound",
+              "configuration_and_test_source_digests_are_exact"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

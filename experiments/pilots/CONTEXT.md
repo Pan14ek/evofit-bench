@@ -15,12 +15,24 @@ Store pilot-specific protocols, reports, derived result tables, and narrow tools
 - `PILOT_01_WORKLOAD.yaml` — the fixed A0.1 pilot load profile.
 - `PILOT_01_RESULTS.csv` and `PILOT_01_DESCRIPTIVE_STATISTICS.json` — generated from digest-validated run evidence.
 - `PILOT_01_S1_FAULT.patch` — exact isolated source-level S1 intervention.
+- `PILOT_02_PROTOCOL.md` — frozen, restricted A0-to-A0.1 architecture-compliance protocol.
+- `PILOT_02_A0_1_METHOD_INPUT_PROFILE_V1.json` — exact DEVELOPMENT mapping profile, pinned by the P verifier.
+- `run_pilot02_method_p.py` — validates an EXP-02 run, exports the existing V3 input, verifies the profile, and runs the existing P pipeline.
+- `PILOT_02_REPORT.md`, `PILOT_02_RESULTS.csv`, `PILOT_02_MANUSCRIPT_UA.md`, and `PILOT_02_RAW_EVIDENCE.zip` — evidence-derived pilot outputs and their checksums.
 - `generate_pilot01_results.py` — validates existing EXP-01/02 artifacts, independently derives runtime metrics from raw Locust/process CSV files, cross-checks the manifest values with documented tolerances, and writes the CSV table and descriptive summary.
 - `run_pilot01_measurement.py` — invokes the existing Import Linter, module test, Locust task file, runtime sampler, and EXP-01/02 validators for this pilot only.
 
 ## Constraints and known limits
 
 PILOT-01 report and manuscript record the A0.1 engineering evaluator response to one controlled source dependency edge. Its repeated runs are technical repetitions of one condition, not independent architecture changes. It does not establish independent semantic coverage or Method P adaptation effectiveness. Keep the S1 source fault on its isolated branch and worktree; preserve the exact source patch and revision. Raw run directories are generated evidence, excluded from Git, and must retain their hashes in the export archive. The result generator must derive request counts, failures, latency percentiles, throughput, CPU delta, peak RSS, and sample count from the raw CSVs and reject manifest-only metric edits even when artifact hashes validate.
+
+## PILOT-02 limits
+
+PILOT-02 is a restricted DEVELOPMENT case with an independently pending
+denominator and semantic reference. Its source-bound profile and exact-pair
+diagnostics do not authorize P operations, claim P coverage, or turn the
+manually established A0.1 reference into a P output. Preserve the raw archive,
+profile bundle, actual Method P trace, and unavailable outcomes as-is.
 
 ## Verification
 

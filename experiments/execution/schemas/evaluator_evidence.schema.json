@@ -22,7 +22,7 @@
     "resolved_targets": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "inspected_subjects": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "missing_targets": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-    "inspected_edge_count": {"type": "integer", "minimum": 0},
+    "inspected_edge_count": {"type": ["integer", "null"], "minimum": 0},
     "stage_applicable": {"type": "boolean"},
     "semantic_compatible": {"type": ["boolean", "null"]},
     "mapping_resolved": {"type": "boolean"},
