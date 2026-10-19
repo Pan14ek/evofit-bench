@@ -5,7 +5,9 @@
 
 ## Responsibility
 
-Business API/DB integration, SPEC02 V3 synthetic pipeline, and SPEC03 synthetic orchestration through impact, candidate and governance.
+Business API/DB integration, SPEC02 V3 synthetic pipeline, SPEC03 synthetic
+orchestration through impact/candidate/governance, and EXP-03/04 evaluator
+evidence bridges.
 
 ## Local landmarks
 
@@ -14,6 +16,7 @@ Business API/DB integration, SPEC02 V3 synthetic pipeline, and SPEC03 synthetic 
 - `test_p_applicability_v3.py`
 - `test_p_governed_adaptation_v1.py`
 - `test_exp03_method_bridge.py`
+- `test_exp04_evidence_admission.py`
 
 ## Established conventions
 
@@ -48,6 +51,15 @@ must fail readback. The evaluator-observation regression intentionally shows
 that changing valid EXP-02 observations does not affect Method P governance;
 this records the current evidence-consumption limitation, not successful
 evidence-driven adaptation.
+
+`test_exp04_evidence_admission.py` adds strict candidate identity checks,
+source-revision mismatch cases, signature and missing-authority cases, and
+TEST_ONLY V3 sidecar cases. The 1.1.0 cases distinguish eligibility,
+authorization scope, and exact-pair consumption, including an authorized but
+unconsumed sidecar. Digest-resealed manifest/trace attacks cover unauthorized
+ACCEPT and unsupported consumption claims. A conforming and a nonconforming
+digest-valid fixture keep observed compliance distinct from P validity; none
+of these fixtures is a measured evaluator run or production authority.
 
 ## Verification and further reading
 

@@ -5,7 +5,7 @@
 
 ## Responsibility
 
-Python unit, architecture and PostgreSQL integration suites, including EXP-01/02 evidence contracts, EXP-03 bridge integration, and independent synthetic SPEC03 impact, exact-pair, operation, materialization, governance, provenance and rollback tests.
+Python unit, architecture and PostgreSQL integration suites, including EXP-01/02 evidence contracts, EXP-03 bridge integration, EXP-04 evidence admission, and independent synthetic SPEC03 impact, exact-pair, operation, materialization, governance, provenance and rollback tests.
 
 ## Local landmarks
 
@@ -17,6 +17,7 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 - `unit/test_p_candidate_governance_v1.py`
 - `integration/test_p_governed_adaptation_v1.py`
 - `integration/test_exp03_method_bridge.py`
+- `integration/test_exp04_evidence_admission.py`
 
 ## Established conventions
 
@@ -31,6 +32,12 @@ the repository's DRAFT/OPEN V3 policy pilot. They execute the actual verified
 Method P development path and assert HOLD/UNKNOWN; they do not authorize
 positive semantic proof or measured DA01 outcomes. Existing V3 TEST_ONLY
 positive cases remain separate and run in the hosted development regression.
+
+The EXP-04 integration tests validate digest-bound EXP-02 observations,
+adversarial canonical mappings, verifier failures, TEST_ONLY sidecar
+consumption without semantic proof, noncompliance versus evaluator adequacy,
+and contradictory readback. These fixtures do not claim production authority
+or represent measured EXP-02 runs.
 
 ## Verification and further reading
 

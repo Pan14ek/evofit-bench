@@ -65,8 +65,14 @@ SUPPORTED_INPUTS = (
     "scripts/exp01_evidence_contract.py",
     "scripts/exp01_evidence_runtime.py",
 )
-VIOLATION_OUTPUT = re.compile(r"found\s+\d+\s+broken contract", re.IGNORECASE)
+VIOLATION_OUTPUT = re.compile(
+    r"(?:found\s+\d+\s+broken contracts?|contracts:\s+\d+\s+kept,\s+\d+\s+broken\b)",
+    re.IGNORECASE,
+)
 VIOLATION_COUNT_OUTPUT = re.compile(r"found\s+(\d+)\s+broken contracts?", re.IGNORECASE)
+VIOLATION_SUMMARY_COUNT_OUTPUT = re.compile(
+    r"contracts:\s+\d+\s+kept,\s+(\d+)\s+broken\b", re.IGNORECASE
+)
 PYTEST_SUMMARY = re.compile(
     r"(?:(\d+) passed)?(?:,?\s*(\d+) failed)?"
     r"(?:,?\s*(\d+) skipped)?\s+in\s+[0-9.]+s"
@@ -268,6 +274,8 @@ def run_architecture_acceptance(
     ]
     output = f"{stdout}\n{stderr}".strip()
     violation_count = VIOLATION_COUNT_OUTPUT.search(output)
+    if violation_count is None:
+        violation_count = VIOLATION_SUMMARY_COUNT_OUTPUT.search(output)
     dependency_rule_violations = int(violation_count.group(1)) if violation_count else None
     if record["status"] == "invalid":
         pass
