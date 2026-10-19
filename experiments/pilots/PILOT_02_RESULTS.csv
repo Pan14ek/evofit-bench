@@ -1,25 +1,28 @@
-Outcome,B0,Method P,Independent assessment
-Applicability for AC_LAYERING and AC_MODULE_STRUCTURE,Not independently established,UNKNOWN under the open DRAFT policy registry,Pending
-Fitness representations,Five existing A0 representations; architecture evaluator is REP_A0_ARCH_CI_LAYERING,Materialized failed candidate retained the five parent representations; no edits,Pending
-AC_LAYERING pair,Current B0 pair is UNKNOWN: PAIR_EVIDENCE_MISSING,"Post-run exact-pair diagnostic: REP_A01_ARCH_INTERNAL_LAYERING_CI; execution passed, metric 0 violations, pair UNKNOWN",Pending semantic adequacy
-AC_MODULE_STRUCTURE pair,No B0 representation in the pinned B0 architecture scope,"Post-run exact-pair diagnostic: REP_A01_ARCH_MODULE_STRUCTURE_CI; execution passed, metric 0 failures, pair UNKNOWN",Pending semantic adequacy
-Valid architecture-obligation coverage,Not established,Not established; the profile denominator is unapproved and both pair assessments are UNKNOWN,Pending
-Adaptation operations,Not applicable,None; operations list is empty,Pending
-Controlled S1 violation,Frozen B0 evaluator inconclusive on S1,No P candidate evaluation measured; A0.1 profile evaluator control found one broken notification layering contract,Pending
-Adaptation computation time,Not applicable,174096417 ns (0.174096417 s; run_adaptation only),Not applicable
-Evaluator time,124764583 ns (0.124764583 s); inconclusive,Not measured; candidate validation failed,Not applicable
-Candidate validation,Not applicable,Failed: ACTIVE_EVALUATOR_ARTIFACT_UNAVAILABLE,Pending
-Governance decision,Not applicable,HOLD,Pending
-TEST_ONLY continuation run,Fresh A0.1 B0 evaluation on source a6b18480aa60eee2e0274a8da3f5a4f62e35193b,Existing Method P V3 on the same source under explicitly declared TEST_ONLY assumptions,Not an independent assessment
-TEST_ONLY target applicability,Not independently established,"Before INACTIVE; after ACTIVE for AC_LAYERING and AC_MODULE_STRUCTURE under TEST_ONLY assumptions",Not established independently
-Continuation EXP-02 evidence,"Not applicable; B0 uses its unchanged frozen evaluator","Validated bundle 521a320a03c1aa4566156c474bcdcdb1f1a122b6c3dece73b0e1c3f2da58beec; incomplete; 5 representation rows; 3 unresolved mappings",Coverage_P not assessed; Coverage_ref not established
-Continuation B0 evaluator,Inconclusive; exit 1; app.repositories absent; broken-contract count not reported,"P profile Import Linter pass: 5 kept, 0 broken; module structure pass: 1 test",Execution only; not semantic proof
-Continuation Method P operations,Not applicable,"REPLACE REP_A0_ARCH_CI_LAYERING; ADD AC_MODULE_STRUCTURE; 1 TEST_ONLY planning unit each",TEST_ONLY operations; not independent reference judgments
-Continuation candidate,Not applicable,"Materialized; SHA-256 971c2074f00de4fb1fe290d6786e58217047dcabd1db70284669555d75707954",Not accepted
-Continuation candidate validation,Not applicable,"Failed: ACTIVE_EVALUATOR_ARTIFACT_UNAVAILABLE on four active inherited non-target A0 representations",Unresolved
-Continuation candidate target pairs,Not applicable,"Both UNKNOWN; evaluator scope unknown and semantic proof missing",Independent pair validity pending
-Continuation coverage diagnostic,Not applicable,"Candidate coverage UNKNOWN; no numeric P coverage claimed",Denominator and exact-pair evidence not independently established
-Continuation Method P computation time,Not applicable,201084750 ns (0.201084750 s; run_adaptation only),Descriptive TEST_ONLY measurement
-Continuation evaluator execution time,83797667 ns (0.083797667 s); inconclusive,289808166 ns (0.289808166 s for two profile evaluator subprocesses),Different evaluator counts/configurations; not a controlled speedup estimate
-Continuation governance,Not applicable,"HOLD; includes candidate validation, impacted-retain, required-stage, and governance-proof blockers",No publication or acceptance
-Continuation evidence archive,Not applicable,"PILOT_02_RAW_EVIDENCE_CONTINUATION.zip; SHA-256 243111746f805f39f256622bed3e2fdf74b25a001f6f7dd1015ec4acbf8339d4",Original HOLD archive preserved separately
+Outcome,B0 unchanged,Method P V4,Interpretation and limit
+Transition,A0_MONOLITH → A0_1_CAPABILITY_MODULES,A0_MONOLITH → A0_1_CAPABILITY_MODULES,One architecture transition; V1–V4 records are not independent samples
+Source revision,d793c92b881f0b69321188f888fa7346c468fc3c,d793c92b881f0b69321188f888fa7346c468fc3c,Same clean A0.1 source revision and application tree
+A0.1 app tree SHA-1,cdff9a6c3cee870e1eca2a5f5f3eb3202b0b1f08,cdff9a6c3cee870e1eca2a5f5f3eb3202b0b1f08,Source scope matched
+TEST_ONLY applicability AC_LAYERING,ACTIVE before and after,ACTIVE before and after,Researcher-declared assumption; not independent policy authority
+TEST_ONLY applicability AC_MODULE_STRUCTURE,INACTIVE before; no B0 control,INACTIVE before; ACTIVE after,Researcher-declared assumption; not independent policy authority
+EXP-01 run,pilot02-a01-ci-20261020-v4,pilot02-a01-ci-20261020-v4,Two CI evaluator records available; deployment skipped; runtime missing
+EXP-01 bundle status,Incomplete,Incomplete,Exit 2; Coverage_P not assessed; Coverage_ref not established
+EXP-02 evidence,Same validated V4 bundle,Same validated V4 bundle,Valid; five representation rows; three unresolved mappings
+B0 evaluator result,Import Linter 2.15 exit 1; app.repositories missing,Not applicable,Inconclusive; no broken-contract count reported
+B0 evaluator duration,85392875 ns,Not applicable,One frozen evaluator subprocess
+B0 exact AC_LAYERING pair,INVALID pair; compliance UNKNOWN,Not applicable,Evaluator artifact unavailable and target scope mismatch; not an architecture violation
+B0 AC_MODULE_STRUCTURE pair,No configured representation,Not applicable,No baseline pair evidence
+Method P operations,Not applicable,REPLACE REP_A0_ARCH_CI_LAYERING; ADD AC_MODULE_STRUCTURE,Two operations; each TEST_ONLY cost 1.0 unit; not elapsed time
+Materialized candidate,Not applicable,SHA-256 9f319ad6795f69321bd9e06d88c0aac2efabde90508cfd1678a39f5df6c2fc2d,Materialized but not fully validated
+P Import Linter candidate evaluator,Not applicable,Exit 0; 5 contracts kept; 0 broken; 99483667 ns,Exact candidate profile binding matched
+P module-structure candidate evaluator,Not applicable,Exit 0; 1 test passed; 296822875 ns,Exact candidate profile binding matched
+P target exact pairs,Not applicable,Both UNKNOWN; compliance UNKNOWN,Inspection scope unknown and semantic pair proof missing
+Internal coverage diagnostic,Parent INCOMPLETE 0/2,Candidate UNKNOWN 0/2,Internal diagnostic only; no numeric Coverage_P or independent coverage claim
+Full candidate validation,Not applicable,Failed: ACTIVE_EVALUATOR_ARTIFACT_UNAVAILABLE,Four active inherited performance/reliability representations lack pinned evaluator artifacts
+Method P adaptation time,Not applicable,225158417 ns (0.225158417 s),Measured around run_adaptation only
+P candidate evaluator total,Not applicable,396306542 ns (0.396306542 s),Two subprocesses including startup; not directly comparable with B0's one evaluator
+Execution evidence admission,Not applicable,admitted_execution_evidence; TEST_ONLY sidecar supplied before adaptation,Execution evidence entered P calculations; semantic pair proof supplied false
+Method input/result separation,Not applicable,expected_operations_in_method_input=false,No expected operation outcomes or oracle/scorer labels were supplied as method inputs
+Governance,Not applicable,HOLD,CANDIDATE_NOT_POSITIVELY_VALIDATED; IMPACTED_RETAIN_REASSESSMENT_MISSING; INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED; INVARIANT_VERDICTS_NOT_ALL_POSITIVE; REQUIRED_STAGE_EVIDENCE_UNKNOWN; VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING
+Detection comparison,Inconclusive due missing configured target,No controlled degradation introduced,Relative detection behavior not established
+V4 raw evidence archive,Not applicable,PILOT_02_RAW_EVIDENCE_CONTINUATION_V4.zip; SHA-256 4ff90f865ad48dae7e89e18f43b281467f35858fe92970858b2375342016b1a0,130 Method P inventory artifacts verified
+Research gates,G1 incomplete; G4 not authorized,G1 incomplete; G4 not authorized; P_ALGORITHM_STATUS NOT_READY,DEVELOPMENT result; not measured DA01 or accepted adaptation
