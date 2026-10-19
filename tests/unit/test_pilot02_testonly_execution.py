@@ -10,6 +10,7 @@ from typing import Any
 from experiments.execution.tooling.hashing import sha256_bytes
 from experiments.execution.tooling.p_input_validation import SourceReference
 from experiments.pilots.pilot02_testonly_execution import create_testonly_policy_source
+from experiments.pilots.run_pilot02_method_p import _exp02_execution_evidence_admission
 
 ROOT = Path(__file__).resolve().parents[2]
 POLICY_SOURCE = ROOT / "experiments/execution/policy-pilot/v1/source"
@@ -18,6 +19,21 @@ BEFORE_SHA = "b78b0967be937634b7762baccf5ac6892b279a73"
 AFTER_SHA = "3fdd5c68f8f60fad5757eefa66cc2aa8b24d9306"
 CATALOG_SHA = "8c5bd8fffe3bdb2af8fb85f8d0012bc34673f72866e52daed99fab96f9763011"
 AS_OF = "2026-10-14T00:00:00Z"
+
+
+def test_execution_evidence_admission_trace_matches_verified_sidecar_scope() -> None:
+    assert _exp02_execution_evidence_admission(sidecar_supplied=True, trust_scope="TEST_ONLY") == (
+        "admitted_execution_evidence",
+        True,
+    )
+    assert _exp02_execution_evidence_admission(sidecar_supplied=False, trust_scope="TEST_ONLY") == (
+        "not_admitted",
+        False,
+    )
+    assert _exp02_execution_evidence_admission(sidecar_supplied=True, trust_scope=None) == (
+        "not_admitted",
+        False,
+    )
 
 
 def _create_source(tmp_path: Path) -> tuple[Path, Any]:

@@ -18,12 +18,15 @@ Store pilot-specific protocols, reports, derived result tables, and narrow tools
 - `PILOT_02_PROTOCOL.md` — frozen, restricted A0-to-A0.1 architecture-compliance protocol.
 - `PILOT_02_DEVELOPMENT_ASSUMPTIONS_V1.json` and `PILOT_02_DEVELOPMENT_ADDENDUM_V1.md` — prospective, TEST_ONLY execution assumptions and their relation to the frozen protocol.
 - `PILOT_02_DEVELOPMENT_ASSUMPTIONS_V2.json` and `PILOT_02_DEVELOPMENT_ADDENDUM_V2.md` — prospective correction of A0 applicability assumptions, evaluator-row binding rules, and V2 execution boundary; not DA01 authority.
+- `PILOT_02_DEVELOPMENT_ADDENDUM_V3.md` — prospective correction of compliance classification when evaluator scope is unresolved; V2 assumptions remain unchanged.
+- `PILOT_02_DEVELOPMENT_ADDENDUM_V4.md` — prospective correction of the TEST_ONLY execution-evidence admission label in the PILOT-02 trace; it does not claim semantic pair proof.
 - `PILOT_02_A0_1_METHOD_INPUT_PROFILE_V1.json` — exact DEVELOPMENT mapping profile, pinned by the P verifier.
 - `run_pilot02_method_p.py` — validates an EXP-02 run, exports the existing V3 input, verifies the profile, and runs the existing P pipeline.
 - `pilot02_testonly_execution.py` — builds only the prospective continuation's isolated TEST_ONLY policy source, evidence ledger and adaptation sidecar; never used as a production trust anchor.
 - `PILOT_02_REPORT.md`, `PILOT_02_RESULTS.csv`, `PILOT_02_MANUSCRIPT_UA.md`, and `PILOT_02_RAW_EVIDENCE.zip` — evidence-derived pilot outputs and their checksums.
 - `PILOT_02_RAW_EVIDENCE_CONTINUATION.zip` — separate continuation evidence archive; the first run archive remains unchanged.
 - `PILOT_02_RAW_EVIDENCE_CONTINUATION_V2.zip` — corrected prospective continuation archive; V1 assumptions and outputs remain unchanged.
+- `PILOT_02_RAW_EVIDENCE_CONTINUATION_V3.zip` and `PILOT_02_RAW_EVIDENCE_CONTINUATION_V4.zip` — preserved prospective continuations; each archive has a separate SHA-256 sidecar.
 - `generate_pilot01_results.py` — validates existing EXP-01/02 artifacts, independently derives runtime metrics from raw Locust/process CSV files, cross-checks the manifest values with documented tolerances, and writes the CSV table and descriptive summary.
 - `run_pilot01_measurement.py` — invokes the existing Import Linter, module test, Locust task file, runtime sampler, and EXP-01/02 validators for this pilot only.
 
@@ -50,6 +53,12 @@ Keep V1 as historical evidence, and use the separate V2 assumption set for a
 prospective correction. The V2 runner checks each candidate row against the
 source-bound profile and records a scoped architecture measurement without
 changing full candidate validation.
+
+V2's raw compliance fields are retained; V3 corrects the generic evaluator
+scope/compliance distinction. V3's raw trace is also retained; V4 aligns the
+execution-evidence admission label with the verified TEST_ONLY sidecar and
+keeps `exp02_observations_used_as_semantic_pair_evidence` false. These are
+successive corrections on one transition, not independent samples.
 
 ## Verification
 

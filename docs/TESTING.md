@@ -317,3 +317,12 @@ The pilot records one independent source intervention. Its results do not establ
 `Coverage_P`, `Coverage_ref`, G1/G4, Method P readiness, or measured DA01
 outcomes. The isolated S1 source fault is not part of the normal implementation
 branch.
+
+### PILOT-02 TEST_ONLY runner
+
+The bounded runner uses the existing V3 P input verifier and `run_adaptation()` path. A TEST_ONLY sidecar can supply execution observations to adaptation calculations, while exact-pair semantic proof and research authority remain separate.
+
+| Requirement | Expected behavior | Test owner | Status |
+| --- | --- | --- | --- |
+| PILOT02-DEV-01 | Report admitted execution evidence only when a sidecar is supplied and Method P verifies TEST_ONLY trust scope; do not label execution observations as semantic pair proof. | `test_execution_evidence_admission_trace_matches_verified_sidecar_scope`, `test_real_exp02_run_executes_existing_p_pipeline_and_preserves_hold` | Implemented; TEST_ONLY runner and bridge fixtures |
+| PILOT02-DEV-02 | Execute candidate-profile evaluators only when the materialized row and all pinned identity, artifact, revision, scope, stage, coverage, and evidence-contract bindings match; mismatches stay not measured. | `tests/unit/test_pilot02_candidate_evaluators.py` | Implemented; positive scoped execution and adversarial mismatches |

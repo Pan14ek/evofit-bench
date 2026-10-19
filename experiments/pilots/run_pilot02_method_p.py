@@ -98,6 +98,15 @@ def _read_exp02_artifact(run_dir: Path, reference: dict[str, Any]) -> bytes:
     return content
 
 
+def _exp02_execution_evidence_admission(
+    *, sidecar_supplied: bool, trust_scope: str | None
+) -> tuple[str, bool]:
+    """Report verified TEST_ONLY execution admission separately from pair proof."""
+    admitted = sidecar_supplied and trust_scope == "TEST_ONLY"
+    status = "admitted_execution_evidence" if admitted else "not_admitted"
+    return status, admitted
+
+
 def _source_blob(revision: str, path: str) -> bytes:
     """Read one exact tracked blob from a validated clean source revision."""
     if GIT_EXECUTABLE is None:
@@ -998,6 +1007,12 @@ def run_pilot(
         result = run_adaptation(p_bundle, evidence_context=adaptation_sidecar)
         adaptation_duration_ns = time.perf_counter_ns() - started_ns
         trace = _adaptation_trace(p_bundle, result)
+        execution_admission_status, execution_evidence_admitted = (
+            _exp02_execution_evidence_admission(
+                sidecar_supplied=adaptation_sidecar is not None,
+                trust_scope=result.evidence_trust_scope,
+            )
+        )
         trace["pilot02_profile_pair_assessments"] = pair_assessments
         trace["pilot02_profile_pair_assessments_role"] = (
             "TEST_ONLY evaluator execution records were admitted; pair diagnostics supplied "
@@ -1009,7 +1024,8 @@ def run_pilot(
         trace["pilot02_test_only_assumptions_sha256"] = (
             assumptions_digest if test_only_continuation else None
         )
-        trace["exp02_evidence_admitted_to_p_calculations"] = test_only_continuation
+        trace["exp02_evidence_admission_status"] = execution_admission_status
+        trace["exp02_evidence_admitted_to_p_calculations"] = execution_evidence_admitted
         trace["exp02_observations_used_as_semantic_pair_evidence"] = False
         trace["adaptation_evidence_sidecar_supplied"] = adaptation_sidecar is not None
         trace["adaptation_evidence_trust_scope"] = result.evidence_trust_scope
@@ -1039,7 +1055,7 @@ def run_pilot(
                 else []
             ),
             "semantic_pair_proof_supplied_for_exp02": False,
-            "exact_pair_admission_status": trace.get("exp02_evidence_admission_status"),
+            "execution_evidence_admission_status": execution_admission_status,
             "interpretation": (
                 "Digest-validated EXP-02 executions were supplied before run_adaptation under "
                 "TEST_ONLY; this is not semantic pair proof or coverage admission."
