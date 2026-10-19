@@ -33,7 +33,7 @@ from experiments.execution.tooling.p_policy_source_v3 import (
 )
 from experiments.execution.tooling.p_semantic import assess_pair
 from scripts import exp02_fitness_evidence as exp02
-from scripts.exp01_evidence_contract import _safe_relative_path, validate_bundle
+from scripts.exp01_evidence_contract import BUNDLE_FILENAME, _safe_relative_path, validate_bundle
 from scripts.exp03_method_bridge import _adaptation_trace
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -459,7 +459,7 @@ def run_pilot(exp02_run_dir: Path, output_dir: Path) -> dict[str, Any]:
         "exp02": {
             "run_id": exp02_bundle["run_id"],
             "bundle_status": exp02_bundle["bundle_status"],
-            "bundle_sha256": exp02_bundle["bundle_sha256"],
+            "bundle_sha256": sha256_bytes((exp02_path / BUNDLE_FILENAME).read_bytes()),
             "representation_evidence_sha256": exp02_bundle["fitness_representation_evidence"][
                 "sha256"
             ],
