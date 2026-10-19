@@ -1,0 +1,12 @@
+Outcome,B0,Method P,Independent assessment
+Applicability for AC_LAYERING and AC_MODULE_STRUCTURE,Not independently established,UNKNOWN under the open DRAFT policy registry,Pending
+Fitness representations,Five existing A0 representations; architecture evaluator is REP_A0_ARCH_CI_LAYERING,Materialized failed candidate retained the five parent representations; no edits,Pending
+AC_LAYERING pair,Current B0 pair is UNKNOWN: PAIR_EVIDENCE_MISSING,"Post-run exact-pair diagnostic: REP_A01_ARCH_INTERNAL_LAYERING_CI; execution passed, metric 0 violations, pair UNKNOWN",Pending semantic adequacy
+AC_MODULE_STRUCTURE pair,No B0 representation in the pinned B0 architecture scope,"Post-run exact-pair diagnostic: REP_A01_ARCH_MODULE_STRUCTURE_CI; execution passed, metric 0 failures, pair UNKNOWN",Pending semantic adequacy
+Valid architecture-obligation coverage,Not established,Not established; the profile denominator is unapproved and both pair assessments are UNKNOWN,Pending
+Adaptation operations,Not applicable,None; operations list is empty,Pending
+Controlled S1 violation,Frozen B0 evaluator inconclusive on S1,No P candidate evaluation measured; A0.1 profile evaluator control found one broken notification layering contract,Pending
+Adaptation computation time,Not applicable,174096417 ns (0.174096417 s; run_adaptation only),Not applicable
+Evaluator time,124764583 ns (0.124764583 s); inconclusive,Not measured; candidate validation failed,Not applicable
+Candidate validation,Not applicable,Failed: ACTIVE_EVALUATOR_ARTIFACT_UNAVAILABLE,Pending
+Governance decision,Not applicable,HOLD,Pending
