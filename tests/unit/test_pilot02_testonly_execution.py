@@ -87,3 +87,29 @@ def test_testonly_signatures_verify_and_tampering_is_unresolved(tmp_path: Path) 
         content=json.dumps(tampered).encode("utf-8"),
     )
     assert trust.verify_approval(policy, charter, tampered_source, AS_OF) is None
+
+
+def test_per_obligation_applicability_states_are_preserved_in_testonly_policy_source(
+    tmp_path: Path,
+) -> None:
+    """V2 keeps layering applicable in A0 while module structure starts in A0.1."""
+    source, _ = create_testonly_policy_source(
+        POLICY_SOURCE,
+        tmp_path,
+        evaluation_as_of=AS_OF,
+        before_sha=BEFORE_SHA,
+        after_sha=AFTER_SHA,
+        obligation_catalog_sha256=CATALOG_SHA,
+        target_obligation_ids=TARGET_IDS,
+        applicability_by_obligation={
+            "AC_LAYERING": {"before": "ACTIVE", "after": "ACTIVE"},
+            "AC_MODULE_STRUCTURE": {"before": "INACTIVE", "after": "ACTIVE"},
+        },
+    )
+
+    registry = json.loads((source / "fitness/policy/registry.json").read_bytes())
+    policies = {row["obligation_ids"][0]: row for row in registry["policies"]}
+    assert policies["AC_LAYERING"]["applies_to_states"] == ["before", "after"]
+    assert policies["AC_MODULE_STRUCTURE"]["applies_to_states"] == ["after"]
+    assert all(row["kind"] == "UNCONDITIONAL_MANDATE" for row in policies.values())
+    assert "condition_ref" not in policies["AC_MODULE_STRUCTURE"]

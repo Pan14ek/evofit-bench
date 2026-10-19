@@ -17,11 +17,13 @@ Store pilot-specific protocols, reports, derived result tables, and narrow tools
 - `PILOT_01_S1_FAULT.patch` — exact isolated source-level S1 intervention.
 - `PILOT_02_PROTOCOL.md` — frozen, restricted A0-to-A0.1 architecture-compliance protocol.
 - `PILOT_02_DEVELOPMENT_ASSUMPTIONS_V1.json` and `PILOT_02_DEVELOPMENT_ADDENDUM_V1.md` — prospective, TEST_ONLY execution assumptions and their relation to the frozen protocol.
+- `PILOT_02_DEVELOPMENT_ASSUMPTIONS_V2.json` and `PILOT_02_DEVELOPMENT_ADDENDUM_V2.md` — prospective correction of A0 applicability assumptions, evaluator-row binding rules, and V2 execution boundary; not DA01 authority.
 - `PILOT_02_A0_1_METHOD_INPUT_PROFILE_V1.json` — exact DEVELOPMENT mapping profile, pinned by the P verifier.
 - `run_pilot02_method_p.py` — validates an EXP-02 run, exports the existing V3 input, verifies the profile, and runs the existing P pipeline.
 - `pilot02_testonly_execution.py` — builds only the prospective continuation's isolated TEST_ONLY policy source, evidence ledger and adaptation sidecar; never used as a production trust anchor.
 - `PILOT_02_REPORT.md`, `PILOT_02_RESULTS.csv`, `PILOT_02_MANUSCRIPT_UA.md`, and `PILOT_02_RAW_EVIDENCE.zip` — evidence-derived pilot outputs and their checksums.
 - `PILOT_02_RAW_EVIDENCE_CONTINUATION.zip` — separate continuation evidence archive; the first run archive remains unchanged.
+- `PILOT_02_RAW_EVIDENCE_CONTINUATION_V2.zip` — corrected prospective continuation archive; V1 assumptions and outputs remain unchanged.
 - `generate_pilot01_results.py` — validates existing EXP-01/02 artifacts, independently derives runtime metrics from raw Locust/process CSV files, cross-checks the manifest values with documented tolerances, and writes the CSV table and descriptive summary.
 - `run_pilot01_measurement.py` — invokes the existing Import Linter, module test, Locust task file, runtime sampler, and EXP-01/02 validators for this pilot only.
 
@@ -41,6 +43,13 @@ The author-authorized continuation uses an explicit TEST_ONLY assumption set
 to exercise operation planning with authentic evaluator output. Preserve its
 separate archive and TEST_ONLY label; a candidate may be materialized while
 semantic coverage and governance remain unresolved.
+
+V1 classified `AC_LAYERING` as inactive in A0; the versioned A0 traceability,
+fitness configuration, and frozen A0 evaluator support applicability in A0.
+Keep V1 as historical evidence, and use the separate V2 assumption set for a
+prospective correction. The V2 runner checks each candidate row against the
+source-bound profile and records a scoped architecture measurement without
+changing full candidate validation.
 
 ## Verification
 

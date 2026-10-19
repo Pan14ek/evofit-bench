@@ -118,11 +118,16 @@ def create_testonly_policy_source(
     after_sha: str,
     obligation_catalog_sha256: str,
     target_obligation_ids: Sequence[str],
+    applicability_by_obligation: Mapping[str, Mapping[str, str]] | None = None,
 ) -> tuple[Path, Pilot02TestOnlyTrustContext]:
-    """Create an isolated policy input embodying the addendum's TEST_ONLY assumptions."""
+    """Create an isolated policy input embodying explicit TEST_ONLY state assumptions."""
     source = destination / "policy-source-test-only"
     if source.exists():
         raise ValueError("TEST_ONLY policy source destination already exists")
+    if applicability_by_obligation is not None and set(applicability_by_obligation) != set(
+        target_obligation_ids
+    ):
+        raise ValueError("TEST_ONLY applicability assumptions do not match the target obligations")
     shutil.copytree(source_directory, source)
     registry_path = source / "fitness/policy/registry.json"
     registry = json.loads(registry_path.read_bytes())
@@ -136,15 +141,28 @@ def create_testonly_policy_source(
         if len(matches) != 1:
             raise ValueError(f"Expected one pilot policy for {obligation_id}")
         policy = dict(matches[0])
+        state_assumption = (
+            applicability_by_obligation.get(obligation_id)
+            if applicability_by_obligation is not None
+            else {"before": "INACTIVE", "after": "ACTIVE"}
+        )
+        if not isinstance(state_assumption, Mapping):
+            raise ValueError(f"Missing TEST_ONLY applicability assumption for {obligation_id}")
+        states = [state for state in ("before", "after") if state_assumption.get(state) == "ACTIVE"]
+        invalid_state = any(
+            state_assumption.get(state) not in {"ACTIVE", "INACTIVE"}
+            for state in ("before", "after")
+        )
+        if invalid_state or not states:
+            raise ValueError(f"Invalid TEST_ONLY applicability assumption for {obligation_id}")
         policy["normative_status"] = "APPROVED"
         policy["scope"] = "application"
-        policy["applies_to_states"] = ["after"]
+        policy["applies_to_states"] = states
+        # The explicit TEST_ONLY state assessment stands in for a source-backed
+        # predicate evaluation; it is not promoted to an authority or policy finding.
+        policy["kind"] = "UNCONDITIONAL_MANDATE"
+        policy.pop("condition_ref", None)
         policy["approval_source_id"] = f"PILOT02_APPROVAL_{obligation_id}"
-        if obligation_id == "AC_MODULE_STRUCTURE":
-            # The development assumption makes the target-state scope explicit;
-            # it does not claim independent proof of the source policy predicate.
-            policy["kind"] = "UNCONDITIONAL_MANDATE"
-            policy.pop("condition_ref", None)
         selected.append(policy)
 
     registry["schema_version"] = "1.2"

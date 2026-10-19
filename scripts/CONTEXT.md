@@ -57,9 +57,14 @@ output references and rejects resealed cross-artifact contradictions.
 ## PILOT-02 execution
 
 The PILOT-02 runner is a narrow pilot tool, not a replacement P entrypoint. It
-uses the existing V3 exporter/verifier and `run_adaptation()`, then performs
-separate exact-pair diagnostics from validated EXP-02 raw outputs without
-passing those observations into P calculations.
+uses the existing V3 exporter/verifier and `run_adaptation()`. The original
+run keeps EXP-02 observations diagnostic. Separate TEST_ONLY continuations may
+pass digest-validated execution records and raw artifacts to P before
+adaptation, but they supply no positive semantic pair proof and do not establish
+coverage. Candidate-profile evaluators run only after the materialized row,
+source revision, artifact digests, scope, stage, covered obligation, and full
+evidence contract match the pinned source profile. Scoped profile execution
+does not change a failed full-candidate validation status.
 
 ## Verification and further reading
 

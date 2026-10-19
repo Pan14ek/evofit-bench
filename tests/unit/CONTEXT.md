@@ -17,6 +17,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_exp02_fitness_evidence.py`
 - `test_pilot01_results.py`
 - `test_pilot02_method_input_profile.py`
+- `test_pilot02_candidate_evaluators.py`
 - `test_pilot02_testonly_execution.py`
 - `test_fault_state.py`
 - `test_p_applicability_policies_v1.py`
@@ -34,6 +35,9 @@ This is a selected list (14 direct tracked files), not a complete source invento
 ## Established conventions
 
 Test negative/unverified/expired/contradictory inputs plus backward compatibility.
+PILOT-02 candidate-evaluator cases verify the materialized row, source revision,
+profile artifacts, scope, stage, coverage links, and evidence contract before a
+scoped evaluator can run; mismatches must remain unmeasured.
 SPEC03 regression cases also check stale pair revisions, conflicting and
 digest-tampered pair assessments, parent-byte/mapping consistency, publish
 decision integrity, exact-hash rollback authorization, and full-template

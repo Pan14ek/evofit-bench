@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import binascii
 import importlib.metadata
 import json
 import platform
@@ -19,7 +20,12 @@ from pathlib import Path
 from typing import Any, cast
 
 from experiments.execution.tooling.errors import ProtocolError
-from experiments.execution.tooling.hashing import bundle_sha256, pretty_json_bytes, sha256_bytes
+from experiments.execution.tooling.hashing import (
+    bundle_sha256,
+    canonical_json_bytes,
+    pretty_json_bytes,
+    sha256_bytes,
+)
 from experiments.execution.tooling.p_adaptation import (
     PILOT02_PROFILE_DEFINITION_PATH,
     PILOT02_PROFILE_DEFINITION_SHA256,
@@ -172,7 +178,11 @@ def _install_profile(bundle_dir: Path, profile: dict[str, Any]) -> dict[str, Any
     return cast(dict[str, Any], manifest)
 
 
-def _install_testonly_cost_model(bundle_dir: Path, profile: dict[str, Any]) -> dict[str, Any]:
+def _install_testonly_cost_model(
+    bundle_dir: Path,
+    profile: dict[str, Any],
+    assumptions: dict[str, Any],
+) -> dict[str, Any]:
     """Pin only the addendum's bounded TEST_ONLY planning cost assumptions."""
     manifest_path = bundle_dir / "method_input_v3.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -183,7 +193,6 @@ def _install_testonly_cost_model(bundle_dir: Path, profile: dict[str, Any]) -> d
         for mapping in profile["mappings"]
         for item in [mapping["candidate_template"]]
     }
-    assumptions = json.loads(PILOT02_ASSUMPTIONS_PATH.read_bytes())
     cost = assumptions["candidate_cost_model"]
     capabilities["p_cost_model_v1"] = {
         "schema_version": 1,
@@ -319,25 +328,205 @@ def _b0_pair_evidence(
     return evidence, artifact_bytes
 
 
+def _profile_artifact_binding_errors(
+    profile: dict[str, Any],
+    mapping: dict[str, Any],
+    source_revision: str,
+) -> list[str]:
+    """Verify profile configuration and evaluator artifacts against the pinned source."""
+    representation = mapping.get("candidate_template", {}).get("representation", {})
+    references = [
+        mapping.get("configuration_artifact"),
+        *mapping.get("evaluator_source_artifacts", []),
+        representation.get("evaluator_artifact"),
+    ]
+    embedded = profile.get("embedded_evaluator_artifacts", [])
+    errors: list[str] = []
+    for reference in references:
+        if not isinstance(reference, dict):
+            errors.append("profile_artifact_reference_invalid")
+            continue
+        path = str(reference.get("path", ""))
+        digest = str(reference.get("sha256", ""))
+        matches = [row for row in embedded if isinstance(row, dict) and row.get("path") == path]
+        if len(matches) != 1:
+            errors.append(f"profile_artifact_inventory_mismatch:{path}")
+            continue
+        record = matches[0]
+        try:
+            content = base64.b64decode(str(record.get("content_base64", "")), validate=True)
+            source_content = _source_blob(source_revision, path)
+        except (ValueError, binascii.Error, OSError, subprocess.CalledProcessError):
+            errors.append(f"profile_artifact_source_unavailable:{path}")
+            continue
+        if (
+            record.get("sha256") != digest
+            or record.get("size_bytes") != len(content)
+            or sha256_bytes(content) != digest
+            or sha256_bytes(source_content) != digest
+        ):
+            errors.append(f"profile_artifact_digest_mismatch:{path}")
+    return sorted(set(errors))
+
+
+def _candidate_profile_binding_errors(
+    *,
+    profile: dict[str, Any],
+    candidate: dict[str, Any],
+    mapping: dict[str, Any],
+    candidate_rows: list[Any],
+    source_revision: str,
+    after_tree_sha: str,
+    input_bundle_sha256: str,
+) -> tuple[dict[str, Any] | None, list[str]]:
+    """Require the materialized candidate row to match its exact source profile."""
+    template = mapping["candidate_template"]["representation"]
+    representation_id = str(template["id"])
+    errors: list[str] = []
+    matching_rows = [
+        row
+        for row in candidate_rows
+        if isinstance(row, dict) and row.get("id") == representation_id
+    ]
+    if len(matching_rows) != 1:
+        errors.append("candidate_row_missing_or_duplicated")
+        candidate_row = None
+    else:
+        candidate_row = matching_rows[0]
+
+    if candidate.get("architecture_source_sha") != source_revision:
+        errors.append("candidate_source_revision_mismatch")
+    if profile.get("architecture_source_sha") != source_revision:
+        errors.append("profile_source_revision_mismatch")
+    if profile.get("a0_1_app_tree_sha") != after_tree_sha:
+        errors.append("profile_source_tree_mismatch")
+    if candidate.get("input_bundle_sha256") != input_bundle_sha256:
+        errors.append("candidate_input_bundle_mismatch")
+
+    if candidate_row is not None:
+        fields = (
+            "id",
+            "active",
+            "criterion",
+            "stage",
+            "evaluator",
+            "evaluator_artifact",
+            "covers",
+            "applicability_scope",
+            "evidence_contract",
+        )
+        for field in fields:
+            if candidate_row.get(field) != template.get(field):
+                errors.append(f"candidate_row_field_mismatch:{field}")
+        if candidate_row != template:
+            errors.append("candidate_row_template_mismatch")
+
+    config_reference = mapping.get("configuration_artifact", {})
+    contract = template.get("evidence_contract", {})
+    if not isinstance(config_reference, dict) or not isinstance(contract, dict):
+        errors.append("profile_configuration_binding_invalid")
+    else:
+        expected_config_digest = config_reference.get("sha256")
+        if contract.get("configuration_artifact_sha256") != expected_config_digest:
+            errors.append("profile_configuration_digest_mismatch")
+        if candidate_row is not None:
+            candidate_contract = candidate_row.get("evidence_contract")
+            if (
+                not isinstance(candidate_contract, dict)
+                or candidate_contract.get("configuration_artifact_sha256") != expected_config_digest
+            ):
+                errors.append("candidate_configuration_digest_mismatch")
+
+    scope = template.get("applicability_scope", {})
+    if (
+        mapping.get("source_scope_id") != scope.get("scope_id")
+        or mapping.get("architecture_scope") != scope.get("architecture_scope")
+        or mapping.get("obligation_id") not in template.get("covers", [])
+    ):
+        errors.append("profile_scope_or_obligation_binding_mismatch")
+
+    profile_definition = profile.get("profile_definition_artifact")
+    if not isinstance(profile_definition, dict) or profile_definition.get("sha256") != (
+        PILOT02_PROFILE_DEFINITION_SHA256
+    ):
+        errors.append("profile_definition_digest_mismatch")
+    errors.extend(_profile_artifact_binding_errors(profile, mapping, source_revision))
+    return candidate_row, sorted(set(errors))
+
+
 def _run_profile_candidate_evaluators(
     output_dir: Path,
     profile: dict[str, Any],
     candidate: Any,
+    *,
+    source_revision: str,
+    after_tree_sha: str,
+    input_bundle_sha256: str,
 ) -> dict[str, Any]:
-    """Measure the actual A0.1 profile evaluators after P materializes its candidate."""
+    """Run only candidate rows whose full source-profile binding verifies."""
     if not isinstance(candidate, dict):
         return {"status": "not_measured", "reason": "P did not materialize a candidate"}
     candidate_rows = candidate.get("representations", [])
-    candidate_ids = {str(row.get("id")) for row in candidate_rows if isinstance(row, dict)}
+    if not isinstance(candidate_rows, list):
+        candidate_rows = []
     records: list[dict[str, Any]] = []
     raw_dir = output_dir / "raw/p-candidate"
     raw_dir.mkdir(parents=True, exist_ok=True)
     for mapping in profile["mappings"]:
         template = mapping["candidate_template"]["representation"]
         representation_id = str(template["id"])
-        if representation_id not in candidate_ids:
-            continue
         evaluator_id = str(template["evaluator"])
+        candidate_row, binding_errors = _candidate_profile_binding_errors(
+            profile=profile,
+            candidate=candidate,
+            mapping=mapping,
+            candidate_rows=candidate_rows,
+            source_revision=source_revision,
+            after_tree_sha=after_tree_sha,
+            input_bundle_sha256=input_bundle_sha256,
+        )
+        binding = {
+            "status": "matched" if not binding_errors else "mismatch",
+            "reason_codes": binding_errors,
+            "candidate_row_sha256": (
+                sha256_bytes(canonical_json_bytes(candidate_row))
+                if candidate_row is not None
+                else None
+            ),
+            "template_sha256": sha256_bytes(canonical_json_bytes(template)),
+            "candidate_source_revision": candidate.get("architecture_source_sha"),
+            "profile_source_revision": profile.get("architecture_source_sha"),
+            "expected_source_revision": source_revision,
+            "profile_after_tree_sha": profile.get("a0_1_app_tree_sha"),
+            "expected_after_tree_sha": after_tree_sha,
+            "candidate_input_bundle_sha256": candidate.get("input_bundle_sha256"),
+            "expected_input_bundle_sha256": input_bundle_sha256,
+            "candidate_applicability_scope": (
+                candidate_row.get("applicability_scope") if candidate_row is not None else None
+            ),
+            "source_scope_id": mapping.get("source_scope_id"),
+            "stage": template.get("stage"),
+            "covers": template.get("covers"),
+            "evaluator_id": evaluator_id,
+            "configuration_artifact_sha256": mapping.get("configuration_artifact", {}).get(
+                "sha256"
+            ),
+            "evaluator_artifact_sha256": template.get("evaluator_artifact", {}).get("sha256"),
+            "evidence_contract_sha256": sha256_bytes(
+                canonical_json_bytes(template.get("evidence_contract", {}))
+            ),
+        }
+        if binding_errors:
+            records.append(
+                {
+                    "representation_id": representation_id,
+                    "evaluator_id": evaluator_id,
+                    "status": "not_measured",
+                    "reason_code": "CANDIDATE_PROFILE_BINDING_MISMATCH",
+                    "candidate_profile_binding": binding,
+                }
+            )
+            continue
         if evaluator_id == "EV_A01_IMPORT_LINTER":
             config_path = str(mapping["configuration_artifact"]["path"])
             command = [
@@ -363,6 +552,7 @@ def _run_profile_candidate_evaluators(
                     "representation_id": representation_id,
                     "status": "not_measured",
                     "reason": "unsupported evaluator",
+                    "candidate_profile_binding": binding,
                 }
             )
             continue
@@ -403,17 +593,30 @@ def _run_profile_candidate_evaluators(
                 },
                 "status": "execution_completed",
                 "process_verdict": "PASS" if completed.returncode == 0 else "FAIL",
+                "candidate_profile_binding": binding,
             }
         )
     durations = [
         int(row["duration_ns"]) for row in records if isinstance(row.get("duration_ns"), int)
     ]
+    expected_count = len(profile["mappings"])
+    status = (
+        "measured"
+        if len(durations) == expected_count
+        else "partial"
+        if durations
+        else "not_measured"
+    )
     return {
-        "status": "measured" if durations else "not_measured",
+        "status": status,
         "execution_count": len(durations),
+        "expected_evaluator_count": expected_count,
         "total_duration_ns": sum(durations) if durations else None,
         "representations": records,
-        "validation_scope": "TEST_ONLY evaluator observations; not independent pair semantic proof",
+        "validation_scope": (
+            "TEST_ONLY execution of rows matching the exact candidate profile; this scoped run "
+            "does not clear full-candidate validation or provide independent pair semantic proof"
+        ),
     }
 
 
@@ -597,6 +800,7 @@ def run_pilot(
     output_dir: Path,
     *,
     test_only_continuation: bool = False,
+    test_only_assumptions_path: Path | None = None,
 ) -> dict[str, Any]:
     """Validate authentic EXP-02 evidence, execute P, and write a reproducible trace."""
     root = ROOT.resolve(strict=True)
@@ -609,6 +813,8 @@ def run_pilot(
         raise ValueError("source checkout must be clean before the PILOT-02 Method P run")
     if _git("rev-parse", f"{source_revision}:app") != "cdff9a6c3cee870e1eca2a5f5f3eb3202b0b1f08":
         raise ValueError("A0.1 app tree differs from the protocol-pinned source tree")
+    if test_only_assumptions_path is not None and not test_only_continuation:
+        raise ValueError("TEST_ONLY assumptions require --test-only-continuation")
 
     exp02_bundle = validate_bundle(exp02_path)
     exp02_evidence = exp02.validate_representation_evidence(exp02_path, exp02_bundle)
@@ -624,13 +830,30 @@ def run_pilot(
     raw_dir.mkdir()
     b0_evaluation = _run_b0_evaluator(destination)
     assumptions: dict[str, Any] | None = None
+    assumptions_bytes: bytes | None = None
+    assumptions_digest: str | None = None
+    selected_assumptions_path: Path | None = None
     if test_only_continuation:
-        assumptions = json.loads(PILOT02_ASSUMPTIONS_PATH.read_bytes())
+        selected_assumptions_path = (
+            test_only_assumptions_path or PILOT02_ASSUMPTIONS_PATH
+        ).resolve(strict=True)
+        if not selected_assumptions_path.is_relative_to(root):
+            raise ValueError("TEST_ONLY assumptions must be tracked inside the source checkout")
+        assumptions_bytes = selected_assumptions_path.read_bytes()
+        assumptions_digest = sha256_bytes(assumptions_bytes)
+        assumptions = json.loads(assumptions_bytes)
         if assumptions.get("status") != "TEST_ONLY_NOT_AUTHORITY":
             raise ValueError("PILOT-02 TEST_ONLY assumptions are not explicitly non-authoritative")
         if assumptions.get("transition", {}).get("before_commit") != FROZEN_A0_SHA:
             raise ValueError("PILOT-02 TEST_ONLY assumptions do not bind frozen A0")
-        shutil.copy2(PILOT02_ASSUMPTIONS_PATH, destination / "development_assumptions.json")
+        transition_assumptions = assumptions.get("transition", {})
+        if transition_assumptions.get("after_source_basis") != PILOT02_SOURCE_BASE_SHA:
+            raise ValueError("PILOT-02 TEST_ONLY assumptions do not bind the current main base")
+        expected_app_tree = transition_assumptions.get("after_app_tree_sha256")
+        actual_app_tree = _git("rev-parse", f"{source_revision}:app")
+        if expected_app_tree is not None and expected_app_tree != actual_app_tree:
+            raise ValueError("PILOT-02 TEST_ONLY assumptions do not bind the A0.1 app tree")
+        shutil.copyfile(selected_assumptions_path, destination / "development_assumptions.json")
     with tempfile.TemporaryDirectory(prefix="pilot02-method-input-") as temporary:
         temporary_root = Path(temporary)
         p_input_dir = temporary_root / "method-input-p"
@@ -656,6 +879,9 @@ def run_pilot(
                 after_sha=source_revision,
                 obligation_catalog_sha256=str(profile["obligation_catalog_sha256"]),
                 target_obligation_ids=list(assumptions["transition"]["target_obligation_ids"]),
+                applicability_by_obligation=assumptions["transition"].get(
+                    "applicability_by_obligation"
+                ),
             )
             obligation_ids = {item.obligation_id for item in ruleset.obligations}
             if not set(assumptions["transition"]["target_obligation_ids"]).issubset(obligation_ids):
@@ -691,7 +917,9 @@ def run_pilot(
         _embedded_artifacts(profile, source_revision)
         _install_profile(p_input_dir, profile)
         if test_only_continuation:
-            _install_testonly_cost_model(p_input_dir, profile)
+            if assumptions is None:
+                raise RuntimeError("PILOT-02 assumptions were not loaded")
+            _install_testonly_cost_model(p_input_dir, profile, assumptions)
             method_manifest = verify_method_bundle_v3(p_input_dir, expected_method_id="P")
             snapshot = json.loads((p_input_dir / "architecture-policy-snapshot.json").read_bytes())
             sources, source_report = load_verified_source_manifest(
@@ -779,12 +1007,44 @@ def run_pilot(
         )
         trace["pilot02_test_only_continuation"] = test_only_continuation
         trace["pilot02_test_only_assumptions_sha256"] = (
-            sha256_bytes(PILOT02_ASSUMPTIONS_PATH.read_bytes()) if test_only_continuation else None
+            assumptions_digest if test_only_continuation else None
         )
         trace["exp02_evidence_admitted_to_p_calculations"] = test_only_continuation
         trace["exp02_observations_used_as_semantic_pair_evidence"] = False
         trace["adaptation_evidence_sidecar_supplied"] = adaptation_sidecar is not None
         trace["adaptation_evidence_trust_scope"] = result.evidence_trust_scope
+        trace["pilot02_exp02_consumption"] = {
+            "sidecar_passed_to_run_adaptation": adaptation_sidecar is not None,
+            "sidecar_sha256": (
+                adaptation_sidecar.get("sidecar_sha256") if adaptation_sidecar is not None else None
+            ),
+            "exp02_run_id": exp02_bundle["run_id"],
+            "exp02_bundle_sha256": sha256_bytes((exp02_path / BUNDLE_FILENAME).read_bytes()),
+            "exp02_representation_evidence_sha256": exp02_bundle["fitness_representation_evidence"][
+                "sha256"
+            ],
+            "exp02_execution_record_count": len(execution_evidence_rows),
+            "exp02_representation_ids": [
+                row["representation_id"] for row in execution_evidence_rows
+            ],
+            "exp02_evaluator_record_ids": [
+                row["source_evaluator_record_id"] for row in pair_assessments
+            ],
+            "raw_artifacts_in_sidecar": (
+                [
+                    {"path": row["path"], "sha256": row["sha256"]}
+                    for row in adaptation_sidecar["payload"]["artifact_bytes"]
+                ]
+                if adaptation_sidecar is not None
+                else []
+            ),
+            "semantic_pair_proof_supplied_for_exp02": False,
+            "exact_pair_admission_status": trace.get("exp02_evidence_admission_status"),
+            "interpretation": (
+                "Digest-validated EXP-02 executions were supplied before run_adaptation under "
+                "TEST_ONLY; this is not semantic pair proof or coverage admission."
+            ),
+        }
         trace["method_p_computation_duration_ns"] = adaptation_duration_ns
         trace["method_p_computation_duration_seconds"] = adaptation_duration_ns / 1_000_000_000
         (destination / "method_p_trace.json").write_bytes(pretty_json_bytes(trace))
@@ -797,7 +1057,14 @@ def run_pilot(
         else "not_materialized"
     )
     p_evaluation = (
-        _run_profile_candidate_evaluators(destination, profile, candidate)
+        _run_profile_candidate_evaluators(
+            destination,
+            profile,
+            candidate,
+            source_revision=source_revision,
+            after_tree_sha=v3_manifest["after_tree_sha"],
+            input_bundle_sha256=p_bundle.manifest["bundle_sha256"],
+        )
         if test_only_continuation
         else {
             "status": "not_measured",
@@ -856,8 +1123,11 @@ def run_pilot(
             "profile_definition_sha256": PILOT02_PROFILE_DEFINITION_SHA256,
             "trust_scope": result.evidence_trust_scope or "none",
             "test_only_assumptions_sha256": (
-                sha256_bytes(PILOT02_ASSUMPTIONS_PATH.read_bytes())
-                if test_only_continuation
+                assumptions_digest if test_only_continuation else None
+            ),
+            "test_only_assumptions_path": (
+                selected_assumptions_path.relative_to(root).as_posix()
+                if selected_assumptions_path is not None
                 else None
             ),
         },
@@ -922,12 +1192,18 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Use the prospective PILOT-02 TEST_ONLY development assumptions.",
     )
+    parser.add_argument(
+        "--test-only-assumptions",
+        type=Path,
+        help="Use a tracked PILOT-02 TEST_ONLY assumption set for a prospective continuation.",
+    )
     args = parser.parse_args(argv)
     try:
         manifest = run_pilot(
             args.exp02_run_dir,
             args.output_dir,
             test_only_continuation=args.test_only_continuation,
+            test_only_assumptions_path=args.test_only_assumptions,
         )
     except (OSError, ValueError, KeyError, ProtocolError) as error:
         print(json.dumps({"status": "rejected", "reason": str(error)}, sort_keys=True))
