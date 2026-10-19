@@ -1,5 +1,16 @@
 # Controlled experiments
 
+## PILOT-01 DEVELOPMENT measurement
+
+The completed [PILOT-01 report](pilots/PILOT_01_REPORT.md), [Ukrainian
+manuscript subsection](pilots/PILOT_01_MANUSCRIPT_UA.md), and validated
+[result table](pilots/PILOT_01_RESULTS.csv) describe a single source-level
+dependency intervention with three technical repetitions per condition. This
+is evaluator-behavior evidence; it is not measured DA01 evidence, independent
+semantic coverage, or a B0/B1/Method P comparison. The raw outputs are ignored
+under `experiments/results/`; the report documents their local archive and
+verification procedure.
+
 The [architecture-evolution experimental design specification](design/ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md) defines the controlled architecture-evolution trajectory, ground-truth rules, research questions, and experimental data requirements for DA01–DA14.
 
 For each scenario, `required_obligations_after` is the complete active obligation set Q(A_after), including obligations unaffected by the current delta. `new_obligations` contains only obligations introduced by that delta and must be a subset of the required set. An unaffected obligation remains required; it is not a removed obligation. An unaffected representation normally receives `retain` unless its semantic validity has changed.

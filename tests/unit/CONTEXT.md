@@ -15,6 +15,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_experiment_evidence.py`
 - `test_exp01_evidence.py`
 - `test_exp02_fitness_evidence.py`
+- `test_pilot01_results.py`
 - `test_fault_state.py`
 - `test_p_applicability_policies_v1.py`
 - `test_p_applicability_ruleset_v1.py`

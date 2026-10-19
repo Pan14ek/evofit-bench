@@ -1,0 +1,17 @@
+id: pilot01-a01-smoke-v1
+architecture_state: A0_1_CAPABILITY_MODULES
+users: 5
+spawn_rate_per_second: 1
+warmup:
+  duration_seconds: 0
+  read_only: true
+measurement:
+  duration_seconds: 30
+  sampling_interval_seconds: 1
+request_mix:
+  get_task: 25
+  list_tasks: 20
+  create_task: 15
+  assign_task: 15
+  change_status: 15
+  task_summary: 10
