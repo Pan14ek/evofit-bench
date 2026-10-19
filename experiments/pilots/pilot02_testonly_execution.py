@@ -225,6 +225,7 @@ def create_testonly_policy_source(
         }
         claims.append(claim)
         _write_json(source / f"fitness/policy/evidence/{evidence_id}.json", evidence)
+    claims.sort(key=lambda row: str(row["id"]))
     _write_json(source / "fitness/policy/completeness-claims.json", claims)
     return source, Pilot02TestOnlyTrustContext()
 

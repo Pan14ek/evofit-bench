@@ -52,9 +52,11 @@ def test_source_is_isolated_and_limited_to_declared_obligations(tmp_path: Path) 
 
     registry = json.loads((source / "fitness/policy/registry.json").read_bytes())
     policies = registry["policies"]
+    claims = json.loads((source / "fitness/policy/completeness-claims.json").read_bytes())
     assert {item["obligation_ids"][0] for item in policies} == set(TARGET_IDS)
     assert all(item["normative_status"] == "APPROVED" for item in policies)
     assert all(item["applies_to_states"] == ["after"] for item in policies)
+    assert [item["id"] for item in claims] == sorted(item["id"] for item in claims)
     assert trust.trust_scope == "TEST_ONLY"
     assert (POLICY_SOURCE / "fitness/policy/registry.json").read_bytes() == original_registry
     assert (
