@@ -120,20 +120,26 @@ Artifact-level integrity checks passed for all 130 files in the P run inventory,
 
 ### TEST_ONLY continuation verification
 
-The following continuation checks apply to source commit `a6b18480aa60eee2e0274a8da3f5a4f62e35193b`. Commands ran from the repository worktree with the bundled Python 3.12 runtime and repository site-packages.
+The following continuation checks apply to source commit `a6b18480aa60eee2e0274a8da3f5a4f62e35193b`. Commands ran from the repository worktree. Python commands used the bundled Python 3.12 runtime with repository site-packages; the shell variable below records the executable path.
 
 ```bash
-python -m scripts.exp01_evidence --architecture-state A0_1_CAPABILITY_MODULES --run-id pilot02-a01-ci-20261019-continuation-v3 --skip-deployment-observation
-python -m scripts.exp02_fitness_evidence --run-dir experiments/results/pilot02-a01-ci-20261019-continuation-v3
-python -m experiments.pilots.run_pilot02_method_p --exp02-run-dir experiments/results/pilot02-a01-ci-20261019-continuation-v3 --output-dir /private/tmp/pilot02-continuation-20261019-v3 --test-only-continuation
+export PYTHONDONTWRITEBYTECODE=1
+export PYTHONPATH=/Users/oleksii_makieiev/Documents/startups/evofit-bench/.venv/lib/python3.12/site-packages
+PYTHON=/Users/oleksii_makieiev/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+"$PYTHON" -m scripts.exp01_evidence --architecture-state A0_1_CAPABILITY_MODULES --run-id pilot02-a01-ci-20261019-continuation-v3 --skip-deployment-observation
+"$PYTHON" -m scripts.exp02_fitness_evidence --run-dir experiments/results/pilot02-a01-ci-20261019-continuation-v3
+"$PYTHON" -m experiments.pilots.run_pilot02_method_p --exp02-run-dir experiments/results/pilot02-a01-ci-20261019-continuation-v3 --output-dir /private/tmp/pilot02-continuation-20261019-v3 --test-only-continuation
 ```
 
 EXP-01 collected both target CI evaluators successfully; the bundle remained incomplete because deployment was skipped and runtime evidence was missing. EXP-02 returned `valid` for five representation rows, with three unresolved mappings. Method P completed under `TEST_ONLY`, emitted one ADD and one REPLACE, materialized a candidate, and returned HOLD.
 
 ```bash
-python -m pytest -q -p no:cacheprovider tests/unit/test_pilot02_testonly_execution.py tests/unit/test_pilot02_method_input_profile.py tests/unit/test_context_documents.py
-python -m pytest -q -p no:cacheprovider tests/unit/test_p_adaptation_evidence_v1.py
-python -m pytest -q -p no:cacheprovider tests/integration/test_exp03_method_bridge.py
+export PYTHONDONTWRITEBYTECODE=1
+export PYTHONPATH=/Users/oleksii_makieiev/Documents/startups/evofit-bench/.venv/lib/python3.12/site-packages
+PYTHON=/Users/oleksii_makieiev/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3
+"$PYTHON" -m pytest -q -p no:cacheprovider tests/unit/test_pilot02_testonly_execution.py tests/unit/test_pilot02_method_input_profile.py tests/unit/test_context_documents.py
+"$PYTHON" -m pytest -q -p no:cacheprovider tests/unit/test_p_adaptation_evidence_v1.py
+"$PYTHON" -m pytest -q -p no:cacheprovider tests/integration/test_exp03_method_bridge.py
 ruff check --no-cache experiments/pilots/run_pilot02_method_p.py experiments/pilots/pilot02_testonly_execution.py tests/unit/test_pilot02_testonly_execution.py
 ruff format --check experiments/pilots/run_pilot02_method_p.py experiments/pilots/pilot02_testonly_execution.py tests/unit/test_pilot02_testonly_execution.py
 mypy --no-incremental --explicit-package-bases --follow-imports=silent --ignore-missing-imports experiments/pilots/run_pilot02_method_p.py
