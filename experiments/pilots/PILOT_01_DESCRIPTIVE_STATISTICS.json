@@ -1,0 +1,149 @@
+{
+  "conditions": {
+    "S0": {
+      "metrics": {
+        "application_cpu_seconds_delta": {
+          "max": 1.5300000000000002,
+          "mean": 1.4266666666666667,
+          "min": 1.29,
+          "n": 3
+        },
+        "application_rss_max_bytes": {
+          "max": 99033088.0,
+          "mean": 98937514.66666667,
+          "min": 98885632.0,
+          "n": 3
+        },
+        "failure_count": {
+          "max": 0.0,
+          "mean": 0.0,
+          "min": 0.0,
+          "n": 3
+        },
+        "import_linter_duration_seconds": {
+          "max": 0.3146949999500066,
+          "mean": 0.2248824863539388,
+          "min": 0.16222270904108882,
+          "n": 3
+        },
+        "module_structure_duration_seconds": {
+          "max": 0.4173803748562932,
+          "mean": 0.3925723750144243,
+          "min": 0.3616659580729902,
+          "n": 3
+        },
+        "p50_ms": {
+          "max": 14.0,
+          "mean": 12.666666666666666,
+          "min": 12.0,
+          "n": 3
+        },
+        "p95_ms": {
+          "max": 45.0,
+          "mean": 33.0,
+          "min": 21.0,
+          "n": 3
+        },
+        "p99_ms": {
+          "max": 76.0,
+          "mean": 59.0,
+          "min": 43.0,
+          "n": 3
+        },
+        "request_count": {
+          "max": 138.0,
+          "mean": 129.0,
+          "min": 115.0,
+          "n": 3
+        },
+        "runtime_sample_count": {
+          "max": 32.0,
+          "mean": 32.0,
+          "min": 32.0,
+          "n": 3
+        },
+        "throughput_requests_per_second": {
+          "max": 4.741251859860296,
+          "mean": 4.64555218388924,
+          "min": 4.588899126295301,
+          "n": 3
+        }
+      },
+      "repetition_count": 3
+    },
+    "S1": {
+      "metrics": {
+        "application_cpu_seconds_delta": {
+          "max": 1.5899999999999999,
+          "mean": 1.4633333333333332,
+          "min": 1.3900000000000001,
+          "n": 3
+        },
+        "application_rss_max_bytes": {
+          "max": 100229120.0,
+          "mean": 99500032.0,
+          "min": 98795520.0,
+          "n": 3
+        },
+        "failure_count": {
+          "max": 0.0,
+          "mean": 0.0,
+          "min": 0.0,
+          "n": 3
+        },
+        "import_linter_duration_seconds": {
+          "max": 0.2960442500188947,
+          "mean": 0.23138727767703435,
+          "min": 0.1859172498807311,
+          "n": 3
+        },
+        "module_structure_duration_seconds": {
+          "max": 0.49042895808815956,
+          "mean": 0.45538776406707865,
+          "min": 0.41247062501497567,
+          "n": 3
+        },
+        "p50_ms": {
+          "max": 11.0,
+          "mean": 10.666666666666666,
+          "min": 10.0,
+          "n": 3
+        },
+        "p95_ms": {
+          "max": 28.0,
+          "mean": 25.666666666666668,
+          "min": 21.0,
+          "n": 3
+        },
+        "p99_ms": {
+          "max": 130.0,
+          "mean": 70.33333333333333,
+          "min": 35.0,
+          "n": 3
+        },
+        "request_count": {
+          "max": 140.0,
+          "mean": 136.66666666666666,
+          "min": 134.0,
+          "n": 3
+        },
+        "runtime_sample_count": {
+          "max": 32.0,
+          "mean": 32.0,
+          "min": 32.0,
+          "n": 3
+        },
+        "throughput_requests_per_second": {
+          "max": 4.8238569971198855,
+          "mean": 4.702578921536187,
+          "min": 4.608696870764064,
+          "n": 3
+        }
+      },
+      "repetition_count": 3
+    }
+  },
+  "independent_architecture_change_count": 1,
+  "inferential_statistics": "not_applicable",
+  "scope": "technical repetitions of one controlled source-level condition"
+}

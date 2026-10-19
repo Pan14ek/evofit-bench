@@ -15,6 +15,7 @@ Scientific protocol, scenarios, execution, curated evidence and run results.
 - `schemas/fitness_representation_evidence_v1.schema.json`
 - `execution/EXP04_EVIDENCE_ADMISSION.md`
 - `results/` (ignored generated run outputs)
+- `pilots/` contains the PILOT-01 report, manuscript subsection, generated table, and narrow evidence tools
 
 ## Established conventions
 

@@ -295,3 +295,25 @@ modified, linted, formatted, or type-checked in this run.
 The exact current-head GitHub Actions URLs and conclusions are recorded in the
 existing [PR #10 description](https://github.com/Pan14ek/evofit-bench/pull/10).
 
+### PILOT-01 evidence and result export
+
+PILOT-01 is a DEVELOPMENT pilot of existing architecture-evaluator behavior. It
+uses isolated S0/S1 source revisions and preserves raw run outputs under the
+ignored `experiments/results/` tree. Rebuild the CSV only after the generator
+validates each manifest inventory and the EXP-01/EXP-02 evidence:
+
+```bash
+uv run python -m experiments.pilots.generate_pilot01_results
+uv run python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_pilot01_results.py
+```
+
+| Requirement | Evidence / test |
+| --- | --- |
+| PILOT01-R1: use Locust's recorded aggregate values without recalculating percentiles | `test_locust_aggregate_reads_saved_statistics` |
+| PILOT01-R2: detect post-collection raw-artifact mutation by size or digest | `test_artifact_inventory_rejects_changed_bytes`; result generator revalidates all six run inventories and EXP-01/02 bundles |
+| PILOT01-R3: label three technical repeats descriptively, without inferential statistics | `test_statistics_label_repetitions_as_non_inferential` |
+
+The pilot records one independent source intervention. Its results do not establish
+`Coverage_P`, `Coverage_ref`, G1/G4, Method P readiness, or measured DA01
+outcomes. The isolated S1 source fault is not part of the normal implementation
+branch.

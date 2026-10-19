@@ -18,6 +18,7 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 - `integration/test_p_governed_adaptation_v1.py`
 - `integration/test_exp03_method_bridge.py`
 - `integration/test_exp04_evidence_admission.py`
+- `unit/test_pilot01_results.py`
 
 ## Established conventions
 
