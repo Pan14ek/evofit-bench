@@ -252,11 +252,17 @@ def _b0_pair_evidence(
     representation = next(
         row for row in bundle.representations if row.get("id") == "REP_A0_ARCH_CI_LAYERING"
     )
-    artifact = representation.get("evaluator_artifact")
-    artifact_path = artifact.get("path") if isinstance(artifact, dict) else None
-    config_bytes = bundle.artifact_bytes.get(str(artifact_path))
-    if config_bytes is None:
+    config_path = "fitness/a0-importlinter.toml"
+    config_records = [
+        row
+        for row in bundle.manifest.get("files", [])
+        if isinstance(row, dict) and row.get("path") == config_path
+    ]
+    if len(config_records) != 1 or config_records[0].get("sha256") != FROZEN_B0_EVALUATOR_SHA256:
         raise ValueError("Pinned B0 evaluator configuration bytes are unavailable")
+    config_bytes = (bundle.root / config_path).read_bytes()
+    if sha256_bytes(config_bytes) != FROZEN_B0_EVALUATOR_SHA256:
+        raise ProtocolError("PILOT02_FROZEN_B0_BUNDLE_CONFIGURATION_MISMATCH")
     configured = sorted(_configured_import_targets(config_bytes))
     resolved_set = _after_module_names(bundle.root)
     resolved = sorted(set(configured) & resolved_set)
