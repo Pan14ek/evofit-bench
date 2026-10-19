@@ -77,6 +77,28 @@ def test_clean_nonzero_exit_records_noncompliance_without_invalidating_monitor_s
     assert "COMPLIANCE_VIOLATION_OBSERVED" in pair.reason_codes
 
 
+def test_unresolved_targets_do_not_become_an_architecture_violation() -> None:
+    pair, *_ = make_valid_pair(
+        process_exit_code=1,
+        evidence_changes={"missing_targets": ["app.repositories"]},
+    )
+
+    assert pair.status is PairStatus.INVALID
+    assert pair.compliance_status is ComplianceStatus.UNKNOWN
+    assert "EVALUATOR_TARGET_RESOLUTION_MISMATCH" in pair.reason_codes
+    assert "COMPLIANCE_RESULT_UNDETERMINED" in pair.reason_codes
+    assert "COMPLIANCE_VIOLATION_OBSERVED" not in pair.reason_codes
+
+
+def test_success_with_unknown_inspection_scope_is_not_compliant() -> None:
+    pair, *_ = make_valid_pair(evidence_changes={"inspected_edge_count": None})
+
+    assert pair.status is PairStatus.UNKNOWN
+    assert pair.compliance_status is ComplianceStatus.UNKNOWN
+    assert "EVALUATOR_INSPECTION_SCOPE_UNKNOWN" in pair.reason_codes
+    assert "COMPLIANCE_RESULT_UNDETERMINED" in pair.reason_codes
+
+
 def test_evaluator_infrastructure_failure_is_unknown_and_not_a_compliance_verdict() -> None:
     pair, *_ = make_valid_pair(
         evidence_changes={

@@ -97,10 +97,22 @@ V3 capabilities path. The profile verifier checks the exact source
 configuration, obligation catalog, evaluator configuration/source bytes, and
 versioned profile definition before exposing candidate descriptors. Its
 post-run exact-pair diagnostics bind authentic EXP-02 stdout/stderr and retain
-unknown inspection scope and missing semantic proof. Those diagnostics are
-not passed into `run_adaptation()` and do not establish coverage or authority.
-The existing P algorithm continues to produce its own operations, candidate,
-and governance decision.
+unknown inspection scope and missing semantic proof. In the TEST_ONLY
+continuation, a separately digest-validated sidecar of EXP-02 execution
+records and raw artifacts is supplied to `run_adaptation()` before adaptation;
+the records are not admitted as semantic pair proof and do not establish
+coverage or authority. Keep the post-run diagnostics distinct from that
+sidecar. The existing P algorithm continues to produce its own operations,
+candidate, and governance decision.
+
+`p_semantic.py` records compliance only when evaluator execution, identity,
+target/stage/mapping scope, and evidence artifacts resolve. Adequacy,
+evidence-contract satisfaction, semantic compatibility, and pair proof remain
+separate: they can leave pair validity unknown without erasing a resolvable
+compliance observation. An unresolved evaluator scope remains `UNKNOWN` even
+when its process exits nonzero or zero; a resolved nonzero result is an
+observation of noncompliance and does not by itself invalidate exact-pair
+semantics.
 
 ## Verification and further reading
 

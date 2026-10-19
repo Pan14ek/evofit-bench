@@ -330,11 +330,37 @@ def assess_pair(
         reasons.add("EVIDENCE_ARTIFACTS_UNVERIFIED")
 
     exit_code = evaluator_evidence.get("process_exit_code")
-    if infrastructure == "completed" and isinstance(exit_code, int) and exit_code != 0:
-        compliance = ComplianceStatus.NON_COMPLIANT
-        reasons.add("COMPLIANCE_VIOLATION_OBSERVED")
-    elif infrastructure == "completed" and exit_code == 0:
-        compliance = ComplianceStatus.COMPLIANT
+    compliance_blockers = {
+        "REPRESENTATION_ID_MISMATCH",
+        "ARCHITECTURE_REVISION_MISMATCH",
+        "EVALUATOR_ID_MISMATCH",
+        "OBLIGATION_MAPPING_MISSING",
+        "CRITERION_INTENT_MAPPING_MISMATCH",
+        "EVALUATOR_ARTIFACT_UNAVAILABLE",
+        "EVALUATOR_ARTIFACT_PATH_INVALID",
+        "EVALUATOR_ARTIFACT_DIGEST_INVALID",
+        "EVALUATOR_ARTIFACT_BYTES_MISSING",
+        "EVALUATOR_ARTIFACT_DIGEST_MISMATCH",
+        "EVIDENCE_ARTIFACT_BYTES_MISSING",
+        "EVIDENCE_ARTIFACT_DIGEST_MISMATCH",
+        "EVIDENCE_ARTIFACT_REFERENCE_INVALID",
+        "EVALUATOR_INSPECTION_SCOPE_UNKNOWN",
+        "EVALUATOR_EXECUTION_UNRESOLVED",
+        "EVALUATOR_NOT_RUN",
+        "VACUOUS_SUCCESS",
+        "EVALUATOR_TARGET_RESOLUTION_MISMATCH",
+        "STAGE_OR_CONTEXT_MISMATCH",
+        "OBLIGATION_MAPPING_MISMATCH",
+        "EVIDENCE_ARTIFACTS_UNVERIFIED",
+    }
+    if infrastructure == "completed" and isinstance(exit_code, int):
+        if reasons & compliance_blockers:
+            reasons.add("COMPLIANCE_RESULT_UNDETERMINED")
+        elif exit_code != 0:
+            compliance = ComplianceStatus.NON_COMPLIANT
+            reasons.add("COMPLIANCE_VIOLATION_OBSERVED")
+        else:
+            compliance = ComplianceStatus.COMPLIANT
 
     proof_status = "UNDETERMINED"
     proof = semantic_proof
