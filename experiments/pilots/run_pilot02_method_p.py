@@ -22,7 +22,6 @@ from experiments.execution.tooling.hashing import bundle_sha256, pretty_json_byt
 from experiments.execution.tooling.p_adaptation import (
     PILOT02_PROFILE_DEFINITION_PATH,
     PILOT02_PROFILE_DEFINITION_SHA256,
-    _adaptation_trace,
     run_adaptation,
     verify_v3_p_bundle,
 )
@@ -35,6 +34,7 @@ from experiments.execution.tooling.p_policy_source_v3 import (
 from experiments.execution.tooling.p_semantic import assess_pair
 from scripts import exp02_fitness_evidence as exp02
 from scripts.exp01_evidence_contract import _safe_relative_path, validate_bundle
+from scripts.exp03_method_bridge import _adaptation_trace
 
 ROOT = Path(__file__).resolve().parents[2]
 POLICY_SOURCE = ROOT / "experiments/execution/policy-pilot/v1/source"
