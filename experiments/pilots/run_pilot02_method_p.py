@@ -39,8 +39,10 @@ from scripts.exp03_method_bridge import _adaptation_trace
 ROOT = Path(__file__).resolve().parents[2]
 POLICY_SOURCE = ROOT / "experiments/execution/policy-pilot/v1/source"
 FROZEN_A0_SHA = "b78b0967be937634b7762baccf5ac6892b279a73"
+PILOT02_SOURCE_BASE_SHA = "3fdd5c68f8f60fad5757eefa66cc2aa8b24d9306"
 FROZEN_B0_CONFIG_SHA256 = "5ad60e373463ea459e192bf85d82704ca9aa1c217c4abf4d8caeb66924059ecb"
 FROZEN_B0_EVALUATOR = "fitness/evaluators/a0/importlinter.toml"
+FROZEN_B0_EVALUATOR_SHA256 = "88ff64a4792c6048a6ab0686ddf9326ebbee49f76996933845a6142cc1a2ba27"
 IMPORT_LINTER_ENTRYPOINT = "import importlinter.cli as c; c.lint_imports_command()"
 GIT_EXECUTABLE = shutil.which("git")
 
@@ -276,8 +278,11 @@ def _run_b0_evaluator(output_dir: Path) -> dict[str, Any]:
     """Run the unchanged frozen A0 Import Linter artifact against this source."""
     config_path = ROOT / FROZEN_B0_EVALUATOR
     config_bytes = config_path.read_bytes()
-    frozen_bytes = _source_blob(FROZEN_A0_SHA, FROZEN_B0_EVALUATOR)
-    if sha256_bytes(frozen_bytes) != sha256_bytes(config_bytes):
+    frozen_bytes = _source_blob(PILOT02_SOURCE_BASE_SHA, FROZEN_B0_EVALUATOR)
+    if (
+        sha256_bytes(frozen_bytes) != sha256_bytes(config_bytes)
+        or sha256_bytes(frozen_bytes) != FROZEN_B0_EVALUATOR_SHA256
+    ):
         raise ProtocolError("PILOT02_FROZEN_B0_EVALUATOR_MISMATCH")
     if sha256_bytes(_source_blob(FROZEN_A0_SHA, "fitness/configs/a0-monolith.yaml")) != (
         FROZEN_B0_CONFIG_SHA256
