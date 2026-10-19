@@ -13,9 +13,10 @@ import subprocess  # nosec B404 - fixed Git/evaluator argv, no shell
 import sys
 import tempfile
 import time
+import tomllib
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from experiments.execution.tooling.errors import ProtocolError
 from experiments.execution.tooling.hashing import bundle_sha256, pretty_json_bytes, sha256_bytes
@@ -25,13 +26,28 @@ from experiments.execution.tooling.p_adaptation import (
     run_adaptation,
     verify_v3_p_bundle,
 )
-from experiments.execution.tooling.p_applicability import EvidenceLedger
+from experiments.execution.tooling.p_applicability import (
+    EvidenceLedger,
+    load_and_validate_ruleset,
+)
+from experiments.execution.tooling.p_input_validation import (
+    ValidationStatus,
+    load_fact_vocabulary,
+    load_verified_source_manifest,
+)
 from experiments.execution.tooling.p_policy_source_v3 import (
     export_method_inputs_v3,
     package_policy_source_v3,
     verify_method_bundle_v3,
 )
 from experiments.execution.tooling.p_semantic import assess_pair
+from experiments.pilots.pilot02_testonly_execution import (
+    Pilot02TestOnlyTrustContext,
+    build_adaptation_sidecar,
+    build_testonly_evidence_ledger,
+    create_testonly_policy_source,
+    testonly_completeness_verifier,
+)
 from scripts import exp02_fitness_evidence as exp02
 from scripts.exp01_evidence_contract import BUNDLE_FILENAME, _safe_relative_path, validate_bundle
 from scripts.exp03_method_bridge import _adaptation_trace
@@ -45,6 +61,7 @@ FROZEN_B0_EVALUATOR = "fitness/evaluators/a0/importlinter.toml"
 FROZEN_B0_EVALUATOR_SHA256 = "88ff64a4792c6048a6ab0686ddf9326ebbee49f76996933845a6142cc1a2ba27"
 IMPORT_LINTER_ENTRYPOINT = "import importlinter.cli as c; c.lint_imports_command()"
 GIT_EXECUTABLE = shutil.which("git")
+PILOT02_ASSUMPTIONS_PATH = ROOT / "experiments/pilots/PILOT_02_DEVELOPMENT_ASSUMPTIONS_V1.json"
 
 
 def _git(*arguments: str) -> str:
@@ -152,7 +169,246 @@ def _install_profile(bundle_dir: Path, profile: dict[str, Any]) -> dict[str, Any
     manifest["bundle_sha256"] = bundle_sha256(manifest["files"])
     manifest_path.write_bytes(pretty_json_bytes(manifest))
     verify_method_bundle_v3(bundle_dir, expected_method_id="P")
-    return manifest
+    return cast(dict[str, Any], manifest)
+
+
+def _install_testonly_cost_model(bundle_dir: Path, profile: dict[str, Any]) -> dict[str, Any]:
+    """Pin only the addendum's bounded TEST_ONLY planning cost assumptions."""
+    manifest_path = bundle_dir / "method_input_v3.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    capabilities_path = bundle_dir / "fitness/evaluator-capabilities.json"
+    capabilities = json.loads(capabilities_path.read_text(encoding="utf-8"))
+    target_ids = {
+        str(item["representation"]["evaluator_artifact"]["sha256"])
+        for mapping in profile["mappings"]
+        for item in [mapping["candidate_template"]]
+    }
+    assumptions = json.loads(PILOT02_ASSUMPTIONS_PATH.read_bytes())
+    cost = assumptions["candidate_cost_model"]
+    capabilities["p_cost_model_v1"] = {
+        "schema_version": 1,
+        "model_version": str(cost["model_id"]),
+        "authority_status": "TEST_ONLY",
+        "unit": str(cost["unit"]),
+        "max_incremental_cost": cost["maximum_incremental_cost"],
+        "max_search_nodes": cost["maximum_search_nodes"],
+        "candidate_costs": {
+            digest: cost["cost_per_profile_template"] for digest in sorted(target_ids)
+        },
+    }
+    capabilities_bytes = pretty_json_bytes(capabilities)
+    capabilities_path.write_bytes(capabilities_bytes)
+    record = next(
+        item for item in manifest["files"] if item["path"] == "fitness/evaluator-capabilities.json"
+    )
+    record["size_bytes"] = len(capabilities_bytes)
+    record["sha256"] = sha256_bytes(capabilities_bytes)
+    manifest["bundle_sha256"] = bundle_sha256(manifest["files"])
+    manifest_path.write_bytes(pretty_json_bytes(manifest))
+    verify_method_bundle_v3(bundle_dir, expected_method_id="P")
+    return cast(dict[str, Any], manifest)
+
+
+def _configured_import_targets(configuration_bytes: bytes) -> set[str]:
+    """Read the module targets actually named by one pinned Import Linter file."""
+    document = tomllib.loads(configuration_bytes.decode("utf-8"))
+    section = document.get("tool", {}).get("importlinter", {})
+    targets: set[str] = set()
+    contracts = section.get("contracts", []) if isinstance(section, dict) else []
+    for contract in contracts:
+        if not isinstance(contract, dict):
+            continue
+        for key in ("source_modules", "forbidden_modules"):
+            targets.update(item for item in contract.get(key, []) if isinstance(item, str))
+        layers = contract.get("layers", [])
+        for layer in layers:
+            if isinstance(layer, str):
+                targets.add(layer)
+            elif isinstance(layer, list):
+                targets.update(item for item in layer if isinstance(item, str))
+    return targets
+
+
+def _after_module_names(bundle_root: Path) -> set[str]:
+    """Derive module identities from the exact after-source files in the P bundle."""
+    source_root = bundle_root / "architecture/after"
+    modules: set[str] = set()
+    for path in source_root.rglob("*.py"):
+        relative = path.relative_to(source_root)
+        parts = list(relative.parts[:-1]) + [path.stem]
+        if parts[-1] == "__init__":
+            parts.pop()
+        modules.add("app" if not parts else "app." + ".".join(parts))
+    return modules
+
+
+def _b0_pair_evidence(
+    *,
+    bundle: Any,
+    output_dir: Path,
+    evaluation: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, bytes]]:
+    """Bind the actual B0 process and assess only its exact current pair scope."""
+    representation = next(
+        row for row in bundle.representations if row.get("id") == "REP_A0_ARCH_CI_LAYERING"
+    )
+    artifact = representation.get("evaluator_artifact")
+    artifact_path = artifact.get("path") if isinstance(artifact, dict) else None
+    config_bytes = bundle.artifact_bytes.get(str(artifact_path))
+    if config_bytes is None:
+        raise ValueError("Pinned B0 evaluator configuration bytes are unavailable")
+    configured = sorted(_configured_import_targets(config_bytes))
+    resolved_set = _after_module_names(bundle.root)
+    resolved = sorted(set(configured) & resolved_set)
+    missing = sorted(set(configured) - resolved_set)
+
+    artifact_bytes: dict[str, bytes] = {}
+    references: list[dict[str, str]] = []
+    for key in ("stdout", "stderr"):
+        reference = evaluation[key]
+        relative = str(reference["path"])
+        content = (output_dir / relative).read_bytes()
+        digest = sha256_bytes(content)
+        artifact_bytes[relative] = content
+        references.append({"path": relative, "sha256": digest})
+    stdout = artifact_bytes[str(evaluation["stdout"]["path"])]
+    stderr = artifact_bytes[str(evaluation["stderr"]["path"])]
+    process_completed = isinstance(evaluation.get("exit_status"), int)
+    output_text = (stdout + b"\n" + stderr).decode("utf-8", errors="replace").lower()
+    output_confirmed_missing = (
+        [target for target in missing if target.lower() in output_text]
+        if process_completed and evaluation.get("exit_status") != 0
+        else []
+    )
+    unresolved_missing = sorted(set(missing) - set(output_confirmed_missing))
+    evaluation["scope_diagnostics"] = {
+        "configured_targets": configured,
+        "source_resolved_targets": resolved,
+        "source_missing_targets": missing,
+        "output_confirmed_missing_targets": output_confirmed_missing,
+        "unresolved_missing_targets": unresolved_missing,
+        "interpretation": "TEST_ONLY evaluator-scope compatibility only",
+    }
+    evidence = {
+        "schema_version": 1,
+        "representation_id": str(representation["id"]),
+        "architecture_source_sha": str(bundle.snapshot["architecture"]["after_commit"]),
+        "evaluator_id": str(representation["evaluator"]),
+        "infrastructure_status": "completed" if process_completed else "infrastructure_failure",
+        "process_exit_code": evaluation.get("exit_status"),
+        "configured_targets": configured,
+        "resolved_targets": resolved,
+        "inspected_subjects": resolved,
+        "missing_targets": output_confirmed_missing,
+        "inspected_edge_count": None,
+        "stage_applicable": True,
+        "semantic_compatible": False if output_confirmed_missing else None,
+        "mapping_resolved": not bool(output_confirmed_missing),
+        "evidence_contract_satisfied": not bool(output_confirmed_missing),
+        "adequacy_proven": False,
+        "evidence_artifacts": references,
+        "stdout_sha256": sha256_bytes(stdout),
+        "stderr_sha256": sha256_bytes(stderr),
+    }
+    return evidence, artifact_bytes
+
+
+def _run_profile_candidate_evaluators(
+    output_dir: Path,
+    profile: dict[str, Any],
+    candidate: Any,
+) -> dict[str, Any]:
+    """Measure the actual A0.1 profile evaluators after P materializes its candidate."""
+    if not isinstance(candidate, dict):
+        return {"status": "not_measured", "reason": "P did not materialize a candidate"}
+    candidate_rows = candidate.get("representations", [])
+    candidate_ids = {str(row.get("id")) for row in candidate_rows if isinstance(row, dict)}
+    records: list[dict[str, Any]] = []
+    raw_dir = output_dir / "raw/p-candidate"
+    raw_dir.mkdir(parents=True, exist_ok=True)
+    for mapping in profile["mappings"]:
+        template = mapping["candidate_template"]["representation"]
+        representation_id = str(template["id"])
+        if representation_id not in candidate_ids:
+            continue
+        evaluator_id = str(template["evaluator"])
+        if evaluator_id == "EV_A01_IMPORT_LINTER":
+            config_path = str(mapping["configuration_artifact"]["path"])
+            command = [
+                sys.executable,
+                "-c",
+                IMPORT_LINTER_ENTRYPOINT,
+                "--config",
+                config_path,
+                "--no-cache",
+                "--no-logo",
+            ]
+        elif evaluator_id == "EV_A01_MODULE_STRUCTURE_PYTEST":
+            command = [
+                sys.executable,
+                "-m",
+                "pytest",
+                "-q",
+                "tests/architecture/test_module_structure.py",
+            ]
+        else:
+            records.append(
+                {
+                    "representation_id": representation_id,
+                    "status": "not_measured",
+                    "reason": "unsupported evaluator",
+                }
+            )
+            continue
+        started_ns = time.perf_counter_ns()
+        completed = subprocess.run(  # noqa: S603 - fixed project evaluator argv; no shell
+            command,
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            timeout=120,
+        )
+        duration_ns = time.perf_counter_ns() - started_ns
+        stem = re.sub(r"[^A-Za-z0-9_-]", "_", representation_id)
+        stdout_path = raw_dir / f"{stem}.stdout.txt"
+        stderr_path = raw_dir / f"{stem}.stderr.txt"
+        stdout_path.write_bytes(completed.stdout)
+        stderr_path.write_bytes(completed.stderr)
+        records.append(
+            {
+                "representation_id": representation_id,
+                "evaluator_id": evaluator_id,
+                "evaluator_version": (
+                    importlib.metadata.version("import-linter")
+                    if evaluator_id == "EV_A01_IMPORT_LINTER"
+                    else importlib.metadata.version("pytest")
+                ),
+                "argv": command,
+                "exit_status": completed.returncode,
+                "duration_ns": duration_ns,
+                "duration_seconds": duration_ns / 1_000_000_000,
+                "stdout": {
+                    "path": stdout_path.relative_to(output_dir).as_posix(),
+                    "sha256": sha256_bytes(completed.stdout),
+                },
+                "stderr": {
+                    "path": stderr_path.relative_to(output_dir).as_posix(),
+                    "sha256": sha256_bytes(completed.stderr),
+                },
+                "status": "execution_completed",
+                "process_verdict": "PASS" if completed.returncode == 0 else "FAIL",
+            }
+        )
+    durations = [
+        int(row["duration_ns"]) for row in records if isinstance(row.get("duration_ns"), int)
+    ]
+    return {
+        "status": "measured" if durations else "not_measured",
+        "execution_count": len(durations),
+        "total_duration_ns": sum(durations) if durations else None,
+        "representations": records,
+        "validation_scope": "TEST_ONLY evaluator observations; not independent pair semantic proof",
+    }
 
 
 def _copy_pair_evidence(
@@ -258,6 +514,7 @@ def _assess_profile_pairs(
         assessments.append(
             {
                 "assessment": assessment.to_dict(),
+                "evaluator_evidence": pair_evidence,
                 "source_representation_id": source_id,
                 "source_evaluator_record_id": record_id,
                 "source_lifecycle_stage": observation["lifecycle_stage"],
@@ -267,7 +524,9 @@ def _assess_profile_pairs(
                 "observed_execution_verdict": record["execution_verdict"],
                 "observed_exit_status": record["exit_status"],
                 "observed_metric": observation["metrics"],
-                "assessment_role": "post-run exact-pair diagnostic; not supplied to P adaptation",
+                "assessment_role": (
+                    "pair assessment is diagnostic only; no semantic proof is supplied"
+                ),
                 "semantic_adequacy": "pending_independent_assessment",
             }
         )
@@ -327,7 +586,12 @@ def _run_b0_evaluator(output_dir: Path) -> dict[str, Any]:
     }
 
 
-def run_pilot(exp02_run_dir: Path, output_dir: Path) -> dict[str, Any]:
+def run_pilot(
+    exp02_run_dir: Path,
+    output_dir: Path,
+    *,
+    test_only_continuation: bool = False,
+) -> dict[str, Any]:
     """Validate authentic EXP-02 evidence, execute P, and write a reproducible trace."""
     root = ROOT.resolve(strict=True)
     exp02_path = exp02_run_dir.resolve(strict=True)
@@ -352,15 +616,56 @@ def run_pilot(exp02_run_dir: Path, output_dir: Path) -> dict[str, Any]:
     destination.mkdir(parents=True)
     raw_dir = destination / "raw"
     raw_dir.mkdir()
+    b0_evaluation = _run_b0_evaluator(destination)
+    assumptions: dict[str, Any] | None = None
+    if test_only_continuation:
+        assumptions = json.loads(PILOT02_ASSUMPTIONS_PATH.read_bytes())
+        if assumptions.get("status") != "TEST_ONLY_NOT_AUTHORITY":
+            raise ValueError("PILOT-02 TEST_ONLY assumptions are not explicitly non-authoritative")
+        if assumptions.get("transition", {}).get("before_commit") != FROZEN_A0_SHA:
+            raise ValueError("PILOT-02 TEST_ONLY assumptions do not bind frozen A0")
+        shutil.copy2(PILOT02_ASSUMPTIONS_PATH, destination / "development_assumptions.json")
     with tempfile.TemporaryDirectory(prefix="pilot02-method-input-") as temporary:
         temporary_root = Path(temporary)
-        policy_bundle = temporary_root / "policy-source-v3"
         p_input_dir = temporary_root / "method-input-p"
         registry = json.loads(
             (POLICY_SOURCE / "fitness/policy/registry.json").read_text(encoding="utf-8")
         )
-        policy_revision = f"PILOT02_DRAFT_OPEN_{source_revision[:12]}"
-        policy_manifest = package_policy_source_v3(POLICY_SOURCE, policy_bundle, policy_revision)
+        trust_context: Pilot02TestOnlyTrustContext | None = None
+        if test_only_continuation:
+            profile_bytes = _source_blob(source_revision, PILOT02_PROFILE_DEFINITION_PATH)
+            profile = json.loads(profile_bytes)
+            ruleset = load_and_validate_ruleset(
+                POLICY_SOURCE / "policy/applicability_ruleset_v1.json",
+                load_fact_vocabulary(),
+                ROOT / "fitness/catalog/architectural-obligations.yaml",
+            )
+            if assumptions is None:
+                raise RuntimeError("PILOT-02 assumptions were not loaded")
+            policy_source, trust_context = create_testonly_policy_source(
+                POLICY_SOURCE,
+                temporary_root,
+                evaluation_as_of=str(registry["as_of"]),
+                before_sha=FROZEN_A0_SHA,
+                after_sha=source_revision,
+                obligation_catalog_sha256=str(profile["obligation_catalog_sha256"]),
+                target_obligation_ids=list(assumptions["transition"]["target_obligation_ids"]),
+            )
+            obligation_ids = {item.obligation_id for item in ruleset.obligations}
+            if not set(assumptions["transition"]["target_obligation_ids"]).issubset(obligation_ids):
+                raise ValueError("PILOT-02 assumption names an obligation outside the catalog")
+            policy_revision = f"PILOT02_TEST_ONLY_{source_revision[:12]}"
+            policy_bundle = temporary_root / "policy-source-v3"
+            policy_manifest = package_policy_source_v3(
+                policy_source, policy_bundle, policy_revision
+            )
+        else:
+            policy_source = POLICY_SOURCE
+            policy_revision = f"PILOT02_DRAFT_OPEN_{source_revision[:12]}"
+            policy_bundle = temporary_root / "policy-source-v3"
+            policy_manifest = package_policy_source_v3(
+                policy_source, policy_bundle, policy_revision
+            )
         v3_manifest = export_method_inputs_v3(
             root,
             policy_bundle,
@@ -379,16 +684,34 @@ def run_pilot(exp02_run_dir: Path, output_dir: Path) -> dict[str, Any]:
         profile["a0_1_app_tree_sha"] = v3_manifest["after_tree_sha"]
         _embedded_artifacts(profile, source_revision)
         _install_profile(p_input_dir, profile)
-        p_bundle = verify_v3_p_bundle(
-            p_input_dir,
-            evidence_ledger=EvidenceLedger({}, {}, {}),
-        )
+        if test_only_continuation:
+            _install_testonly_cost_model(p_input_dir, profile)
+            method_manifest = verify_method_bundle_v3(p_input_dir, expected_method_id="P")
+            snapshot = json.loads((p_input_dir / "architecture-policy-snapshot.json").read_bytes())
+            sources, source_report = load_verified_source_manifest(
+                snapshot, method_manifest, p_input_dir
+            )
+            if trust_context is None:
+                raise RuntimeError("TEST_ONLY trust context was not created")
+            evidence_ledger = build_testonly_evidence_ledger(
+                snapshot,
+                sources,
+                source_integrity_valid=source_report.status is ValidationStatus.VALID,
+                trust_context=trust_context,
+            )
+            p_bundle = verify_v3_p_bundle(
+                p_input_dir,
+                evidence_ledger=evidence_ledger,
+                trust_context=trust_context,
+                completeness_verifier=testonly_completeness_verifier,
+            )
+        else:
+            p_bundle = verify_v3_p_bundle(
+                p_input_dir,
+                evidence_ledger=EvidenceLedger({}, {}, {}),
+            )
 
-        started_ns = time.perf_counter_ns()
-        result = run_adaptation(p_bundle)
-        adaptation_duration_ns = time.perf_counter_ns() - started_ns
-        trace = _adaptation_trace(p_bundle, result)
-        trace["pilot02_profile_pair_assessments"] = _assess_profile_pairs(
+        pair_assessments = _assess_profile_pairs(
             profile=profile,
             exp02_run_dir=exp02_path,
             exp02_bundle=exp02_bundle,
@@ -396,42 +719,112 @@ def run_pilot(exp02_run_dir: Path, output_dir: Path) -> dict[str, Any]:
             p_bundle=p_bundle,
             output_dir=destination,
         )
-        trace["pilot02_profile_pair_assessments_not_used_for_adaptation"] = True
+        adaptation_sidecar: dict[str, Any] | None = None
+        execution_evidence_rows: list[dict[str, Any]] = []
+        if test_only_continuation:
+            if assumptions is None or trust_context is None:
+                raise RuntimeError("TEST_ONLY continuation inputs were not initialized")
+            extra_artifacts: dict[str, bytes] = {}
+            for item in pair_assessments:
+                evidence = item["evaluator_evidence"]
+                execution_evidence_rows.append(
+                    {
+                        "representation_id": item["source_representation_id"],
+                        "obligation_id": item["assessment"]["obligation_id"],
+                        "evidence": evidence,
+                    }
+                )
+                for reference in evidence["evidence_artifacts"]:
+                    path = str(reference["path"])
+                    extra_artifacts[path] = (destination / path).read_bytes()
+            b0_representation = next(
+                row
+                for row in p_bundle.representations
+                if row.get("id") == "REP_A0_ARCH_CI_LAYERING"
+            )
+            b0_evidence, b0_artifacts = _b0_pair_evidence(
+                bundle=p_bundle,
+                output_dir=destination,
+                evaluation=b0_evaluation,
+            )
+            extra_artifacts.update(b0_artifacts)
+            adaptation_sidecar = build_adaptation_sidecar(
+                p_bundle,
+                assumptions=assumptions,
+                evaluator_evidence=execution_evidence_rows,
+                b0_representation=b0_representation,
+                b0_evaluator_evidence=b0_evidence,
+                extra_artifacts=extra_artifacts,
+            )
+            (destination / "adaptation_evidence_test_only.json").write_bytes(
+                pretty_json_bytes(adaptation_sidecar)
+            )
+
+        started_ns = time.perf_counter_ns()
+        result = run_adaptation(p_bundle, evidence_context=adaptation_sidecar)
+        adaptation_duration_ns = time.perf_counter_ns() - started_ns
+        trace = _adaptation_trace(p_bundle, result)
+        trace["pilot02_profile_pair_assessments"] = pair_assessments
+        trace["pilot02_profile_pair_assessments_role"] = (
+            "TEST_ONLY evaluator execution records were admitted; pair diagnostics supplied "
+            "no positive semantic proof"
+            if test_only_continuation
+            else "diagnostic only; not used for adaptation"
+        )
+        trace["pilot02_test_only_continuation"] = test_only_continuation
+        trace["pilot02_test_only_assumptions_sha256"] = (
+            sha256_bytes(PILOT02_ASSUMPTIONS_PATH.read_bytes()) if test_only_continuation else None
+        )
+        trace["exp02_evidence_admitted_to_p_calculations"] = test_only_continuation
+        trace["exp02_observations_used_as_semantic_pair_evidence"] = False
+        trace["adaptation_evidence_sidecar_supplied"] = adaptation_sidecar is not None
+        trace["adaptation_evidence_trust_scope"] = result.evidence_trust_scope
         trace["method_p_computation_duration_ns"] = adaptation_duration_ns
         trace["method_p_computation_duration_seconds"] = adaptation_duration_ns / 1_000_000_000
         (destination / "method_p_trace.json").write_bytes(pretty_json_bytes(trace))
         shutil.copytree(p_input_dir, destination / "verified_method_input")
 
-    b0_evaluation = _run_b0_evaluator(destination)
     candidate = result.candidate
     candidate_status = (
-        candidate.get("candidate_validation", {}).get("status")
+        candidate.get("candidate_validation", {}).get("status", "materialized_unvalidated")
         if isinstance(candidate, dict)
         else "not_materialized"
     )
-    p_evaluation = {
-        "status": "not_measured",
-        "reason": (
-            "The existing Method P result did not provide a valid, publishable candidate "
-            "with an independently authorized evaluator configuration."
-        ),
-        "candidate_validation_status": candidate_status,
-    }
+    p_evaluation = (
+        _run_profile_candidate_evaluators(destination, profile, candidate)
+        if test_only_continuation
+        else {
+            "status": "not_measured",
+            "reason": (
+                "The existing Method P result did not provide a valid, publishable candidate "
+                "with an independently authorized evaluator configuration."
+            ),
+            "candidate_validation_status": candidate_status,
+        }
+    )
+    p_evaluation["candidate_validation_status"] = candidate_status
     if isinstance(candidate, dict):
         (destination / "candidate_configuration.json").write_bytes(pretty_json_bytes(candidate))
 
     artifacts = []
-    for path in sorted(destination.rglob("*")):
-        if path.is_file() and path.name not in {"run_manifest.json", "run_manifest.sha256"}:
-            relative = path.relative_to(destination).as_posix()
-            content = path.read_bytes()
+    for artifact_path in sorted(destination.rglob("*")):
+        if artifact_path.is_file() and artifact_path.name not in {
+            "run_manifest.json",
+            "run_manifest.sha256",
+        }:
+            relative = artifact_path.relative_to(destination).as_posix()
+            content = artifact_path.read_bytes()
             artifacts.append(
                 {"path": relative, "size_bytes": len(content), "sha256": sha256_bytes(content)}
             )
     manifest = {
         "schema_version": 1,
         "pilot_id": "PILOT-02",
-        "execution_status": "completed_development_only",
+        "execution_status": (
+            "completed_test_only_development_continuation"
+            if test_only_continuation
+            else "completed_development_only"
+        ),
         "generated_at_utc": datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z"),
         "architecture": {
             "before_sha": FROZEN_A0_SHA,
@@ -455,6 +848,12 @@ def run_pilot(exp02_run_dir: Path, output_dir: Path) -> dict[str, Any]:
                 {str(row.get("normative_status")) for row in registry["policies"]}
             ),
             "profile_definition_sha256": PILOT02_PROFILE_DEFINITION_SHA256,
+            "trust_scope": result.evidence_trust_scope or "none",
+            "test_only_assumptions_sha256": (
+                sha256_bytes(PILOT02_ASSUMPTIONS_PATH.read_bytes())
+                if test_only_continuation
+                else None
+            ),
         },
         "exp02": {
             "run_id": exp02_bundle["run_id"],
@@ -479,6 +878,14 @@ def run_pilot(exp02_run_dir: Path, output_dir: Path) -> dict[str, Any]:
             "candidate_status": candidate_status,
             "candidate_sha256": result.candidate_sha256,
             "candidate_evaluation": p_evaluation,
+            "current_coverage": result.current_coverage.to_dict(),
+            "candidate_coverage": (
+                result.candidate_coverage.to_dict()
+                if result.candidate_coverage is not None
+                else None
+            ),
+            "candidate_pairs": [item.to_dict() for item in result.candidate_pairs],
+            "test_only_continuation": test_only_continuation,
             "trace_path": "method_p_trace.json",
         },
         "b0": {
@@ -504,9 +911,18 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--exp02-run-dir", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
+    parser.add_argument(
+        "--test-only-continuation",
+        action="store_true",
+        help="Use the prospective PILOT-02 TEST_ONLY development assumptions.",
+    )
     args = parser.parse_args(argv)
     try:
-        manifest = run_pilot(args.exp02_run_dir, args.output_dir)
+        manifest = run_pilot(
+            args.exp02_run_dir,
+            args.output_dir,
+            test_only_continuation=args.test_only_continuation,
+        )
     except (OSError, ValueError, KeyError, ProtocolError) as error:
         print(json.dumps({"status": "rejected", "reason": str(error)}, sort_keys=True))
         return 1

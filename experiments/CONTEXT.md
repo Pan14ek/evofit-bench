@@ -34,10 +34,12 @@ commands and output interpretation.
 ## PILOT-02
 
 PILOT-02 exercises one versioned A0.1-to-P candidate profile for
-`AC_LAYERING` and `AC_MODULE_STRUCTURE`. Its exact-pair diagnostics are created
-after P execution from digest-validated EXP-02 outputs; they are not injected
-as P semantic proof. Report the restricted denominator as pending until
-independently approved, and never label it DA01 `Coverage_ref`.
+`AC_LAYERING` and `AC_MODULE_STRUCTURE`. Its original HOLD run is preserved.
+The prospective development continuation may pass authentic evaluator
+observations and explicitly TEST_ONLY assumptions through existing Method P
+contracts to observe operations and candidate materialization. Those inputs
+are not independent semantic proof or production authority. Keep independent
+coverage pending and never label it DA01 `Coverage_ref`.
 
 ## Verification and further reading
 

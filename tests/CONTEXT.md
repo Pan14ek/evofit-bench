@@ -20,6 +20,7 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 - `integration/test_exp04_evidence_admission.py`
 - `unit/test_pilot01_results.py`
 - `unit/test_pilot02_method_input_profile.py`
+- `unit/test_pilot02_testonly_execution.py`
 
 ## Established conventions
 

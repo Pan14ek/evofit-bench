@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "assumption_set_id": "PILOT_02_TEST_ONLY_DEVELOPMENT_ASSUMPTIONS_V1",
+  "status": "TEST_ONLY_NOT_AUTHORITY",
+  "transition": {
+    "before_commit": "b78b0967be937634b7762baccf5ac6892b279a73",
+    "after_source_basis": "3fdd5c68f8f60fad5757eefa66cc2aa8b24d9306",
+    "target_obligation_ids": ["AC_LAYERING", "AC_MODULE_STRUCTURE"]
+  },
+  "applicability_assumptions": {
+    "scope": "application",
+    "before": "INACTIVE",
+    "after": "ACTIVE",
+    "basis": "The two obligations are the explicitly bounded architecture-compliance scope in the manually established A0.1 DEVELOPMENT configuration.",
+    "authority_status": "researcher_declared_development_assumption"
+  },
+  "mandatory_assumptions": {
+    "mandatory_obligation_ids": ["AC_LAYERING", "AC_MODULE_STRUCTURE"],
+    "all_other_catalog_obligations": "not_mandatory_for_this_bounded_TEST_ONLY_demonstration"
+  },
+  "required_stages": {
+    "AC_LAYERING": ["ci"],
+    "AC_MODULE_STRUCTURE": ["ci"]
+  },
+  "pair_evidence_rules": {
+    "b0_scope_mismatch": "If the pinned B0 evaluator execution reports a configured module target that is absent from the pinned A0.1 source inventory, classify only that B0 representation-obligation pair as TEST_ONLY INVALID for scope incompatibility. Preserve the actual process exit code and do not interpret it as an A0.1 architecture violation.",
+    "candidate_semantics": "Admit only digest-validated actual evaluator execution records. Do not create positive exact-pair semantic proofs. Candidate pair validity remains UNKNOWN until independently established."
+  },
+  "candidate_cost_model": {
+    "model_id": "PILOT_02_TEST_ONLY_UNIT_COST_V1",
+    "unit": "declared development unit; not currency or measured runtime",
+    "cost_per_profile_template": 1,
+    "maximum_incremental_cost": 2,
+    "maximum_search_nodes": 16
+  },
+  "measurement_rules": {
+    "method_p_computation": "time.perf_counter_ns immediately around run_adaptation only",
+    "evaluator_execution": "record each actual subprocess duration, exit status, stdout and stderr digests separately for B0 and A0.1 profile evaluators",
+    "primary_coverage": "not established unless independent applicability, denominator and exact-pair semantic evidence are supplied",
+    "controlled_violation": "reuse existing PILOT-01 S1 only as a secondary evaluator control; it is not a new architecture transition or independent sample"
+  },
+  "input_separation": {
+    "expected_operations_in_method_input": false,
+    "oracle_or_scorer_input": false,
+    "production_authority": false,
+    "da01_authorization": false
+  }
+}
