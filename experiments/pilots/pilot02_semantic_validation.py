@@ -360,7 +360,7 @@ def _module_file_inventory(source_root: Path) -> dict[str, Any]:
         "manifest_sha256": _sha(state_path),
         "evaluator_source_file": test_path.relative_to(source_root).as_posix(),
         "evaluator_source_sha256": _sha(test_path),
-        "test_literals": test_constants,
+        "test_literals": json.loads(json.dumps(test_constants)),
         "manifest_properties": manifest_properties,
         "package_inventory": {
             "expected": expected_package_names,
