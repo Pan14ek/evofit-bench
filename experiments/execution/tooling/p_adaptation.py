@@ -14,6 +14,7 @@ from weakref import WeakKeyDictionary
 
 import yaml
 
+from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError, ProtocolError
 from experiments.execution.tooling.hashing import (
     bundle_sha256,
@@ -84,6 +85,26 @@ from experiments.execution.tooling.p_semantic import (
 )
 
 METHOD_VERSION = "P_GOVERNED_ADAPTATION_DEVELOPMENT_V1"
+PILOT02_PROFILE_DEFINITION_PATH = "experiments/pilots/PILOT_02_A0_1_METHOD_INPUT_PROFILE_V1.json"
+PILOT02_PROFILE_DEFINITION_SHA256 = (
+    "b9f9ceb7f5947b4de36544dcaccaafeafe5e0c22bf2742d96af3f56226858712"
+)
+PILOT02_PROFILE_V2_DEFINITION_PATH = "experiments/pilots/PILOT_02_A0_1_METHOD_INPUT_PROFILE_V2.json"
+PILOT02_PROFILE_V2_DEFINITION_SHA256 = (
+    "c480b1907d9f69cb7c5d1c4f45cb221551aeb857881ba859529e8c1f1fd5e8c9"
+)
+PILOT02_PROFILE_PINS = {
+    1: (
+        PILOT02_PROFILE_DEFINITION_PATH,
+        PILOT02_PROFILE_DEFINITION_SHA256,
+        "pilot02_method_input_profile_v1.schema.json",
+    ),
+    2: (
+        PILOT02_PROFILE_V2_DEFINITION_PATH,
+        PILOT02_PROFILE_V2_DEFINITION_SHA256,
+        "pilot02_method_input_profile_v2.schema.json",
+    ),
+}
 
 
 @dataclass(frozen=True, eq=False)
@@ -235,6 +256,7 @@ def verify_v3_p_bundle(
         if isinstance(template_value, list)
         else ()
     )
+    pilot_profile = capabilities.get("pilot02_method_input_profile")
     cost_model = capabilities.get("p_cost_model_v1")
     if not isinstance(cost_model, Mapping):
         cost_model = None
@@ -245,6 +267,19 @@ def verify_v3_p_bundle(
         for path, row in file_records.items()
         if row.get("role") in {"evaluator_artifact", "evaluator_evidence", "evidence_artifact"}
     }
+    if pilot_profile is not None:
+        profile_artifacts = _validate_pilot02_method_input_profile(
+            pilot_profile,
+            capabilities=capabilities,
+            manifest=manifest,
+            snapshot=snapshot,
+            obligations=obligations,
+            parent_representations=representations,
+            parent_configuration_sha256=sha256_bytes(representation_bytes),
+        )
+        if set(artifact_bytes) & set(profile_artifacts):
+            raise ProtocolError("P03_PILOT02_ARTIFACT_PATH_CONFLICT")
+        artifact_bytes.update(profile_artifacts)
     trust_scope_value = getattr(trust_context, "trust_scope", "PRODUCTION")
     if not isinstance(trust_scope_value, str):
         raise ProtocolError("P03_TRUST_SCOPE_INVALID")
@@ -277,6 +312,329 @@ def verify_v3_p_bundle(
     if isinstance(registry, AdaptationEvidenceVerifierRegistry):
         _BUNDLE_EVIDENCE_VERIFIER_REGISTRIES[bundle] = registry
     return bundle
+
+
+def _validate_pilot02_method_input_profile(
+    value: Any,
+    *,
+    capabilities: Mapping[str, Any],
+    manifest: Mapping[str, Any],
+    snapshot: Mapping[str, Any],
+    obligations: Sequence[Mapping[str, Any]],
+    parent_representations: Sequence[Mapping[str, Any]] | None = None,
+    parent_configuration_sha256: str | None = None,
+) -> dict[str, bytes]:
+    """Validate the separately versioned A0.1 pilot profile inside P capabilities."""
+    if not isinstance(value, dict):
+        raise ProtocolError("P03_PILOT02_PROFILE_INVALID")
+    version = value.get("schema_version")
+    profile_pin = PILOT02_PROFILE_PINS.get(version) if isinstance(version, int) else None
+    if profile_pin is None:
+        raise ProtocolError("P03_PILOT02_PROFILE_VERSION_INVALID")
+    definition_path, definition_sha256, schema_path = profile_pin
+    validate_payload(schema_path, value)
+    architecture = snapshot.get("architecture")
+    if not isinstance(architecture, Mapping) or (
+        value.get("architecture_before_sha") != architecture.get("before_commit")
+        or value.get("architecture_source_sha") != architecture.get("after_commit")
+        or value.get("architecture_source_sha") != manifest.get("architecture_source_sha")
+        or value.get("a0_1_app_tree_sha") != manifest.get("after_tree_sha")
+    ):
+        raise ProtocolError("P03_PILOT02_ARCHITECTURE_BINDING_MISMATCH")
+
+    mappings = value.get("mappings")
+    if not isinstance(mappings, list):
+        raise ProtocolError("P03_PILOT02_MAPPINGS_INVALID")
+    source_ids: set[str] = set()
+    obligation_ids: set[str] = set()
+    expected_templates: list[Mapping[str, Any]] = []
+    referenced_artifacts: dict[str, str] = {}
+    for mapping in mappings:
+        if not isinstance(mapping, Mapping):
+            raise ProtocolError("P03_PILOT02_MAPPING_INVALID")
+        source_id = str(mapping.get("source_representation_id", ""))
+        obligation_id = str(mapping.get("obligation_id", ""))
+        template = mapping.get("candidate_template")
+        metric = mapping.get("metric")
+        configuration_artifact = mapping.get("configuration_artifact")
+        evaluator_artifacts = mapping.get("evaluator_source_artifacts")
+        if (
+            not source_id
+            or source_id in source_ids
+            or obligation_id in obligation_ids
+            or not isinstance(template, Mapping)
+            or not isinstance(template.get("representation"), Mapping)
+            or not isinstance(metric, Mapping)
+            or not isinstance(configuration_artifact, Mapping)
+            or not isinstance(evaluator_artifacts, list)
+        ):
+            raise ProtocolError("P03_PILOT02_MAPPING_IDENTITY_INVALID")
+        source_ids.add(source_id)
+        obligation_ids.add(obligation_id)
+        representation = template["representation"]
+        evidence_contract = representation.get("evidence_contract")
+        scope = representation.get("applicability_scope")
+        artifact = representation.get("evaluator_artifact")
+        if (
+            representation.get("id") != source_id
+            or representation.get("criterion") != value.get("criterion_id")
+            or representation.get("stage") != value["stage_translation"].get("method_stage")
+            or representation.get("evaluator") != mapping.get("source_evaluator_id")
+            or representation.get("covers") != [obligation_id]
+            or not isinstance(scope, Mapping)
+            or scope.get("scope_id") != mapping.get("source_scope_id")
+            or not isinstance(evidence_contract, Mapping)
+            or evidence_contract.get("metric") != metric
+            or evidence_contract.get("configuration_artifact_sha256")
+            != configuration_artifact.get("sha256")
+            or not isinstance(artifact, Mapping)
+        ):
+            raise ProtocolError("P03_PILOT02_CANONICAL_BINDING_MISMATCH")
+        expected_templates.append(template)
+        for record in [configuration_artifact, *evaluator_artifacts, artifact]:
+            if not isinstance(record, Mapping):
+                raise ProtocolError("P03_PILOT02_ARTIFACT_REFERENCE_INVALID")
+            path, digest = record.get("path"), record.get("sha256")
+            if not isinstance(path, str) or not _is_sha256(str(digest)):
+                raise ProtocolError("P03_PILOT02_ARTIFACT_REFERENCE_INVALID")
+            previous = referenced_artifacts.get(path)
+            if previous is not None and previous != digest:
+                raise ProtocolError("P03_PILOT02_ARTIFACT_REFERENCE_CONFLICT")
+            referenced_artifacts[path] = str(digest)
+
+    if obligation_ids != {"AC_LAYERING", "AC_MODULE_STRUCTURE"}:
+        raise ProtocolError("P03_PILOT02_OBLIGATION_SCOPE_MISMATCH")
+    if value.get("fitness_configuration_sha256") != value["fitness_configuration_artifact"].get(
+        "sha256"
+    ) or value.get("obligation_catalog_sha256") != value["obligation_catalog_artifact"].get(
+        "sha256"
+    ):
+        raise ProtocolError("P03_PILOT02_PROFILE_ARTIFACT_BINDING_MISMATCH")
+    if capabilities.get("generic_candidate_templates") != expected_templates:
+        raise ProtocolError("P03_PILOT02_TEMPLATE_BINDING_MISMATCH")
+    for record in (
+        value["profile_definition_artifact"],
+        value["fitness_configuration_artifact"],
+        value["obligation_catalog_artifact"],
+    ):
+        path, digest = record["path"], record["sha256"]
+        previous = referenced_artifacts.get(path)
+        if previous is not None and previous != digest:
+            raise ProtocolError("P03_PILOT02_ARTIFACT_REFERENCE_CONFLICT")
+        referenced_artifacts[path] = digest
+
+    if version == 2:
+        parent_artifact = value.get("parent_representation_catalog_artifact")
+        parent_digest = value.get("parent_representation_catalog_sha256")
+        parent_bindings = value.get("parent_evaluator_bindings")
+        if (
+            not isinstance(parent_artifact, Mapping)
+            or parent_artifact.get("sha256") != parent_digest
+            or parent_digest != parent_configuration_sha256
+            or parent_representations is None
+            or not isinstance(parent_bindings, list)
+            or not parent_bindings
+        ):
+            raise ProtocolError("P03_PILOT02_PARENT_BINDING_BASELINE_MISMATCH")
+        parent_catalog_path = parent_artifact.get("path")
+        if not isinstance(parent_catalog_path, str):
+            raise ProtocolError("P03_PILOT02_PARENT_BINDING_ARTIFACT_INVALID")
+        previous = referenced_artifacts.get(parent_catalog_path)
+        if previous is not None and previous != parent_digest:
+            raise ProtocolError("P03_PILOT02_ARTIFACT_REFERENCE_CONFLICT")
+        referenced_artifacts[parent_catalog_path] = str(parent_digest)
+        parent_by_id = {str(row.get("id")): row for row in parent_representations}
+        binding_ids: set[str] = set()
+        for binding in parent_bindings:
+            if not isinstance(binding, Mapping):
+                raise ProtocolError("P03_PILOT02_PARENT_BINDING_INVALID")
+            representation_id = binding.get("representation_id")
+            artifact = binding.get("evaluator_artifact")
+            source_artifacts = binding.get("evaluator_source_artifacts")
+            parent_row = parent_by_id.get(str(representation_id))
+            if (
+                not isinstance(representation_id, str)
+                or representation_id in binding_ids
+                or parent_row is None
+                or parent_row.get("evaluator_artifact") is not None
+                or not isinstance(artifact, Mapping)
+                or not isinstance(source_artifacts, list)
+                or binding.get("binding_status") != "A0_1_DEVELOPMENT_ADAPTER"
+            ):
+                raise ProtocolError("P03_PILOT02_PARENT_BINDING_IDENTITY_MISMATCH")
+            binding_ids.add(representation_id)
+            if not source_artifacts:
+                raise ProtocolError("P03_PILOT02_PARENT_BINDING_SOURCE_MISSING")
+            for record in [artifact, *source_artifacts]:
+                if not isinstance(record, Mapping):
+                    raise ProtocolError("P03_PILOT02_ARTIFACT_REFERENCE_INVALID")
+                path, digest = record.get("path"), record.get("sha256")
+                if not isinstance(path, str) or not _is_sha256(str(digest)):
+                    raise ProtocolError("P03_PILOT02_ARTIFACT_REFERENCE_INVALID")
+                previous = referenced_artifacts.get(path)
+                if previous is not None and previous != digest:
+                    raise ProtocolError("P03_PILOT02_ARTIFACT_REFERENCE_CONFLICT")
+                referenced_artifacts[path] = str(digest)
+
+    embedded = value.get("embedded_evaluator_artifacts", [])
+    if not isinstance(embedded, list):
+        raise ProtocolError("P03_PILOT02_EMBEDDED_ARTIFACTS_INVALID")
+    result: dict[str, bytes] = {}
+    declared: dict[str, str] = {}
+    for row in embedded:
+        if not isinstance(row, Mapping):
+            raise ProtocolError("P03_PILOT02_EMBEDDED_ARTIFACT_INVALID")
+        path, digest, encoded = row.get("path"), row.get("sha256"), row.get("content_base64")
+        if (
+            not isinstance(path, str)
+            or not isinstance(digest, str)
+            or not isinstance(encoded, str)
+            or path in declared
+        ):
+            raise ProtocolError("P03_PILOT02_EMBEDDED_ARTIFACT_INVALID")
+        try:
+            content = base64.b64decode(encoded, validate=True)
+        except ValueError as error:
+            raise ProtocolError("P03_PILOT02_EMBEDDED_ARTIFACT_ENCODING_INVALID") from error
+        if len(content) != row.get("size_bytes") or sha256_bytes(content) != digest:
+            raise ProtocolError("P03_PILOT02_EMBEDDED_ARTIFACT_DIGEST_MISMATCH")
+        if referenced_artifacts.get(path) != digest:
+            raise ProtocolError("P03_PILOT02_EMBEDDED_ARTIFACT_UNREFERENCED")
+        declared[path] = digest
+        result[path] = content
+    if declared != referenced_artifacts:
+        raise ProtocolError("P03_PILOT02_EMBEDDED_ARTIFACT_INVENTORY_MISMATCH")
+    definition_ref = value["profile_definition_artifact"]
+    if (
+        definition_ref.get("path") != definition_path
+        or definition_ref.get("sha256") != definition_sha256
+    ):
+        raise ProtocolError("P03_PILOT02_PROFILE_DEFINITION_PIN_MISMATCH")
+    try:
+        definition = json.loads(result[definition_path])
+        configuration = yaml.safe_load(result[value["fitness_configuration_artifact"]["path"]])
+        catalog = yaml.safe_load(result[value["obligation_catalog_artifact"]["path"]])
+    except (KeyError, json.JSONDecodeError, UnicodeDecodeError, yaml.YAMLError, TypeError) as error:
+        raise ProtocolError("P03_PILOT02_SOURCE_CONFIGURATION_INVALID") from error
+    if (
+        not isinstance(definition, Mapping)
+        or sha256_bytes(result[definition_path]) != definition_sha256
+        or not isinstance(configuration, Mapping)
+        or not isinstance(catalog, Mapping)
+    ):
+        raise ProtocolError("P03_PILOT02_SOURCE_CONFIGURATION_INVALID")
+    immutable_definition_keys = (
+        "schema_version",
+        "profile_id",
+        "profile_status",
+        "architecture_before_sha",
+        "a0_1_source_basis_sha",
+        "a0_1_app_tree_sha",
+        "fitness_configuration_sha256",
+        "fitness_configuration_artifact",
+        "obligation_catalog_sha256",
+        "obligation_catalog_artifact",
+        "criterion_id",
+        "criterion_intent",
+        "stage_translation",
+        "mappings",
+    )
+    if version == 2:
+        immutable_definition_keys += (
+            "parent_representation_catalog_sha256",
+            "parent_representation_catalog_artifact",
+            "parent_evaluator_bindings",
+        )
+    if any(value.get(key) != definition.get(key) for key in immutable_definition_keys):
+        raise ProtocolError("P03_PILOT02_PROFILE_DEFINITION_MISMATCH")
+    source_criteria = {
+        str(row.get("id")): row
+        for row in configuration.get("criteria", [])
+        if isinstance(row, Mapping)
+    }
+    source_representations = {
+        str(row.get("id")): row
+        for row in configuration.get("representations", [])
+        if isinstance(row, Mapping)
+    }
+    source_obligations = {
+        str(row.get("id")): row
+        for row in catalog.get("obligations", [])
+        if isinstance(row, Mapping)
+    }
+    p_obligations = {str(row.get("id")): row for row in obligations}
+    for mapping in mappings:
+        source_id = str(mapping["source_representation_id"])
+        obligation_id = str(mapping["obligation_id"])
+        source = source_representations.get(source_id)
+        obligation = source_obligations.get(obligation_id)
+        template = mapping["candidate_template"]["representation"]
+        criterion = source_criteria.get(str(template.get("criterion", "")))
+        if (
+            not isinstance(source, Mapping)
+            or not isinstance(obligation, Mapping)
+            or not isinstance(criterion, Mapping)
+        ):
+            raise ProtocolError("P03_PILOT02_SOURCE_MAPPING_MISSING")
+        evaluator = source.get("evaluator")
+        applicability = source.get("applicability")
+        metric_rows = evaluator.get("metrics") if isinstance(evaluator, Mapping) else None
+        expected_metric = next(
+            (
+                row
+                for row in metric_rows or []
+                if isinstance(row, Mapping) and row.get("name") == mapping["metric"].get("name")
+            ),
+            None,
+        )
+        scope = template["applicability_scope"]
+        evidence_contract = template["evidence_contract"]
+        artifact = template["evaluator_artifact"]
+        source_paths = (
+            [str(path) for path in evaluator.get("source_artifacts", [])]
+            if isinstance(evaluator, Mapping)
+            and isinstance(evaluator.get("source_artifacts"), list)
+            else []
+        )
+        if any(path not in result for path in source_paths):
+            raise ProtocolError("P03_PILOT02_SOURCE_ARTIFACT_MISSING")
+        expected_sources = [
+            {"path": path, "sha256": sha256_bytes(result[path])} for path in source_paths
+        ]
+        if (
+            source.get("criterion_id") != value.get("criterion_id")
+            or source.get("stage") != mapping.get("source_stage")
+            or criterion.get("intent") != value.get("criterion_intent")
+            or obligation.get("criterion") != value.get("criterion_id")
+            or p_obligations.get(obligation_id, {}).get("criterion") != obligation.get("criterion")
+            or p_obligations.get(obligation_id, {}).get("intent") != obligation.get("intent")
+            or obligation_id not in source.get("declared_obligations", [])
+            or not isinstance(evaluator, Mapping)
+            or evaluator.get("id") != mapping.get("source_evaluator_id")
+            or evaluator.get("name") != mapping.get("source_evaluator_name")
+            or evaluator.get("record_id") != evidence_contract.get("record_id")
+            or evaluator.get("scope_id") != mapping.get("source_scope_id")
+            or not isinstance(applicability, Mapping)
+            or mapping.get("architecture_scope") not in applicability.get("scopes", [])
+            or evaluator.get("configuration_artifact_source")
+            != mapping["configuration_artifact"].get("path")
+            or expected_metric is None
+            or expected_metric.get("unit") != mapping["metric"].get("unit")
+            or expected_metric.get("evidence_path") != mapping["metric"].get("evidence_path")
+            or evidence_contract.get("source_stage") != source.get("stage")
+            or evidence_contract.get("scope_id") != evaluator.get("scope_id")
+            or evidence_contract.get("metric") != mapping.get("metric")
+            or evidence_contract.get("configuration_artifact_sha256")
+            != mapping["configuration_artifact"].get("sha256")
+            or artifact.get("path")
+            not in [row.get("path") for row in mapping["evaluator_source_artifacts"]]
+            or sorted(mapping["evaluator_source_artifacts"], key=lambda row: row["path"])
+            != sorted(expected_sources, key=lambda row: row["path"])
+            or scope.get("architecture_state") != configuration.get("architecture_state")
+            or scope.get("architecture_scope") != mapping.get("architecture_scope")
+        ):
+            raise ProtocolError("P03_PILOT02_SOURCE_MAPPING_MISMATCH")
+    return result
 
 
 def run_adaptation(
@@ -352,6 +710,7 @@ def run_adaptation(
     pair_evidence = side_inputs["evaluator_evidence"]
     proofs = side_inputs["pair_proofs"]
     checked_artifacts = _merge_artifacts(bundle.artifact_bytes, side_inputs["artifact_bytes"])
+    parent_evaluator_bindings = _verified_parent_evaluator_bindings(bundle)
     pairs: list[PairAssessment] = []
     obligations_by_id = {str(row["id"]): row for row in obligations}
     for representation in sorted(bundle.representations, key=lambda item: str(item.get("id", ""))):
@@ -452,6 +811,7 @@ def run_adaptation(
             operation_plan=plan,
             artifact_bytes=checked_artifacts,
             valid_obligation_ids=tuple(obligations_by_id),
+            parent_evaluator_bindings=parent_evaluator_bindings,
         )
         candidate_digest = candidate_sha256(candidate)
     candidate_pairs: list[PairAssessment] = []
@@ -1575,6 +1935,23 @@ def _normalize_representation(row: Any) -> Mapping[str, Any]:
         return normalize_parent_representation(row)
     except ContractValidationError as error:
         raise ProtocolError("P03_REPRESENTATION_ROW_INVALID") from error
+
+
+def _verified_parent_evaluator_bindings(
+    bundle: VerifiedPBundle,
+) -> tuple[Mapping[str, Any], ...]:
+    """Return only parent bindings carried in the verified Pilot-02 profile bytes."""
+    profile_bytes = bundle.artifact_bytes.get(PILOT02_PROFILE_V2_DEFINITION_PATH)
+    if profile_bytes is None:
+        return ()
+    try:
+        profile = json.loads(profile_bytes)
+    except (json.JSONDecodeError, UnicodeDecodeError) as error:
+        raise ContractValidationError("P03_PILOT02_PROFILE_DEFINITION_INVALID") from error
+    bindings = profile.get("parent_evaluator_bindings") if isinstance(profile, Mapping) else None
+    if not isinstance(bindings, list) or not all(isinstance(row, Mapping) for row in bindings):
+        raise ContractValidationError("P03_PILOT02_PARENT_BINDINGS_INVALID")
+    return tuple(dict(row) for row in bindings)
 
 
 def _read_pinned_file(root: Path, relative: str, records: Mapping[str, Mapping[str, Any]]) -> bytes:

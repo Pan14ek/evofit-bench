@@ -156,6 +156,105 @@ def test_candidate_materialization_binds_parent_artifacts_and_all_source_version
     assert candidate_sha256(candidate) == candidate_sha256(copy.deepcopy(candidate))
 
 
+def test_parent_evaluator_binding_materializes_verified_bytes_without_parent_mutation() -> None:
+    """A verified development binding can make an inherited row executable."""
+    parent = parent_config()
+    inherited = copy.deepcopy(parent["representations"][0])
+    inherited.update(
+        {
+            "id": "REP_SYNTH_INHERITED",
+            "evaluator_artifact": None,
+            "evidence_contract": {"metrics": ["observed_value"]},
+        }
+    )
+    parent["representations"].append(inherited)
+    parent_bytes = canonical_json_bytes(parent)
+    first = parent["representations"][0]
+    artifact = b"pinned evaluator source"
+    candidate = materialize_candidate(
+        parent_configuration=parent,
+        parent_configuration_bytes=parent_bytes,
+        parent_path="configs/synthetic-parent.json",
+        parent_sha256=sha256_bytes(parent_bytes),
+        architecture_source_sha=ARCH_AFTER,
+        policy_source_revision="SYN_POLICY_REV_1",
+        policy_bundle_sha256="4" * 64,
+        policy_ruleset_sha256="5" * 64,
+        input_bundle_sha256="6" * 64,
+        impact_assessment_sha256="7" * 64,
+        method_version="P_GOVERNED_ADAPTATION_DEVELOPMENT_V1",
+        configuration_version="SYN_CONFIG_2",
+        operation_plan=ready_plan(
+            PlannedOperation(
+                "representation", first["id"], OperationKind.RETAIN, ("PARENT_BINDING_TEST",)
+            )
+        ),
+        artifact_bytes={
+            first["evaluator_artifact"]["path"]: SYN_ARTIFACT,
+            "evaluator.py": artifact,
+        },
+        parent_evaluator_bindings=(
+            {
+                "representation_id": "REP_SYNTH_INHERITED",
+                "evaluator_artifact": {
+                    "path": "evaluator.py",
+                    "sha256": sha256_bytes(artifact),
+                },
+            },
+        ),
+    )
+
+    materialized = next(
+        row for row in candidate["representations"] if row["id"] == "REP_SYNTH_INHERITED"
+    )
+    assert materialized["evaluator_artifact"] == {
+        "path": "evaluator.py",
+        "sha256": sha256_bytes(artifact),
+    }
+    assert materialized["evidence_contract"] == {"metrics": ["observed_value"]}
+    assert candidate["candidate_validation"]["status"] == "valid"
+    assert parent["representations"][1]["evaluator_artifact"] is None
+
+
+def test_parent_evaluator_binding_rejects_unverified_bytes() -> None:
+    """A parent binding must resolve to the digest-pinned bytes in the bundle."""
+    parent = parent_config()
+    inherited = copy.deepcopy(parent["representations"][0])
+    inherited.update({"id": "REP_SYNTH_INHERITED", "evaluator_artifact": None})
+    parent["representations"].append(inherited)
+    parent_bytes = canonical_json_bytes(parent)
+    first = parent["representations"][0]
+    with pytest.raises(
+        ContractValidationError, match="P03_PARENT_EVALUATOR_ARTIFACT_BYTES_MISMATCH"
+    ):
+        materialize_candidate(
+            parent_configuration=parent,
+            parent_configuration_bytes=parent_bytes,
+            parent_path="configs/synthetic-parent.json",
+            parent_sha256=sha256_bytes(parent_bytes),
+            architecture_source_sha=ARCH_AFTER,
+            policy_source_revision="SYN_POLICY_REV_1",
+            policy_bundle_sha256="4" * 64,
+            policy_ruleset_sha256="5" * 64,
+            input_bundle_sha256="6" * 64,
+            impact_assessment_sha256="7" * 64,
+            method_version="P_GOVERNED_ADAPTATION_DEVELOPMENT_V1",
+            configuration_version="SYN_CONFIG_2",
+            operation_plan=ready_plan(
+                PlannedOperation(
+                    "representation", first["id"], OperationKind.RETAIN, ("PARENT_BINDING_TEST",)
+                )
+            ),
+            artifact_bytes={first["evaluator_artifact"]["path"]: SYN_ARTIFACT},
+            parent_evaluator_bindings=(
+                {
+                    "representation_id": "REP_SYNTH_INHERITED",
+                    "evaluator_artifact": {"path": "evaluator.py", "sha256": "0" * 64},
+                },
+            ),
+        )
+
+
 def test_child_configuration_version_is_deterministic_and_parent_bound() -> None:
     values = {
         "parent_configuration_sha256": "1" * 64,

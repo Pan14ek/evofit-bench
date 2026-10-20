@@ -17,6 +17,7 @@ evidence bridges.
 - `test_p_governed_adaptation_v1.py`
 - `test_exp03_method_bridge.py`
 - `test_exp04_evidence_admission.py`
+- `test_pilot02_semantic_validation.py` (real pinned evaluator controls and digest-resealed readback attacks)
 
 ## Established conventions
 

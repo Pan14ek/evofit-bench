@@ -15,7 +15,7 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `architecture_policy_snapshot_v1_2.schema.json` (additive, unfrozen DEVELOPMENT extension)
 - `candidate_configuration.schema.json`
 - `coverage_assessment.schema.json`
-- `evaluator_evidence.schema.json`
+- `evaluator_evidence.schema.json` — includes backward-compatible typed inspection scope (`dependency_edge`, `module`, or `file`) with digest-bound inventory evidence.
 - `ground_truth_hash.schema.json`
 - `p_traceability_graph_v1.schema.json`
 - `p_impact_assessment_v1.schema.json`
@@ -33,6 +33,10 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `exp04_evidence_admission_v1.schema.json`
 - `exp04_method_p_execution_trace_v1.schema.json`
 - `exp04_evidence_verifier_config_v1.schema.json`
+- `pilot02_method_input_profile_v1.schema.json`
+- `pilot02_method_input_profile_v2.schema.json` (additive inherited evaluator bindings)
+- `pilot02_inherited_evaluator_results_v1.schema.json`
+- `pilot02_inherited_evaluator_inventory_v1.schema.json`
 
 This is a selected list, not a complete source inventory.
 
@@ -65,6 +69,19 @@ construction-time governance and publication restrictions after digest
 resealing. The CLI verifier-config schema is TEST_ONLY and cannot assert
 research authority. These contracts do not establish canonical A0.1-to-V3
 mappings, positive coverage, or research readiness.
+
+## PILOT-02 profile schema
+
+PILOT-02's profile schema pins exact A0.1 representation identities,
+translated stages, evaluator artifacts, and embedded byte digests. Evaluator
+evidence permits `inspected_edge_count: null` when a collector does not report
+an inspection count; this remains unresolved input and must not be serialized
+as a fabricated zero.
+Profile V2 preserves V1 and adds digest-bound parent-row evaluator artifacts
+against the exact A0 representation-catalog bytes. PILOT-02 inherited
+evaluator results require per-representation source/configuration identities,
+commands, timings, raw-stream hashes, and an evaluator inventory. They describe DEVELOPMENT execution only; they do not change
+DA01 prediction, scorer, or evidence contracts.
 
 ## Verification and further reading
 

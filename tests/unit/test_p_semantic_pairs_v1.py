@@ -3,14 +3,22 @@
 from __future__ import annotations
 
 from dataclasses import replace
+from typing import Any
 
-from experiments.execution.tooling.p_applicability import ApplicabilityStatus, ProofStatus
+from experiments.execution.tooling.hashing import canonical_json_bytes, sha256_bytes
+from experiments.execution.tooling.p_applicability import (
+    ApplicabilityStatus,
+    EvidenceProof,
+    ProofStatus,
+)
 from experiments.execution.tooling.p_semantic import (
     ComplianceStatus,
     CoverageStatus,
+    PairAssessment,
     PairStatus,
     assess_mandatory_coverage,
     assess_pair,
+    pair_proof_subject,
 )
 from tests.unit.p_spec03_support import (
     ARCH_AFTER,
@@ -43,6 +51,20 @@ def test_zero_exit_without_resolved_inspected_subjects_is_vacuous() -> None:
     assert "VACUOUS_SUCCESS" in pair.reason_codes
 
 
+def test_unreported_inspection_scope_remains_unknown_without_invented_zero() -> None:
+    pair, *_ = make_valid_pair(
+        evidence_changes={
+            "configured_targets": [],
+            "resolved_targets": [],
+            "inspected_subjects": [],
+            "inspected_edge_count": None,
+        }
+    )
+    assert pair.status is PairStatus.UNKNOWN
+    assert "EVALUATOR_INSPECTION_SCOPE_UNKNOWN" in pair.reason_codes
+    assert "VACUOUS_SUCCESS" not in pair.reason_codes
+
+
 def test_wrong_stage_architecture_or_mapping_never_reuses_pair_proof() -> None:
     wrong_stage, *_ = make_valid_pair(evidence_changes={"stage_applicable": False})
     wrong_revision, *_ = make_valid_pair(
@@ -61,6 +83,173 @@ def test_clean_nonzero_exit_records_noncompliance_without_invalidating_monitor_s
     assert pair.status is PairStatus.VALID
     assert pair.compliance_status is ComplianceStatus.NON_COMPLIANT
     assert "COMPLIANCE_VIOLATION_OBSERVED" in pair.reason_codes
+
+
+def test_unresolved_targets_do_not_become_an_architecture_violation() -> None:
+    pair, *_ = make_valid_pair(
+        process_exit_code=1,
+        evidence_changes={"missing_targets": ["app.repositories"]},
+    )
+
+    assert pair.status is PairStatus.INVALID
+    assert pair.compliance_status is ComplianceStatus.UNKNOWN
+    assert "EVALUATOR_TARGET_RESOLUTION_MISMATCH" in pair.reason_codes
+    assert "COMPLIANCE_RESULT_UNDETERMINED" in pair.reason_codes
+    assert "COMPLIANCE_VIOLATION_OBSERVED" not in pair.reason_codes
+
+
+def test_success_with_unknown_inspection_scope_is_not_compliant() -> None:
+    pair, *_ = make_valid_pair(evidence_changes={"inspected_edge_count": None})
+
+    assert pair.status is PairStatus.UNKNOWN
+    assert pair.compliance_status is ComplianceStatus.UNKNOWN
+    assert "EVALUATOR_INSPECTION_SCOPE_UNKNOWN" in pair.reason_codes
+    assert "COMPLIANCE_RESULT_UNDETERMINED" in pair.reason_codes
+
+
+def test_typed_module_inspection_scope_resolves_without_an_edge_count() -> None:
+    pair, *_ = _typed_scope_pair(
+        unit="module",
+        expected_subjects=["app.modules.users"],
+        inspected_subjects=["app.modules.users"],
+        measured_count=1,
+        inspected_edge_count=None,
+    )
+
+    assert pair.status is PairStatus.VALID
+    assert "EVALUATOR_INSPECTION_SCOPE_UNKNOWN" not in pair.reason_codes
+
+
+def test_typed_inspection_scope_rejects_missing_subjects_and_wrong_count() -> None:
+    incomplete, *_ = _typed_scope_pair(
+        unit="module",
+        expected_subjects=["app.modules.users", "app.modules.tasks"],
+        inspected_subjects=["app.modules.users"],
+        measured_count=1,
+        inspected_edge_count=None,
+    )
+    wrong_count, *_ = _typed_scope_pair(
+        unit="module",
+        expected_subjects=["app.modules.users"],
+        inspected_subjects=["app.modules.users"],
+        measured_count=0,
+        inspected_edge_count=None,
+    )
+
+    assert incomplete.status is PairStatus.UNKNOWN
+    assert "EVALUATOR_INSPECTION_SCOPE_UNKNOWN" in incomplete.reason_codes
+    assert wrong_count.status is PairStatus.UNKNOWN
+    assert "EVALUATOR_INSPECTION_SCOPE_UNKNOWN" in wrong_count.reason_codes
+
+
+def test_typed_inspection_scope_rejects_digest_valid_conflicting_inventory() -> None:
+    conflict, *_ = _typed_scope_pair(
+        unit="module",
+        expected_subjects=["app.modules.users"],
+        inspected_subjects=["app.modules.users"],
+        measured_count=1,
+        inspected_edge_count=None,
+        artifact_expected_subjects=["app.modules.tasks"],
+    )
+
+    assert conflict.status is PairStatus.UNKNOWN
+    assert "EVALUATOR_INSPECTION_SCOPE_UNKNOWN" in conflict.reason_codes
+
+
+def test_typed_dependency_edge_scope_requires_matching_count_and_graph_artifact() -> None:
+    matching, *_ = _typed_scope_pair(
+        unit="dependency_edge",
+        expected_subjects=["app.modules.users.repository"],
+        inspected_subjects=["app.modules.users.repository"],
+        measured_count=2,
+        inspected_edge_count=2,
+    )
+    mismatched, *_ = _typed_scope_pair(
+        unit="dependency_edge",
+        expected_subjects=["app.modules.users.repository"],
+        inspected_subjects=["app.modules.users.repository"],
+        measured_count=2,
+        inspected_edge_count=1,
+    )
+    missing_artifact, *_ = _typed_scope_pair(
+        unit="module",
+        expected_subjects=["app.modules.users"],
+        inspected_subjects=["app.modules.users"],
+        measured_count=1,
+        inspected_edge_count=None,
+        evidence_artifact_path="evidence/missing-graph.json",
+        include_scope_artifact=False,
+    )
+
+    assert matching.status is PairStatus.VALID
+    assert mismatched.status is PairStatus.UNKNOWN
+    assert "EVALUATOR_INSPECTION_SCOPE_UNKNOWN" in mismatched.reason_codes
+    assert missing_artifact.status is PairStatus.UNKNOWN
+    assert "EVALUATOR_INSPECTION_SCOPE_UNKNOWN" in missing_artifact.reason_codes
+
+
+def _typed_scope_pair(
+    *,
+    unit: str,
+    expected_subjects: list[str],
+    inspected_subjects: list[str],
+    measured_count: int,
+    inspected_edge_count: int | None,
+    evidence_artifact_path: str = "evidence/typed-scope.json",
+    artifact_expected_subjects: list[str] | None = None,
+    include_scope_artifact: bool = True,
+) -> tuple[PairAssessment, dict[str, Any], dict[str, Any], dict[str, bytes], EvidenceProof]:
+    _baseline, representation, obligation, artifacts, _proof = make_valid_pair()
+    evidence, _ = make_evaluator_evidence(representation, obligation_id=str(obligation["id"]))
+    supporting_bytes = canonical_json_bytes(
+        {
+            "inspection_unit": unit,
+            "expected_subjects": artifact_expected_subjects or expected_subjects,
+            "inspected_subjects": inspected_subjects,
+            "measured_count": measured_count,
+        }
+    )
+    if include_scope_artifact:
+        artifacts[evidence_artifact_path] = supporting_bytes
+    evidence["inspected_subjects"] = inspected_subjects
+    evidence["inspected_edge_count"] = inspected_edge_count
+    evidence["evidence_artifacts"].append(
+        {
+            "path": evidence_artifact_path,
+            "sha256": sha256_bytes(supporting_bytes),
+        }
+    )
+    evidence["inspection_scope"] = {
+        "unit": unit,
+        "expected_subjects": expected_subjects,
+        "measured_count": measured_count,
+        "evidence_artifact": {
+            "path": evidence_artifact_path,
+            "sha256": sha256_bytes(supporting_bytes),
+        },
+    }
+    source_digests = {"SYN_SOURCE_FACT": "6" * 64}
+    proof = EvidenceProof(
+        status=ProofStatus.VALID,
+        subject_sha256=sha256_bytes(
+            canonical_json_bytes(
+                pair_proof_subject(representation, obligation, ARCH_AFTER, evidence)
+            )
+        ),
+        source_bindings=tuple(sorted(source_digests.items())),
+        verifier_id="synthetic_pair_semantics_v1",
+        evidence_refs=("SYN_PAIR_PROOF",),
+    )
+    assessment = assess_pair(
+        representation=representation,
+        obligation=obligation,
+        architecture_source_sha=ARCH_AFTER,
+        evaluator_evidence=evidence,
+        semantic_proof=proof,
+        artifact_bytes=artifacts,
+        source_digests=source_digests,
+    )
+    return assessment, representation, obligation, artifacts, proof
 
 
 def test_evaluator_infrastructure_failure_is_unknown_and_not_a_compliance_verdict() -> None:
@@ -112,6 +301,26 @@ def test_wrong_obligation_identity_cannot_borrow_same_metric_evidence() -> None:
     )
     assert assessment.status is PairStatus.INVALID
     assert assessment.obligation_id == "SYN_OBL_OTHER"
+
+
+def test_representation_proof_cannot_be_reused_for_a_different_representation() -> None:
+    _pair, representation, obligation, artifacts, proof = make_valid_pair()
+    other_representation = dict(representation)
+    other_representation["id"] = "REP_SYN_OTHER"
+    evidence, _ = make_evaluator_evidence(representation, obligation_id=str(obligation["id"]))
+
+    assessment = assess_pair(
+        representation=other_representation,
+        obligation=obligation,
+        architecture_source_sha=ARCH_AFTER,
+        evaluator_evidence=evidence,
+        semantic_proof=proof,
+        artifact_bytes=artifacts,
+        source_digests={"SYN_SOURCE_FACT": "6" * 64},
+    )
+
+    assert assessment.status is PairStatus.INVALID
+    assert "REPRESENTATION_ID_MISMATCH" in assessment.reason_codes
 
 
 def test_semantic_compatibility_unknown_is_not_a_valid_pair() -> None:

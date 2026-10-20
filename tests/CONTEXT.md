@@ -19,6 +19,8 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 - `integration/test_exp03_method_bridge.py`
 - `integration/test_exp04_evidence_admission.py`
 - `unit/test_pilot01_results.py`
+- `unit/test_pilot02_method_input_profile.py`
+- `unit/test_pilot02_testonly_execution.py`
 
 ## Established conventions
 
@@ -39,6 +41,13 @@ adversarial canonical mappings, verifier failures, TEST_ONLY sidecar
 consumption without semantic proof, noncompliance versus evaluator adequacy,
 and contradictory readback. These fixtures do not claim production authority
 or represent measured EXP-02 runs.
+
+## PILOT-02 tests
+
+PILOT-02 profile tests bind the A0.1 architecture-compliance mappings to the
+pinned profile and exact configuration/catalog/evaluator bytes. Pair tests
+preserve unavailable inspection scope as UNKNOWN without substituting a
+numeric zero.
 
 ## Verification and further reading
 

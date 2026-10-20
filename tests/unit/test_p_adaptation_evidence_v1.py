@@ -184,6 +184,24 @@ def test_v2_sidecar_rejects_signature_tampering() -> None:
         )
 
 
+def test_v2_sidecar_rejects_unsigned_proof_payload() -> None:
+    key = b"synthetic-test-key-not-for-production"
+    sidecar, source_digests, bindings = _signed_v2_sidecar(key)
+    sidecar.pop("signature")
+
+    with pytest.raises(ContractValidationError):
+        verify_adaptation_evidence(
+            sidecar,
+            expected_bindings=bindings,
+            expected_source_digests=source_digests,
+            verifier_registry=AdaptationEvidenceVerifierRegistry(
+                {"SYN_TEST_VERIFIER": _HmacVerifier(key)}
+            ),
+            allow_test_only=True,
+            expected_trust_scope="TEST_ONLY",
+        )
+
+
 @pytest.mark.parametrize(
     ("binding", "replacement"),
     [

@@ -35,7 +35,7 @@ A test described in a specification must have a stable requirement ID, fixture p
 | S01 | Oracle/scorer/source-history/network and other-method output cannot enter method input | `tests/unit/test_da01_inputs_and_isolation.py`, `tests/integration/test_p_applicability_v3.py` | Existing; inspect Docker SKIP separately |
 | P03-01 | Generic architecture/policy/obligation diff and conservative impact graph | `p_impact.py`, `test_p_impact_v1.py` | See complete status matrix |
 | P03-02 | `retain/add/replace/deactivate/adjust` selection is generic and evidence-gated | `p_operations.py`, `test_p_operations_v1.py` | See complete status matrix |
-| P03-03 | Exact-pair validity, mandatory coverage and ACCEPT/REJECT/HOLD | `p_semantic.py`, `p_governance.py` and their unit tests | See complete status matrix |
+| P03-03 | Exact-pair validity, mandatory coverage and ACCEPT/REJECT/HOLD; compliance stays UNKNOWN when evaluator identity, execution scope, mapping, or artifact integrity is unresolved, while adequacy remains separate | `p_semantic.py`, `p_governance.py`, `test_p_semantic_pairs_v1.py` (`test_unresolved_targets_do_not_become_an_architecture_violation`, `test_success_with_unknown_inspection_scope_is_not_compliant`), `test_noncompliance_and_evaluator_inadequacy_are_independent` | See complete status matrix |
 | P03-04 | Candidate materialization, deterministic versioning and V1 adapters | `p_candidate.py`, `test_p_candidate_governance_v1.py` | See complete status matrix |
 | P03-05 | Deterministic replay, version binding, event log and conditional rollback | `p_governance.py`, impact and governance tests | See complete status matrix |
 | P03-06 | SPEC 02 reuse, V3 preflight and end-to-end method isolation | `p_adaptation.py`, `test_p_governed_adaptation_v1.py` | See complete status matrix |
@@ -317,3 +317,28 @@ The pilot records one independent source intervention. Its results do not establ
 `Coverage_P`, `Coverage_ref`, G1/G4, Method P readiness, or measured DA01
 outcomes. The isolated S1 source fault is not part of the normal implementation
 branch.
+
+### PILOT-02 TEST_ONLY runner
+
+The bounded runner uses the existing V3 P input verifier and `run_adaptation()` path. A TEST_ONLY sidecar can supply execution observations to adaptation calculations, while exact-pair semantic proof and research authority remain separate.
+
+| Requirement | Expected behavior | Test owner | Status |
+| --- | --- | --- | --- |
+| PILOT02-DEV-01 | Report admitted execution evidence only when a sidecar is supplied and Method P verifies TEST_ONLY trust scope; do not label execution observations as semantic pair proof. | `test_execution_evidence_admission_trace_matches_verified_sidecar_scope`, `test_real_exp02_run_executes_existing_p_pipeline_and_preserves_hold` | Implemented; TEST_ONLY runner and bridge fixtures |
+| PILOT02-DEV-02 | Execute candidate-profile evaluators only when the materialized row and all pinned identity, artifact, revision, scope, stage, coverage, and evidence-contract bindings match; mismatches stay not measured. | `tests/unit/test_pilot02_candidate_evaluators.py` | Implemented; positive scoped execution and adversarial mismatches |
+| PILOT02-DEV-03 | Verify inherited parent evaluator artifact bytes against the exact parent catalog and attach them only to a detached materialized candidate; preserve the parent bytes. | `tests/unit/test_pilot02_method_input_profile.py`, `tests/unit/test_p_candidate_governance_v1.py` | Implemented; positive and negative binding checks |
+| PILOT02-DEV-04 | Record each fresh inherited evaluator execution with exact source and configuration hashes, command, timestamps, metric units/status, raw stream digests, database-container identity, and per-run evaluator inventory; reject source path or digest mismatches and tampered raw output. | `test_inherited_evaluator_result_binds_source_config_and_raw_streams`, `test_inherited_evaluator_source_reference_rejects_digest_and_path_mismatch`, `test_inherited_evaluator_readback_rejects_tampered_raw_output`, `test_inherited_evaluator_database_container_uses_published_host_port` | Implemented; focused runner-record checks; real execution recorded separately |
+| PILOT02-SEM-01 | Establish exact-pair semantic evidence only after actual pinned clean/negative evaluator controls, non-vacuous typed scope, source mutation reconstruction, and exact representation/obligation/source/evaluator binding. | `tests/integration/test_pilot02_semantic_validation.py::test_real_controls_establish_two_testonly_semantic_pairs` | Live TEST_ONLY evaluator control integration; no DA01 authority or coverage claim |
+| PILOT02-SEM-02 | Reject digest-resealed scope, identity, source-revision, raw-stream, or negative-control tampering; do not reuse proof after a candidate-row change or admit unsigned evidence. | `tests/integration/test_pilot02_semantic_validation.py::test_readback_rejects_digest_resealed_adversarial_evidence`, `test_pilot02_testonly_execution.py::test_semantic_proof_is_not_reusable_after_candidate_row_changes`, `test_p_adaptation_evidence_v1.py::test_v2_sidecar_rejects_unsigned_proof_payload`, `test_p_semantic_pairs_v1.py::test_representation_proof_cannot_be_reused_for_a_different_representation` | Positive and adversarial controls; noncompliance remains separate from pair validity |
+| PILOT02-SEM-03 | Admit a semantic proof only when the exact pinned candidate template is present in the verified template catalog; a new ADD/REPLACE row need not already exist in the parent representation catalog, while conflicting parent rows remain unresolved and candidate-row equality is rechecked from the measured candidate evaluator records after materialization. | `tests/unit/test_pilot02_testonly_execution.py::test_prevalidated_new_candidate_template_does_not_need_parent_catalog_row`, `test_prevalidated_template_binding_rejects_missing_or_conflicting_template`, `test_candidate_evaluator_representation_records_are_used_for_proof_readback`, `test_semantic_proof_is_not_reusable_after_candidate_row_changes` | TEST_ONLY proof handoff and post-materialization exact-row check |
+
+Run the real semantic controls and adversarial readback checks with:
+
+```bash
+uv run python -m pytest -q --no-cov -p no:cacheprovider tests/integration/test_pilot02_semantic_validation.py
+```
+
+The test invokes pinned Grimp/Import Linter and pytest evaluators in disposable
+source copies. The preserved experiment archive is generated separately by
+`python -m experiments.pilots.pilot02_semantic_validation`; test executions are
+engineering verification, not independent architecture-transition samples.

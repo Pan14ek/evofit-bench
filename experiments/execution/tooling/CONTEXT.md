@@ -90,6 +90,46 @@ Use deterministic source hashes and method-input isolation; keep scorer oracle-s
 
 SPEC03 is a DEVELOPMENT implementation only. It uses SPEC02 applicability, exact-pair evidence, conservative impact, materialized templates, bounded deterministic operations, governance, provenance and conditional rollback. Do not use oracle/scorer inputs or claim G1/G4 readiness; unresolved authority, mandatory classifications, templates, costs, multi-stage contracts and method review produce HOLD or remain blockers.
 
+## PILOT-02 profile boundary
+
+PILOT-02 adds one pinned A0.1 architecture-compliance profile to the verified
+V3 capabilities path. The profile verifier checks the exact source
+configuration, obligation catalog, evaluator configuration/source bytes, and
+versioned profile definition before exposing candidate descriptors. Its
+post-run exact-pair diagnostics bind authentic EXP-02 stdout/stderr and retain
+unknown inspection scope and missing semantic proof. In the TEST_ONLY
+continuation, a separately digest-validated sidecar of EXP-02 execution
+records and raw artifacts is supplied to `run_adaptation()` before adaptation;
+the records are not admitted as semantic pair proof and do not establish
+coverage or authority. Keep the post-run diagnostics distinct from that
+sidecar. The existing P algorithm continues to produce its own operations,
+candidate, and governance decision.
+
+Profile V2 also supplies digest-pinned A0.1 DEVELOPMENT evaluator bindings for
+parent representations. The V3 verifier checks them against the exact parent
+catalog digest and parent row identities. `p_candidate.materialize_candidate`
+attaches only those verified artifact references to a detached candidate
+snapshot and validates their bytes; it does not mutate parent bytes or consume
+the run's evaluator outputs as semantic proof. V1 profiles remain supported.
+
+`p_semantic.py` records compliance only when evaluator execution, identity,
+target/stage/mapping scope, and evidence artifacts resolve. Adequacy,
+evidence-contract satisfaction, semantic compatibility, and pair proof remain
+separate: they can leave pair validity unknown without erasing a resolvable
+compliance observation. An unresolved evaluator scope remains `UNKNOWN` even
+when its process exits nonzero or zero; a resolved nonzero result is an
+observation of noncompliance and does not by itself invalidate exact-pair
+semantics.
+
+PILOT-02's `run_pilot02_method_p.py` accepts semantic reports only from the
+separate `pilot02_semantic_validation.py` readback verifier, and only in its
+TEST_ONLY continuation. The verifier reconstructs typed inspection scope,
+positive/negative control interpretation, and the pinned source mutation before
+the existing `run_adaptation()` call. Candidate proof reuse is recorded only
+when the materialized evaluator row and its evaluator artifact exactly match
+the prevalidated template. These reports do not authorize DA01 measurement or
+independent coverage.
+
 ## Verification and further reading
 
 Consult the original source files and nearest relevant tests, then `docs/README.md` for repository-wide architecture, experiment, stack and verification references. DEVELOPMENT validation uses `make development-quality` with a **disposable** PostgreSQL database; the protected DA01 test modules are excluded. When a context summary conflicts with source code, a reviewed manifest or a frozen scientific protocol, **report the conflict**; do not silently reinterpret research rules.

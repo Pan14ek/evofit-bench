@@ -1,0 +1,269 @@
+{
+  "schema_version": 2,
+  "profile_id": "PILOT_02_A0_1_ARCHITECTURE_COMPLIANCE_V2",
+  "profile_status": "DEVELOPMENT_UNFROZEN",
+  "architecture_before_sha": "b78b0967be937634b7762baccf5ac6892b279a73",
+  "architecture_source_sha": "3fdd5c68f8f60fad5757eefa66cc2aa8b24d9306",
+  "a0_1_source_basis_sha": "3fdd5c68f8f60fad5757eefa66cc2aa8b24d9306",
+  "a0_1_app_tree_sha": "cdff9a6c3cee870e1eca2a5f5f3eb3202b0b1f08",
+  "fitness_configuration_sha256": "3f8c952afd00f97f00b84955cc85fdf8dc5cbe32b52e65771773b8aa5a12fbad",
+  "fitness_configuration_artifact": {
+    "path": "fitness/configs/a0_1-capability-modules.dev.yaml",
+    "sha256": "3f8c952afd00f97f00b84955cc85fdf8dc5cbe32b52e65771773b8aa5a12fbad"
+  },
+  "obligation_catalog_sha256": "8c5bd8fffe3bdb2af8fb85f8d0012bc34673f72866e52daed99fab96f9763011",
+  "obligation_catalog_artifact": {
+    "path": "fitness/catalog/architectural-obligations.yaml",
+    "sha256": "8c5bd8fffe3bdb2af8fb85f8d0012bc34673f72866e52daed99fab96f9763011"
+  },
+  "criterion_id": "architecture_compliance",
+  "criterion_intent": "Capability module structure and declared internal layering are checked by executable evaluators.",
+  "stage_translation": {
+    "source_stage": "ci_test",
+    "method_stage": "ci",
+    "rule_id": "PILOT02_CI_TEST_TO_CI_V1"
+  },
+  "mappings": [
+    {
+      "source_representation_id": "REP_A01_ARCH_INTERNAL_LAYERING_CI",
+      "obligation_id": "AC_LAYERING",
+      "source_stage": "ci_test",
+      "source_evaluator_id": "EV_A01_IMPORT_LINTER",
+      "source_evaluator_name": "import-linter",
+      "source_scope_id": "architecture.internal_dependencies",
+      "architecture_scope": "app.modules",
+      "configuration_artifact": {
+        "path": "architecture/acceptance/importlinter.toml",
+        "sha256": "5e938273faa86b4584886e2ede5700b35b064d5e54fe04b0c3d1e50278c64eb0"
+      },
+      "evaluator_source_artifacts": [
+        {
+          "path": "architecture/acceptance/importlinter.toml",
+          "sha256": "5e938273faa86b4584886e2ede5700b35b064d5e54fe04b0c3d1e50278c64eb0"
+        }
+      ],
+      "metric": {
+        "name": "dependency_rule_violations",
+        "unit": "contracts",
+        "evidence_path": "measurements.dependency_rule_violations"
+      },
+      "candidate_template": {
+        "template_id": "PILOT02_TEMPLATE_LAYERING_V1",
+        "representation": {
+          "id": "REP_A01_ARCH_INTERNAL_LAYERING_CI",
+          "active": true,
+          "criterion": "architecture_compliance",
+          "stage": "ci",
+          "evaluator": "EV_A01_IMPORT_LINTER",
+          "evaluator_artifact": {
+            "path": "architecture/acceptance/importlinter.toml",
+            "sha256": "5e938273faa86b4584886e2ede5700b35b064d5e54fe04b0c3d1e50278c64eb0"
+          },
+          "covers": [
+            "AC_LAYERING"
+          ],
+          "applicability_scope": {
+            "scope_id": "architecture.internal_dependencies",
+            "architecture_scope": "app.modules",
+            "architecture_state": "A0_1_CAPABILITY_MODULES"
+          },
+          "evidence_contract": {
+            "record_id": "exp01-ci-import-linter-v1",
+            "evaluator_id": "EV_A01_IMPORT_LINTER",
+            "evaluator_name": "import-linter",
+            "source_stage": "ci_test",
+            "method_stage": "ci",
+            "scope_id": "architecture.internal_dependencies",
+            "configuration_artifact_sha256": "5e938273faa86b4584886e2ede5700b35b064d5e54fe04b0c3d1e50278c64eb0",
+            "metric": {
+              "name": "dependency_rule_violations",
+              "unit": "contracts",
+              "evidence_path": "measurements.dependency_rule_violations"
+            },
+            "evidence_requirements": [
+              "record_matches_run_and_source_revision",
+              "raw_stdout_and_stderr_are_digest_bound",
+              "configuration_artifact_digest_is_exact"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "source_representation_id": "REP_A01_ARCH_MODULE_STRUCTURE_CI",
+      "obligation_id": "AC_MODULE_STRUCTURE",
+      "source_stage": "ci_test",
+      "source_evaluator_id": "EV_A01_MODULE_STRUCTURE_PYTEST",
+      "source_evaluator_name": "pytest-architecture-module-structure",
+      "source_scope_id": "architecture.capability_modules",
+      "architecture_scope": "app.modules",
+      "configuration_artifact": {
+        "path": "architecture/states/A0_1_CAPABILITY_MODULES.yaml",
+        "sha256": "e062c8cd0689116240bddcb4feacd5975dcf28c86a88cc11e29ebf03968d0aeb"
+      },
+      "evaluator_source_artifacts": [
+        {
+          "path": "architecture/states/A0_1_CAPABILITY_MODULES.yaml",
+          "sha256": "e062c8cd0689116240bddcb4feacd5975dcf28c86a88cc11e29ebf03968d0aeb"
+        },
+        {
+          "path": "tests/architecture/test_module_structure.py",
+          "sha256": "d1f7ae29a1c8ed5fb5a4e1c37df8c8c22bfe98a31e0fa85c8c32012c0d083f7c"
+        }
+      ],
+      "metric": {
+        "name": "module_structure_test_failures",
+        "unit": "tests",
+        "evidence_path": "measurements.module_structure_test_failures"
+      },
+      "candidate_template": {
+        "template_id": "PILOT02_TEMPLATE_MODULE_STRUCTURE_V1",
+        "representation": {
+          "id": "REP_A01_ARCH_MODULE_STRUCTURE_CI",
+          "active": true,
+          "criterion": "architecture_compliance",
+          "stage": "ci",
+          "evaluator": "EV_A01_MODULE_STRUCTURE_PYTEST",
+          "evaluator_artifact": {
+            "path": "tests/architecture/test_module_structure.py",
+            "sha256": "d1f7ae29a1c8ed5fb5a4e1c37df8c8c22bfe98a31e0fa85c8c32012c0d083f7c"
+          },
+          "covers": [
+            "AC_MODULE_STRUCTURE"
+          ],
+          "applicability_scope": {
+            "scope_id": "architecture.capability_modules",
+            "architecture_scope": "app.modules",
+            "architecture_state": "A0_1_CAPABILITY_MODULES"
+          },
+          "evidence_contract": {
+            "record_id": "exp02-ci-module-structure-v1",
+            "evaluator_id": "EV_A01_MODULE_STRUCTURE_PYTEST",
+            "evaluator_name": "pytest-architecture-module-structure",
+            "source_stage": "ci_test",
+            "method_stage": "ci",
+            "scope_id": "architecture.capability_modules",
+            "configuration_artifact_sha256": "e062c8cd0689116240bddcb4feacd5975dcf28c86a88cc11e29ebf03968d0aeb",
+            "metric": {
+              "name": "module_structure_test_failures",
+              "unit": "tests",
+              "evidence_path": "measurements.module_structure_test_failures"
+            },
+            "evidence_requirements": [
+              "record_matches_run_and_source_revision",
+              "raw_stdout_and_stderr_are_digest_bound",
+              "configuration_and_test_source_digests_are_exact"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "parent_representation_catalog_sha256": "d1a019bb5389e64351751fe10dabd685b29a0fac383ab4ea5fd21906c807cfef",
+  "parent_representation_catalog_artifact": {
+    "path": "fitness/catalog/a0-fitness-elements.yaml",
+    "sha256": "d1a019bb5389e64351751fe10dabd685b29a0fac383ab4ea5fd21906c807cfef"
+  },
+  "parent_evaluator_bindings": [
+    {
+      "representation_id": "REP_A0_PERF_TEST_HTTP_P95",
+      "binding_status": "A0_1_DEVELOPMENT_ADAPTER",
+      "evaluator_artifact": {
+        "path": "load/locustfile.py",
+        "sha256": "c8c7922998c8ca2e9479c5c720f547a805418248afc2f078c79493080ac41574"
+      },
+      "evaluator_source_artifacts": [
+        {
+          "path": "load/locustfile.py",
+          "sha256": "c8c7922998c8ca2e9479c5c720f547a805418248afc2f078c79493080ac41574"
+        },
+        {
+          "path": "load/workload_profile.py",
+          "sha256": "c73aeaa46118efc4bbb0bb8cdb22d271f379a6d55318096c0b9deaa8d9fed8c4"
+        },
+        {
+          "path": "experiments/pilots/PILOT_01_WORKLOAD.yaml",
+          "sha256": "bca4dac8994cdf8021670beb4d19075ef45dc93df5fb464e98fef6188ab6c168"
+        }
+      ]
+    },
+    {
+      "representation_id": "REP_A0_PERF_RUNTIME_HTTP_DURATION",
+      "binding_status": "A0_1_DEVELOPMENT_ADAPTER",
+      "evaluator_artifact": {
+        "path": "scripts/exp01_evidence_runtime.py",
+        "sha256": "467302575f6eff47e0b1139337b9f6087473c07fd530a520afb4776c9216d4f8"
+      },
+      "evaluator_source_artifacts": [
+        {
+          "path": "app/observability/metrics.py",
+          "sha256": "7bb14727373805f503307ec46b47022d3405742cbb122edd594621851982ab84"
+        },
+        {
+          "path": "scripts/prometheus_snapshot.py",
+          "sha256": "fba388947d382da4befb8a989825ec461109787597c42f953fcff0898c1657de"
+        },
+        {
+          "path": "scripts/runtime_validation.py",
+          "sha256": "951462e3a12c74afc845df28abe1446c2df4c385e3605ef806c2f5ab640cde4b"
+        },
+        {
+          "path": "scripts/sample_runtime_metrics.py",
+          "sha256": "b60bbe98013d6fd4594731fc173ea3eb954b49469e39a890b4c893bdc975369c"
+        },
+        {
+          "path": "scripts/exp01_evidence_runtime.py",
+          "sha256": "467302575f6eff47e0b1139337b9f6087473c07fd530a520afb4776c9216d4f8"
+        }
+      ]
+    },
+    {
+      "representation_id": "REP_A0_REL_TEST_INTEGRATION",
+      "binding_status": "A0_1_DEVELOPMENT_ADAPTER",
+      "evaluator_artifact": {
+        "path": "tests/integration/test_api_flows.py",
+        "sha256": "dbd306696ecd625f54476a9d918c586c4ca67d532c623ffd04c32c72117e5eb3"
+      },
+      "evaluator_source_artifacts": [
+        {
+          "path": "tests/integration/test_api_flows.py",
+          "sha256": "dbd306696ecd625f54476a9d918c586c4ca67d532c623ffd04c32c72117e5eb3"
+        },
+        {
+          "path": "tests/integration/conftest.py",
+          "sha256": "544168d068ef6810802c8bf5e92904eea326f1c8f31fb19af431273dcd69f8c3"
+        }
+      ]
+    },
+    {
+      "representation_id": "REP_A0_REL_RUNTIME_FAILURES",
+      "binding_status": "A0_1_DEVELOPMENT_ADAPTER",
+      "evaluator_artifact": {
+        "path": "scripts/exp01_evidence_runtime.py",
+        "sha256": "467302575f6eff47e0b1139337b9f6087473c07fd530a520afb4776c9216d4f8"
+      },
+      "evaluator_source_artifacts": [
+        {
+          "path": "app/observability/metrics.py",
+          "sha256": "7bb14727373805f503307ec46b47022d3405742cbb122edd594621851982ab84"
+        },
+        {
+          "path": "scripts/prometheus_snapshot.py",
+          "sha256": "fba388947d382da4befb8a989825ec461109787597c42f953fcff0898c1657de"
+        },
+        {
+          "path": "scripts/runtime_validation.py",
+          "sha256": "951462e3a12c74afc845df28abe1446c2df4c385e3605ef806c2f5ab640cde4b"
+        },
+        {
+          "path": "scripts/sample_runtime_metrics.py",
+          "sha256": "b60bbe98013d6fd4594731fc173ea3eb954b49469e39a890b4c893bdc975369c"
+        },
+        {
+          "path": "scripts/exp01_evidence_runtime.py",
+          "sha256": "467302575f6eff47e0b1139337b9f6087473c07fd530a520afb4776c9216d4f8"
+        }
+      ]
+    }
+  ]
+}

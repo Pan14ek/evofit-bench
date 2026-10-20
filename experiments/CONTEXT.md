@@ -14,8 +14,9 @@ Scientific protocol, scenarios, execution, curated evidence and run results.
 - `schemas/development_evidence_bundle_v1.schema.json`
 - `schemas/fitness_representation_evidence_v1.schema.json`
 - `execution/EXP04_EVIDENCE_ADMISSION.md`
+- `execution/schemas/pilot02_inherited_evaluator_results_v1.schema.json`
 - `results/` (ignored generated run outputs)
-- `pilots/` contains the PILOT-01 report, manuscript subsection, generated table, and narrow evidence tools
+- `pilots/` contains PILOT-01 and PILOT-02 protocols, reports, manuscript subsections, generated tables, evidence archives, and narrow tools
 
 ## Established conventions
 
@@ -30,6 +31,37 @@ mapping, verifier authority, and semantic validity. Its current A0.1-to-V3
 mapping remains unresolved; outputs are DEVELOPMENT diagnostics and cannot
 establish coverage or authorize a measured run. See the execution guide for
 commands and output interpretation.
+
+## PILOT-02
+
+PILOT-02 exercises one versioned A0.1-to-P candidate profile for
+`AC_LAYERING` and `AC_MODULE_STRUCTURE`. Its original HOLD run is preserved.
+The prospective development continuation may pass authentic evaluator
+observations and explicitly TEST_ONLY assumptions through existing Method P
+contracts to observe operations and candidate materialization. Those inputs
+are not independent semantic proof or production authority. Keep independent
+coverage pending and never label it DA01 `Coverage_ref`.
+
+Profile V2 additionally binds four unchanged A0 representation rows to exact
+A0.1 DEVELOPMENT evaluator source bytes. Fresh Locust, EXP-01 runtime, and
+PostgreSQL integration outputs remain in the separate ignored run directory;
+they are not passed to P as semantic proof. The inherited-evaluator protocol
+defines these runs before measurement.
+
+The semantic-validation continuation runs the pinned Import Linter and module
+structure evaluators with clean and source-mutated controls, independently
+reconstructs inspection scope and mutation inventories, and rechecks report
+bytes before admitting exact-pair proofs through the existing TEST_ONLY
+sidecar. Its pair statuses remain DEVELOPMENT diagnostics; they do not
+establish DA01 authorization, independent coverage, G1/G4, or production
+readiness.
+
+V5's canonical run `pilot02-inherited-20261020-v5d` executed the four inherited
+evaluator rows and its full candidate validator returned `valid` after the
+versioned V2 DEVELOPMENT bindings were admitted. The V5 archive preserves the
+canonical run, linked EXP-01 bundle and earlier attempts. Runtime failure samples
+remain unavailable; exact pairs are UNKNOWN, the internal diagnostic is 0/2,
+governance remains HOLD, and no coverage or DA01 result is established.
 
 ## Verification and further reading
 
