@@ -80,6 +80,26 @@ run. This task does not have independent reference custody, so it does not
 create that transition or label it held out. The prepared A0-to-A0.1 package
 remains calibration-only.
 
+The generated preparation-only package is `dev-b0p-20261020-preflight-a01`.
+Its `study_manifest.json` SHA-256 is
+`d6d55437fcc30c4e8bdd5acb37fd9f881be74f646989e701b03092ba8ac82b2f`; its
+`SHA256SUMS` SHA-256 is
+`29852caf847e50133977c4624a84df9a335f022dd61becbd0d75f2b54e3d37f7`. The
+readback verifier returned exit 0 and all 217 listed files passed checksum
+verification. The package is ignored local DEVELOPMENT output at
+`experiments/results/dev-b0p-20261020-preflight-a01/`; no B0/P arm, evaluator,
+scorer, or governance process ran. The English report and Ukrainian manuscript
+subsection record the run state and blockers in
+`experiments/pilots/B0P_DEVELOPMENT_REPORT.md` and
+`experiments/pilots/B0P_DEVELOPMENT_MANUSCRIPT_UA.md`.
+
+Reproduce the package readback with:
+
+```bash
+python -m scripts.verify_b0p_development_comparison \
+  --run-directory experiments/results/dev-b0p-20261020-preflight-a01
+```
+
 ## Completion criterion for this preparation PR
 
-Author decisions, protocol and checker are present, CI is green, and outstanding empirical prerequisites are clearly recorded. Completing preparation does **not** authorize changing canonical G1/G4 statuses or claiming a new measured outcome.
+The preparation implementation, tests, source-pinned package, readback verification, and outstanding empirical prerequisites are recorded. Local checks for this change include the focused B0/P tests, development lint, security scan, architecture check, disposable-database migration check, and development regression suite. The full `make development-quality` target stops at type checking on 10 diagnostics in four untouched pilot files; therefore this document does not claim that target passed. Hosted GitHub Actions status is reported on the Draft PR. Completing preparation does **not** authorize changing canonical G1/G4 statuses or claiming a new measured outcome.
