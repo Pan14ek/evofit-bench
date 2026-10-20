@@ -195,3 +195,32 @@ These durations have different boundaries. The runtime collector overlaps Locust
 The original `ACTIVE_EVALUATOR_ARTIFACT_UNAVAILABLE` blocker is **fully resolved as a candidate-validator artifact-binding error**: all four rows now have exact source/configuration bindings in the prospective V2 profile, and the full candidate validator reports `valid`. This does not establish complete or semantically adequate evidence for every row. In particular, `REP_A0_REL_RUNTIME_FAILURES` remains `UNKNOWN`, exact-pair validity and coverage remain unresolved, and governance remains `HOLD`.
 
 The V5 archive `PILOT_02_RAW_EVIDENCE_CONTINUATION_V5.zip` has SHA-256 `358c6758c5acf7efde694357471a17f12546d8f3076a85fc1263634688240d9b`. It contains the canonical V5d run and linked EXP-01 bundle, the V2 protocol/profile/assumptions/schemas and runner sources, plus raw records of earlier V5 technical attempts. The initial setup failure ran no evaluator; V5b recorded authentic outputs but failed finalization on a runner `KeyError`; V5c completed but omitted the database container ID. Those attempts are preserved and excluded from primary analysis. V1–V4 archives remain unchanged.
+
+
+## V5 verification and delivery
+
+The focused regression command, executed after commit `29013f8` on the unchanged V5 implementation, was:
+
+```bash
+/private/tmp/evofit-pilot01-main-env/bin/python -m pytest -q --no-cov -p no:cacheprovider \
+  tests/unit/test_p_semantic_pairs_v1.py \
+  tests/unit/test_p_candidate_governance_v1.py \
+  tests/unit/test_p_adaptation_evidence_v1.py \
+  tests/integration/test_exp04_evidence_admission.py \
+  tests/unit/test_pilot02_method_input_profile.py \
+  tests/unit/test_pilot02_testonly_execution.py \
+  tests/unit/test_pilot02_candidate_evaluators.py \
+  tests/unit/test_context_documents.py \
+  tests/integration/test_exp03_method_bridge.py \
+  tests/integration/test_p_governed_adaptation_v1.py
+```
+
+Result: **135 passed, 1 existing Starlette deprecation warning** in 108.69 s. Additional local checks passed:
+
+```bash
+RUFF_CACHE_DIR=/private/tmp/evofit-ruff-cache /private/tmp/evofit-pilot01-main-env/bin/ruff check .
+MYPY_CACHE_DIR=/private/tmp/evofit-mypy-cache PYTHONDONTWRITEBYTECODE=1 /private/tmp/evofit-pilot01-main-env/bin/python -m mypy app scripts tests --exclude '(^|/)test_da01_execution\.py$' --exclude '(^|/)test_research_schema_foundation\.py$'
+git diff --check
+```
+
+The final report/archive commit `29013f8` passed both hosted `development-quality` jobs, which execute `make development-quality`: [run 39376954092](https://github.com/Pan14ek/evofit-bench/actions/runs/39376954092), [run 39376956871](https://github.com/Pan14ek/evofit-bench/actions/runs/39376956871). The V5 manifest readback validator returned `validated` for 193 artifacts; the ZIP sidecar and CRC checks passed; the results CSV has 39 rows and four columns. The original and V1–V4 archive SHA-256 values still match their recorded checksums.
