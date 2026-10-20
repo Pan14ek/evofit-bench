@@ -532,6 +532,7 @@ def verify_development_execution(
     _verify_runtime_contexts(root, manifest)
     _verify_runtime_images(root, manifest)
     for arm_key, arm in manifest["arms"].items():
+        _validate_completed_arm_prediction(arm_key, arm)
         if arm["status"] != "COMPLETED":
             continue
         expected_source = manifest["source_revisions"][
@@ -606,7 +607,7 @@ def verify_development_execution(
         raise B0PExecutionError("RQ1 reference-availability record digest mismatch")
     reference = json.loads(reference_path.read_text(encoding="utf-8"))
     _validate_rq1_claims(manifest["rq1_scoring"], reference)
-    _validate_rq2_claims(manifest["rq2_scoring"])
+    _validate_rq2_claims(manifest["rq2_scoring"], manifest["semantic_pair_verification"])
     _validate_unknown_resource_metrics(manifest["resource_metrics"])
     if manifest["semantic_pair_verification"]["independently_verified_pair_count"]:
         if manifest["semantic_pair_verification"]["status"] not in {"VERIFIED", "PARTIAL"}:
@@ -1528,13 +1529,47 @@ def _prediction_binding_error(
     return None
 
 
-def _validate_rq2_claims(rq2: Mapping[str, Any]) -> None:
+def _validate_completed_arm_prediction(arm_key: str, arm: Mapping[str, Any]) -> None:
+    if arm_key == "B0" and arm.get("status") == "COMPLETED":
+        if arm.get("prediction_status") != "SEALED":
+            raise B0PExecutionError("A completed B0 arm must have a sealed prediction")
+        if not isinstance(arm.get("prediction_path"), str) or not arm.get("prediction_path"):
+            raise B0PExecutionError("A completed B0 arm prediction path is missing")
+        if not isinstance(arm.get("prediction_sha256"), str):
+            raise B0PExecutionError("A completed B0 arm prediction digest is missing")
+
+
+def _validate_rq2_claims(
+    rq2: Mapping[str, Any],
+    semantic_pair_verification: Mapping[str, Any] | None = None,
+) -> None:
     if rq2.get("status") in {"UNKNOWN", "NOT_EVALUABLE"} and (
         rq2.get("required_obligation_set_bound") or rq2.get("same_denominator_for_arms")
     ):
         raise B0PExecutionError(
             "Unknown RQ2 result cannot claim a bound shared obligation denominator"
         )
+    if rq2.get("status") in {"SCORED", "PARTIAL"}:
+        if not rq2.get("required_obligation_set_bound") or not rq2.get("same_denominator_for_arms"):
+            raise B0PExecutionError("RQ2 score requires a bound shared obligation denominator")
+        if semantic_pair_verification is None:
+            raise B0PExecutionError("RQ2 score lacks independent exact-pair semantic proofs")
+        pair_status = semantic_pair_verification.get("status")
+        verified_pair_count = semantic_pair_verification.get("independently_verified_pair_count")
+        verified_rows = sum(
+            row.get("independent_verification") == "VERIFIED"
+            for row in semantic_pair_verification.get("pairs", [])
+            if isinstance(row, Mapping)
+        )
+        if (
+            not isinstance(verified_pair_count, int)
+            or verified_pair_count <= 0
+            or verified_pair_count > verified_rows
+            or pair_status not in {"VERIFIED", "PARTIAL"}
+        ):
+            raise B0PExecutionError("RQ2 score lacks independent exact-pair semantic proofs")
+        if rq2.get("status") == "SCORED" and pair_status != "VERIFIED":
+            raise B0PExecutionError("A complete RQ2 score requires fully verified exact pairs")
 
 
 def _validate_rq1_claims(rq1: Mapping[str, Any], reference: Mapping[str, Any] | None) -> None:

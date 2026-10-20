@@ -14,6 +14,8 @@ from experiments.execution.tooling.b0p_execution import (
     _expected_prediction_status,
     _import_linter_compliance,
     _prediction_binding_error,
+    _unknown_pair_verification,
+    _validate_completed_arm_prediction,
     _validate_rq1_claims,
     _validate_rq2_claims,
     _validate_unknown_resource_metrics,
@@ -22,6 +24,7 @@ from experiments.execution.tooling.b0p_execution import (
     _verify_run_inventory,
     _write_bytes_once,
     _write_final_checksums,
+    _write_once,
     _write_run_checksums,
 )
 from experiments.execution.tooling.errors import SealedArtifactError
@@ -121,6 +124,21 @@ def test_p_hold_requires_matching_no_prediction_marker() -> None:
         _expected_prediction_status("NOT_RUN")
 
 
+def test_completed_b0_arm_cannot_omit_its_sealed_prediction() -> None:
+    arm = {
+        "status": "COMPLETED",
+        "prediction_status": "NOT_RUN",
+        "prediction_path": None,
+        "prediction_sha256": None,
+    }
+    with pytest.raises(B0PExecutionError, match="must have a sealed prediction"):
+        _validate_completed_arm_prediction("B0", arm)
+
+    arm["prediction_status"] = "SEALED"
+    with pytest.raises(B0PExecutionError, match="prediction path is missing"):
+        _validate_completed_arm_prediction("B0", arm)
+
+
 def test_oracle_git_and_scorer_paths_are_forbidden_method_inputs() -> None:
     from experiments.execution.tooling.b0p_execution import (
         _contains_forbidden_method_input_path,
@@ -151,6 +169,44 @@ def test_unknown_rq2_cannot_claim_shared_or_bound_denominator() -> None:
                 "required_obligation_set_bound": False,
                 "same_denominator_for_arms": True,
             }
+        )
+
+
+def test_rq2_cannot_score_method_pair_diagnostics_as_independent_proof(
+    tmp_path: Path,
+) -> None:
+    run_root = tmp_path / "run-current"
+    p_output = run_root / "P"
+    p_output.mkdir(parents=True)
+    (p_output / "method_p_trace.json").write_text(
+        json.dumps(
+            {
+                "current_pairs": [
+                    {
+                        "representation_id": "rep-a",
+                        "obligation_id": "obl-a",
+                        "status": "COMPLIANT",
+                        "semantic_proof_status": "VERIFIED",
+                    }
+                ],
+                "candidate_pairs": [],
+            }
+        ),
+        encoding="utf-8",
+    )
+    pair_evidence = _unknown_pair_verification(run_root, p_output)
+    assert pair_evidence["status"] == "UNKNOWN"
+    assert pair_evidence["independently_verified_pair_count"] == 0
+    assert pair_evidence["pairs"][0]["independent_verification"] == "UNKNOWN"
+
+    with pytest.raises(B0PExecutionError, match="independent exact-pair semantic proofs"):
+        _validate_rq2_claims(
+            {
+                "status": "SCORED",
+                "required_obligation_set_bound": True,
+                "same_denominator_for_arms": True,
+            },
+            pair_evidence,
         )
 
 
@@ -258,6 +314,16 @@ def test_execution_artifacts_are_write_once(tmp_path: Path) -> None:
         _write_bytes_once(artifact, b"replacement")
 
     assert artifact.read_bytes() == b"first"
+
+
+def test_execution_manifest_record_cannot_be_overwritten(tmp_path: Path) -> None:
+    manifest = tmp_path / "execution_manifest.json"
+    _write_once(manifest, {"run_id": "run-first"})
+
+    with pytest.raises(FileExistsError):
+        _write_once(manifest, {"run_id": "run-replacement"})
+
+    assert json.loads(manifest.read_text(encoding="utf-8")) == {"run_id": "run-first"}
 
 
 def test_post_execution_inventory_preserves_original_and_covers_appended_files(
