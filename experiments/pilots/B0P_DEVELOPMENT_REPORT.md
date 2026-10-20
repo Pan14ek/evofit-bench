@@ -165,7 +165,7 @@ pytest --no-cov -p no:cacheprovider -q \
   tests/unit/test_b0p_development.py \
   tests/unit/test_b0p_git_inventory.py \
   tests/unit/test_b0p_execution.py
-# 35 passed
+# 39 passed
 
 ruff check experiments/execution/tooling/b0p_execution.py \
   experiments/execution/tooling/b0p_isolated_b0_runner.py \
@@ -190,8 +190,27 @@ python scripts/verify_b0p_development_execution.py \
 # exit 0; verified=true; EXECUTED_PARTIAL
 ```
 
-`make development-quality` and hosted GitHub Actions are tracked separately;
-this report does not infer their status from the focused checks above.
+`make development-quality` passed locally: Ruff check and format, Mypy (119
+source files), Bandit, Import Linter (5 kept, 0 broken), architecture tests (6
+passed), migration validation, the DEVELOPMENT regression set (414 passed),
+EXP-01 (49 passed), and EXP-02 (30 passed). The aggregate target excludes
+`tests/unit/test_da01_execution.py` and
+`tests/unit/test_research_schema_foundation.py`; neither is counted as passed.
+One existing Starlette/httpx deprecation warning was emitted.
+
+The exact local invocation used a disposable PostgreSQL test container and
+temporary cache paths to keep tool caches outside the managed worktree:
+
+```bash
+PATH=/private/tmp/b0p-uv/bin:$PATH UV_CACHE_DIR=/private/tmp/b0p-uv-cache UV_PROJECT_ENVIRONMENT=/private/tmp/b0p-venv RUFF_CACHE_DIR=/private/tmp/b0p-ruff-cache MYPY_CACHE_DIR=/private/tmp/b0p-mypy-cache PYTEST_ADDOPTS='-p no:cacheprovider' TEST_DATABASE_URL=postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test make UV=/private/tmp/b0p-uv-cache-wrapper development-quality
+# PASS
+```
+
+Hosted GitHub Actions run [#220](https://github.com/Pan14ek/evofit-bench/actions/runs/39480351406)
+completed successfully on implementation commit
+`2abf028e758c0736656dbf27afff893e54c3c5e0`. The follow-up commit updates this
+report's focused-test count and records those verification results; it does not
+change the tested implementation.
 
 ## Limits and next experiment
 
