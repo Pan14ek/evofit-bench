@@ -34,6 +34,9 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `exp04_method_p_execution_trace_v1.schema.json`
 - `exp04_evidence_verifier_config_v1.schema.json`
 - `pilot02_method_input_profile_v1.schema.json`
+- `pilot02_method_input_profile_v2.schema.json` (additive inherited evaluator bindings)
+- `pilot02_inherited_evaluator_results_v1.schema.json`
+- `pilot02_inherited_evaluator_inventory_v1.schema.json`
 
 This is a selected list, not a complete source inventory.
 
@@ -74,6 +77,11 @@ translated stages, evaluator artifacts, and embedded byte digests. Evaluator
 evidence permits `inspected_edge_count: null` when a collector does not report
 an inspection count; this remains unresolved input and must not be serialized
 as a fabricated zero.
+Profile V2 preserves V1 and adds digest-bound parent-row evaluator artifacts
+against the exact A0 representation-catalog bytes. PILOT-02 inherited
+evaluator results require per-representation source/configuration identities,
+commands, timings, raw-stream hashes, and an evaluator inventory. They describe DEVELOPMENT execution only; they do not change
+DA01 prediction, scorer, or evidence contracts.
 
 ## Verification and further reading
 

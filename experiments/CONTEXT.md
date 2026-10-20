@@ -14,6 +14,7 @@ Scientific protocol, scenarios, execution, curated evidence and run results.
 - `schemas/development_evidence_bundle_v1.schema.json`
 - `schemas/fitness_representation_evidence_v1.schema.json`
 - `execution/EXP04_EVIDENCE_ADMISSION.md`
+- `execution/schemas/pilot02_inherited_evaluator_results_v1.schema.json`
 - `results/` (ignored generated run outputs)
 - `pilots/` contains PILOT-01 and PILOT-02 protocols, reports, manuscript subsections, generated tables, evidence archives, and narrow tools
 
@@ -40,6 +41,12 @@ observations and explicitly TEST_ONLY assumptions through existing Method P
 contracts to observe operations and candidate materialization. Those inputs
 are not independent semantic proof or production authority. Keep independent
 coverage pending and never label it DA01 `Coverage_ref`.
+
+Profile V2 additionally binds four unchanged A0 representation rows to exact
+A0.1 DEVELOPMENT evaluator source bytes. Fresh Locust, EXP-01 runtime, and
+PostgreSQL integration outputs remain in the separate ignored run directory;
+they are not passed to P as semantic proof. The inherited-evaluator protocol
+defines these runs before measurement.
 
 ## Verification and further reading
 

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:pilot02-inherited-evaluator-manifest:v1",
+  "title": "PILOT-02 inherited evaluator run manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "created_at_utc",
+    "execution_status",
+    "source_revision",
+    "app_tree_sha",
+    "python_version",
+    "platform",
+    "workload_profile_sha256",
+    "test_database",
+    "compose_project",
+    "exp01_run_id",
+    "artifact_inventory_sha256",
+    "evaluator_results_sha256",
+    "evidence_integrity_status",
+    "artifact_count"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "run_id": {"type": "string", "pattern": "^pilot02-inherited-[A-Za-z0-9][A-Za-z0-9._-]{0,48}$"},
+    "created_at_utc": {"type": "string", "format": "date-time"},
+    "execution_status": {"enum": ["completed_development_evidence", "partial"]},
+    "source_revision": {"$ref": "#/$defs/sha1"},
+    "app_tree_sha": {"$ref": "#/$defs/sha1"},
+    "python_version": {"type": "string", "minLength": 1},
+    "platform": {"type": "string", "minLength": 1},
+    "workload_profile_sha256": {"$ref": "#/$defs/sha256"},
+    "test_database": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host", "port", "database_name", "container_id", "credentials_recorded", "isolation_requirement"],
+      "properties": {
+        "host": {"type": "string", "minLength": 1},
+        "port": {"type": ["integer", "null"], "minimum": 1, "maximum": 65535},
+        "database_name": {"type": "string", "minLength": 1},
+        "container_id": {"type": ["string", "null"]},
+        "credentials_recorded": {"const": false},
+        "isolation_requirement": {"type": "string", "minLength": 1}
+      }
+    },
+    "compose_project": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{0,62}$"},
+    "exp01_run_id": {"type": "string", "minLength": 1},
+    "artifact_inventory_sha256": {"$ref": "#/$defs/sha256"},
+    "evaluator_results_sha256": {"$ref": "#/$defs/sha256"},
+    "evidence_integrity_status": {"enum": ["pending", "validated"]},
+    "artifact_count": {"type": "integer", "minimum": 1}
+  },
+  "$defs": {
+    "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

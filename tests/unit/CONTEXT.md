@@ -16,7 +16,9 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_exp01_evidence.py`
 - `test_exp02_fitness_evidence.py`
 - `test_pilot01_results.py`
-- `test_pilot02_method_input_profile.py`
+- `test_pilot02_method_input_profile.py` (also checks evaluator-run records bind source,
+  configuration, command, metrics and raw streams to exact digests)
+- `test_p_candidate_governance_v1.py` (including verified inherited-row bindings)
 - `test_pilot02_candidate_evaluators.py`
 - `test_pilot02_testonly_execution.py`
 - `test_fault_state.py`
@@ -38,6 +40,8 @@ Test negative/unverified/expired/contradictory inputs plus backward compatibilit
 PILOT-02 candidate-evaluator cases verify the materialized row, source revision,
 profile artifacts, scope, stage, coverage links, and evidence contract before a
 scoped evaluator can run; mismatches must remain unmeasured.
+Profile V2 tests also reject parent-catalog digest mismatches, unknown inherited
+rows, and evaluator bytes that do not match the verified profile binding.
 SPEC03 regression cases also check stale pair revisions, conflicting and
 digest-tampered pair assessments, parent-byte/mapping consistency, publish
 decision integrity, exact-hash rollback authorization, and full-template

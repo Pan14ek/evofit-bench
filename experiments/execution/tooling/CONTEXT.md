@@ -105,6 +105,13 @@ coverage or authority. Keep the post-run diagnostics distinct from that
 sidecar. The existing P algorithm continues to produce its own operations,
 candidate, and governance decision.
 
+Profile V2 also supplies digest-pinned A0.1 DEVELOPMENT evaluator bindings for
+parent representations. The V3 verifier checks them against the exact parent
+catalog digest and parent row identities. `p_candidate.materialize_candidate`
+attaches only those verified artifact references to a detached candidate
+snapshot and validates their bytes; it does not mutate parent bytes or consume
+the run's evaluator outputs as semantic proof. V1 profiles remain supported.
+
 `p_semantic.py` records compliance only when evaluator execution, identity,
 target/stage/mapping scope, and evidence artifacts resolve. Adequacy,
 evidence-contract satisfaction, semantic compatibility, and pair proof remain

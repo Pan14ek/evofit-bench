@@ -21,12 +21,16 @@ Store pilot-specific protocols, reports, derived result tables, and narrow tools
 - `PILOT_02_DEVELOPMENT_ADDENDUM_V3.md` — prospective correction of compliance classification when evaluator scope is unresolved; V2 assumptions remain unchanged.
 - `PILOT_02_DEVELOPMENT_ADDENDUM_V4.md` — prospective correction of the TEST_ONLY execution-evidence admission label in the PILOT-02 trace; it does not claim semantic pair proof.
 - `PILOT_02_A0_1_METHOD_INPUT_PROFILE_V1.json` — exact DEVELOPMENT mapping profile, pinned by the P verifier.
+- `PILOT_02_A0_1_METHOD_INPUT_PROFILE_V2.json` — additive profile binding four inherited A0 rows to A0.1 DEVELOPMENT evaluator source bytes; V1 remains unchanged.
+- `PILOT_02_INHERITED_EVALUATOR_PROTOCOL_V1.md` — pre-execution protocol for the four inherited evaluator observations.
+- `run_pilot02_inherited_evaluators.py` — fresh Locust, EXP-01 runtime and isolated PostgreSQL integration evidence collector; emits per-evaluator source/configuration hashes, raw-stream digests, `evaluator_inventory.json`, results, and a run manifest.
 - `run_pilot02_method_p.py` — validates an EXP-02 run, exports the existing V3 input, verifies the profile, and runs the existing P pipeline.
 - `pilot02_testonly_execution.py` — builds only the prospective continuation's isolated TEST_ONLY policy source, evidence ledger and adaptation sidecar; never used as a production trust anchor.
 - `PILOT_02_REPORT.md`, `PILOT_02_RESULTS.csv`, `PILOT_02_MANUSCRIPT_UA.md`, and `PILOT_02_RAW_EVIDENCE.zip` — evidence-derived pilot outputs and their checksums.
 - `PILOT_02_RAW_EVIDENCE_CONTINUATION.zip` — separate continuation evidence archive; the first run archive remains unchanged.
 - `PILOT_02_RAW_EVIDENCE_CONTINUATION_V2.zip` — corrected prospective continuation archive; V1 assumptions and outputs remain unchanged.
 - `PILOT_02_RAW_EVIDENCE_CONTINUATION_V3.zip` and `PILOT_02_RAW_EVIDENCE_CONTINUATION_V4.zip` — preserved prospective continuations; each archive has a separate SHA-256 sidecar.
+- `PILOT_02_RAW_EVIDENCE_CONTINUATION_V5.zip` — inherited-evaluator execution and V2-profile continuation evidence, with a separate SHA-256 sidecar.
 - `generate_pilot01_results.py` — validates existing EXP-01/02 artifacts, independently derives runtime metrics from raw Locust/process CSV files, cross-checks the manifest values with documented tolerances, and writes the CSV table and descriptive summary.
 - `run_pilot01_measurement.py` — invokes the existing Import Linter, module test, Locust task file, runtime sampler, and EXP-01/02 validators for this pilot only.
 

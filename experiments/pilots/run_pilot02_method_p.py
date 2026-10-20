@@ -27,8 +27,7 @@ from experiments.execution.tooling.hashing import (
     sha256_bytes,
 )
 from experiments.execution.tooling.p_adaptation import (
-    PILOT02_PROFILE_DEFINITION_PATH,
-    PILOT02_PROFILE_DEFINITION_SHA256,
+    PILOT02_PROFILE_PINS,
     run_adaptation,
     verify_v3_p_bundle,
 )
@@ -123,8 +122,13 @@ def _source_blob(revision: str, path: str) -> bytes:
 
 def _embedded_artifacts(profile: dict[str, Any], source_revision: str) -> None:
     """Pin every profile definition, source, configuration and evaluator byte."""
+    version = profile.get("schema_version")
+    pin = PILOT02_PROFILE_PINS.get(version) if isinstance(version, int) else None
+    if pin is None:
+        raise ProtocolError("PILOT02_PROFILE_VERSION_UNSUPPORTED")
+    definition_path, definition_sha256, _ = pin
     references: dict[str, str] = {
-        PILOT02_PROFILE_DEFINITION_PATH: PILOT02_PROFILE_DEFINITION_SHA256,
+        definition_path: definition_sha256,
         str(profile["fitness_configuration_artifact"]["path"]): str(
             profile["fitness_configuration_artifact"]["sha256"]
         ),
@@ -143,6 +147,23 @@ def _embedded_artifacts(profile: dict[str, Any], source_revision: str) -> None:
             if previous is not None and previous != digest:
                 raise ProtocolError("PILOT02_PROFILE_ARTIFACT_CONFLICT")
             references[path] = digest
+    for binding in profile.get("parent_evaluator_bindings", []):
+        for item in [
+            binding["evaluator_artifact"],
+            *binding["evaluator_source_artifacts"],
+        ]:
+            path, digest = str(item["path"]), str(item["sha256"])
+            previous = references.get(path)
+            if previous is not None and previous != digest:
+                raise ProtocolError("PILOT02_PROFILE_ARTIFACT_CONFLICT")
+            references[path] = digest
+    parent_catalog = profile.get("parent_representation_catalog_artifact")
+    if isinstance(parent_catalog, dict):
+        path, digest = str(parent_catalog["path"]), str(parent_catalog["sha256"])
+        previous = references.get(path)
+        if previous is not None and previous != digest:
+            raise ProtocolError("PILOT02_PROFILE_ARTIFACT_CONFLICT")
+        references[path] = digest
 
     embedded: list[dict[str, Any]] = []
     for path, expected_digest in sorted(references.items()):
@@ -158,8 +179,8 @@ def _embedded_artifacts(profile: dict[str, Any], source_revision: str) -> None:
             }
         )
     profile["profile_definition_artifact"] = {
-        "path": PILOT02_PROFILE_DEFINITION_PATH,
-        "sha256": PILOT02_PROFILE_DEFINITION_SHA256,
+        "path": definition_path,
+        "sha256": definition_sha256,
     }
     profile["embedded_evaluator_artifacts"] = embedded
 
@@ -375,6 +396,36 @@ def _profile_artifact_binding_errors(
             or sha256_bytes(source_content) != digest
         ):
             errors.append(f"profile_artifact_digest_mismatch:{path}")
+    for binding in profile.get("parent_evaluator_bindings", []):
+        if not isinstance(binding, dict):
+            errors.append("profile_parent_binding_invalid")
+            continue
+        for reference in [
+            binding.get("evaluator_artifact"),
+            *binding.get("evaluator_source_artifacts", []),
+        ]:
+            if not isinstance(reference, dict):
+                errors.append("profile_parent_artifact_reference_invalid")
+                continue
+            path = str(reference.get("path", ""))
+            digest = str(reference.get("sha256", ""))
+            matches = [row for row in embedded if isinstance(row, dict) and row.get("path") == path]
+            if len(matches) != 1:
+                errors.append(f"profile_artifact_inventory_mismatch:{path}")
+                continue
+            record = matches[0]
+            try:
+                content = base64.b64decode(str(record.get("content_base64", "")), validate=True)
+                source_content = _source_blob(source_revision, path)
+            except (ValueError, binascii.Error, OSError, subprocess.CalledProcessError):
+                errors.append(f"profile_artifact_source_unavailable:{path}")
+                continue
+            if (
+                record.get("sha256") != digest
+                or sha256_bytes(content) != digest
+                or sha256_bytes(source_content) != digest
+            ):
+                errors.append(f"profile_artifact_digest_mismatch:{path}")
     return sorted(set(errors))
 
 
@@ -455,8 +506,13 @@ def _candidate_profile_binding_errors(
         errors.append("profile_scope_or_obligation_binding_mismatch")
 
     profile_definition = profile.get("profile_definition_artifact")
-    if not isinstance(profile_definition, dict) or profile_definition.get("sha256") != (
-        PILOT02_PROFILE_DEFINITION_SHA256
+    version = profile.get("schema_version")
+    pin = PILOT02_PROFILE_PINS.get(version) if isinstance(version, int) else None
+    if (
+        pin is None
+        or not isinstance(profile_definition, dict)
+        or profile_definition.get("path") != pin[0]
+        or profile_definition.get("sha256") != pin[1]
     ):
         errors.append("profile_definition_digest_mismatch")
     errors.extend(_profile_artifact_binding_errors(profile, mapping, source_revision))
@@ -810,6 +866,7 @@ def run_pilot(
     *,
     test_only_continuation: bool = False,
     test_only_assumptions_path: Path | None = None,
+    profile_version: int = 2,
 ) -> dict[str, Any]:
     """Validate authentic EXP-02 evidence, execute P, and write a reproducible trace."""
     root = ROOT.resolve(strict=True)
@@ -824,6 +881,10 @@ def run_pilot(
         raise ValueError("A0.1 app tree differs from the protocol-pinned source tree")
     if test_only_assumptions_path is not None and not test_only_continuation:
         raise ValueError("TEST_ONLY assumptions require --test-only-continuation")
+    profile_pin = PILOT02_PROFILE_PINS.get(profile_version)
+    if profile_pin is None:
+        raise ValueError("unsupported PILOT-02 profile version")
+    profile_path, profile_sha256, _ = profile_pin
 
     exp02_bundle = validate_bundle(exp02_path)
     exp02_evidence = exp02.validate_representation_evidence(exp02_path, exp02_bundle)
@@ -871,7 +932,7 @@ def run_pilot(
         )
         trust_context: Pilot02TestOnlyTrustContext | None = None
         if test_only_continuation:
-            profile_bytes = _source_blob(source_revision, PILOT02_PROFILE_DEFINITION_PATH)
+            profile_bytes = _source_blob(source_revision, profile_path)
             profile = json.loads(profile_bytes)
             ruleset = load_and_validate_ruleset(
                 POLICY_SOURCE / "policy/applicability_ruleset_v1.json",
@@ -916,10 +977,8 @@ def run_pilot(
             source_revision,
             str(registry["as_of"]),
         )
-        profile = json.loads(_source_blob(source_revision, PILOT02_PROFILE_DEFINITION_PATH))
-        if sha256_bytes(_source_blob(source_revision, PILOT02_PROFILE_DEFINITION_PATH)) != (
-            PILOT02_PROFILE_DEFINITION_SHA256
-        ):
+        profile = json.loads(_source_blob(source_revision, profile_path))
+        if sha256_bytes(_source_blob(source_revision, profile_path)) != profile_sha256:
             raise ProtocolError("PILOT02_PROFILE_DEFINITION_SOURCE_MISMATCH")
         profile["architecture_source_sha"] = source_revision
         profile["a0_1_app_tree_sha"] = v3_manifest["after_tree_sha"]
@@ -1136,7 +1195,7 @@ def run_pilot(
             "policy_normative_statuses": sorted(
                 {str(row.get("normative_status")) for row in registry["policies"]}
             ),
-            "profile_definition_sha256": PILOT02_PROFILE_DEFINITION_SHA256,
+            "profile_definition_sha256": profile_sha256,
             "trust_scope": result.evidence_trust_scope or "none",
             "test_only_assumptions_sha256": (
                 assumptions_digest if test_only_continuation else None
@@ -1213,6 +1272,7 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         help="Use a tracked PILOT-02 TEST_ONLY assumption set for a prospective continuation.",
     )
+    parser.add_argument("--profile-version", type=int, choices=[1, 2], default=2)
     args = parser.parse_args(argv)
     try:
         manifest = run_pilot(
@@ -1220,6 +1280,7 @@ def main(argv: list[str] | None = None) -> int:
             args.output_dir,
             test_only_continuation=args.test_only_continuation,
             test_only_assumptions_path=args.test_only_assumptions,
+            profile_version=args.profile_version,
         )
     except (OSError, ValueError, KeyError, ProtocolError) as error:
         print(json.dumps({"status": "rejected", "reason": str(error)}, sort_keys=True))

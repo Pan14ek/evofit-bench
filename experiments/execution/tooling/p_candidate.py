@@ -49,6 +49,7 @@ def materialize_candidate(
     operation_plan: OperationPlan,
     artifact_bytes: Mapping[str, bytes],
     valid_obligation_ids: Sequence[str] | None = None,
+    parent_evaluator_bindings: Sequence[Mapping[str, Any]] = (),
 ) -> dict[str, Any]:
     """Apply a reviewed plan to an immutable copy and validate exact artifact bytes."""
     if not _SHA1.fullmatch(architecture_source_sha):
@@ -73,6 +74,7 @@ def materialize_candidate(
     by_id = {str(row.get("id")): row for row in representations}
     if len(by_id) != len(representations):
         raise ContractValidationError("P03_PARENT_REPRESENTATION_ID_DUPLICATE")
+    _apply_parent_evaluator_bindings(by_id, parent_evaluator_bindings, artifact_bytes)
     changes = [operation.to_dict() for operation in operation_plan.operations]
     for operation in operation_plan.operations:
         _apply_operation(operation, by_id, representations)
@@ -123,6 +125,41 @@ def materialize_candidate(
     }
     validate_payload("p_candidate_configuration_v1.schema.json", payload)
     return payload
+
+
+def _apply_parent_evaluator_bindings(
+    representations: Mapping[str, dict[str, Any]],
+    bindings: Sequence[Mapping[str, Any]],
+    artifact_bytes: Mapping[str, bytes],
+) -> None:
+    """Attach verified DEVELOPMENT evaluator artifacts to exact parent rows."""
+    seen: set[str] = set()
+    for binding in bindings:
+        representation_id = binding.get("representation_id")
+        artifact = binding.get("evaluator_artifact")
+        if not isinstance(representation_id, str) or representation_id in seen:
+            raise ContractValidationError("P03_PARENT_EVALUATOR_BINDING_ID_INVALID")
+        seen.add(representation_id)
+        row = representations.get(representation_id)
+        if row is None:
+            raise ContractValidationError("P03_PARENT_EVALUATOR_BINDING_TARGET_MISSING")
+        if not isinstance(artifact, Mapping):
+            raise ContractValidationError("P03_PARENT_EVALUATOR_ARTIFACT_INVALID")
+        path, digest = artifact.get("path"), artifact.get("sha256")
+        if (
+            not isinstance(path, str)
+            or _SAFE_PATH.fullmatch(path) is None
+            or not isinstance(digest, str)
+            or _SHA256.fullmatch(digest) is None
+        ):
+            raise ContractValidationError("P03_PARENT_EVALUATOR_ARTIFACT_INVALID")
+        content = artifact_bytes.get(path)
+        if content is None or sha256_bytes(content) != digest:
+            raise ContractValidationError("P03_PARENT_EVALUATOR_ARTIFACT_BYTES_MISMATCH")
+        current = row.get("evaluator_artifact")
+        if current is not None and current != dict(artifact):
+            raise ContractValidationError("P03_PARENT_EVALUATOR_ARTIFACT_CONFLICT")
+        row["evaluator_artifact"] = {"path": path, "sha256": digest}
 
 
 def derive_configuration_version(

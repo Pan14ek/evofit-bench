@@ -1,0 +1,356 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:pilot02-method-input-profile:v2",
+  "title": "PILOT-02 A0.1 architecture-compliance and inherited evaluator development profile v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "profile_id",
+    "profile_status",
+    "architecture_before_sha",
+    "architecture_source_sha",
+    "a0_1_source_basis_sha",
+    "a0_1_app_tree_sha",
+    "profile_definition_artifact",
+    "fitness_configuration_sha256",
+    "fitness_configuration_artifact",
+    "obligation_catalog_sha256",
+    "obligation_catalog_artifact",
+    "criterion_id",
+    "criterion_intent",
+    "stage_translation",
+    "mappings",
+    "parent_representation_catalog_sha256",
+    "parent_representation_catalog_artifact",
+    "parent_evaluator_bindings"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 2
+    },
+    "profile_id": {
+      "const": "PILOT_02_A0_1_ARCHITECTURE_COMPLIANCE_V2"
+    },
+    "profile_status": {
+      "const": "DEVELOPMENT_UNFROZEN"
+    },
+    "architecture_before_sha": {
+      "$ref": "#/$defs/sha1"
+    },
+    "architecture_source_sha": {
+      "$ref": "#/$defs/sha1"
+    },
+    "a0_1_source_basis_sha": {
+      "$ref": "#/$defs/sha1"
+    },
+    "a0_1_app_tree_sha": {
+      "$ref": "#/$defs/sha1"
+    },
+    "profile_definition_artifact": {
+      "$ref": "#/$defs/artifact"
+    },
+    "fitness_configuration_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "fitness_configuration_artifact": {
+      "$ref": "#/$defs/artifact"
+    },
+    "obligation_catalog_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "obligation_catalog_artifact": {
+      "$ref": "#/$defs/artifact"
+    },
+    "criterion_id": {
+      "const": "architecture_compliance"
+    },
+    "criterion_intent": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stage_translation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_stage",
+        "method_stage",
+        "rule_id"
+      ],
+      "properties": {
+        "source_stage": {
+          "const": "ci_test"
+        },
+        "method_stage": {
+          "const": "ci"
+        },
+        "rule_id": {
+          "const": "PILOT02_CI_TEST_TO_CI_V1"
+        }
+      }
+    },
+    "mappings": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "$ref": "#/$defs/mapping"
+      }
+    },
+    "embedded_evaluator_artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/embeddedArtifact"
+      }
+    },
+    "parent_representation_catalog_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "parent_representation_catalog_artifact": {
+      "$ref": "#/$defs/artifact"
+    },
+    "parent_evaluator_bindings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/parentEvaluatorBinding"
+      }
+    }
+  },
+  "$defs": {
+    "sha1": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "unit",
+        "evidence_path"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_path": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "representation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "active",
+        "criterion",
+        "stage",
+        "evaluator",
+        "evaluator_artifact",
+        "covers",
+        "applicability_scope",
+        "evidence_contract"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+        },
+        "active": {
+          "type": "boolean"
+        },
+        "criterion": {
+          "const": "architecture_compliance"
+        },
+        "stage": {
+          "const": "ci"
+        },
+        "evaluator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evaluator_artifact": {
+          "$ref": "#/$defs/artifact"
+        },
+        "covers": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "applicability_scope": {
+          "type": "object"
+        },
+        "evidence_contract": {
+          "type": "object"
+        }
+      }
+    },
+    "mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_representation_id",
+        "obligation_id",
+        "source_stage",
+        "source_evaluator_id",
+        "source_evaluator_name",
+        "source_scope_id",
+        "architecture_scope",
+        "configuration_artifact",
+        "evaluator_source_artifacts",
+        "metric",
+        "candidate_template"
+      ],
+      "properties": {
+        "source_representation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "obligation_id": {
+          "enum": [
+            "AC_LAYERING",
+            "AC_MODULE_STRUCTURE"
+          ]
+        },
+        "source_stage": {
+          "const": "ci_test"
+        },
+        "source_evaluator_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_evaluator_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_scope_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "architecture_scope": {
+          "type": "string",
+          "minLength": 1
+        },
+        "configuration_artifact": {
+          "$ref": "#/$defs/artifact"
+        },
+        "evaluator_source_artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/artifact"
+          }
+        },
+        "metric": {
+          "$ref": "#/$defs/metric"
+        },
+        "candidate_template": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "template_id",
+            "representation"
+          ],
+          "properties": {
+            "template_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "representation": {
+              "$ref": "#/$defs/representation"
+            }
+          }
+        }
+      }
+    },
+    "embeddedArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "size_bytes",
+        "sha256",
+        "content_base64"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "content_base64": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "parentEvaluatorBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "representation_id",
+        "binding_status",
+        "evaluator_artifact",
+        "evaluator_source_artifacts"
+      ],
+      "properties": {
+        "representation_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+        },
+        "binding_status": {
+          "const": "A0_1_DEVELOPMENT_ADAPTER"
+        },
+        "evaluator_artifact": {
+          "$ref": "#/$defs/artifact"
+        },
+        "evaluator_source_artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/artifact"
+          }
+        }
+      }
+    }
+  }
+}
