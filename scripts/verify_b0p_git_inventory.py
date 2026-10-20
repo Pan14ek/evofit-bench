@@ -34,7 +34,7 @@ def _git(repository: Path, *args: str) -> bytes:
     if executable is None:
         raise SourceInventoryError("Git executable is required")
     try:
-        result = subprocess.run(  # noqa: S603 - fixed local executable and argv only
+        result = subprocess.run(  # noqa: S603  # nosec B603 - fixed Git executable and argv only
             [executable, "-C", str(repository), *args],
             check=True,
             capture_output=True,
