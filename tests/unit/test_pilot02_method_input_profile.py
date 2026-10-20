@@ -203,7 +203,7 @@ def _profile_v2_input() -> tuple[
         )
     )
     parent_representations = [
-        _normalize_representation(row) for row in parent_catalog["representations"]
+        dict(_normalize_representation(row)) for row in parent_catalog["representations"]
     ]
     bindings = {
         "manifest": {
@@ -224,7 +224,7 @@ def _profile_v2_input() -> tuple[
         bindings["snapshot"],
         obligations,
         parent_representations,
-        profile["parent_representation_catalog_sha256"],
+        str(profile["parent_representation_catalog_sha256"]),
     )
 
 

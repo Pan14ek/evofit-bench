@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import atexit
 import importlib.metadata
 import json
 import os
@@ -584,6 +585,28 @@ def run_evaluators(
         "EXPERIMENT_MODE": "false",
         "SEED_ID": "a0-v1",
     }
+    cleanup_state = [True]
+
+    def cleanup_compose_on_exit() -> None:
+        """Stop only this uniquely named Compose project after an exceptional exit."""
+        if not cleanup_state[0]:
+            return
+        docker_executable = shutil.which("docker")
+        if docker_executable is None:
+            return
+        try:
+            subprocess.run(  # noqa: S603 - fixed Compose cleanup argv, no shell
+                [docker_executable, "compose", "down"],
+                cwd=ROOT,
+                env=environment,
+                check=False,
+                capture_output=True,
+                timeout=180,
+            )
+        except (OSError, subprocess.SubprocessError):
+            pass
+
+    atexit.register(cleanup_compose_on_exit)
     setup_commands: list[dict[str, Any]] = []
     for label, argv, timeout_seconds in [
         (
@@ -1144,13 +1167,7 @@ def run_evaluators(
         or exp01_summary.get("runtime_sampling_status") != "available"
     ):
         results["execution_status"] = "partial"
-    elif (
-        integration_record["status"] == "partial"
-        or integration_record["exit_status"] != 0
-        or (integration_record["junit"] or {}).get("failures", 0) > 0
-        or (integration_record["junit"] or {}).get("errors", 0) > 0
-        or (integration_record["junit"] or {}).get("skipped", 0) > 0
-    ):
+    elif integration_record["execution_status"] == "partial":
         results["execution_status"] = "partial"
     elif execute_method_p and method_p_summary.get("status") != "measured":
         results["execution_status"] = "partial"
@@ -1163,6 +1180,9 @@ def run_evaluators(
         environment=environment,
         timeout_seconds=180,
     )
+    cleanup_state[0] = cleanup_command["exit_status"] != 0
+    if cleanup_state[0]:
+        results["execution_status"] = "partial"
     results["setup_commands"] = setup_commands
     results["cleanup_command"] = cleanup_command
     results_path = run_dir / "evaluator_results.json"
