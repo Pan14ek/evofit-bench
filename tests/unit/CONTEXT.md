@@ -67,3 +67,5 @@ Current coverage gate reports app-only coverage, not research-tool or requiremen
 ## Verification and further reading
 
 Consult the original source files and nearest relevant tests, then `docs/README.md` for repository-wide architecture, experiment, stack and verification references. SPEC 01/02/03 DEVELOPMENT checks use `make development-quality` with a **disposable** PostgreSQL database; its lint, format, type-check, and test discovery exclude the two protected DA01 modules. When a context summary conflicts with source code, a reviewed manifest or a frozen scientific protocol, **report the conflict**; do not silently reinterpret research rules.
+
+- test_pilot02_v6_archive.py verifies the PILOT-02 V6 packaging-copy helper preserves payload bytes, emits sha256sum-compatible relative rows, and rejects traversal paths; it does not alter or authorize the historical experiment.

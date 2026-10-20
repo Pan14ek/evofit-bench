@@ -1,0 +1,335 @@
+{
+  "schema_version": 1,
+  "audit_id": "PILOT_02_FINAL_V6_GOVERNANCE_AUDIT",
+  "audit_date": "2026-10-20",
+  "scope": {
+    "experiment": "PILOT-02",
+    "classification": "DEVELOPMENT_TEST_ONLY",
+    "transition": "A0_MONOLITH -> A0_1_CAPABILITY_MODULES",
+    "source_revision": "24e9fb91161523377946e16fe5699e49955c2db4",
+    "no_evaluator_or_adaptation_rerun": true,
+    "purpose": "Audit existing V5/V6 evidence and the recorded V6 Method P decision; no new experimental iteration."
+  },
+  "source_evidence": {
+    "v5_archive": {
+      "path": "PILOT_02_RAW_EVIDENCE_CONTINUATION_V5.zip",
+      "sha256": "358c6758c5acf7efde694357471a17f12546d8f3076a85fc1263634688240d9b",
+      "zip_crc": "PASS"
+    },
+    "v6_original_archive": {
+      "path": "PILOT_02_RAW_EVIDENCE_CONTINUATION_V6.zip",
+      "sha256": "9da182c1db37f00ddf8b118564a60e27f6350b83492d205b9abd54fdcd795e2e",
+      "preserved_unchanged": true
+    },
+    "v6_method_trace": {
+      "path": "PILOT_02_RAW_EVIDENCE_CONTINUATION_V6.zip::primary/method_p/method_p_trace.json",
+      "sha256": "869c6f18cca02ec1c61a9d19de7a814423fc63ac57801d5815c6b696a4fe8995",
+      "governance_decision_sha256": "6555c7b18d9f984c37a0fff39a4c23978a2eecb02a30d75a7b60e055cbb88405"
+    },
+    "v6_candidate": {
+      "path": "PILOT_02_RAW_EVIDENCE_CONTINUATION_V6.zip::primary/method_p/candidate_configuration.json",
+      "canonical_sha256": "55061a7651faff4d2156bfe1c9734507b521c95be16e7f884114df17e28ae37e",
+      "file_sha256": "1f58103112ace2b360b9efcfe806e2f846a31e9f7314b31a25e4780217e5dbce",
+      "validation": "valid"
+    }
+  },
+  "invariant_audit": {
+    "method_verdicts_before_audit": {
+      "INV-01": "PASS",
+      "INV-02": "PASS",
+      "INV-03": "PASS",
+      "INV-04": "PASS",
+      "INV-05": "UNKNOWN",
+      "INV-06": "PASS",
+      "INV-07": "PASS",
+      "INV-08": "PASS",
+      "INV-09": "PASS",
+      "INV-10": "UNKNOWN",
+      "INV-11": "PASS",
+      "INV-12": "PASS"
+    },
+    "method_verdicts_after_audit": {
+      "INV-01": "PASS",
+      "INV-02": "PASS",
+      "INV-03": "PASS",
+      "INV-04": "PASS",
+      "INV-05": "UNKNOWN",
+      "INV-06": "PASS",
+      "INV-07": "PASS",
+      "INV-08": "PASS",
+      "INV-09": "PASS",
+      "INV-10": "UNKNOWN",
+      "INV-11": "PASS",
+      "INV-12": "PASS"
+    },
+    "investigated": [
+      {
+        "id": "INV-05",
+        "formal_requirement": "Wrong authority, time, revision, provenance, digest or reuse of stale validation never yields a positive proof.",
+        "implementation": "experiments/execution/tooling/p_adaptation.py::_invariant_verdicts; input status is derived by _input_status; extracted-fact validation is experiments/execution/tooling/p_input_validation.py::validate_facts.",
+        "verification_function": "validate_facts(snapshot, vocabulary, source_manifest, fact_verifier=None) leaves EXTRACTED facts UNDETERMINED; _input_status propagates that status; _invariant_verdicts reports UNKNOWN unless input is VALID, TEST_ONLY evidence context is verified, and the bundle registration digest is current.",
+        "current_input_evidence": {
+          "snapshot_schema_status": "VALID",
+          "snapshot_integrity_status": "VALID",
+          "snapshot_authority_status": "VALID",
+          "snapshot_completeness_status": "VALID",
+          "snapshot_fact_status": "UNDETERMINED",
+          "snapshot_fact_reason_codes": [
+            "EXTRACTED_FACT_UNVERIFIED"
+          ],
+          "unverified_fact_ids": [
+            "FV01_AFTER",
+            "FV01_BEFORE",
+            "FV02_MODULES_ADDED",
+            "FV03_MODULES_REMOVED"
+          ],
+          "adaptation_evidence_trust_scope": "TEST_ONLY",
+          "execution_evidence_admission_status": "admitted_execution_evidence",
+          "snapshot_authority_and_completeness_scope": "TEST_ONLY"
+        },
+        "exact_unknown_reason": "The V6 runner supplied no fact_verifier. The source references bind the bytes and commit/tree labels of git_tree_inventory_v1 inventories, but the V6 input contains no independent verification that those inventory rows correspond to the pinned commit trees. Re-deriving snapshot facts from the same inventory bytes would be a consistency check, not independent source verification.",
+        "technical_semantic_evidence_or_authority": "evidence_provenance_and_independent_verification",
+        "existing_evidence_can_resolve": false,
+        "classification": "BLOCKED_BY_MISSING_INDEPENDENT_EVIDENCE",
+        "additional_development_execution_needed": false,
+        "g1_g4_dependency": {
+          "required_for_this_development_invariant_check": false,
+          "required_for_measured_da01_claims": true,
+          "current_external_or_production_authority": "unavailable"
+        },
+        "result": "Preserve UNKNOWN. No fact verdict was promoted and no synthetic approval was created."
+      },
+      {
+        "id": "INV-10",
+        "formal_requirement": "Never ACCEPT on invalid or unresolved mandatory coverage; HOLD cannot publish; rollback needs fresh current-state validation.",
+        "implementation": "experiments/execution/tooling/p_adaptation.py::_invariant_verdicts and _issue_governance_pipeline_authorization; experiments/execution/tooling/p_governance.py::governance_decision and publication checks.",
+        "verification_function": "The V6 method verdict is PASS only when governance_ready is true: candidate coverage COMPLETE, candidate valid, no unknown mandatory before-state, positive inputs, and no operation-plan holds or rejects. The governance-pipeline capability is issued only when all twelve verdicts PASS and all other required conditions are positive.",
+        "current_input_evidence": {
+          "candidate_validation": "valid",
+          "candidate_internal_coverage_status": "COMPLETE",
+          "candidate_internal_coverage_numerator_denominator": "2/2",
+          "coverage_scope": "TEST_ONLY target obligations AC_LAYERING and AC_MODULE_STRUCTURE only",
+          "operation_plan_hold_reasons": [
+            "IMPACTED_RETAIN_REASSESSMENT_MISSING"
+          ],
+          "governance_result": "HOLD",
+          "governance_decision_sha256": "6555c7b18d9f984c37a0fff39a4c23978a2eecb02a30d75a7b60e055cbb88405",
+          "publish_or_rollback_attempt": "none"
+        },
+        "exact_unknown_reason": "The code's aggregate governance_ready predicate is false because input status is UNDETERMINED and the operation plan contains IMPACTED_RETAIN_REASSESSMENT_MISSING. The recorded HOLD is fail-closed and no ACCEPT or publication occurred, but the method's stricter INV-10 readiness predicate is not fully established.",
+        "technical_semantic_evidence_or_authority": "downstream_of_unresolved_input_provenance_and_retained_pair_evidence",
+        "existing_evidence_can_resolve": false,
+        "classification": "BLOCKED_BY_MISSING_INDEPENDENT_EVIDENCE",
+        "additional_development_execution_needed": false,
+        "g1_g4_dependency": {
+          "required_for_this_development_safety_check": false,
+          "required_for_measured_da01_claims": true,
+          "current_external_or_production_authority": "unavailable"
+        },
+        "engineering_regressions": [
+          "test_unresolved_coverage_is_hold_and_proven_incomplete_candidate_is_reject",
+          "test_publication_stays_disabled_without_an_atomic_compare_and_swap_writer",
+          "test_rollback_requires_positive_fresh_current_context_validation"
+        ],
+        "regression_scope": "synthetic software safety evidence; not independent scientific evidence"
+      }
+    ]
+  },
+  "retained_representation_audit": {
+    "impact_assessment_sha256": "215b68fb8415ea11a771fd4f5c58664c821d323a8dba6520f1c519ad5c6f10a8",
+    "traceability_inventory_status": "incomplete",
+    "impact_status_for_all_four": "POSSIBLY_AFFECTED",
+    "impact_reason_for_all_four": "TRACEABILITY_INVENTORY_INCOMPLETE",
+    "after_applicability_for_linked_non_target_obligations": "INACTIVE under the PILOT-02 TEST_ONLY assumption; not an independent applicability verdict",
+    "candidate_behavior": "The four parent rows are carried forward unchanged in the materialized candidate. The operation plan does not record positive RETAIN operations for them; it adds IMPACTED_RETAIN_REASSESSMENT_MISSING because impact is possible and there are no active after-state links or valid exact-pair reassessments.",
+    "rows": [
+      {
+        "representation_id": "REP_A0_PERF_TEST_HTTP_P95",
+        "obligations": [
+          "P_EXT_LATENCY"
+        ],
+        "transition_impact": "POSSIBLY_AFFECTED; the transition reorganizes internal modules while preserving the single-process HTTP application, but the traceability inventory cannot prove no impact to user-facing request paths.",
+        "stage_scope_metric": "test; user-facing business HTTP operations; Locust http_p95_ms.",
+        "v5_observation": "137 requests; p95 21 ms; p50 13 ms; p99 57 ms; zero recorded Locust request failures; NOT_EVALUATED because no threshold is configured.",
+        "v6_observation": "137 requests; p95 23 ms; p50 13 ms; p99 33 ms; zero recorded Locust request failures; NOT_EVALUATED because no threshold is configured.",
+        "source_sha256": "c8c7922998c8ca2e9479c5c720f547a805418248afc2f078c79493080ac41574",
+        "configuration_sha256": "966bc5e5762324e4b8b9af6d998a29f6a0d919a1321b955922dec6d3bd41f4b1",
+        "provenance_limit": "A0.1 DEVELOPMENT adapter; request target was measured, but the application source-to-container revision is unverified.",
+        "method_exact_pair_status": "UNKNOWN",
+        "retention_verdict": "NOT_ESTABLISHED",
+        "reason": "The observations measure the intended latency statistic but no SLO decision is configured, and there is no exact semantic-pair adequacy proof for the retained A0 representation.",
+        "classification": "BLOCKED_BY_MISSING_INDEPENDENT_EVIDENCE"
+      },
+      {
+        "representation_id": "REP_A0_PERF_RUNTIME_HTTP_DURATION",
+        "obligations": [
+          "P_EXT_LATENCY"
+        ],
+        "transition_impact": "POSSIBLY_AFFECTED; the traceability inventory cannot prove the runtime metric contract is independent of the module change.",
+        "stage_scope_metric": "runtime; business HTTP request duration; Prometheus cumulative histogram buckets/count/sum.",
+        "v5_observation": "153 histogram series, including 102 business series; no quantiles; NOT_EVALUATED because no threshold is configured.",
+        "v6_observation": "153 histogram series, including 102 business series; business request count delta 73 and histogram sum delta 0.607506125 s; no quantiles; NOT_EVALUATED because no threshold is configured.",
+        "source_sha256": "467302575f6eff47e0b1139337b9f6087473c07fd530a520afb4776c9216d4f8",
+        "configuration_sha256": "1b323b9fe5a65995138c821a4d0f174e3158588de7e79df5d42cc4b9005b71b1",
+        "provenance_limit": "A0.1 DEVELOPMENT runtime adapter; the observed container was stable but no authoritative source-to-image revision binding exists.",
+        "method_exact_pair_status": "UNKNOWN",
+        "retention_verdict": "NOT_ESTABLISHED",
+        "reason": "Histogram execution is real but bucket/count/sum data are not latency quantiles, no threshold is set, and no exact semantic-pair adequacy proof exists.",
+        "classification": "BLOCKED_BY_MISSING_INDEPENDENT_EVIDENCE"
+      },
+      {
+        "representation_id": "REP_A0_REL_TEST_INTEGRATION",
+        "obligations": [
+          "R_LOCAL_ATOMICITY"
+        ],
+        "transition_impact": "POSSIBLY_AFFECTED; capability-module transaction and notification boundaries changed, and the incomplete traceability inventory cannot prove no impact.",
+        "stage_scope_metric": "test; local Task/Notification/Audit atomicity path; one targeted pytest integration node.",
+        "v5_observation": "Exact node passed 1/1 with 0 failed, 0 errors, 0 skipped; database container ID was not captured in that V5 attempt.",
+        "v6_observation": "Exact node passed 1/1 with 0 failed, 0 errors, 0 skipped in 1,416,900,709 ns against isolated evofit_pilot02_test; database container ID was captured.",
+        "source_sha256": "dbd306696ecd625f54476a9d918c586c4ca67d532c623ffd04c32c72117e5eb3",
+        "configuration_sha256": "a465ad4f6096867793bb60081d289295fe9af8a6e21a132738fbed348c8bc8cb",
+        "provenance_limit": "V6 source and database are pinned; this one test execution is not an exact semantic-pair proof for the whole R_LOCAL_ATOMICITY obligation.",
+        "method_exact_pair_status": "UNKNOWN",
+        "retention_verdict": "NOT_ESTABLISHED",
+        "reason": "A passing targeted fault-and-consistency test is authentic execution evidence but does not independently establish semantic adequacy or full obligation scope.",
+        "classification": "BLOCKED_BY_MISSING_INDEPENDENT_EVIDENCE"
+      },
+      {
+        "representation_id": "REP_A0_REL_RUNTIME_FAILURES",
+        "obligations": [
+          "R_BUSINESS_FAILURE",
+          "R_HTTP_5XX"
+        ],
+        "transition_impact": "POSSIBLY_AFFECTED; module boundaries changed and the incomplete traceability inventory cannot prove no impact to operation-failure or HTTP response instrumentation.",
+        "stage_scope_metric": "runtime; business HTTP failures and unexpected operation failures; Prometheus counters.",
+        "v5_observation": "76 business requests; matching 5xx, business-operation-failure, and business-rule-rejection series unavailable; UNKNOWN.",
+        "v6_observation": "73 business requests; matching 5xx, business-operation-failure, and business-rule-rejection series unavailable; UNKNOWN. Missing values are not zero.",
+        "source_sha256": "467302575f6eff47e0b1139337b9f6087473c07fd530a520afb4776c9216d4f8",
+        "configuration_sha256": "ecf4c7726418fe53c1fc9e91dc4e5eaca061ad4be0556a473c14f822128dda75",
+        "provenance_limit": "A0.1 DEVELOPMENT runtime adapter; application source-to-image revision remains unverified.",
+        "method_exact_pair_status": "UNKNOWN",
+        "retention_verdict": "NOT_ESTABLISHED",
+        "reason": "The denominator was observed but required numerator/failure samples are absent; normal smoke traffic did not exercise a recorded failure condition, and no exact semantic-pair proof exists.",
+        "classification": "OUT_OF_SCOPE",
+        "future_evidence_note": "A separately scoped faulted runtime observation with verified counter samples could address this metric; it would be a new measurement, not a correction to V6."
+      }
+    ]
+  },
+  "governance": {
+    "candidate_validation": "valid",
+    "candidate_exact_pairs": {
+      "REP_A01_ARCH_INTERNAL_LAYERING_CI -> AC_LAYERING": "VALID / COMPLIANT / TEST_ONLY",
+      "REP_A01_ARCH_MODULE_STRUCTURE_CI -> AC_MODULE_STRUCTURE": "VALID / COMPLIANT / TEST_ONLY"
+    },
+    "internal_target_coverage_diagnostic": "2/2",
+    "coverage_claim_boundary": "Not Coverage_P, Coverage_ref, independent mandatory coverage, or a DA01 result.",
+    "method_result": "HOLD",
+    "remaining_reason_codes": [
+      "IMPACTED_RETAIN_REASSESSMENT_MISSING",
+      "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED",
+      "INVARIANT_VERDICTS_NOT_ALL_POSITIVE",
+      "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING"
+    ],
+    "reason_code_dependencies": {
+      "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED": "The implementation emits this generic reason for UNDETERMINED input status; the specific source is EXTRACTED_FACT_UNVERIFIED, while the trace reports schema, integrity, authority, and completeness fields as valid in the TEST_ONLY context.",
+      "INVARIANT_VERDICTS_NOT_ALL_POSITIVE": "Downstream of INV-05 and INV-10 remaining UNKNOWN.",
+      "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING": "Downstream: internal pipeline capability is issued only when input status, candidate, coverage, cost, plan, and all twelve invariants are positive."
+    },
+    "independent_blocker_count": 2,
+    "independent_blockers": [
+      "unverified extracted source-inventory facts",
+      "missing exact-pair reassessment for possibly affected inherited representations"
+    ],
+    "g1_status": "INCOMPLETE",
+    "g4_status": "NOT AUTHORIZED",
+    "p_algorithm_status": "NOT_READY",
+    "decision": "Outcome B: validated candidate with governance HOLD. No governance algorithm or research gate was changed."
+  },
+  "unresolved_prerequisites": [
+    {
+      "id": "EXTRACTED_FACT_SOURCE_VERIFICATION",
+      "status": "UNRESOLVED",
+      "classification": "BLOCKED_BY_MISSING_INDEPENDENT_EVIDENCE",
+      "can_existing_v5_v6_evidence_resolve": false,
+      "additional_development_execution_needed": false,
+      "reason": "A source-hash-bound inventory is not independent proof that its extracted module rows correspond to the pinned Git tree. Rechecking facts from the same inventory file would be circular.",
+      "method_effect": "INV-05 UNKNOWN; generic INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED remains."
+    },
+    {
+      "id": "INHERITED_EXACT_PAIR_REASSESSMENT",
+      "status": "UNRESOLVED",
+      "classification": "BLOCKED_BY_MISSING_INDEPENDENT_EVIDENCE",
+      "can_existing_v5_v6_evidence_resolve": false,
+      "additional_development_execution_needed": false,
+      "reason": "V5/V6 evaluator outputs and A0.1 adapter bindings prove execution and artifact identity, not exact-pair semantic adequacy. The V6 trace has PAIR_EVIDENCE_MISSING for all four inherited rows; impact remains POSSIBLY_AFFECTED.",
+      "method_effect": "IMPACTED_RETAIN_REASSESSMENT_MISSING remains."
+    },
+    {
+      "id": "RUNTIME_FAILURE_COUNTER_SAMPLES",
+      "status": "UNRESOLVED",
+      "classification": "OUT_OF_SCOPE",
+      "can_existing_v5_v6_evidence_resolve": false,
+      "additional_development_execution_needed": false,
+      "reason": "The canonical workload produced no matching 5xx or operation-failure samples. V6 accurately reports UNKNOWN; the current pilot does not add a new faulted runtime measurement."
+    },
+    {
+      "id": "GOVERNANCE_PIPELINE_PROOF",
+      "status": "UNRESOLVED_DOWNSTREAM",
+      "classification": "BLOCKED_BY_MISSING_INDEPENDENT_EVIDENCE",
+      "independent_blocker": false,
+      "depends_on": [
+        "EXTRACTED_FACT_SOURCE_VERIFICATION",
+        "INHERITED_EXACT_PAIR_REASSESSMENT"
+      ],
+      "reason": "The capability is withheld by the existing fail-closed pipeline until every prerequisite and invariant is positive. No separate pipeline defect was found."
+    },
+    {
+      "id": "G1_G4_MEASURED_DA01_AUTHORIZATION",
+      "status": "NOT_AUTHORIZED",
+      "classification": "OUT_OF_SCOPE",
+      "reason": "G1 and G4 govern measured DA01 claims; this audit remains a separate TEST_ONLY DEVELOPMENT result and does not alter those gates."
+    }
+  ],
+  "claims_boundary": {
+    "verified_engineering": [
+      "Authentic V5 and V6 evaluator executions and digest-bound A0.1 adapter artifacts.",
+      "V6 full candidate configuration validation returned valid.",
+      "Two exact architecture-compliance pairs returned VALID and COMPLIANT in the TEST_ONLY verifier.",
+      "Method P emitted the recorded ADD and REPLACE operations and materialized the parent-bound candidate.",
+      "The corrected package preserves all 1,451 inventoried experimental payload bytes."
+    ],
+    "not_established": [
+      "Independent applicability or mandatory denominator.",
+      "Independent Coverage_P, Coverage_ref, or Method P superiority over B0.",
+      "Positive retention of the four inherited representations.",
+      "Independent human semantic adequacy assessment.",
+      "End-to-end CI/CD, deployment, and runtime effectiveness.",
+      "Statistical significance, broader generalization, or DA01 readiness."
+    ]
+  },
+  "package_audit": {
+    "historical_generation_callsite": "not found in tracked repository; exact original generator invocation cannot be established",
+    "structural_cause": "26 of 1451 inventory paths already began with the archive root before ZIP packaging added the outer root; the other 1425 paths were relative",
+    "original_archive_sha256": "9da182c1db37f00ddf8b118564a60e27f6350b83492d205b9abd54fdcd795e2e",
+    "original_archive_preserved_unchanged": true,
+    "corrected_archive_path": "experiments/pilots/PILOT_02_RAW_EVIDENCE_CONTINUATION_V6_PACKAGING_CORRECTED.zip",
+    "corrected_archive_sha256": "2f94b7957c3c9710e6d19693dd3880df96e6c16ad79d2c69dbf3fd665e7d60cd",
+    "corrected_sidecar_sha256": "257809f057985eefbd4ff7af3ebc0338e681e6db3e3035181649ff7f2c7eced0",
+    "archive_entries_including_manifest": 1452,
+    "verified_payload_count": 1451,
+    "verified_payload_bytes": 17510993,
+    "normalized_member_paths": 26,
+    "payload_bytes_and_sizes_preserved": true,
+    "standard_sha256_manifest_rows": 1451,
+    "clean_extraction_sha256_rows_passed": 1451,
+    "zip_crc": "PASS",
+    "duplicate_missing_unexpected_or_traversal_paths": 0,
+    "reproduction_command": "/private/tmp/evofit-pilot01-main-env/bin/python experiments/pilots/correct_pilot02_v6_archive.py",
+    "clean_extraction_verification": [
+      "PILOT02_AUDIT_TMP=$(mktemp -d /private/tmp/pilot02-v6-clean.XXXXXX)",
+      "unzip -q experiments/pilots/PILOT_02_RAW_EVIDENCE_CONTINUATION_V6_PACKAGING_CORRECTED.zip -d \"$PILOT02_AUDIT_TMP\"",
+      "cd \"$PILOT02_AUDIT_TMP/PILOT_02_RAW_EVIDENCE_CONTINUATION_V6\"",
+      "shasum -a 256 -c SHA256SUMS (macOS) or sha256sum -c SHA256SUMS (GNU/Linux)"
+    ]
+  }
+}

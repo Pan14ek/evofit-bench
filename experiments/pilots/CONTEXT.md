@@ -81,3 +81,6 @@ a DA01 prediction or coverage denominator; Method P governance remains HOLD.
 ## Verification
 
 Use the focused pilot tests and result generator, then the repository's documented `make development-quality` command with a disposable PostgreSQL database. Never interpret `Coverage_P`, `Coverage_ref`, G1/G4, or measured DA01 outcomes from this pilot.
+
+- PILOT-02 final V6 audit: PILOT_02_GOVERNANCE_AUDIT_V1.json records INV-05/INV-10 and four inherited-row reassessments; correct_pilot02_v6_archive.py creates a path-normalized copy while preserving V6 payload bytes; the corrected ZIP and sidecar are separate from the immutable original.
+- tests/unit/test_pilot02_v6_archive.py checks inventory normalization, byte preservation, and traversal rejection. Clean extraction verification uses shasum -a 256 -c SHA256SUMS from the extracted V6 archive root.

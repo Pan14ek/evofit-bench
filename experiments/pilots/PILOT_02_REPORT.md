@@ -288,3 +288,61 @@ PR #22 base is `3fdd5c68f8f60fad5757eefa66cc2aa8b24d9306`. The semantic/evaluato
 The pair verifier, adversarial readback, and proof-to-materialized-template binding satisfy `PILOT02-SEM-01`, `PILOT02-SEM-02`, and `PILOT02-SEM-03`; inherited evaluator evidence records satisfy `PILOT02-DEV-04`. Relevant implementation landmarks are `experiments/pilots/pilot02_semantic_validation.py`, `experiments/pilots/run_pilot02_method_p.py`, `experiments/pilots/run_pilot02_inherited_evaluators.py`, `experiments/execution/tooling/p_semantic.py`, `experiments/execution/tooling/p_candidate.py`, and the focused tests mapped in `docs/TESTING.md`. The existing evaluator schema remains additive/backward-compatible; candidate evidence is rechecked against exact template bytes and source revision; EXP-02 execution data is not semantic proof; no oracle/scorer or frozen B0/DA01 input was changed.
 
 Remaining limits are the unresolved runtime-failure samples, unverified runtime source-to-image revision, inconclusive B0 scope, no independent human assessment, and governance HOLD. G1/G4/DA01 remain unchanged. The next boundary is any separately authorized research-gate/DA01 phase; this V6 continuation does not cross it. Hosted engineering CI confirms repository quality only, not scientific authorization.
+
+## Final V6 packaging and governance audit (2026-10-20)
+
+This bounded audit reviewed the recorded V5/V6 evidence and V6 Method P decision. It did not rerun an evaluator or adaptation. The source-level audit found no tracked call site for the original V6 archive-generation operation, so the exact historical command cannot be established. The observed structural cause is reproducible: 26 of 1,451 checksum-listed paths already contained the archive root, and ZIP packaging added that root again. The other 1,425 paths were relative. The correction is a version-specific packaging helper that writes a new copy; it does not claim to patch an unavailable original generator.
+
+The new archive is experiments/pilots/PILOT_02_RAW_EVIDENCE_CONTINUATION_V6_PACKAGING_CORRECTED.zip, SHA-256 2f94b7957c3c9710e6d19693dd3880df96e6c16ad79d2c69dbf3fd665e7d60cd. Its sidecar records the same archive digest. The original V6 archive and sidecar remain byte-identical. The corrected package changes 26 ZIP member paths and rewrites the 1,451-row inventory from the historical hash-size-path format to standard hash-path rows. All 1,451 payloads, totaling 17,510,993 bytes, have identical bytes, sizes and SHA-256 values to the original inventory. The corrected ZIP contains 1,452 entries including SHA256SUMS; CRC, inventory, and clean extraction checks passed. There are no duplicate, missing, unexpected, or traversal paths.
+
+Reproduce the corrected copy with:
+
+    /private/tmp/evofit-pilot01-main-env/bin/python experiments/pilots/correct_pilot02_v6_archive.py
+
+Verify it from a clean extraction on macOS with:
+
+    PILOT02_AUDIT_TMP=$(mktemp -d /private/tmp/pilot02-v6-clean.XXXXXX)
+    unzip -q experiments/pilots/PILOT_02_RAW_EVIDENCE_CONTINUATION_V6_PACKAGING_CORRECTED.zip -d "$PILOT02_AUDIT_TMP"
+    cd "$PILOT02_AUDIT_TMP/PILOT_02_RAW_EVIDENCE_CONTINUATION_V6"
+    shasum -a 256 -c SHA256SUMS
+
+The equivalent GNU/Linux final command is sha256sum -c SHA256SUMS. Both commands operate from inside the extracted archive root.
+
+### INV-05 and INV-10
+
+The audit compared the exact method verdicts before and after review. Neither the method input nor its historical verdict was changed.
+
+| Invariant | Exact requirement | Previous status | Current status | Evidence | Remaining blocker |
+|---|---|---|---|---|---|
+| INV-05 | Wrong authority, time, revision, provenance, digest or reuse of stale validation never yields a positive proof. | UNKNOWN | UNKNOWN | p_adaptation._invariant_verdicts propagates _input_status; p_input_validation.validate_facts leaves extracted facts UNDETERMINED when no fact_verifier is supplied. V6 records schema and integrity VALID, authority and completeness VALID within the TEST_ONLY context, and four extracted facts as UNDETERMINED with EXTRACTED_FACT_UNVERIFIED. | The inventory digests bind the inventory bytes and commit/tree labels, but the V6 bundle contains no independent check that inventory rows correspond to the pinned Git trees. Recomputing facts from the same inventory would be circular. |
+| INV-10 | Never ACCEPT on invalid or unresolved mandatory coverage; HOLD cannot publish; rollback needs fresh current-state validation. | UNKNOWN | UNKNOWN | The candidate is valid and its internal TEST_ONLY target diagnostic is COMPLETE 2/2. The operation plan has IMPACTED_RETAIN_REASSESSMENT_MISSING; input status is UNDETERMINED. Governance returned HOLD; no publish or rollback was attempted. Synthetic regression checks exercise fail-closed behavior. | The implementation reports PASS only when its full governance_ready predicate is true. That predicate is false for this run. The observed HOLD is safely fail-closed, but its stricter readiness invariant is not fully established for this V6 input. |
+
+These DEVELOPMENT invariant checks do not themselves require G1/G4. Measured DA01 claims do require the applicable research gates and authority, which remain G1 INCOMPLETE and G4 NOT AUTHORIZED. No existing V5/V6 evidence resolves the two missing prerequisites, and no additional evaluator or adaptation run is justified for this final audit.
+
+### Inherited representation reassessment
+
+All four rows are marked POSSIBLY_AFFECTED because the transition changes internal module and transaction boundaries while the traceability inventory is incomplete. V5/V6 execution records establish that evaluators ran and bind the recorded source/configuration bytes; they do not establish an exact semantic pair for any inherited row. The materialized candidate carries the rows forward, but the operation plan did not record positive RETAIN operations. Accordingly, RETAIN is NOT_ESTABLISHED for every row.
+
+| Representation | Transition impact | Existing evaluator evidence | Reassessment result | Reason |
+|---|---|---|---|---|
+| REP_A0_PERF_TEST_HTTP_P95 | POSSIBLY_AFFECTED; request-path impact cannot be excluded by the incomplete inventory. | V5: 137 requests, p95 21 ms, p50 13 ms, p99 57 ms. V6: 137 requests, p95 23 ms, p50 13 ms, p99 33 ms; exact Locust source/config digests match the profile. Both are NOT_EVALUATED because no threshold exists. | NOT_ESTABLISHED; exact pair UNKNOWN. | Real latency observation and artifact binding do not establish semantic adequacy or an SLO decision; container-to-source revision is unverified. |
+| REP_A0_PERF_RUNTIME_HTTP_DURATION | POSSIBLY_AFFECTED; the inventory cannot establish that metric behavior is independent of the module reorganization. | V5/V6 each captured 153 histogram series. V6 business request-count delta was 73 and histogram-sum delta was 0.607506125 s. No quantiles were inferred; no threshold exists. Source/config digests match. | NOT_ESTABLISHED; exact pair UNKNOWN. | Histogram execution does not establish quantiles, threshold compliance, or exact-pair adequacy; runtime image-to-source provenance is unverified. |
+| REP_A0_REL_TEST_INTEGRATION | POSSIBLY_AFFECTED; capability-module transaction and notification boundaries changed. | The exact V6 integration node passed 1/1 with zero failures, errors or skips on the isolated evofit_pilot02_test database; source/configuration digests match. V5 also passed 1/1, but lacked the captured DB container ID. | NOT_ESTABLISHED; exact pair UNKNOWN. | This authentic targeted fault-and-state execution does not independently establish the full R_LOCAL_ATOMICITY obligation or evaluator semantic adequacy. |
+| REP_A0_REL_RUNTIME_FAILURES | POSSIBLY_AFFECTED; instrumentation and failure paths may be affected by the boundary changes. | V5 observed 76 and V6 observed 73 business requests. Matching 5xx, business-operation-failure, and business-rule-rejection samples were absent in both; missing values remain UNKNOWN, not zero. | NOT_ESTABLISHED; exact pair UNKNOWN; metric UNKNOWN. | The canonical workload did not produce the required numerator/failure samples. Resolving this would require a separately scoped faulted runtime measurement, which is outside this final bounded audit. |
+
+The hold reason IMPACTED_RETAIN_REASSESSMENT_MISSING is therefore correct. The evidence does not justify changing or deactivating inherited rows, nor expanding the two-operation plan.
+
+### Final governance interpretation
+
+Method P produced ADD REP_A01_ARCH_MODULE_STRUCTURE_CI for AC_MODULE_STRUCTURE and REPLACE REP_A0_ARCH_CI_LAYERING with REP_A01_ARCH_INTERNAL_LAYERING_CI for AC_LAYERING. Candidate validation is valid. Both exact candidate pairs are VALID and COMPLIANT within TEST_ONLY scope. The internal diagnostic is 0/2 before to 2/2 after; it is not Coverage_P, Coverage_ref, an independent denominator, or a DA01 result.
+
+The final outcome is Outcome B: a valid materialized candidate with governance HOLD. The recorded reason codes remain:
+
+- IMPACTED_RETAIN_REASSESSMENT_MISSING — independent blocker: exact-pair reassessment for four possibly affected inherited representations is absent.
+- INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED — the implementation's generic reason for UNDETERMINED input status; the specific source is EXTRACTED_FACT_UNVERIFIED, although schema, integrity, authority and completeness fields are valid in TEST_ONLY context.
+- INVARIANT_VERDICTS_NOT_ALL_POSITIVE — downstream of INV-05 and INV-10 remaining UNKNOWN.
+- VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING — downstream fail-closed capability withheld until every required input, plan, candidate, coverage, cost and invariant condition is positive.
+
+Thus there are two independent unresolved evidence blockers: extracted source-inventory facts lack independent verification, and the inherited rows lack exact-pair reassessment. The latter two governance reasons are downstream. The missing runtime-failure samples are recorded as OUT_OF_SCOPE for this canonical workload and do not imply zero failures. No governance algorithm, frozen protocol, source baseline, oracle, scorer, or historical experiment artifact was changed.
+
+The machine-readable audit is experiments/pilots/PILOT_02_GOVERNANCE_AUDIT_V1.json. It records the prerequisite classifications, retained-row evidence, invariant implementation paths, governance dependency chain, and corrected-package verification. Historical V1–V6 artifacts remain available; the corrected ZIP is an additional packaging artifact, not a new experiment.
