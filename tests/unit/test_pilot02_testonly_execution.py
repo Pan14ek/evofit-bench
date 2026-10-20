@@ -20,6 +20,7 @@ from experiments.pilots.pilot02_testonly_execution import (
 from experiments.pilots.run_pilot02_method_p import (
     _candidate_template_match,
     _exp02_execution_evidence_admission,
+    _prevalidated_template_binding,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -53,6 +54,57 @@ def test_semantic_proof_is_not_reusable_after_candidate_row_changes() -> None:
             template_preflight_verified=True,
             candidate_record=candidate_record,
             template_evaluator_artifact_sha256="c" * 64,
+        )
+        is False
+    )
+
+
+def test_prevalidated_new_candidate_template_does_not_need_parent_catalog_row() -> None:
+    representation = {
+        "id": "REP_A01_ARCH_MODULE_STRUCTURE_CI",
+        "active": True,
+        "covers": ["AC_MODULE_STRUCTURE"],
+        "evaluator_artifact": {"sha256": "a" * 64},
+    }
+    template = {"template_id": "T_MODULE_STRUCTURE", "representation": representation}
+    bundle = SimpleNamespace(
+        templates=(template,),
+        representations=({"id": "REP_A0_ARCH_CI_LAYERING"},),
+    )
+    mapping = {
+        "source_representation_id": representation["id"],
+        "obligation_id": "AC_MODULE_STRUCTURE",
+        "candidate_template": template,
+    }
+
+    assert _prevalidated_template_binding(p_bundle=bundle, mapping=mapping) is True
+
+
+def test_prevalidated_template_binding_rejects_missing_or_conflicting_template() -> None:
+    representation = {
+        "id": "REP_A01_ARCH_MODULE_STRUCTURE_CI",
+        "active": True,
+        "covers": ["AC_MODULE_STRUCTURE"],
+        "evaluator_artifact": {"sha256": "a" * 64},
+    }
+    template = {"template_id": "T_MODULE_STRUCTURE", "representation": representation}
+    mapping = {
+        "source_representation_id": representation["id"],
+        "obligation_id": "AC_MODULE_STRUCTURE",
+        "candidate_template": template,
+    }
+    assert (
+        _prevalidated_template_binding(
+            p_bundle=SimpleNamespace(templates=(), representations=()), mapping=mapping
+        )
+        is False
+    )
+
+    conflicting_parent = {**representation, "evaluator_artifact": {"sha256": "b" * 64}}
+    assert (
+        _prevalidated_template_binding(
+            p_bundle=SimpleNamespace(templates=(template,), representations=(conflicting_parent,)),
+            mapping=mapping,
         )
         is False
     )

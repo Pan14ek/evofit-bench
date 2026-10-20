@@ -710,6 +710,59 @@ def _candidate_template_match(
     )
 
 
+def _prevalidated_template_binding(
+    *,
+    p_bundle: Any,
+    mapping: Mapping[str, Any],
+) -> bool:
+    """Verify the pinned candidate template even when it is new to the parent catalog.
+
+    PILOT-02's ADD/REPLACE templates describe candidate rows, so requiring the
+    candidate ID to already occur in the parent representation catalog rejects
+    legitimate new rows before their exact source binding can be assessed.
+    A same-ID parent row is allowed only when it is byte-equivalent to the
+    authorized template representation.
+    """
+    candidate_template = mapping.get("candidate_template")
+    if not isinstance(candidate_template, Mapping):
+        return False
+    representation = candidate_template.get("representation")
+    if not isinstance(representation, Mapping):
+        return False
+    templates = getattr(p_bundle, "templates", None)
+    parent_representations = getattr(p_bundle, "representations", None)
+    if not isinstance(templates, (tuple, list)) or not isinstance(
+        parent_representations, (tuple, list)
+    ):
+        return False
+    representation_id = representation.get("id")
+    if (
+        not isinstance(representation_id, str)
+        or mapping.get("source_representation_id") != representation_id
+        or mapping.get("obligation_id") not in representation.get("covers", [])
+    ):
+        return False
+
+    template_rows = [
+        row
+        for row in templates
+        if isinstance(row, Mapping)
+        and canonical_json_bytes(dict(row)) == canonical_json_bytes(dict(candidate_template))
+    ]
+    if len(template_rows) != 1:
+        return False
+
+    parent_rows = [
+        row
+        for row in parent_representations
+        if isinstance(row, Mapping) and row.get("id") == representation_id
+    ]
+    return not parent_rows or (
+        len(parent_rows) == 1
+        and canonical_json_bytes(dict(parent_rows[0])) == canonical_json_bytes(dict(representation))
+    )
+
+
 def _copy_pair_evidence(
     *,
     run_dir: Path,
@@ -784,22 +837,9 @@ def _assess_profile_pairs(
             if semantic_pair_inputs is not None
             else None
         )
-        template_rows = [
-            dict(row)
-            for row in p_bundle.templates
-            if isinstance(row, dict)
-            and canonical_json_bytes(dict(row))
-            == canonical_json_bytes(mapping["candidate_template"])
-        ]
-        representation_rows = [
-            dict(row)
-            for row in p_bundle.representations
-            if isinstance(row, dict) and row.get("id") == source_id
-        ]
-        template_binding_verified = (
-            len(template_rows) == 1
-            and len(representation_rows) == 1
-            and canonical_json_bytes(representation_rows[0]) == canonical_json_bytes(representation)
+        template_binding_verified = _prevalidated_template_binding(
+            p_bundle=p_bundle,
+            mapping=mapping,
         )
         pair_evidence = {
             "schema_version": 1,
@@ -859,7 +899,20 @@ def _assess_profile_pairs(
                 and source_id == representation.get("id")
                 and bool(representation.get("evidence_contract"))
             )
-            report_can_bind = report_identity_verified and template_binding_verified
+            configuration_artifact = mapping.get("configuration_artifact")
+            evidence_contract = representation.get("evidence_contract")
+            configuration_binding_verified = (
+                isinstance(configuration_artifact, Mapping)
+                and isinstance(evidence_contract, Mapping)
+                and configuration_artifact.get("sha256")
+                == evidence_contract.get("configuration_artifact_sha256")
+            )
+            report_can_bind = (
+                report_identity_verified
+                and template_binding_verified
+                and profile_mapping_verified
+                and configuration_binding_verified
+            )
             pair_evidence.update(
                 {
                     "configured_targets": expected_subjects,
