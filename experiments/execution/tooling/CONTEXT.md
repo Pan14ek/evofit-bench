@@ -98,6 +98,25 @@ either arm, produce predictions, or score a result. Keep `PREPARED_NOT_EXECUTED`
 distinct from an experiment outcome. Its B0, P, policy and architecture source
 revisions are separate fields; do not infer authority from the policy digest.
 
+`b0p_execution.py` continues a verified preparation in a separate write-once
+run. It builds two source-pinned container contexts, executes B0 and frozen P
+separately without network access, then records fresh Import Linter and
+architecture-test outputs. `b0p_isolated_b0_runner.py` and
+`b0p_isolated_p_runner.py` are run wrappers; the frozen algorithm modules stay
+unchanged. The execution schema and archive are distinct from the preparation
+schema and package. An unavailable presealed reference keeps RQ1 NOT_EVALUABLE;
+an unbound denominator or missing independent exact-pair proof keeps RQ2
+UNKNOWN. Do not turn this calibration-exposed execution into holdout evidence,
+G1/G4 approval or measured DA01 results.
+
+The narrowly scoped post-execution finalizer handles the recorded
+`candidate_validation` aggregation failure only. It verifies the original
+inventory, preparation snapshot, runtime contexts, persisted runner output and
+prediction seal, reuses both method outputs, reruns only fresh evaluator
+commands under recovery-specific names, and adds a final checksum inventory
+without replacing the original failed-attempt inventory. Its execution mode
+must remain explicit in the manifest.
+
 ## PILOT-02 profile boundary
 
 PILOT-02 adds one pinned A0.1 architecture-compliance profile to the verified

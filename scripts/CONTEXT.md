@@ -22,6 +22,9 @@ Seed/reset, metrics capture, workload runners, method prep and reproducibility t
 - `exp04_evidence_admission.py`
 - `prepare_b0p_development_comparison.py`
 - `verify_b0p_development_comparison.py`
+- `run_b0p_development_execution.py` — continues one verified preparation with isolated B0/P arms, fresh evaluators, and a separate ZIP plus SHA-256 sidecar
+- `finalize_b0p_development_execution.py` — append-only recovery for the specifically bound post-arm aggregation failure; reuses method outputs and reruns only post-arm evaluators
+- `verify_b0p_development_execution.py` — verifies execution inputs, sealed/withheld predictions, evaluator outputs, runtime contexts, and archive inventory
 - `verify_b0p_git_inventory.py`
 - `../experiments/pilots/run_pilot02_method_p.py`
 - `finalize_run.py`
@@ -37,6 +40,10 @@ The B0/P preparation CLI accepts full commit SHAs and writes a new, write-once
 package under `experiments/results/<run-id>/`. The readback CLI independently
 checks the pinned source inventories, bundles, source facts and checksum
 inventory. Preparation does not run B0 or P and does not access the scorer.
+The separate execution CLI consumes a verified preparation, keeps the method
+containers offline, and records fresh evaluators only after both arms complete.
+It does not invoke the scorer when no admissible reference was sealed before
+the predictions; its archive is verified after clean extraction.
 
 ## Constraints and known gaps
 

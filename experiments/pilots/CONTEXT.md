@@ -37,6 +37,7 @@ Store pilot-specific protocols, reports, derived result tables, and narrow tools
 - `run_pilot01_measurement.py` — invokes the existing Import Linter, module test, Locust task file, runtime sampler, and EXP-01/02 validators for this pilot only.
 - `B0P_DEVELOPMENT_REPORT.md` — source-pinned B0/P preparation report and execution blockers
 - `B0P_DEVELOPMENT_MANUSCRIPT_UA.md` — Ukrainian academic subsection; no unexecuted scores are claimed
+- `B0P_DEVELOPMENT_EXECUTION_REPORT.md` and `B0P_DEVELOPMENT_EXECUTION_MANUSCRIPT_UA.md` — run-specific report and manuscript subsection for the calibration-exposed execution continuation; preserve UNKNOWN/HOLD and do not infer RQ1/RQ2 scores
 
 ## Constraints and known limits
 
@@ -85,6 +86,13 @@ The B0/P preparation package identifies the A0-to-A0.1 transition as
 scorer, sealer, and verifier sources and records the full six-item RQ2
 denominator from the DEVELOPMENT protocol. `PREPARED_NOT_EXECUTED` is not a
 B0/P result; do not score prior PILOT-02 evidence into the new run.
+
+The separate execution continuation preserves the preflight package, runs the
+two pinned methods in separate offline containers, and collects fresh
+evaluators after both arms. A missing presealed target-operation reference
+keeps RQ1 unscored; absence of current independent exact-pair proofs and an
+exact-target denominator keeps RQ2 UNKNOWN. This calibration execution is not
+a holdout, an independent validation, or a G1/G4-authorized DA01 measurement.
 
 ## Verification
 

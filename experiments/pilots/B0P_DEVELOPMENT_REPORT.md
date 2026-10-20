@@ -1,121 +1,226 @@
-# B0/P Comparative DEVELOPMENT Study Report
+# B0 vs Method P Comparative DEVELOPMENT Report
 
-**Study:** DEV-B0P-V1
-**Run ID:** `dev-b0p-20261020-preflight-a01`
-**Record date:** 2026-10-20
-**Status:** `PREPARED_NOT_EXECUTED`
+**Study:** `DEV-B0P-V1`
+**Preparation run:** `dev-b0p-20261020-preflight-a01`
+**Execution run:** `dev-b0p-20261020-execution-a02`
+**Execution status:** `EXECUTED_PARTIAL`
 **Exposure:** `CALIBRATION_EXPOSED`
+**Record date:** 2026-10-20
 
-## Research question
+## Summary
 
-This study is intended to compare the unchanged B0 fitness configuration with frozen Method P after an architectural transition. RQ1 asks whether P identifies affected fitness representations and obligations. RQ2 asks whether P's candidate and governance-accepted configurations provide more valid, evidence-supported coverage of the required obligations than B0.
+This is the first actual B0/frozen-Method-P DEVELOPMENT comparison on the
+previously exposed A0→A0.1 transition. Both isolated method containers ran
+once from the verified preparation inputs. B0 produced a valid candidate and
+sealed prediction. Frozen P ran its existing `run_adaptation()` implementation,
+produced an invalid candidate, and returned governance `HOLD`; it emitted no
+prediction. No method was changed to influence that outcome.
 
-This run produced a verified preparation package only. Neither arm was executed. It has no predictions, evaluator results, sealed outputs, governance decision, RQ1 measurements, or RQ2 measurements. It therefore supplies no comparative effectiveness result.
+The execution is calibration-exposed evidence. It is not a holdout, independent
+validation, authorized measured DA01 result, or evidence of generalized P
+superiority. RQ1 is `NOT_EVALUABLE`; RQ2 is `UNKNOWN`. The scorer was not
+invoked.
 
-## Experimental design
+The original runner lost in-memory arm result fields after both arms and the
+first evaluators had completed. The run was finalized append-only from its
+persisted outputs: both original method outputs and seals were verified and
+reused, and only the two post-arm evaluator commands were rerun under
+`recovery_a01_` names. The original failure and checksum inventory remain in
+the package. No method container was invoked again.
 
-The package records the available A0-to-A0.1 source transition:
+## Design and frozen identities
 
 | Input | Identity |
 |---|---|
 | Before architecture | `b78b0967be937634b7762baccf5ac6892b279a73` |
 | After architecture | `3fdd5c68f8f60fad5757eefa66cc2aa8b24d9306` |
-| B0 source and study base | `165a7d6ef31adbe8ce3abe9f72e59d74692c987e` |
+| B0 source and policy-source revision | `165a7d6ef31adbe8ce3abe9f72e59d74692c987e` |
 | Frozen Method P source | `984f75b11b3153c52275e223ce8ec23b8d0dd0e5` |
-| Policy source | `165a7d6ef31adbe8ce3abe9f72e59d74692c987e` |
-| Exposure class | `CALIBRATION_EXPOSED` |
+| B0 input bundle SHA-256 | `62ce5f223715a35a407e58c92c45355ddd31708de192a0479e1afeb2f133b628` |
+| P input bundle SHA-256 | `b39899ade3ac7330362e0bd4d986b19e8d0112101cdd2dda24dc5355ab2ec11f` |
+| Original preparation manifest SHA-256 | `d6d55437fcc30c4e8bdd5acb37fd9f881be74f646989e701b03092ba8ac82b2f` |
+| B0 frozen configuration SHA-256 | `5ad60e373463ea459e192bf85d82704ca9aa1c217c4abf4d8caeb66924059ecb` |
+| Import Linter configuration SHA-256 | `88ff64a4792c6048a6ab0686ddf9326ebbee49f76996933845a6142cc1a2ba27` |
 
-The A0-to-A0.1 transition was repeatedly exposed during PILOT-02 and is unsuitable as a prospective holdout. The design document describes `ΔA2` (public module APIs), but the repository has no executable `scenario.yaml` for it. The protocol requires a scenario definition and frozen reference before P execution. This task has no independent reference custody, so it did not implement a new transition or label one held out.
+The preparation package `dev-b0p-20261020-preflight-a01` is unchanged. Its
+217-file preparation inventory was verified before execution and its manifest
+was independently verified again for the continuation. The A0→A0.1 transition
+was explicitly accepted as calibration-exposed. No new architecture scenario
+was necessary for this bounded DEVELOPMENT execution.
 
-The package records the full RQ2 denominator as six required obligations, read from the DEVELOPMENT protocol. The scorer-side oracle and scenario-specific expected identifiers were not opened, and no obligation identifiers were added to method inputs. G1 remains `INCOMPLETE`; G4 remains `NOT AUTHORIZED`.
+The B0 and P method images were built from separate, digest-recorded contexts
+using the pinned base image
+`python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0bb1784edc11b1`
+and hash-locked runtime dependencies. Both method containers ran with network
+disabled and read-only roots. Their observed image IDs are recorded in the
+execution manifest. Method inputs did not contain Git history, scorer material,
+ground truth, or expected-operation labels.
 
-## Baselines
+## Execution observations
 
-| Arm | Frozen identity | Preparation finding |
-|---|---|---|
-| B0 | `B0_UNCHANGED_V1`, source `165a7d6ef31adbe8ce3abe9f72e59d74692c987e` | Original A0 configuration and evaluator-configuration bytes were verified at both architecture revisions. |
-| P | `P_GOVERNED_ADAPTATION_DEVELOPMENT_V1`, algorithm source `984f75b11b3153c52275e223ce8ec23b8d0dd0e5` | Source-pinned input bundle prepared; `P_ALGORITHM_STATUS=NOT_READY`; governance status `NOT_RUN`. The included policy source is DRAFT/OPEN and has no production authority. |
+| Stage | B0 | Method P | Interpretation |
+|---|---|---|---|
+| Input preparation | Verified bundle `62ce…b628` | Verified bundle `b398…c11f` | Both bind the same after-architecture SHA and separate method inputs. |
+| Method execution | Completed; `B0_UNCHANGED_V1` | Completed; `P_GOVERNED_ADAPTATION_DEVELOPMENT_V1` | Frozen method sources were used. |
+| Candidate validation | `VALID` | `INVALID` | P's candidate is not a validated configuration. |
+| Prediction | Sealed; SHA-256 `124a2495…ef9b34` | Not emitted; governance HOLD marker SHA-256 `f612bb1b…c857650` | The P marker is not a prediction. |
+| Governance | Not applicable | `HOLD` | DRAFT/OPEN policy and unresolved mandatory inputs remain blockers. |
+| Adaptation operations | Empty list by unchanged B0 definition | Empty operation plan | P recorded hold reasons and proposed no operations. |
 
-No B1 arm was included, and no human operator participated.
+P's recorded HOLD reasons are `APPLICABILITY_UNKNOWN`,
+`CANDIDATE_NOT_POSITIVELY_VALIDATED`, `COST_MODEL_UNRESOLVED`,
+`COST_VERDICT_UNRESOLVED`, `INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED`,
+`INVARIANT_VERDICTS_NOT_ALL_POSITIVE`,
+`MANDATORY_APPLICABILITY_UNKNOWN`,
+`MANDATORY_CLASSIFICATION_UNRESOLVED`,
+`UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION`, and
+`VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING`. The trace contains 12 current
+and candidate pair records; each remains `UNKNOWN` for independent verification.
+P's candidate coverage object is not an RQ2 result and is not used as an
+independent reference.
 
-## Measurement procedure
+## Fresh evaluator observations
 
-The implemented CLI is a preparation/readback runner, not a comparative arm-execution runner. It exported read-only method-input bundles, recorded source and configuration identities, independently recomputed Git module inventories for both architecture revisions, captured the protocol denominator, and wrote checksums. The independent inventory readback returned `VERIFIED_GIT_INVENTORY` for the four module-name facts. It does not verify completeness outside that module inventory, establish policy authority, prove compliance, or establish semantic evaluator adequacy.
+Both evaluator commands ran after the method outputs. These are current-run
+process observations bound to the target source and recorded configuration.
+Their successful execution does not by itself establish semantic adequacy or
+independent exact-pair proof.
 
-The resulting manifest records B0 bundle SHA-256 `62ce5f223715a35a407e58c92c45355ddd31708de192a0479e1afeb2f133b628`, P bundle SHA-256 `b39899ade3ac7330362e0bd4d986b19e8d0112101cdd2dda24dc5355ab2ec11f`, and policy bundle SHA-256 `3fff9d4d0f2aeb584868c295f5da482b0d5541235e643c4c307a51856b4c68a8`. The Import Linter configuration SHA-256 is `88ff64a4792c6048a6ab0686ddf9326ebbee49f76996933845a6142cc1a2ba27`. The runtime image digest is absent; evaluator runtime and source-to-image provenance are not pinned.
+| Evaluator | Exit | Evidence validity | Recorded compliance | Semantic adequacy | Result |
+|---|---:|---|---|---|---|
+| Frozen B0 Import Linter | 1 | `VALID` | `NOT_EVALUABLE` | `UNKNOWN` | Its configured `app.repositories` target does not exist in A0.1 (`Module 'app.repositories' does not exist.`); no broken-contract count was emitted. This is a scope mismatch, not a confirmed architectural violation. |
+| `tests/architecture` | 0 | `VALID` | `COMPLIANT` at process/suite level | `UNKNOWN` | 6 tests passed. This does not prove all obligations or exact-pair semantics. |
 
-No evaluator was run, no current-run exact-pair evidence was generated, and no output was sealed or scored. The preparation/readback commands were:
+The evaluator output digests, commands, source revision, source-tree identity,
+configuration digest, durations, and raw stdout/stderr are included in the run
+package. Evaluator execution time was `865,165,750 ns`; the recorded evidence
+verification overhead was `1,240,166 ns`. The verification duration does not
+include all run setup or Docker build work.
 
-```bash
-python -m scripts.prepare_b0p_development_comparison \
-  --run-id dev-b0p-20261020-preflight-a01 \
-  --before-sha b78b0967be937634b7762baccf5ac6892b279a73 \
-  --after-sha 3fdd5c68f8f60fad5757eefa66cc2aa8b24d9306 \
-  --b0-source-sha 165a7d6ef31adbe8ce3abe9f72e59d74692c987e \
-  --p-source-sha 984f75b11b3153c52275e223ce8ec23b8d0dd0e5 \
-  --policy-source-sha 165a7d6ef31adbe8ce3abe9f72e59d74692c987e
+## RQ1 and RQ2
 
-python -m scripts.verify_b0p_development_comparison \
-  --run-directory experiments/results/dev-b0p-20261020-preflight-a01
-```
+| Endpoint | B0 | Method P | Status and reason |
+|---|---|---|---|
+| RQ1 TP/FP/FN/TN, precision, recall, F1 | `NOT_EVALUABLE` | `NOT_EVALUABLE` | No exact-after-SHA reference was fixed and sealed before the predictions. The scorer was not invoked. |
+| Operation-selection accuracy | Not calculated | Not calculated | There is no admissible expected-operation reference. P emitted no prediction and proposed no operations. |
+| RQ2 evidence-supported coverage | `UNKNOWN` | `UNKNOWN` | A complete target-bound obligation set and independent exact-pair semantic evidence were not established. No percentage or shared denominator is claimed. |
+| Governance-accepted configuration coverage | Not applicable | `UNKNOWN` | P returned HOLD; no accepted P configuration exists in this run. |
+| Independent exact-pair proofs | 0 | 0 | All 12 P-trace pair diagnostics remain `UNKNOWN`; P's own pair verdicts are not the independent reference. |
+
+The preparation protocol records six required obligations, but that historical
+count alone does not bind a complete, applicable denominator to this A0.1
+target. It is therefore not used to calculate RQ2. Missing reference and pair
+proof prevent positive scientific claims without invalidating the actual
+method execution evidence.
+
+## Timings and quantitative limits
+
+| Timing | B0 | Method P | Measurement boundary |
+|---|---:|---:|---|
+| Method execution | `84,999,500 ns` | `457,522,042 ns` | B0 builder/prediction path; P bundle verification plus adaptation path. These timer boundaries differ and are not a controlled performance comparison. |
+| Adaptation | `0 ns` | `190,146,001 ns` | B0 is unchanged by definition; P timer surrounds `run_adaptation()`. |
+| Evaluator execution | Shared fresh evaluator suite: `865,165,750 ns` | Shared | Two sequential commands; not attributed separately to the arms. |
+| Evidence verification overhead | `1,240,166 ns` | Shared | Recorded verifier interval only. |
+| CPU time / peak RSS | `UNKNOWN` | `UNKNOWN` | No resource sampler was configured; values remain null. |
+
+These are single-run engineering observations. They do not establish speedup,
+latency improvement, statistical significance, or comparative effectiveness.
+
+## Execution and artifact integrity
+
+The first execution attempt `dev-b0p-20261020-execution-a01` stopped while
+assembling the P container context, before either method ran. The second
+attempt `dev-b0p-20261020-execution-a02` completed both methods and its first
+fresh evaluator processes, then recorded a post-arm `KeyError` while assembling
+the manifest. The append-only finalization verifies the original inventory,
+copied preparation, runtime contexts, run-specific images, both persisted arm
+responses, the B0 seal, and the P HOLD marker. It reruns only the evaluator
+commands to preserve their result records. The mode is
+`POST_EXECUTION_FINALIZATION`; the original failure and `SHA256SUMS` are
+preserved, and `FINAL_SHA256SUMS` covers the finalized package.
+
+The finalized run has 363 artifact entries in the manifest. The ZIP contains
+366 entries, including the manifest and both checksum inventories. Its SHA-256
+sidecar passed `shasum -a 256 -c`. A clean extraction under `/private/tmp` passed
+both checksum inventories and the independent execution verifier.
 
 ## Implementation and requirement-to-test matrix
 
-The following PR-local IDs trace preparation and source-fact requirements; they are not new research-protocol requirement IDs.
+These PR-local IDs supplement the versioned DEVELOPMENT protocol; they do not
+amend scientific rules.
 
-| Requirement | Implementation and evidence | Verification status |
+| Requirement | Implementation and verification | Result |
 |---|---|---|
-| `DEV-B0P-PREP-01`: pin inputs and export B0/P bundles without oracle inputs | `prepare_development_study`; `test_preparation_exports_and_independently_verifies_pinned_inputs`, `test_different_p_source_revision_is_rejected` | PASS; manifest and bundle digests were read back. |
-| `DEV-B0P-PREP-02`: independently recompute four module inventory facts from exact Git commits; reject mismatch, unsafe source, and invalid digests | `scripts/verify_b0p_git_inventory.py`; `test_pinned_git_inventory_recomputes_all_four_fields`, `test_a_tampered_observation_is_not_admitted`, `test_cannot_substitute_branch_name_for_pinned_revision`, `test_observations_must_be_canonical_unique_sorted`, `test_symlink_in_git_source_fails_closed`, `test_mutating_the_worktree_does_not_change_pinned_git_fact`, digest/revision/empty-inventory/conflict tests in `tests/unit/test_b0p_git_inventory.py` | PASS for module-name inventory scope; completeness outside that scope is unverified. |
-| `DEV-B0P-PREP-03`: preserve denominator, configuration digests, safe paths, separate custody, and write-once output | `verify_study_manifest`; denominator, evaluator-configuration digest, path-escape, custody-classification, and write-once tests in `tests/unit/test_b0p_development.py` | PASS for preparation/readback checks. |
-| `DEV-B0P-EXEC-01`: execute B0/P, seal predictions, independently execute and semantically verify evaluators, and score RQ1/RQ2 | No arm-execution or independent evaluator-evidence pipeline is implemented in this change; no corresponding execution evidence exists. | BLOCKED/NOT IMPLEMENTED. Runtime/provenance, reference custody, exact-pair evidence, and sealed outputs are prerequisites; see blockers below. |
+| `DEV-B0P-EXEC-01`: separate versioned execution contract | `b0p_development_execution_v1.schema.json`; strict manifest validation | PASS |
+| `DEV-B0P-EXEC-02`: run source-pinned, isolated B0/P arms | separate digest-bound Docker contexts and offline runner containers | Both arms executed once; outputs reused in append-only finalization. |
+| `DEV-B0P-EXEC-03`: validate and seal outputs | B0 seal verification; P HOLD marker and candidate checks; tamper/source/bundle tests | PASS for recorded B0 seal; P emitted no prediction. |
+| `DEV-B0P-EXEC-04`: fresh evaluator collection/readback | raw output, status, run/source/config identity checks; evaluator scope mismatch tests | PASS as execution evidence; semantic adequacy remains UNKNOWN. |
+| `DEV-B0P-EXEC-05`: fail closed on missing references and denominators | no-scorer RQ1, unknown RQ2, unknown exact pairs and resource metrics | PASS; no unsupported score emitted. |
+| `DEV-B0P-EXEC-06`: preserve write-once evidence through recovery | original and final checksum inventory checks; tamper and extra-file tests | PASS; clean archive extraction verified. |
 
-## Results
+Focused commands and outcomes:
 
-| Endpoint | B0 | Method P | Difference | Evidence and interpretation |
-|---|---|---|---|---|
-| RQ1 TP/FP/FN/TN, precision, recall, F1 | Not measured | Not measured | Not estimable | No predictions or reference labels were scored. |
-| RQ1 operation-selection accuracy and protocol violations | Not measured | Not measured | Not estimable | P was not executed; no arm outputs exist. |
-| RQ2 required-obligation denominator | 6, from frozen protocol | 6, from frozen protocol | Not applicable | This is denominator provenance only; no obligation identifiers were read during preparation. |
-| RQ2 independently valid coverage | Not measured | Candidate: not measured; accepted: not measured | Not estimable | No evaluator evidence, exact-pair evidence, predictions, or governance result exists. |
-| Governance | Not run | `NOT_RUN`; policy remains DRAFT/OPEN | Not estimable | Candidate quality and accepted configuration quality cannot be assessed. |
-| Method/adaptation, evaluator, and verification overhead | Not measured | Not measured | Not estimable | No method or evaluator execution occurred. |
+```bash
+pytest --no-cov -p no:cacheprovider -q \
+  tests/unit/test_b0p_development.py \
+  tests/unit/test_b0p_git_inventory.py \
+  tests/unit/test_b0p_execution.py
+# 35 passed
 
-### Engineering findings
+ruff check experiments/execution/tooling/b0p_execution.py \
+  experiments/execution/tooling/b0p_isolated_b0_runner.py \
+  experiments/execution/tooling/b0p_isolated_p_runner.py \
+  scripts/run_b0p_development_execution.py \
+  scripts/verify_b0p_development_execution.py \
+  scripts/finalize_b0p_development_execution.py \
+  tests/unit/test_b0p_execution.py
+# All checks passed
 
-The prospective input package was produced and read back successfully. Its architecture module inventory was independently verified within the verifier's stated scope. All 217 entries in `SHA256SUMS` passed `shasum -a 256 -c`; no PILOT-02 artifact was imported. The package does not contain arm predictions, seals, evaluator evidence, semantic verdicts, governance output, score files, or a completed comparative archive.
+ruff format --check experiments/execution/tooling/b0p_execution.py \
+  experiments/execution/tooling/b0p_isolated_b0_runner.py \
+  experiments/execution/tooling/b0p_isolated_p_runner.py \
+  scripts/run_b0p_development_execution.py \
+  scripts/verify_b0p_development_execution.py \
+  scripts/finalize_b0p_development_execution.py \
+  tests/unit/test_b0p_execution.py
+# 7 files already formatted
 
-### Methodological findings
+python scripts/verify_b0p_development_execution.py \
+  --run-directory experiments/results/dev-b0p-20261020-execution-a02
+# exit 0; verified=true; EXECUTED_PARTIAL
+```
 
-No finding about P's operation selection, proposed candidate quality, governance acceptance, or comparative coverage follows from this preparation. The package correctly preserves the absence of those observations rather than deriving them from source structure or prior PILOT-02 diagnostics.
+`make development-quality` and hosted GitHub Actions are tracked separately;
+this report does not infer their status from the focused checks above.
 
-## Comparison
+## Limits and next experiment
 
-The evidence supports only a comparison of preparation identities and readiness. B0 and P were exported as separate bundles from recorded source revisions, and the pinned source inventories and configuration bytes were checked. Their behavioral outcomes and coverage difference remain unknown. A successful source-inventory check does not establish that B0's evaluator is stale, that the architecture is compliant or noncompliant, or that P is superior.
+This run is one calibration-exposed architecture transition. P's policy bundle
+remains DRAFT/OPEN with no production authority. The P algorithm status remains
+`NOT_READY`; G1 remains `INCOMPLETE`; G4 remains `NOT AUTHORIZED`. Exact-pair
+semantic proof, a source-grounded reference frozen before predictions, a
+complete target-bound obligation denominator, and resource sampling were not
+available. No B1 arm or human operator participated.
 
-## Validity threats and remaining blockers
-
-The run manifest records these blockers:
-
-1. `CURRENT_A0_TO_A0_1_TRANSITION_IS_CALIBRATION_EXPOSED`
-2. `DELTA_A2_SCENARIO_AND_REFERENCE_NOT_FROZEN_OR_INDEPENDENTLY_CUSTODIED`
-3. `METHOD_RUNTIME_IMAGE_NOT_BUILT_OR_PINNED`
-4. `EVALUATOR_RUNTIME_AND_SOURCE_TO_IMAGE_PROVENANCE_NOT_PINNED`
-5. `P_POLICY_SOURCE_IS_DRAFT_OPEN_WITHOUT_AUTHORITY`
-6. `INDEPENDENT_EXACT_PAIR_EVIDENCE_NOT_GENERATED_FOR_THIS_RUN`
-7. `RQ1_RESULTS_NOT_AVAILABLE_UNTIL_BOTH_ARM_PREDICTIONS_ARE_SEALED`
-8. `RQ2_RESULTS_NOT_AVAILABLE_UNTIL_SEALED_PREDICTIONS_AND_CURRENT_RUN_PAIR_EVIDENCE_EXIST`
-
-The source-fact verifier covers module-name inventories, not every possible architectural fact. One transition cannot establish generalization or statistical significance. G1 is incomplete and G4 is not authorized; this report is DEVELOPMENT-only and does not change canonical readiness records.
-
-## Conclusion
-
-This change advances reproducible preparation, not the comparative experiment. Its manifest, source-pinned B0/P bundles, structural inventory readback, and checksums are verified; the arm-execution and independent evaluator pipeline remain unimplemented. RQ1 and RQ2 remain unmeasured. A future execution needs an independently specified and custodied transition/reference, a pinned method and evaluator environment with source-to-image provenance, valid policy authority for the intended claim, fresh exact-pair evidence, and sealed predictions before scoring.
+A subsequent independent evaluation requires a prospectively selected and
+custodied architecture transition and reference, an authorized and complete
+obligation set, evaluator positive/negative controls and exact-pair evidence,
+predeclared scoring rules, and the applicable G1/G4 approvals for canonical
+DA01 claims. None of these limitations invalidates the recorded calibration
+execution; they constrain which endpoints can be calculated and what can be
+claimed from it.
 
 ## Evidence record
 
-- Run directory: `experiments/results/dev-b0p-20261020-preflight-a01/` (ignored local DEVELOPMENT output; preparation package only).
-- `study_manifest.json` SHA-256: `d6d55437fcc30c4e8bdd5acb37fd9f881be74f646989e701b03092ba8ac82b2f`.
-- `SHA256SUMS` SHA-256: `29852caf847e50133977c4624a84df9a335f022dd61becbd0d75f2b54e3d37f7`.
-- Verification: readback CLI exit 0; 217/217 listed files verified; architecture status `VERIFIED_GIT_INVENTORY`.
-- The directory is not represented as a completed study archive because comparative execution did not occur.
+- Preparation: `experiments/results/dev-b0p-20261020-preflight-a01/`
+- Execution: `experiments/results/dev-b0p-20261020-execution-a02/`
+- Execution manifest SHA-256: `8aa1de87ed3c1bc55610b7f4722c3ffe3a88ef5b9ed9dc75c79a827513487e3d`
+- Final checksum inventory SHA-256: `bd0b770afb494fe9cb324f172eb7a38dea4ffd10ce8ef8f4b93c6b31c5c721f2`
+- Semantic-pair diagnostic SHA-256: `f16bc1621a84e30922fe9d651346cefe3b904665493d02901a60548d897f22c7`
+- Evidence archive: `experiments/results/dev-b0p-20261020-execution-a02.zip`
+- Archive SHA-256: `c36a97c49295b36ba166901a372f8c65e961c2f2eda174643a1f0d7b0bb6f87c`
+- Clean extraction: `/private/tmp/dev-b0p-20261020-execution-a02-clean/dev-b0p-20261020-execution-a02/`
+
+The execution results are ignored local DEVELOPMENT artifacts and are supplied
+as a separate archive; they do not alter historical PILOT-02 or the original
+preparation package.

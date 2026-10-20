@@ -34,6 +34,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_g1_method_decision_register.py`
 - `test_b0p_git_inventory.py`
 - `test_b0p_development.py`
+- `test_b0p_execution.py` — prediction/source/bundle bindings, tamper rejection, P HOLD markers, no-scorer reference rules, unknown denominator/resource metrics, evaluator identity, write-once checks, and append-only checksum inventories
 
 This is a selected list (14 direct tracked files), not a complete source inventory.
 
@@ -64,8 +65,10 @@ status; it cannot approve a decision.
 
 The B0/P preparation tests independently clone the Git source and verify exact
 input bundles, six-obligation protocol denominator, pinned source bytes,
-write-once behavior, and package readback. They do not run the methods, open
-the reference oracle, or report comparative scores.
+write-once behavior, and package readback. `test_b0p_execution.py` checks the
+separate continuation's fail-closed seals, evaluator bindings, P governance
+markers, abstention rules and unknown measurements; synthetic cases do not
+substitute for the isolated real execution or produce RQ scores.
 
 Current coverage gate reports app-only coverage, not research-tool or requirement completeness. EXP-01 source-binding cases use synthetic Docker identity observations; a passing fixture does not supply authoritative source-to-image provenance. SPEC03 fixtures are synthetic and explicitly TEST_ONLY.
 
