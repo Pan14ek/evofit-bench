@@ -389,7 +389,12 @@ def _layering_scope(source_root: Path, cache_dir: Path) -> dict[str, Any]:
     config_path = source_root / "architecture/acceptance/importlinter.toml"
     config = tomllib.loads(config_path.read_text(encoding="utf-8"))
     contracts = config.get("tool", {}).get("importlinter", {}).get("contracts", [])
-    graph = grimp.build_graph("app", include_external_packages=False, cache_dir=str(cache_dir))
+    previous_directory = Path.cwd()
+    try:
+        os.chdir(source_root)
+        graph = grimp.build_graph("app", include_external_packages=False, cache_dir=str(cache_dir))
+    finally:
+        os.chdir(previous_directory)
     modules = set(graph.modules)
     all_edges = sorted(
         (importer, imported)
