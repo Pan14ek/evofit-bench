@@ -1,137 +1,110 @@
 # DEV-B0P-V1 readiness and execution status
 
 **Record date:** 2026-10-20
-**Study status:** `EXECUTED_PARTIAL` — both calibration-exposed DEVELOPMENT
-arms ran; B0 prediction was sealed; P returned `HOLD` and emitted no prediction.
+**Primary execution:** `dev-b0p-20261020-execution-a04` — direct,
+`EXECUTED_PARTIAL`.
+**Transition:** A0→A0.1, `CALIBRATION_EXPOSED`.
 **Author scope decision:** `docs/g1/B0P_AUTHOR_DECISIONS_V1.md`
 **Protocol:** `docs/g1/B0P_DEVELOPMENT_PROTOCOL_V1.md`
 **Frozen Method P source:** `984f75b11b3153c52275e223ce8ec23b8d0dd0e5`
 
-## Completed in this PR
-
-- [x] Preserve the independently verified preparation package
-  `dev-b0p-20261020-preflight-a01` and its original manifest/checksums.
-- [x] Execute unchanged B0 and frozen P once each on A0→A0.1, labeled
-  `CALIBRATION_EXPOSED`.
-- [x] Pin separate offline method images, input bundles, source identities and
-  hash-locked runtime dependencies.
-- [x] Verify and seal the B0 prediction; preserve the P candidate, full trace,
-  `HOLD` decision and no-prediction marker.
-- [x] Run fresh Import Linter and architecture-test evaluators after both
-  methods; preserve raw output, source/configuration bindings and current-run
-  identities.
-- [x] Record RQ1 as `NOT_EVALUABLE` and RQ2 as `UNKNOWN`; do not invoke the
-  scorer or claim a coverage percentage.
-- [x] Preserve the original post-arm failure and checksum list; finalize
-  append-only by reusing both method outputs and rerunning only evaluator
-  commands for result persistence.
-- [x] Create a SHA-256 sidecar for the evidence ZIP; verify sidecar,
-  `SHA256SUMS`, `FINAL_SHA256SUMS`, and execution manifest after clean
-  extraction.
-- [x] Update the English report and Ukrainian manuscript with observed results
-  and limits.
-
-## Execution result
+## Execution status
 
 | Stage | B0 | Method P |
 |---|---|---|
+| Arm execution | Completed once | Completed once |
 | Candidate validation | `VALID` | `INVALID` |
-| Prediction | `SEALED`, SHA-256 `124a2495b5217d1686c9ddae631980c1c314654e8b12a9c48d4fc949deef9b34` | `NOT_EMITTED_GOVERNANCE_HOLD` |
-| Governance | Not applicable | `HOLD`; 10 recorded reason codes |
-| Method time | `84,999,500 ns` | `457,522,042 ns` |
-| Adaptation time | `0 ns` by unchanged-B0 definition | `190,146,001 ns` |
-| Evaluator evidence | Shared fresh commands | Shared fresh commands |
-| RQ1 | `NOT_EVALUABLE` | `NOT_EVALUABLE` |
-| RQ2 | `UNKNOWN` | `UNKNOWN` |
+| Prediction | Sealed, SHA-256 `124a2495b5217d1686c9ddae631980c1c314654e8b12a9c48d4fc949deef9b34` | No prediction; authentic `NOT_EMITTED_GOVERNANCE_HOLD` marker |
+| Governance | Not applicable | `HOLD`, 10 reason codes |
+| Execution mode | `DIRECT` | `DIRECT` |
+| Method invocation reused | `false` | `false` |
 
-Import Linter exited 1 with `Module 'app.repositories' does not exist`; its
-evidence is valid as a process observation but compliance is `NOT_EVALUABLE`
-because its configured target is absent. This is not a confirmed architectural
-violation. The architecture suite exited 0 (6 passed); process-level compliance
-is recorded as `COMPLIANT`, while semantic adequacy remains `UNKNOWN`.
+a04 manifest SHA-256 is
+`2b4926d12798f5504e13afeca291d3a9ca09053497f1dc475ba4d9b52d8801c1`.
+No recovery or finalization was used. P's candidate validation is `INVALID`;
+the governance decision is `HOLD`, and no P prediction exists.
 
-Method execution, adaptation, evaluator and evidence-verification timers have
-different boundaries. CPU and RSS remain `UNKNOWN`. No runtime performance
-comparison is inferred.
+The Import Linter process exited 1 because its configured
+`app.repositories` target is missing in A0.1; evidence validity is `VALID`,
+compliance is `NOT_EVALUABLE`, and semantic adequacy is `UNKNOWN`. This is
+not a confirmed architectural violation. The architecture suite exited 0 with
+6/6 tests passing; its suite-level process compliance is `COMPLIANT`, while
+semantic adequacy stays `UNKNOWN`.
 
 ## Research readiness and claim limits
 
-- Transition: A0→A0.1, `CALIBRATION_EXPOSED`; this is not a holdout or
+- RQ1: `NOT_EVALUABLE`; no presealed exact-target reference; scorer not run.
+- RQ2: `UNKNOWN`; no complete target-bound denominator or independent
+  exact-pair proof; no coverage percentage.
+- Twelve P pair diagnostics remain `UNKNOWN`; zero independently verified.
+- G1: `INCOMPLETE`.
+- G4: `NOT AUTHORIZED`.
+- `P_ALGORITHM_STATUS`: `NOT_READY`.
+- Method P remains frozen; original B0 remains unchanged.
+- A0→A0.1 remains `CALIBRATION_EXPOSED`; this is not a holdout or
   independent validation.
-- P policy source: DRAFT/OPEN, without production authority; P's observed HOLD
-  is a valid outcome of this DEVELOPMENT run.
-- Candidate: P candidate validation is `INVALID`; proposed operation list is
-  empty. No governance-accepted P configuration exists.
-- Pair evidence: 0 independently verified exact pairs; 12 trace diagnostics
-  remain `UNKNOWN`.
-- RQ1: no exact-after-SHA reference was sealed before predictions; scorer not
-  invoked; precision, recall, F1 and operation accuracy are not calculated.
-- RQ2: no complete target-bound shared denominator and independent semantic
-  pair evidence; no coverage percentage is reported. The protocol's six-item
-  count alone is insufficient to establish this run's denominator.
-- G1 remains `INCOMPLETE`; G4 remains `NOT AUTHORIZED`; measured-DA01
-  `P_ALGORITHM_STATUS` remains `NOT_READY`.
-- No B1 arm, human operator, significance test or generalization claim.
-
-The unavailable references and authority constrain score calculation and
-research claims. They do not invalidate the isolated method execution or the
-observed evaluator outputs.
+- No B1 arm, human operator, significance test, resource-sampling result, or
+  generalized effectiveness claim.
 
 ## Preserved attempt history
 
-- `dev-b0p-20261020-preflight-a01`: the original verified preparation package;
-  unchanged and still `PREPARED_NOT_EXECUTED`.
-- `dev-b0p-20261020-execution-a01`: failed during runtime-context assembly
-  before either method ran; original failure artifacts retained.
-- `dev-b0p-20261020-execution-a02`: both method containers and initial
-  evaluators completed. The first manifest aggregation failed on a missing
-  in-memory `candidate_validation` field. Finalization read back the persisted
-  runner outputs and seals, reran only the post-arm evaluators, and preserved
-  the original failure/checksum inventory.
+- `preflight-a01`: unchanged verified preparation, still
+  `PREPARED_NOT_EXECUTED`.
+- `execution-a01`: stopped before either arm during runtime-context assembly.
+- `execution-a02`: both arms and initial evaluators completed; manifest
+  construction failed with `KeyError: 'candidate_validation'`. Append-only
+  finalization reused persisted arm outputs and reran evaluator commands.
+  Historical mode remains `POST_EXECUTION_FINALIZATION`.
+- `execution-a03`: both arms ran in direct mode, but the evaluator host lacked
+  the required development packages. The attempt was preserved without
+  recovery and is not the primary result.
+- `execution-a04`: new direct run with evaluator dependencies available;
+  both arms and fresh evaluator records completed, and the execution verifier
+  passed.
 
-The finalized execution is `POST_EXECUTION_FINALIZATION`,
-`EXECUTED_PARTIAL`; method outputs were reused and neither method invocation
-was repeated.
+The regression test now follows both isolated-arm results through
+`_make_execution_manifest()` and checks the B0/P candidate-validation fields.
+The original a02 failure and its evidence remain unchanged.
 
-## Evidence identities
+## Evidence identities and reproduction
 
-- Execution manifest SHA-256:
-  `8aa1de87ed3c1bc55610b7f4722c3ffe3a88ef5b9ed9dc75c79a827513487e3d`
-- Preparation manifest SHA-256:
+- Preparation manifest:
   `d6d55437fcc30c4e8bdd5acb37fd9f881be74f646989e701b03092ba8ac82b2f`
-- Evidence ZIP:
-  `experiments/results/dev-b0p-20261020-execution-a02.zip`
+- a04 execution manifest:
+  `2b4926d12798f5504e13afeca291d3a9ca09053497f1dc475ba4d9b52d8801c1`
+- a04 ZIP:
+  `experiments/results/dev-b0p-20261020-execution-a04.zip`
 - ZIP SHA-256:
-  `c36a97c49295b36ba166901a372f8c65e961c2f2eda174643a1f0d7b0bb6f87c`
-- Clean extraction verifier: exit 0; 363 manifest artifacts; both original and
-  final checksum inventories passed.
+  `13f81c4f74e3cbbf857da204ecff3c22c6f86a87f4c0e0ee4c782983d416cc64`
+- Clean extraction: all 355 checksum rows passed; independent verifier:
+  `verified=true`, `EXECUTED_PARTIAL`, 357 manifest artifacts.
+- Downloadable ZIP and plain-text SHA-256 sidecar are linked in the PR #24
+  evidence comment; neither archive is committed to Git.
 
-## Reproduction and verification
-
-The following commands are read-only verification of the preserved run:
+Focused verification:
 
 ```bash
-python scripts/verify_b0p_development_comparison.py \
-  --run-directory experiments/results/dev-b0p-20261020-preflight-a01
-
-python scripts/verify_b0p_development_execution.py \
-  --run-directory experiments/results/dev-b0p-20261020-execution-a02
-
-(cd experiments/results && \
-  shasum -a 256 -c dev-b0p-20261020-execution-a02.zip.sha256)
+UV_PROJECT_ENVIRONMENT=/private/tmp/b0p-venv UV_CACHE_DIR=/private/tmp/b0p-uv-cache \
+/private/tmp/b0p-venv/bin/python -m pytest --no-cov -q -p no:cacheprovider \
+  tests/unit/test_b0p_development.py \
+  tests/unit/test_b0p_git_inventory.py \
+  tests/unit/test_b0p_execution.py
+# 40 passed
 ```
 
-Focused implementation checks passed locally. The latest result of
-`make development-quality` and the latest hosted GitHub Actions runs must be
-recorded with their actual statuses before release review; neither status
-changes G1/G4 or turns this into independent evidence.
+The final local `make development-quality` run passed: 414 DEVELOPMENT tests,
+49 EXP-01 tests, and 30 EXP-02 tests, plus lint, type, security, architecture,
+and migration checks. The aggregate target excludes
+`tests/unit/test_da01_execution.py` and
+`tests/unit/test_research_schema_foundation.py`; neither is counted as passed.
+Hosted CI is checked separately on the final pushed revision and pending
+checks are not considered passes.
 
 ## Subsequent independent evaluation
 
-Plan a new architecture transition and target-bound reference before any
-prediction is inspected. Freeze separate custody, applicability and complete
-obligation denominator; run evaluator positive/negative controls and obtain
-independent exact-pair semantic proof. Predeclare scoring and resource
-sampling. Obtain the approvals required for any canonical DA01 claim. Retain
-this run as calibration evidence; do not retrospectively relabel it as
-holdout, G4-authorized, or generalized validation.
+Select and custody a new transition and target-bound reference before
+inspecting predictions. Establish an authorized complete obligation
+denominator, evaluator positive/negative controls, independent exact-pair
+semantic proof, and predeclared scoring and resource sampling. Obtain the
+required approvals before any canonical DA01 claim. These requirements are
+unchanged by the current DEVELOPMENT execution.

@@ -22,8 +22,8 @@ Seed/reset, metrics capture, workload runners, method prep and reproducibility t
 - `exp04_evidence_admission.py`
 - `prepare_b0p_development_comparison.py`
 - `verify_b0p_development_comparison.py`
-- `run_b0p_development_execution.py` — continues one verified preparation with isolated B0/P arms, fresh evaluators, and a separate ZIP plus SHA-256 sidecar
-- `finalize_b0p_development_execution.py` — append-only recovery for the specifically bound post-arm aggregation failure; reuses method outputs and reruns only post-arm evaluators
+- `run_b0p_development_execution.py` — continues one verified preparation with isolated B0/P arms, fresh evaluators, and a separate ZIP plus SHA-256 sidecar; direct runs require evaluator development dependencies in the host environment
+- `finalize_b0p_development_execution.py` — append-only recovery for the specifically bound historical a02 post-arm aggregation failure; do not use for a new direct verification
 - `verify_b0p_development_execution.py` — verifies execution inputs, sealed/withheld predictions, evaluator outputs, runtime contexts, and archive inventory
 - `verify_b0p_git_inventory.py`
 - `../experiments/pilots/run_pilot02_method_p.py`
@@ -43,7 +43,11 @@ inventory. Preparation does not run B0 or P and does not access the scorer.
 The separate execution CLI consumes a verified preparation, keeps the method
 containers offline, and records fresh evaluators only after both arms complete.
 It does not invoke the scorer when no admissible reference was sealed before
-the predictions; its archive is verified after clean extraction.
+the predictions; its archive is verified after clean extraction. The regression
+forwards candidate validation from both persisted isolated-arm outputs through
+manifest construction. Configure the direct-run host with its required evaluator
+dependencies before starting a write-once run; a missing host tool is preserved
+as an unsuccessful evaluator observation, not silently recovered.
 
 ## Constraints and known gaps
 

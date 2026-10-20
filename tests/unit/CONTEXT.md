@@ -34,7 +34,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_g1_method_decision_register.py`
 - `test_b0p_git_inventory.py`
 - `test_b0p_development.py`
-- `test_b0p_execution.py` — prediction/source/bundle bindings, tamper rejection, P HOLD markers, no-scorer reference rules, unknown denominator/resource metrics, evaluator identity, write-once checks, and append-only checksum inventories
+- `test_b0p_execution.py` — prediction/source/bundle bindings, tamper rejection, P HOLD markers, no-scorer reference rules, unknown denominator/resource metrics, evaluator identity, write-once checks, append-only checksum inventories, and B0/P candidate-validation propagation into direct manifest assembly
 
 This is a selected list (14 direct tracked files), not a complete source inventory.
 

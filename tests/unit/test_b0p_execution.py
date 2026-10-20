@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
 
+from experiments.execution.tooling import b0p_execution as execution_module
 from experiments.execution.tooling.b0 import build_b0_prediction
 from experiments.execution.tooling.b0p_execution import (
     B0PExecutionError,
@@ -324,6 +326,131 @@ def test_execution_manifest_record_cannot_be_overwritten(tmp_path: Path) -> None
         _write_once(manifest, {"run_id": "run-replacement"})
 
     assert json.loads(manifest.read_text(encoding="utf-8")) == {"run_id": "run-first"}
+
+
+def test_candidate_validation_from_both_isolated_arms_reaches_manifest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    run_root = tmp_path / "run-current"
+    b0_output = run_root / "B0"
+    p_output = run_root / "P"
+    b0_input = run_root / "input-b0"
+    p_input = run_root / "input-p"
+    for directory in (b0_output, p_output, b0_input, p_input):
+        directory.mkdir(parents=True)
+
+    b0_trace = {
+        "candidate_validation": "VALID",
+        "method_version": "B0_TEST",
+        "method_execution_time_ns": 11,
+        "adaptation_time_ns": 0,
+        "prediction_sha256": "d" * 64,
+    }
+    b0_trace_bytes = json.dumps(b0_trace).encode()
+    (b0_output / "execution_trace.json").write_bytes(b0_trace_bytes)
+    (b0_output / "candidate_configuration.json").write_text("{}", encoding="utf-8")
+    p_result = {
+        "candidate_validation": "INVALID",
+        "method_version": "P_TEST",
+        "method_execution_time_ns": 22,
+        "adaptation_time_ns": 7,
+        "governance_result": "HOLD",
+        "governance_reason_codes": ["TEST_HOLD"],
+        "prediction_status": "NOT_EMITTED_GOVERNANCE_HOLD",
+        "prediction_sha256": "e" * 64,
+        "candidate_configuration_sha256": None,
+    }
+    p_result_bytes = json.dumps(p_result).encode()
+    (p_output / "execution_result.json").write_bytes(p_result_bytes)
+    (p_output / "method_p_trace.json").write_text("{}", encoding="utf-8")
+
+    responses = iter(
+        (
+            SimpleNamespace(
+                returncode=0,
+                stdout=json.dumps(
+                    {"execution_trace_sha256": sha256_bytes(b0_trace_bytes)}
+                ).encode(),
+                stderr=b"",
+            ),
+            SimpleNamespace(
+                returncode=0,
+                stdout=json.dumps(
+                    {"execution_result_sha256": sha256_bytes(p_result_bytes)}
+                ).encode(),
+                stderr=b"",
+            ),
+        )
+    )
+    monkeypatch.setattr(
+        "experiments.execution.tooling.b0p_execution.shutil.which",
+        lambda _: "/usr/bin/docker",
+    )
+    monkeypatch.setattr(
+        "experiments.execution.tooling.b0p_execution.subprocess.run",
+        lambda *args, **kwargs: next(responses),
+    )
+
+    preparation: dict[str, Any] = {
+        "run_id": "prep-a01",
+        "source_revisions": {
+            "architecture_before_sha": "1" * 40,
+            "architecture_after_sha": ARCH_SHA,
+            "b0_source_sha": "2" * 40,
+            "p_source_sha": "3" * 40,
+            "policy_source_sha": "4" * 40,
+        },
+        "b0": {
+            "input_bundle_sha256": BUNDLE_SHA,
+            "configuration_sha256": "7" * 64,
+            "evaluator_configuration_sha256": "8" * 64,
+        },
+        "method_p": {"input_bundle_sha256": "c" * 64},
+    }
+    b0_execution = execution_module._run_isolated_arm(
+        method_id="B0",
+        image={"tag": "b0-test", "image_id": "sha256:" + "a" * 64},
+        input_directory=b0_input,
+        output_directory=b0_output,
+        preparation=preparation,
+        docker_executable="docker",
+        repository=tmp_path,
+    )
+    p_execution = execution_module._run_isolated_arm(
+        method_id="P",
+        image={"tag": "p-test", "image_id": "sha256:" + "b" * 64},
+        input_directory=p_input,
+        output_directory=p_output,
+        preparation=preparation,
+        docker_executable="docker",
+        repository=tmp_path,
+    )
+    execution_module._write_reference_availability(run_root, preparation)
+
+    manifest = execution_module._make_execution_manifest(
+        run_root,
+        preparation=preparation,
+        preparation_digest="f" * 64,
+        runtime_contexts={"B0": "5" * 64, "P": "6" * 64},
+        runtime_images={
+            "B0": {"image_id": "sha256:" + "a" * 64},
+            "P": {"image_id": "sha256:" + "b" * 64},
+        },
+        b0_execution=b0_execution,
+        p_execution=p_execution,
+        evaluator_records=[],
+        evaluator_duration_ns=0,
+        verification_duration_ns=0,
+        pair_verification={"pairs": [], "reason_codes": []},
+        execution_mode={
+            "kind": "DIRECT",
+            "source_attempt_run_id": None,
+            "method_invocations_reused": False,
+            "detail": "test",
+        },
+    )
+
+    assert manifest["candidate_validation"] == {"B0": "VALID", "P": "INVALID"}
 
 
 def test_post_execution_inventory_preserves_original_and_covers_appended_files(
