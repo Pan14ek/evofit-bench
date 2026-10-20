@@ -89,14 +89,18 @@ def test_pinned_git_inventory_recomputes_all_four_fields(
     assert result["semantic_pair_verified"] is False
 
 
-@pytest.mark.parametrize("field", [
-    "before_module_names",
-    "after_module_names",
-    "added_module_names",
-    "removed_module_names",
-])
+@pytest.mark.parametrize(
+    "field",
+    [
+        "before_module_names",
+        "after_module_names",
+        "added_module_names",
+        "removed_module_names",
+    ],
+)
 def test_a_tampered_observation_is_not_admitted(
-    revision_pair: tuple[Path, str, str], field: str,
+    revision_pair: tuple[Path, str, str],
+    field: str,
 ) -> None:
     repository, before, after = revision_pair
     observations = actual_inventory(repository, before, after)
