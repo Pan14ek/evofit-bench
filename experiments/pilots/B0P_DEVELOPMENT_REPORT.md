@@ -40,7 +40,7 @@ No B1 arm was included, and no human operator participated.
 
 ## Measurement procedure
 
-The preparation command exported read-only method-input bundles, recorded source and configuration identities, independently recomputed Git module inventories for both architecture revisions, captured the protocol denominator, and wrote checksums. The independent inventory readback returned `VERIFIED_GIT_INVENTORY` for the four module-name facts. It does not verify completeness outside that module inventory, establish policy authority, prove compliance, or establish semantic evaluator adequacy.
+The implemented CLI is a preparation/readback runner, not a comparative arm-execution runner. It exported read-only method-input bundles, recorded source and configuration identities, independently recomputed Git module inventories for both architecture revisions, captured the protocol denominator, and wrote checksums. The independent inventory readback returned `VERIFIED_GIT_INVENTORY` for the four module-name facts. It does not verify completeness outside that module inventory, establish policy authority, prove compliance, or establish semantic evaluator adequacy.
 
 The resulting manifest records B0 bundle SHA-256 `62ce5f223715a35a407e58c92c45355ddd31708de192a0479e1afeb2f133b628`, P bundle SHA-256 `b39899ade3ac7330362e0bd4d986b19e8d0112101cdd2dda24dc5355ab2ec11f`, and policy bundle SHA-256 `3fff9d4d0f2aeb584868c295f5da482b0d5541235e643c4c307a51856b4c68a8`. The Import Linter configuration SHA-256 is `88ff64a4792c6048a6ab0686ddf9326ebbee49f76996933845a6142cc1a2ba27`. The runtime image digest is absent; evaluator runtime and source-to-image provenance are not pinned.
 
@@ -58,6 +58,17 @@ python -m scripts.prepare_b0p_development_comparison \
 python -m scripts.verify_b0p_development_comparison \
   --run-directory experiments/results/dev-b0p-20261020-preflight-a01
 ```
+
+## Implementation and requirement-to-test matrix
+
+The following PR-local IDs trace preparation and source-fact requirements; they are not new research-protocol requirement IDs.
+
+| Requirement | Implementation and evidence | Verification status |
+|---|---|---|
+| `DEV-B0P-PREP-01`: pin inputs and export B0/P bundles without oracle inputs | `prepare_development_study`; `test_preparation_exports_and_independently_verifies_pinned_inputs`, `test_different_p_source_revision_is_rejected` | PASS; manifest and bundle digests were read back. |
+| `DEV-B0P-PREP-02`: independently recompute four module inventory facts from exact Git commits; reject mismatch, unsafe source, and invalid digests | `scripts/verify_b0p_git_inventory.py`; `test_pinned_git_inventory_recomputes_all_four_fields`, `test_a_tampered_observation_is_not_admitted`, `test_cannot_substitute_branch_name_for_pinned_revision`, `test_observations_must_be_canonical_unique_sorted`, `test_symlink_in_git_source_fails_closed`, `test_mutating_the_worktree_does_not_change_pinned_git_fact`, digest/revision/empty-inventory/conflict tests in `tests/unit/test_b0p_git_inventory.py` | PASS for module-name inventory scope; completeness outside that scope is unverified. |
+| `DEV-B0P-PREP-03`: preserve denominator, configuration digests, safe paths, separate custody, and write-once output | `verify_study_manifest`; denominator, evaluator-configuration digest, path-escape, custody-classification, and write-once tests in `tests/unit/test_b0p_development.py` | PASS for preparation/readback checks. |
+| `DEV-B0P-EXEC-01`: execute B0/P, seal predictions, independently execute and semantically verify evaluators, and score RQ1/RQ2 | No arm-execution or independent evaluator-evidence pipeline is implemented in this change; no corresponding execution evidence exists. | BLOCKED/NOT IMPLEMENTED. Runtime/provenance, reference custody, exact-pair evidence, and sealed outputs are prerequisites; see blockers below. |
 
 ## Results
 
@@ -99,7 +110,7 @@ The source-fact verifier covers module-name inventories, not every possible arch
 
 ## Conclusion
 
-This run advances reproducible preparation, not the comparative experiment. Its manifest, source-pinned B0/P bundles, structural inventory readback, and checksums are verified. RQ1 and RQ2 remain unmeasured. A future execution needs an independently specified and custodied transition/reference, a pinned method and evaluator environment with source-to-image provenance, valid policy authority for the intended claim, fresh exact-pair evidence, and sealed predictions before scoring.
+This change advances reproducible preparation, not the comparative experiment. Its manifest, source-pinned B0/P bundles, structural inventory readback, and checksums are verified; the arm-execution and independent evaluator pipeline remain unimplemented. RQ1 and RQ2 remain unmeasured. A future execution needs an independently specified and custodied transition/reference, a pinned method and evaluator environment with source-to-image provenance, valid policy authority for the intended claim, fresh exact-pair evidence, and sealed predictions before scoring.
 
 ## Evidence record
 
