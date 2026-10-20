@@ -48,6 +48,14 @@ PostgreSQL integration outputs remain in the separate ignored run directory;
 they are not passed to P as semantic proof. The inherited-evaluator protocol
 defines these runs before measurement.
 
+The semantic-validation continuation runs the pinned Import Linter and module
+structure evaluators with clean and source-mutated controls, independently
+reconstructs inspection scope and mutation inventories, and rechecks report
+bytes before admitting exact-pair proofs through the existing TEST_ONLY
+sidecar. Its pair statuses remain DEVELOPMENT diagnostics; they do not
+establish DA01 authorization, independent coverage, G1/G4, or production
+readiness.
+
 V5's canonical run `pilot02-inherited-20261020-v5d` executed the four inherited
 evaluator rows and its full candidate validator returned `valid` after the
 versioned V2 DEVELOPMENT bindings were admitted. The V5 archive preserves the

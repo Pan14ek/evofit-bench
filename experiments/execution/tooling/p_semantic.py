@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
@@ -299,7 +300,9 @@ def assess_pair(
     resolved = _string_set(evaluator_evidence.get("resolved_targets", []))
     inspected = _string_set(evaluator_evidence.get("inspected_subjects", []))
     missing = _string_set(evaluator_evidence.get("missing_targets", []))
-    inspection_scope_unknown = evaluator_evidence.get("inspected_edge_count") is None
+    inspection_scope_unknown = _inspection_scope_unresolved(
+        evaluator_evidence, artifacts, artifact_bytes
+    )
     if inspection_scope_unknown:
         reasons.add("EVALUATOR_INSPECTION_SCOPE_UNKNOWN")
     if (
@@ -737,6 +740,68 @@ def _string_set(value: Any) -> set[str]:
     if not isinstance(value, list | tuple):
         return set()
     return {item for item in value if isinstance(item, str)}
+
+
+def _inspection_scope_unresolved(
+    evaluator_evidence: Mapping[str, Any],
+    checked_artifacts: Sequence[Mapping[str, str]],
+    artifact_bytes: Mapping[str, bytes],
+) -> bool:
+    """Validate legacy edge counts or an explicit typed inspection inventory."""
+    scope = evaluator_evidence.get("inspection_scope")
+    if scope is None:
+        return evaluator_evidence.get("inspected_edge_count") is None
+    if not isinstance(scope, Mapping):
+        return True
+
+    unit = scope.get("unit")
+    expected = _string_set(scope.get("expected_subjects"))
+    inspected = _string_set(evaluator_evidence.get("inspected_subjects"))
+    measured_count = scope.get("measured_count")
+    artifact = scope.get("evidence_artifact")
+    if (
+        unit not in {"dependency_edge", "module", "file"}
+        or not expected
+        or expected != inspected
+        or type(measured_count) is not int
+        or measured_count < 0
+        or not isinstance(artifact, Mapping)
+    ):
+        return True
+
+    artifact_path = artifact.get("path")
+    artifact_digest = artifact.get("sha256")
+    if not any(
+        checked.get("path") == artifact_path and checked.get("sha256") == artifact_digest
+        for checked in checked_artifacts
+    ):
+        return True
+    scope_bytes = artifact_bytes.get(str(artifact_path))
+    if scope_bytes is None:
+        return True
+    try:
+        scope_record = json.loads(scope_bytes)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return True
+    if not isinstance(scope_record, Mapping):
+        return True
+    if (
+        scope_record.get("inspection_unit") != unit
+        or _string_set(scope_record.get("expected_subjects")) != expected
+        or _string_set(scope_record.get("inspected_subjects")) != inspected
+        or type(scope_record.get("measured_count")) is not int
+        or scope_record.get("measured_count") != measured_count
+    ):
+        return True
+
+    inspected_edge_count = evaluator_evidence.get("inspected_edge_count")
+    if unit == "dependency_edge":
+        return (
+            measured_count <= 0
+            or type(inspected_edge_count) is not int
+            or inspected_edge_count != measured_count
+        )
+    return inspected_edge_count is not None or measured_count != len(inspected)
 
 
 __all__ = [

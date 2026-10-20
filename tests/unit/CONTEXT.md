@@ -21,6 +21,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_p_candidate_governance_v1.py` (including verified inherited-row bindings)
 - `test_pilot02_candidate_evaluators.py`
 - `test_pilot02_testonly_execution.py`
+- `test_p_adaptation_evidence_v1.py` (signed/unsigned verifier-sidecar admission)
 - `test_fault_state.py`
 - `test_p_applicability_policies_v1.py`
 - `test_p_applicability_ruleset_v1.py`

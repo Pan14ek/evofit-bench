@@ -121,6 +121,15 @@ when its process exits nonzero or zero; a resolved nonzero result is an
 observation of noncompliance and does not by itself invalidate exact-pair
 semantics.
 
+PILOT-02's `run_pilot02_method_p.py` accepts semantic reports only from the
+separate `pilot02_semantic_validation.py` readback verifier, and only in its
+TEST_ONLY continuation. The verifier reconstructs typed inspection scope,
+positive/negative control interpretation, and the pinned source mutation before
+the existing `run_adaptation()` call. Candidate proof reuse is recorded only
+when the materialized evaluator row and its evaluator artifact exactly match
+the prevalidated template. These reports do not authorize DA01 measurement or
+independent coverage.
+
 ## Verification and further reading
 
 Consult the original source files and nearest relevant tests, then `docs/README.md` for repository-wide architecture, experiment, stack and verification references. DEVELOPMENT validation uses `make development-quality` with a **disposable** PostgreSQL database; the protected DA01 test modules are excluded. When a context summary conflicts with source code, a reviewed manifest or a frozen scientific protocol, **report the conflict**; do not silently reinterpret research rules.

@@ -5,12 +5,22 @@ from __future__ import annotations
 import copy
 import json
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 from experiments.execution.tooling.hashing import sha256_bytes
+from experiments.execution.tooling.p_adaptation_evidence import verify_adaptation_evidence
 from experiments.execution.tooling.p_input_validation import SourceReference
-from experiments.pilots.pilot02_testonly_execution import create_testonly_policy_source
-from experiments.pilots.run_pilot02_method_p import _exp02_execution_evidence_admission
+from experiments.pilots.pilot02_testonly_execution import (
+    ADAPTATION_VERIFIER_ID,
+    Pilot02TestOnlyTrustContext,
+    build_adaptation_sidecar,
+    create_testonly_policy_source,
+)
+from experiments.pilots.run_pilot02_method_p import (
+    _candidate_template_match,
+    _exp02_execution_evidence_admission,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 POLICY_SOURCE = ROOT / "experiments/execution/policy-pilot/v1/source"
@@ -26,6 +36,119 @@ def test_execution_evidence_admission_trace_matches_verified_sidecar_scope() -> 
         "admitted_execution_evidence",
         True,
     )
+
+
+def test_semantic_proof_is_not_reusable_after_candidate_row_changes() -> None:
+    candidate_record = {
+        "candidate_profile_binding": {
+            "status": "matched",
+            "candidate_row_sha256": "a" * 64,
+            "template_sha256": "b" * 64,
+            "evaluator_artifact_sha256": "c" * 64,
+        }
+    }
+
+    assert (
+        _candidate_template_match(
+            template_preflight_verified=True,
+            candidate_record=candidate_record,
+            template_evaluator_artifact_sha256="c" * 64,
+        )
+        is False
+    )
+
+
+def test_sidecar_carries_supplied_semantic_pair_proof_through_testonly_verifier() -> None:
+    source_digests = {
+        "P_CAPABILITIES": "a" * 64,
+        "P_TRACEABILITY": "b" * 64,
+        "SYN_REGISTRY_SOURCE": "c" * 64,
+        "SYN_CHARTER_SOURCE": "d" * 64,
+    }
+    bundle_sha = "e" * 64
+    policy_bundle_sha = "f" * 64
+    snapshot = {
+        "architecture": {
+            "before_commit": BEFORE_SHA,
+            "after_commit": AFTER_SHA,
+            "evaluation_as_of": AS_OF,
+        },
+        "policy_registry": {
+            "scope": "service:synth",
+            "source_id": "SYN_REGISTRY_SOURCE",
+            "authority_charter_source_id": "SYN_CHARTER_SOURCE",
+            "registry_version": "TEST_ONLY_V1",
+        },
+        "policies": [],
+        "facts": [],
+        "completeness_claims": [],
+    }
+    bundle = SimpleNamespace(
+        snapshot=snapshot,
+        manifest={
+            "bundle_sha256": bundle_sha,
+            "policy_source_revision": "SYN_POLICY_REV_1",
+            "policy_bundle_sha256": policy_bundle_sha,
+        },
+        source_digests=source_digests,
+        obligations=({"id": "AC_LAYERING"}, {"id": "AC_MODULE_STRUCTURE"}),
+        trace_graph=SimpleNamespace(graph_sha256="1" * 64),
+        snapshot_validation=SimpleNamespace(snapshot_digest="2" * 64),
+        cost_model={
+            "schema_version": 1,
+            "model_version": "TEST_ONLY_COST_V1",
+            "authority_status": "TEST_ONLY",
+            "max_incremental_cost": 1,
+            "max_search_nodes": 1,
+            "candidate_costs": {},
+        },
+        templates=(),
+    )
+    semantic_proof = {
+        "representation_id": "REP_A01_ARCH_INTERNAL_LAYERING_CI",
+        "obligation_id": "AC_LAYERING",
+        "status": "VALID",
+        "subject_sha256": "3" * 64,
+        "verifier_id": ADAPTATION_VERIFIER_ID,
+        "source_bindings": [
+            {"source_id": "P_CAPABILITIES", "sha256": source_digests["P_CAPABILITIES"]},
+            {"source_id": "P_TRACEABILITY", "sha256": source_digests["P_TRACEABILITY"]},
+        ],
+        "evidence_refs": ["PILOT02_SEMANTIC_REPORT_AC_LAYERING"],
+        "reason_codes": [],
+    }
+    trust = Pilot02TestOnlyTrustContext()
+    sidecar = build_adaptation_sidecar(
+        bundle,
+        assumptions={"transition": {"target_obligation_ids": TARGET_IDS}},
+        evaluator_evidence=[],
+        b0_representation={"id": "REP_A0_ARCH_CI_LAYERING"},
+        b0_evaluator_evidence={"missing_targets": []},
+        extra_artifacts={"semantic/report.json": b"{}"},
+        semantic_pair_proofs=[semantic_proof],
+    )
+    verified = verify_adaptation_evidence(
+        sidecar,
+        expected_bindings={
+            "input_bundle_sha256": bundle_sha,
+            "architecture_before_sha": BEFORE_SHA,
+            "architecture_after_sha": AFTER_SHA,
+            "policy_source_revision": "SYN_POLICY_REV_1",
+            "policy_bundle_sha256": policy_bundle_sha,
+            "evaluation_as_of": AS_OF,
+            "scope": "service:synth",
+        },
+        expected_source_digests=source_digests,
+        verifier_registry=trust.adaptation_evidence_verifiers,
+        allow_test_only=True,
+        expected_trust_scope="TEST_ONLY",
+    )
+
+    assert verified is not None
+    proofs = verified.payload["pair_proofs"]
+    assert len(proofs) == 2
+    assert proofs[1]["representation_id"] == semantic_proof["representation_id"]
+    assert proofs[1]["status"] == "VALID"
     assert _exp02_execution_evidence_admission(sidecar_supplied=False, trust_scope="TEST_ONLY") == (
         "not_admitted",
         False,

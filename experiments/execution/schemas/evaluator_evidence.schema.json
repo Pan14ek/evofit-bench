@@ -23,6 +23,30 @@
     "inspected_subjects": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "missing_targets": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "inspected_edge_count": {"type": ["integer", "null"], "minimum": 0},
+    "inspection_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unit", "expected_subjects", "measured_count", "evidence_artifact"],
+      "properties": {
+        "unit": {"enum": ["dependency_edge", "module", "file"]},
+        "expected_subjects": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        },
+        "measured_count": {"type": "integer", "minimum": 0},
+        "evidence_artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path", "sha256"],
+          "properties": {
+            "path": {"type": "string", "minLength": 1},
+            "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+          }
+        }
+      }
+    },
     "stage_applicable": {"type": "boolean"},
     "semantic_compatible": {"type": ["boolean", "null"]},
     "mapping_resolved": {"type": "boolean"},

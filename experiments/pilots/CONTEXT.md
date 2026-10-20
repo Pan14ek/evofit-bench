@@ -31,6 +31,7 @@ Store pilot-specific protocols, reports, derived result tables, and narrow tools
 - `PILOT_02_RAW_EVIDENCE_CONTINUATION_V2.zip` — corrected prospective continuation archive; V1 assumptions and outputs remain unchanged.
 - `PILOT_02_RAW_EVIDENCE_CONTINUATION_V3.zip` and `PILOT_02_RAW_EVIDENCE_CONTINUATION_V4.zip` — preserved prospective continuations; each archive has a separate SHA-256 sidecar.
 - `PILOT_02_RAW_EVIDENCE_CONTINUATION_V5.zip` — inherited-evaluator execution and V2-profile continuation evidence, with a separate SHA-256 sidecar.
+- `pilot02_semantic_validation.py` — pinned clean/fault evaluator controls, typed scope inventories, source-mutation readback, and TEST_ONLY pair reports for the existing Method P path.
 - `generate_pilot01_results.py` — validates existing EXP-01/02 artifacts, independently derives runtime metrics from raw Locust/process CSV files, cross-checks the manifest values with documented tolerances, and writes the CSV table and descriptive summary.
 - `run_pilot01_measurement.py` — invokes the existing Import Linter, module test, Locust task file, runtime sampler, and EXP-01/02 validators for this pilot only.
 
@@ -69,6 +70,11 @@ scope/compliance distinction. V3's raw trace is also retained; V4 aligns the
 execution-evidence admission label with the verified TEST_ONLY sidecar and
 keeps `exp02_observations_used_as_semantic_pair_evidence` false. These are
 successive corrections on one transition, not independent samples.
+
+The semantic-validation continuation reports `VALID` only after recomputing
+the pinned source/configuration bindings, inspection inventories, mutation
+effects, and raw evaluator outcomes. A positive semantic pair remains TEST_ONLY
+and cannot establish a DA01 prediction or coverage denominator.
 
 ## Verification
 

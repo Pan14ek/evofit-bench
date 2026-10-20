@@ -328,3 +328,16 @@ The bounded runner uses the existing V3 P input verifier and `run_adaptation()` 
 | PILOT02-DEV-02 | Execute candidate-profile evaluators only when the materialized row and all pinned identity, artifact, revision, scope, stage, coverage, and evidence-contract bindings match; mismatches stay not measured. | `tests/unit/test_pilot02_candidate_evaluators.py` | Implemented; positive scoped execution and adversarial mismatches |
 | PILOT02-DEV-03 | Verify inherited parent evaluator artifact bytes against the exact parent catalog and attach them only to a detached materialized candidate; preserve the parent bytes. | `tests/unit/test_pilot02_method_input_profile.py`, `tests/unit/test_p_candidate_governance_v1.py` | Implemented; positive and negative binding checks |
 | PILOT02-DEV-04 | Record each fresh inherited evaluator execution with exact source and configuration hashes, command, timestamps, metric units/status, raw stream digests, database-container identity, and per-run evaluator inventory; reject source path or digest mismatches and tampered raw output. | `test_inherited_evaluator_result_binds_source_config_and_raw_streams`, `test_inherited_evaluator_source_reference_rejects_digest_and_path_mismatch`, `test_inherited_evaluator_readback_rejects_tampered_raw_output`, `test_inherited_evaluator_database_container_uses_published_host_port` | Implemented; focused runner-record checks; real execution recorded separately |
+| PILOT02-SEM-01 | Establish exact-pair semantic evidence only after actual pinned clean/negative evaluator controls, non-vacuous typed scope, source mutation reconstruction, and exact representation/obligation/source/evaluator binding. | `tests/integration/test_pilot02_semantic_validation.py::test_real_controls_establish_two_testonly_semantic_pairs` | Live TEST_ONLY evaluator control integration; no DA01 authority or coverage claim |
+| PILOT02-SEM-02 | Reject digest-resealed scope, identity, source-revision, raw-stream, or negative-control tampering; do not reuse proof after a candidate-row change or admit unsigned evidence. | `tests/integration/test_pilot02_semantic_validation.py::test_readback_rejects_digest_resealed_adversarial_evidence`, `test_pilot02_testonly_execution.py::test_semantic_proof_is_not_reusable_after_candidate_row_changes`, `test_p_adaptation_evidence_v1.py::test_v2_sidecar_rejects_unsigned_proof_payload`, `test_p_semantic_pairs_v1.py::test_representation_proof_cannot_be_reused_for_a_different_representation` | Positive and adversarial controls; noncompliance remains separate from pair validity |
+
+Run the real semantic controls and adversarial readback checks with:
+
+```bash
+uv run python -m pytest -q --no-cov -p no:cacheprovider tests/integration/test_pilot02_semantic_validation.py
+```
+
+The test invokes pinned Grimp/Import Linter and pytest evaluators in disposable
+source copies. The preserved experiment archive is generated separately by
+`python -m experiments.pilots.pilot02_semantic_validation`; test executions are
+engineering verification, not independent architecture-transition samples.

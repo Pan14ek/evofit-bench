@@ -15,6 +15,7 @@ import sys
 import tempfile
 import time
 import tomllib
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
@@ -33,6 +34,8 @@ from experiments.execution.tooling.p_adaptation import (
 )
 from experiments.execution.tooling.p_applicability import (
     EvidenceLedger,
+    EvidenceProof,
+    ProofStatus,
     load_and_validate_ruleset,
 )
 from experiments.execution.tooling.p_input_validation import (
@@ -45,7 +48,8 @@ from experiments.execution.tooling.p_policy_source_v3 import (
     package_policy_source_v3,
     verify_method_bundle_v3,
 )
-from experiments.execution.tooling.p_semantic import assess_pair
+from experiments.execution.tooling.p_semantic import assess_pair, pair_proof_subject
+from experiments.pilots.pilot02_semantic_validation import load_verified_pair_inputs
 from experiments.pilots.pilot02_testonly_execution import (
     Pilot02TestOnlyTrustContext,
     build_adaptation_sidecar,
@@ -685,6 +689,27 @@ def _run_profile_candidate_evaluators(
     }
 
 
+def _candidate_template_match(
+    *,
+    template_preflight_verified: bool,
+    candidate_record: Mapping[str, Any] | None,
+    template_evaluator_artifact_sha256: str | None,
+) -> bool:
+    """Permit candidate proof reuse only for the exact prevalidated row and evaluator."""
+    binding = (
+        candidate_record.get("candidate_profile_binding", {})
+        if isinstance(candidate_record, Mapping)
+        else {}
+    )
+    return bool(
+        template_preflight_verified is True
+        and isinstance(binding, Mapping)
+        and binding.get("status") == "matched"
+        and binding.get("candidate_row_sha256") == binding.get("template_sha256")
+        and binding.get("evaluator_artifact_sha256") == template_evaluator_artifact_sha256
+    )
+
+
 def _copy_pair_evidence(
     *,
     run_dir: Path,
@@ -733,6 +758,7 @@ def _assess_profile_pairs(
     exp02_evidence: dict[str, Any],
     p_bundle: Any,
     output_dir: Path,
+    semantic_pair_inputs: dict[tuple[str, str], dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Use authentic validated runs in the existing exact-pair assessment function."""
     source_revision = str(exp02_evidence["source_revision"])
@@ -750,6 +776,30 @@ def _assess_profile_pairs(
             run_dir=exp02_run_dir,
             record=record,
             destination=output_dir,
+        )
+        obligation_id = str(mapping["obligation_id"])
+        representation = mapping["candidate_template"]["representation"]
+        semantic_input = (
+            semantic_pair_inputs.get((source_id, obligation_id))
+            if semantic_pair_inputs is not None
+            else None
+        )
+        template_rows = [
+            dict(row)
+            for row in p_bundle.templates
+            if isinstance(row, dict)
+            and canonical_json_bytes(dict(row))
+            == canonical_json_bytes(mapping["candidate_template"])
+        ]
+        representation_rows = [
+            dict(row)
+            for row in p_bundle.representations
+            if isinstance(row, dict) and row.get("id") == source_id
+        ]
+        template_binding_verified = (
+            len(template_rows) == 1
+            and len(representation_rows) == 1
+            and canonical_json_bytes(representation_rows[0]) == canonical_json_bytes(representation)
         )
         pair_evidence = {
             "schema_version": 1,
@@ -775,19 +825,150 @@ def _assess_profile_pairs(
             "stderr_sha256": raw_evidence["stderr_sha256"],
             "failure_reason_code": None,
         }
+        semantic_proof: EvidenceProof | None = None
+        sidecar_proof: dict[str, Any] | None = None
+        semantic_status = "not_supplied"
         all_bytes = embedded_bytes | raw_bytes
+        if semantic_input is not None:
+            report = semantic_input["report"]
+            scope = semantic_input["inspection_scope"]
+            report_identity_verified = (
+                report.get("representation_id") == source_id
+                and report.get("obligation", {}).get("id") == obligation_id
+                and report.get("architecture_source_sha") == source_revision
+                and report.get("application_tree_sha1") == p_bundle.manifest.get("after_tree_sha")
+                and report.get("evaluator_artifact_sha256")
+                == representation.get("evaluator_artifact", {}).get("sha256")
+                and report.get("evidence_contract_sha256")
+                == sha256_bytes(canonical_json_bytes(representation.get("evidence_contract", {})))
+                and report.get("profile_sha256")
+                == profile.get("profile_definition_artifact", {}).get("sha256")
+                and report.get("fitness_configuration_sha256")
+                == profile.get("fitness_configuration_artifact", {}).get("sha256")
+            )
+            scope_record = report.get("inspection_scope", {})
+            inspected_subjects = list(scope_record.get("inspected_subjects", []))
+            expected_subjects = list(scope.get("expected_subjects", []))
+            evidence_artifacts = [
+                *raw_evidence["evidence_artifacts"],
+                *semantic_input["evidence_artifacts"],
+            ]
+            profile_mapping_verified = (
+                mapping.get("obligation_id") == obligation_id
+                and obligation_id in representation.get("covers", [])
+                and source_id == representation.get("id")
+                and bool(representation.get("evidence_contract"))
+            )
+            report_can_bind = report_identity_verified and template_binding_verified
+            pair_evidence.update(
+                {
+                    "configured_targets": expected_subjects,
+                    "resolved_targets": inspected_subjects,
+                    "inspected_subjects": inspected_subjects,
+                    "missing_targets": sorted(set(expected_subjects) - set(inspected_subjects)),
+                    "inspected_edge_count": (
+                        int(scope["measured_count"]) if scope["unit"] == "dependency_edge" else None
+                    ),
+                    "inspection_scope": scope,
+                    "semantic_compatible": (
+                        True if report.get("status") == "VALID" and report_can_bind else None
+                    ),
+                    "mapping_resolved": profile_mapping_verified,
+                    "evidence_contract_satisfied": (
+                        profile_mapping_verified
+                        and mapping.get("configuration_artifact", {}).get("sha256")
+                        == representation.get("evidence_contract", {}).get(
+                            "configuration_artifact_sha256"
+                        )
+                    ),
+                    "adequacy_proven": (report.get("status") == "VALID" and report_can_bind),
+                    "clean_probe": "pass"
+                    if report.get("positive_control", {}).get("exit_code") == 0
+                    else "fail",
+                    "fault_probe": (
+                        "detected"
+                        if report.get("negative_control", {}).get("exit_code") != 0
+                        and report.get("control_checks", {}).get("negative_behavior_observed")
+                        is True
+                        else "missed"
+                    ),
+                    "evidence_artifacts": evidence_artifacts,
+                }
+            )
+            all_bytes |= semantic_input["artifact_bytes"]
+            semantic_status = str(report.get("status"))
+            if report_can_bind:
+                proof_status = (
+                    ProofStatus.VALID
+                    if report.get("status") == "VALID"
+                    else ProofStatus.UNDETERMINED
+                )
+                source_ids = ["P_CAPABILITIES", "P_TRACEABILITY"]
+                if all(item in p_bundle.source_digests for item in source_ids):
+                    source_bindings = [
+                        {
+                            "source_id": source_id_name,
+                            "sha256": p_bundle.source_digests[source_id_name],
+                        }
+                        for source_id_name in source_ids
+                    ]
+                    proof_subject = pair_proof_subject(
+                        representation, obligations[obligation_id], source_revision, pair_evidence
+                    )
+                    evidence_refs = list(semantic_input["evidence_refs"])
+                    unresolved_codes = [
+                        "PILOT02_SEMANTIC_" + re.sub(r"[^A-Za-z0-9_.:-]", "_", str(reason))
+                        for reason in report.get("unresolved_conditions", [])
+                    ]
+                    semantic_proof = EvidenceProof(
+                        status=proof_status,
+                        subject_sha256=sha256_bytes(canonical_json_bytes(proof_subject)),
+                        source_bindings=tuple(
+                            sorted(
+                                (str(row["source_id"]), str(row["sha256"]))
+                                for row in source_bindings
+                            )
+                        ),
+                        verifier_id=str(semantic_input["verifier_id"]),
+                        evidence_refs=tuple(sorted(evidence_refs)),
+                        reason_codes=tuple(unresolved_codes)
+                        if proof_status is ProofStatus.UNDETERMINED
+                        else (),
+                    )
+                    sidecar_proof = {
+                        "representation_id": source_id,
+                        "obligation_id": obligation_id,
+                        "status": proof_status.value,
+                        "subject_sha256": semantic_proof.subject_sha256,
+                        "verifier_id": semantic_proof.verifier_id,
+                        "source_bindings": source_bindings,
+                        "evidence_refs": evidence_refs,
+                        "reason_codes": list(semantic_proof.reason_codes),
+                    }
         assessment = assess_pair(
-            representation=mapping["candidate_template"]["representation"],
-            obligation=obligations[str(mapping["obligation_id"])],
+            representation=representation,
+            obligation=obligations[obligation_id],
             architecture_source_sha=source_revision,
             evaluator_evidence=pair_evidence,
-            semantic_proof=None,
+            semantic_proof=semantic_proof,
             artifact_bytes=all_bytes,
             source_digests=p_bundle.source_digests,
         )
         assessments.append(
             {
                 "assessment": assessment.to_dict(),
+                "semantic_pair_proof": sidecar_proof,
+                "semantic_report_status": semantic_status,
+                "verified_template_preflight": template_binding_verified,
+                "template_descriptor_sha256": sha256_bytes(
+                    canonical_json_bytes(mapping["candidate_template"])
+                ),
+                "template_representation_sha256": sha256_bytes(
+                    canonical_json_bytes(representation)
+                ),
+                "template_evaluator_artifact_sha256": representation.get(
+                    "evaluator_artifact", {}
+                ).get("sha256"),
                 "evaluator_evidence": pair_evidence,
                 "source_representation_id": source_id,
                 "source_evaluator_record_id": record_id,
@@ -799,9 +980,11 @@ def _assess_profile_pairs(
                 "observed_exit_status": record["exit_status"],
                 "observed_metric": observation["metrics"],
                 "assessment_role": (
-                    "pair assessment is diagnostic only; no semantic proof is supplied"
+                    "digest-verified TEST_ONLY semantic report and exact-pair proof supplied"
+                    if semantic_proof is not None
+                    else "pair assessment remains diagnostic; semantic proof is unavailable"
                 ),
-                "semantic_adequacy": "pending_independent_assessment",
+                "semantic_adequacy": semantic_status,
             }
         )
     return assessments
@@ -866,6 +1049,7 @@ def run_pilot(
     *,
     test_only_continuation: bool = False,
     test_only_assumptions_path: Path | None = None,
+    semantic_verification_dir: Path | None = None,
     profile_version: int = 2,
 ) -> dict[str, Any]:
     """Validate authentic EXP-02 evidence, execute P, and write a reproducible trace."""
@@ -881,6 +1065,8 @@ def run_pilot(
         raise ValueError("A0.1 app tree differs from the protocol-pinned source tree")
     if test_only_assumptions_path is not None and not test_only_continuation:
         raise ValueError("TEST_ONLY assumptions require --test-only-continuation")
+    if semantic_verification_dir is not None and not test_only_continuation:
+        raise ValueError("semantic verification requires --test-only-continuation")
     profile_pin = PILOT02_PROFILE_PINS.get(profile_version)
     if profile_pin is None:
         raise ValueError("unsupported PILOT-02 profile version")
@@ -1013,6 +1199,22 @@ def run_pilot(
                 evidence_ledger=EvidenceLedger({}, {}, {}),
             )
 
+        semantic_pair_inputs = (
+            load_verified_pair_inputs(
+                semantic_verification_dir.resolve(strict=True),
+                repository_root=root,
+                expected_architecture_source_sha=source_revision,
+            )
+            if semantic_verification_dir is not None
+            else None
+        )
+        if semantic_pair_inputs is not None:
+            for pair_input in semantic_pair_inputs.values():
+                for relative_path, content in pair_input["artifact_bytes"].items():
+                    target = destination / relative_path
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(content)
+
         pair_assessments = _assess_profile_pairs(
             profile=profile,
             exp02_run_dir=exp02_path,
@@ -1020,6 +1222,7 @@ def run_pilot(
             exp02_evidence=exp02_evidence,
             p_bundle=p_bundle,
             output_dir=destination,
+            semantic_pair_inputs=semantic_pair_inputs,
         )
         adaptation_sidecar: dict[str, Any] | None = None
         execution_evidence_rows: list[dict[str, Any]] = []
@@ -1050,6 +1253,11 @@ def run_pilot(
                 evaluation=b0_evaluation,
             )
             extra_artifacts.update(b0_artifacts)
+            semantic_pair_proofs = [
+                row["semantic_pair_proof"]
+                for row in pair_assessments
+                if isinstance(row.get("semantic_pair_proof"), dict)
+            ]
             adaptation_sidecar = build_adaptation_sidecar(
                 p_bundle,
                 assumptions=assumptions,
@@ -1057,6 +1265,7 @@ def run_pilot(
                 b0_representation=b0_representation,
                 b0_evaluator_evidence=b0_evidence,
                 extra_artifacts=extra_artifacts,
+                semantic_pair_proofs=semantic_pair_proofs,
             )
             (destination / "adaptation_evidence_test_only.json").write_bytes(
                 pretty_json_bytes(adaptation_sidecar)
@@ -1074,7 +1283,10 @@ def run_pilot(
         )
         trace["pilot02_profile_pair_assessments"] = pair_assessments
         trace["pilot02_profile_pair_assessments_role"] = (
-            "TEST_ONLY evaluator execution records were admitted; pair diagnostics supplied "
+            "TEST_ONLY evaluator executions and independently recomputed TEST_ONLY semantic "
+            "reports were supplied through the existing exact-pair proof path"
+            if semantic_pair_inputs is not None
+            else "TEST_ONLY evaluator execution records were admitted; pair diagnostics supplied "
             "no positive semantic proof"
             if test_only_continuation
             else "diagnostic only; not used for adaptation"
@@ -1088,6 +1300,26 @@ def run_pilot(
         trace["exp02_observations_used_as_semantic_pair_evidence"] = False
         trace["adaptation_evidence_sidecar_supplied"] = adaptation_sidecar is not None
         trace["adaptation_evidence_trust_scope"] = result.evidence_trust_scope
+        trace["pilot02_semantic_pair_inputs"] = {
+            "supplied": semantic_pair_inputs is not None,
+            "reports": [
+                {
+                    "representation_id": row["source_representation_id"],
+                    "obligation_id": row["assessment"]["obligation_id"],
+                    "report_status": row.get("semantic_report_status"),
+                    "prevalidated_template_match": row.get("verified_template_preflight"),
+                    "pair_status_before_adaptation": row["assessment"]["status"],
+                    "proof_status": (
+                        row["semantic_pair_proof"]["status"]
+                        if isinstance(row.get("semantic_pair_proof"), dict)
+                        else "not_supplied"
+                    ),
+                }
+                for row in pair_assessments
+            ],
+            "independent_human_assessment": False,
+            "trust_scope": "TEST_ONLY" if semantic_pair_inputs is not None else "none",
+        }
         trace["pilot02_exp02_consumption"] = {
             "sidecar_passed_to_run_adaptation": adaptation_sidecar is not None,
             "sidecar_sha256": (
@@ -1114,15 +1346,30 @@ def run_pilot(
                 else []
             ),
             "semantic_pair_proof_supplied_for_exp02": False,
+            "semantic_pair_proof_supplied_for_profile_pairs": bool(
+                adaptation_sidecar
+                and any(
+                    row.get("representation_id")
+                    in {
+                        "REP_A01_ARCH_INTERNAL_LAYERING_CI",
+                        "REP_A01_ARCH_MODULE_STRUCTURE_CI",
+                    }
+                    for row in adaptation_sidecar["payload"]["pair_proofs"]
+                )
+            ),
             "execution_evidence_admission_status": execution_admission_status,
             "interpretation": (
                 "Digest-validated EXP-02 executions were supplied before run_adaptation under "
+                "TEST_ONLY. Separate positive/negative evaluator controls and their recomputed "
+                "scope reports supplied pair proofs; they remain TEST_ONLY and are not coverage "
+                "authority."
+                if semantic_pair_inputs is not None
+                else "Digest-validated EXP-02 executions were supplied before run_adaptation under "
                 "TEST_ONLY; this is not semantic pair proof or coverage admission."
             ),
         }
         trace["method_p_computation_duration_ns"] = adaptation_duration_ns
         trace["method_p_computation_duration_seconds"] = adaptation_duration_ns / 1_000_000_000
-        (destination / "method_p_trace.json").write_bytes(pretty_json_bytes(trace))
         shutil.copytree(p_input_dir, destination / "verified_method_input")
 
     candidate = result.candidate
@@ -1153,6 +1400,56 @@ def run_pilot(
     p_evaluation["candidate_validation_status"] = candidate_status
     if isinstance(candidate, dict):
         (destination / "candidate_configuration.json").write_bytes(pretty_json_bytes(candidate))
+
+    candidate_records = {
+        str(row.get("representation_id")): row
+        for row in p_evaluation.get("records", [])
+        if isinstance(row, dict) and isinstance(row.get("representation_id"), str)
+    }
+    candidate_template_checks = []
+    for row in pair_assessments:
+        representation_id = str(row["source_representation_id"])
+        candidate_record = candidate_records.get(representation_id)
+        candidate_binding = (
+            candidate_record.get("candidate_profile_binding", {})
+            if isinstance(candidate_record, dict)
+            else {}
+        )
+        matched = _candidate_template_match(
+            template_preflight_verified=row.get("verified_template_preflight") is True,
+            candidate_record=candidate_record,
+            template_evaluator_artifact_sha256=row.get("template_evaluator_artifact_sha256"),
+        )
+        candidate_template_checks.append(
+            {
+                "representation_id": representation_id,
+                "obligation_id": row["assessment"]["obligation_id"],
+                "prevalidated_template_descriptor_sha256": row.get("template_descriptor_sha256"),
+                "prevalidated_representation_sha256": row.get("template_representation_sha256"),
+                "candidate_binding_status": candidate_binding.get("status", "not_measured"),
+                "candidate_representation_sha256": candidate_binding.get("candidate_row_sha256"),
+                "candidate_template_representation_sha256": candidate_binding.get(
+                    "template_sha256"
+                ),
+                "candidate_evaluator_artifact_sha256": candidate_binding.get(
+                    "evaluator_artifact_sha256"
+                ),
+                "prevalidated_evaluator_artifact_sha256": row.get(
+                    "template_evaluator_artifact_sha256"
+                ),
+                "full_candidate_template_match": matched,
+                "semantic_pair_proof_reusable_for_candidate": matched
+                and isinstance(row.get("semantic_pair_proof"), dict)
+                and row["semantic_pair_proof"].get("status") == "VALID",
+            }
+        )
+    trace["pilot02_candidate_template_verification"] = {
+        "records": candidate_template_checks,
+        "all_materialized_rows_match_prevalidated_templates": bool(candidate_template_checks)
+        and all(row["full_candidate_template_match"] for row in candidate_template_checks),
+        "candidate_evaluator_status": p_evaluation.get("status"),
+    }
+    (destination / "method_p_trace.json").write_bytes(pretty_json_bytes(trace))
 
     artifacts = []
     for artifact_path in sorted(destination.rglob("*")):
@@ -1205,6 +1502,21 @@ def run_pilot(
                 if selected_assumptions_path is not None
                 else None
             ),
+        },
+        "semantic_pair_verification": {
+            "status": "supplied" if semantic_pair_inputs is not None else "not_supplied",
+            "trust_scope": "TEST_ONLY" if semantic_pair_inputs is not None else "none",
+            "verification_inventory_sha256": (
+                sha256_bytes(
+                    (
+                        semantic_verification_dir.resolve(strict=True) / "sha256_inventory.json"
+                    ).read_bytes()
+                )
+                if semantic_verification_dir is not None
+                else None
+            ),
+            "pairs": trace["pilot02_semantic_pair_inputs"]["reports"],
+            "human_independent_assessment": False,
         },
         "exp02": {
             "run_id": exp02_bundle["run_id"],
@@ -1272,6 +1584,11 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         help="Use a tracked PILOT-02 TEST_ONLY assumption set for a prospective continuation.",
     )
+    parser.add_argument(
+        "--semantic-verification-dir",
+        type=Path,
+        help="Read back digest-verified TEST_ONLY semantic reports and bind exact-pair proofs.",
+    )
     parser.add_argument("--profile-version", type=int, choices=[1, 2], default=2)
     args = parser.parse_args(argv)
     try:
@@ -1280,6 +1597,7 @@ def main(argv: list[str] | None = None) -> int:
             args.output_dir,
             test_only_continuation=args.test_only_continuation,
             test_only_assumptions_path=args.test_only_assumptions,
+            semantic_verification_dir=args.semantic_verification_dir,
             profile_version=args.profile_version,
         )
     except (OSError, ValueError, KeyError, ProtocolError) as error:

@@ -15,7 +15,7 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `architecture_policy_snapshot_v1_2.schema.json` (additive, unfrozen DEVELOPMENT extension)
 - `candidate_configuration.schema.json`
 - `coverage_assessment.schema.json`
-- `evaluator_evidence.schema.json`
+- `evaluator_evidence.schema.json` — includes backward-compatible typed inspection scope (`dependency_edge`, `module`, or `file`) with digest-bound inventory evidence.
 - `ground_truth_hash.schema.json`
 - `p_traceability_graph_v1.schema.json`
 - `p_impact_assessment_v1.schema.json`

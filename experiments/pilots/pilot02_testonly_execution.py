@@ -372,6 +372,7 @@ def build_adaptation_sidecar(
     b0_representation: Mapping[str, Any],
     b0_evaluator_evidence: Mapping[str, Any],
     extra_artifacts: Mapping[str, bytes],
+    semantic_pair_proofs: Sequence[Mapping[str, Any]] = (),
 ) -> dict[str, Any]:
     """Sign actual evaluator executions and TEST_ONLY planning assumptions."""
     architecture = bundle.snapshot["architecture"]
@@ -492,7 +493,7 @@ def build_adaptation_sidecar(
     change_source_ids = _change_inventory_source_ids(bundle.snapshot)
     payload = {
         "evaluator_evidence": payload_evidence,
-        "pair_proofs": [pair_proof],
+        "pair_proofs": [pair_proof, *[dict(row) for row in semantic_pair_proofs]],
         "artifact_bytes": [
             {
                 "path": path,
