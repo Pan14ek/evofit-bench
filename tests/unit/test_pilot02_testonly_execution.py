@@ -6,9 +6,10 @@ import copy
 import json
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, cast
 
 from experiments.execution.tooling.hashing import sha256_bytes
+from experiments.execution.tooling.p_adaptation import VerifiedPBundle
 from experiments.execution.tooling.p_adaptation_evidence import verify_adaptation_evidence
 from experiments.execution.tooling.p_input_validation import SourceReference
 from experiments.pilots.pilot02_testonly_execution import (
@@ -61,7 +62,7 @@ def test_semantic_proof_is_not_reusable_after_candidate_row_changes() -> None:
 
 
 def test_candidate_evaluator_representation_records_are_used_for_proof_readback() -> None:
-    record = {
+    record: dict[str, Any] = {
         "representation_id": "REP_A01_ARCH_MODULE_STRUCTURE_CI",
         "candidate_profile_binding": {
             "status": "matched",
@@ -159,26 +160,29 @@ def test_sidecar_carries_supplied_semantic_pair_proof_through_testonly_verifier(
         "facts": [],
         "completeness_claims": [],
     }
-    bundle = SimpleNamespace(
-        snapshot=snapshot,
-        manifest={
-            "bundle_sha256": bundle_sha,
-            "policy_source_revision": "SYN_POLICY_REV_1",
-            "policy_bundle_sha256": policy_bundle_sha,
-        },
-        source_digests=source_digests,
-        obligations=({"id": "AC_LAYERING"}, {"id": "AC_MODULE_STRUCTURE"}),
-        trace_graph=SimpleNamespace(graph_sha256="1" * 64),
-        snapshot_validation=SimpleNamespace(snapshot_digest="2" * 64),
-        cost_model={
-            "schema_version": 1,
-            "model_version": "TEST_ONLY_COST_V1",
-            "authority_status": "TEST_ONLY",
-            "max_incremental_cost": 1,
-            "max_search_nodes": 1,
-            "candidate_costs": {},
-        },
-        templates=(),
+    bundle = cast(
+        VerifiedPBundle,
+        SimpleNamespace(
+            snapshot=snapshot,
+            manifest={
+                "bundle_sha256": bundle_sha,
+                "policy_source_revision": "SYN_POLICY_REV_1",
+                "policy_bundle_sha256": policy_bundle_sha,
+            },
+            source_digests=source_digests,
+            obligations=({"id": "AC_LAYERING"}, {"id": "AC_MODULE_STRUCTURE"}),
+            trace_graph=SimpleNamespace(graph_sha256="1" * 64),
+            snapshot_validation=SimpleNamespace(snapshot_digest="2" * 64),
+            cost_model={
+                "schema_version": 1,
+                "model_version": "TEST_ONLY_COST_V1",
+                "authority_status": "TEST_ONLY",
+                "max_incremental_cost": 1,
+                "max_search_nodes": 1,
+                "candidate_costs": {},
+            },
+            templates=(),
+        ),
     )
     semantic_proof = {
         "representation_id": "REP_A01_ARCH_INTERNAL_LAYERING_CI",
