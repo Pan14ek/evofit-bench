@@ -51,6 +51,12 @@ to exercise operation planning with authentic evaluator output. Preserve its
 separate archive and TEST_ONLY label; a candidate may be materialized while
 semantic coverage and governance remain unresolved.
 
+V5's canonical run `pilot02-inherited-20261020-v5d` validates the full candidate
+configuration after all four inherited evaluator bindings are supplied. The
+runtime-failure metric remains UNKNOWN, exact pairs remain UNKNOWN, and
+governance remains HOLD. Earlier V5 attempts are retained in the V5 archive and
+excluded from primary analysis.
+
 V1 classified `AC_LAYERING` as inactive in A0; the versioned A0 traceability,
 fitness configuration, and frozen A0 evaluator support applicability in A0.
 Keep V1 as historical evidence, and use the separate V2 assumption set for a

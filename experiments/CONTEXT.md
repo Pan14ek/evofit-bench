@@ -48,6 +48,13 @@ PostgreSQL integration outputs remain in the separate ignored run directory;
 they are not passed to P as semantic proof. The inherited-evaluator protocol
 defines these runs before measurement.
 
+V5's canonical run `pilot02-inherited-20261020-v5d` executed the four inherited
+evaluator rows and its full candidate validator returned `valid` after the
+versioned V2 DEVELOPMENT bindings were admitted. The V5 archive preserves the
+canonical run, linked EXP-01 bundle and earlier attempts. Runtime failure samples
+remain unavailable; exact pairs are UNKNOWN, the internal diagnostic is 0/2,
+governance remains HOLD, and no coverage or DA01 result is established.
+
 ## Verification and further reading
 
 Consult the original source files and nearest relevant tests, then `docs/README.md` for repository-wide architecture, experiment, stack and verification references. Implementation work uses `make quality` with a **disposable** PostgreSQL database. When a context summary conflicts with source code, a reviewed manifest or a frozen scientific protocol, **report the conflict**; do not silently reinterpret research rules.
