@@ -530,6 +530,8 @@ def _layering_scope(source_root: Path, cache_dir: Path) -> dict[str, Any]:
     return {
         "schema_version": 1,
         "inspection_unit": "dependency_edge",
+        "configuration_sha256": _sha(config_path),
+        "contract_names": [str(contract.get("name", "")) for contract in contracts],
         "expected_subjects": unique_targets,
         "inspected_subjects": resolved_targets,
         "measured_count": len(scoped_edges),
@@ -1363,15 +1365,7 @@ def run_semantic_controls(
     with tempfile.TemporaryDirectory(prefix="pilot02-semantic-controls-") as temp_directory:
         temp_root = Path(temp_directory)
         clean_root = _extract_snapshot(snapshot_path, temp_root / "clean")
-        lint_config = tomllib.loads(
-            (clean_root / "architecture/acceptance/importlinter.toml").read_text()
-        )
-        contracts = lint_config["tool"]["importlinter"]["contracts"]
         layering = _layering_scope(clean_root, temp_root / "grimp-cache-clean")
-        layering["contract_names"] = [row["name"] for row in contracts]
-        layering["configuration_sha256"] = _sha(
-            clean_root / "architecture/acceptance/importlinter.toml"
-        )
         layering_path = output_root / PAIR_SPECS["REP_A01_ARCH_INTERNAL_LAYERING_CI"]["scope_path"]
         _write_json(layering_path, layering)
         scope_by_representation["REP_A01_ARCH_INTERNAL_LAYERING_CI"] = layering
