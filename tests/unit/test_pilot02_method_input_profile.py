@@ -22,6 +22,7 @@ from experiments.execution.tooling.p_adaptation import (
     _validate_pilot02_method_input_profile,
 )
 from experiments.pilots.run_pilot02_inherited_evaluators import (
+    _docker_port_map_contains_host_port,
     _representation_result,
     _verified_source_reference,
     _verify_run_artifact_digest,
@@ -368,3 +369,14 @@ def test_inherited_evaluator_readback_rejects_tampered_raw_output(tmp_path: Path
     raw_output.write_bytes(b"tampered evaluator output")
     with pytest.raises(ValueError, match="run artifact digest mismatch"):
         _verify_run_artifact_digest(tmp_path, reference)
+
+
+def test_inherited_evaluator_database_container_uses_published_host_port() -> None:
+    port_map = {
+        "5432/tcp": [{"HostIp": "127.0.0.1", "HostPort": "58061"}],
+        "5433/tcp": None,
+    }
+
+    assert _docker_port_map_contains_host_port(port_map, 58061)
+    assert not _docker_port_map_contains_host_port(port_map, 58062)
+    assert not _docker_port_map_contains_host_port(None, 58061)

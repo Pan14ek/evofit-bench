@@ -90,6 +90,66 @@ def _validate_database_url(database_url: str) -> dict[str, Any]:
     }
 
 
+def _docker_port_map_contains_host_port(port_map: Any, host_port: int) -> bool:
+    """Return whether Docker inspect output maps a container port to the host port."""
+    if not isinstance(port_map, dict):
+        return False
+    for bindings in port_map.values():
+        if not isinstance(bindings, list):
+            continue
+        if any(
+            isinstance(binding, dict) and binding.get("HostPort") == str(host_port)
+            for binding in bindings
+        ):
+            return True
+    return False
+
+
+def _docker_container_id_for_host_port(docker: str, host_port: int) -> str | None:
+    """Resolve one running Docker container whose published port matches the test DB URL."""
+    try:
+        containers = subprocess.run(  # noqa: S603 - fixed read-only Docker argv
+            [docker, "ps", "--quiet"],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if containers.returncode != 0:
+            return None
+        matching_ids: list[str] = []
+        for container_id in containers.stdout.splitlines():
+            inspected = subprocess.run(  # noqa: S603 - fixed read-only Docker argv
+                [
+                    docker,
+                    "inspect",
+                    "--format",
+                    "{{.Id}} {{json .NetworkSettings.Ports}}",
+                    container_id,
+                ],
+                cwd=ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            if inspected.returncode != 0:
+                continue
+            try:
+                full_id, serialized_ports = inspected.stdout.strip().split(" ", maxsplit=1)
+                port_map = json.loads(serialized_ports)
+            except (ValueError, json.JSONDecodeError):
+                continue
+            if re.fullmatch(r"[0-9a-f]{64}", full_id) and _docker_port_map_contains_host_port(
+                port_map, host_port
+            ):
+                matching_ids.append(full_id)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return matching_ids[0] if len(matching_ids) == 1 else None
+
+
 def _run_captured(
     label: str,
     argv: list[str],
@@ -455,30 +515,7 @@ def run_evaluators(
         raise ValueError("compose project must use a unique evofit-pilot02- identifier")
     docker = shutil.which("docker")
     if docker is not None:
-        try:
-            container_result = subprocess.run(  # noqa: S603 - fixed read-only Docker query
-                [
-                    docker,
-                    "ps",
-                    "--filter",
-                    f"publish={database['port']}",
-                    "--format",
-                    "{{.ID}}",
-                ],
-                cwd=ROOT,
-                check=False,
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-        except subprocess.SubprocessError:
-            container_result = None
-        if container_result is not None and container_result.returncode == 0:
-            container_ids = [
-                line.strip() for line in container_result.stdout.splitlines() if line.strip()
-            ]
-            if len(container_ids) == 1:
-                database["container_id"] = container_ids[0]
+        database["container_id"] = _docker_container_id_for_host_port(docker, database["port"])
     selected_run_id = _run_id(run_id)
     run_dir = ROOT / "experiments/results" / selected_run_id
     if run_dir.exists():
