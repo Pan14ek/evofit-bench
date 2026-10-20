@@ -12,8 +12,9 @@ import json
 import re
 import shutil
 import subprocess
+from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
-from typing import Any, Mapping
+from typing import Any
 
 _SHA40 = re.compile(r"[0-9a-f]{40}", re.ASCII)
 _FIELDS = (
