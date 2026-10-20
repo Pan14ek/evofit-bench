@@ -130,7 +130,7 @@ def test_symlink_in_git_source_fails_closed(
 ) -> None:
     repository, _, _ = revision_pair
     link = repository / "app" / "external.py"
-    link.symlink_to("/tmp/outside.py")
+    link.symlink_to(repository.parent / "outside.py"
     commit = _commit(repository, "symlink")
     with pytest.raises(SourceInventoryError, match="symlink"):
         committed_modules(repository, commit)
