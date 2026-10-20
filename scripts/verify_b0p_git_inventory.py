@@ -11,7 +11,7 @@ import hashlib
 import json
 import re
 import shutil
-import subprocess
+import subprocess  # nosec B404 - local pinned Git object inspection, no shell
 from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
 from typing import Any
