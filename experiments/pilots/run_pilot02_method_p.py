@@ -710,6 +710,20 @@ def _candidate_template_match(
     )
 
 
+def _candidate_evaluator_records(
+    candidate_evaluation: Mapping[str, Any],
+) -> dict[str, Mapping[str, Any]]:
+    """Index the measured candidate evaluator records by their representation ID."""
+    records = candidate_evaluation.get("representations", [])
+    if not isinstance(records, list):
+        return {}
+    return {
+        str(row["representation_id"]): row
+        for row in records
+        if isinstance(row, Mapping) and isinstance(row.get("representation_id"), str)
+    }
+
+
 def _prevalidated_template_binding(
     *,
     p_bundle: Any,
@@ -1454,11 +1468,7 @@ def run_pilot(
     if isinstance(candidate, dict):
         (destination / "candidate_configuration.json").write_bytes(pretty_json_bytes(candidate))
 
-    candidate_records = {
-        str(row.get("representation_id")): row
-        for row in p_evaluation.get("records", [])
-        if isinstance(row, dict) and isinstance(row.get("representation_id"), str)
-    }
+    candidate_records = _candidate_evaluator_records(p_evaluation)
     candidate_template_checks = []
     for row in pair_assessments:
         representation_id = str(row["source_representation_id"])

@@ -18,6 +18,7 @@ from experiments.pilots.pilot02_testonly_execution import (
     create_testonly_policy_source,
 )
 from experiments.pilots.run_pilot02_method_p import (
+    _candidate_evaluator_records,
     _candidate_template_match,
     _exp02_execution_evidence_admission,
     _prevalidated_template_binding,
@@ -56,6 +57,29 @@ def test_semantic_proof_is_not_reusable_after_candidate_row_changes() -> None:
             template_evaluator_artifact_sha256="c" * 64,
         )
         is False
+    )
+
+
+def test_candidate_evaluator_representation_records_are_used_for_proof_readback() -> None:
+    record = {
+        "representation_id": "REP_A01_ARCH_MODULE_STRUCTURE_CI",
+        "candidate_profile_binding": {
+            "status": "matched",
+            "candidate_row_sha256": "a" * 64,
+            "template_sha256": "a" * 64,
+            "evaluator_artifact_sha256": "b" * 64,
+        },
+    }
+    indexed = _candidate_evaluator_records({"representations": [record]})
+
+    assert indexed[record["representation_id"]] == record
+    assert (
+        _candidate_template_match(
+            template_preflight_verified=True,
+            candidate_record=indexed[record["representation_id"]],
+            template_evaluator_artifact_sha256="b" * 64,
+        )
+        is True
     )
 
 

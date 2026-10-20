@@ -45,6 +45,9 @@ PILOT-02 semantic-proof preflight accepts a new row only when its full template
 is present in the verified candidate-template catalog; a conflicting row with
 the same ID in the parent representation catalog fails closed, and materialized
 candidate equality is checked again before proof reuse.
+The post-materialization comparison indexes the actual `representations` list
+returned by scoped candidate evaluators; it must not look for a nonexistent
+`records` field or treat measured bindings as unavailable.
 Profile V2 tests also reject parent-catalog digest mismatches, unknown inherited
 rows, and evaluator bytes that do not match the verified profile binding.
 SPEC03 regression cases also check stale pair revisions, conflicting and
