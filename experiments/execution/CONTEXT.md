@@ -23,6 +23,10 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - `schemas/exp04_evidence_admission_v1.schema.json`
 - `schemas/exp04_method_p_execution_trace_v1.schema.json`
 - `schemas/exp04_evidence_verifier_config_v1.schema.json`
+- `tooling/b0p_development.py`
+- `schemas/b0p_development_study_v1.schema.json`
+- `../../scripts/prepare_b0p_development_comparison.py`
+- `../../scripts/verify_b0p_development_comparison.py`
 - `P_GOVERNED_ADAPTATION_V1.md`
 - `README.md`
 
@@ -41,6 +45,13 @@ UNKNOWN/HOLD. This does not make P ready for measured trials: production inputs
 still lack approved policy authority, mandatory classifications, evaluator
 templates, and cost authority, and G1/G4 remain separate. Keep
 `p_interface.py` readiness blocked until the documented gates are met.
+
+The B0/P preparation runner produces source-pinned, read-only method bundles,
+checks frozen B0 bytes and independently recomputes the four Git module
+inventory fields. Its status remains `PREPARED_NOT_EXECUTED`; it does not
+create predictions, open the scorer, assert pair coverage, or change G1/G4.
+The selected A0-to-A0.1 transition is `CALIBRATION_EXPOSED`. Readiness and
+exact blockers are recorded in `docs/g1/B0P_READINESS_V1.md`.
 
 The EXP-03 bridge in `scripts/exp03_method_bridge.py` reads validated EXP-02
 artifacts and optionally executes the verified V3 pipeline. EXP-02 execution

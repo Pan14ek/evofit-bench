@@ -37,6 +37,7 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `pilot02_method_input_profile_v2.schema.json` (additive inherited evaluator bindings)
 - `pilot02_inherited_evaluator_results_v1.schema.json`
 - `pilot02_inherited_evaluator_inventory_v1.schema.json`
+- `b0p_development_study_v1.schema.json` — strict source-pinned preparation record; `PREPARED_NOT_EXECUTED` is not a comparative outcome
 
 This is a selected list, not a complete source inventory.
 

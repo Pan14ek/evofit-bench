@@ -79,6 +79,7 @@ tracked in `docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`.
 - `p_operations.py`
 - `p_candidate.py`
 - `p_governance.py`
+- `b0p_development.py`
 
 This is a selected list (17 direct tracked files), not a complete source inventory.
 
@@ -89,6 +90,13 @@ Use deterministic source hashes and method-input isolation; keep scorer oracle-s
 ## Constraints and known gaps
 
 SPEC03 is a DEVELOPMENT implementation only. It uses SPEC02 applicability, exact-pair evidence, conservative impact, materialized templates, bounded deterministic operations, governance, provenance and conditional rollback. Do not use oracle/scorer inputs or claim G1/G4 readiness; unresolved authority, mandatory classifications, templates, costs, multi-stage contracts and method review produce HOLD or remain blockers.
+
+`b0p_development.py` prepares a write-once B0/P DEVELOPMENT package and
+verifies its manifest, Git source inventories, frozen configuration bytes,
+policy bundle and checksums. It is a preflight stage only: it does not execute
+either arm, produce predictions, or score a result. Keep `PREPARED_NOT_EXECUTED`
+distinct from an experiment outcome. Its B0, P, policy and architecture source
+revisions are separate fields; do not infer authority from the policy digest.
 
 ## PILOT-02 profile boundary
 

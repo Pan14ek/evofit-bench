@@ -35,6 +35,8 @@ Store pilot-specific protocols, reports, derived result tables, and narrow tools
 - `pilot02_semantic_validation.py` — pinned clean/fault evaluator controls, typed scope inventories, source-mutation readback, and TEST_ONLY pair reports for the existing Method P path.
 - `generate_pilot01_results.py` — validates existing EXP-01/02 artifacts, independently derives runtime metrics from raw Locust/process CSV files, cross-checks the manifest values with documented tolerances, and writes the CSV table and descriptive summary.
 - `run_pilot01_measurement.py` — invokes the existing Import Linter, module test, Locust task file, runtime sampler, and EXP-01/02 validators for this pilot only.
+- `B0P_DEVELOPMENT_REPORT.md` — source-pinned B0/P preparation report and execution blockers
+- `B0P_DEVELOPMENT_MANUSCRIPT_UA.md` — Ukrainian academic subsection; no unexecuted scores are claimed
 
 ## Constraints and known limits
 
@@ -77,6 +79,12 @@ pairs only after recomputing pinned source/configuration bindings, typed inspect
 inventories, mutation effects, and raw evaluator outcomes. The reports record no
 independent human assessment. Pair validity remains TEST_ONLY and cannot establish
 a DA01 prediction or coverage denominator; Method P governance remains HOLD.
+
+The B0/P preparation package identifies the A0-to-A0.1 transition as
+`CALIBRATION_EXPOSED`. It pins B0, Method P, policy, architecture, exporter,
+scorer, sealer, and verifier sources and records the full six-item RQ2
+denominator from the DEVELOPMENT protocol. `PREPARED_NOT_EXECUTED` is not a
+B0/P result; do not score prior PILOT-02 evidence into the new run.
 
 ## Verification
 

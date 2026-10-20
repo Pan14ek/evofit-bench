@@ -20,6 +20,9 @@ Seed/reset, metrics capture, workload runners, method prep and reproducibility t
 - `exp02_fitness_evidence.py`
 - `exp03_method_bridge.py`
 - `exp04_evidence_admission.py`
+- `prepare_b0p_development_comparison.py`
+- `verify_b0p_development_comparison.py`
+- `verify_b0p_git_inventory.py`
 - `../experiments/pilots/run_pilot02_method_p.py`
 - `finalize_run.py`
 - `prometheus_snapshot.py`
@@ -29,6 +32,11 @@ This is a selected list, not a complete source inventory.
 ## Established conventions
 
 Run on disposable databases; fail clearly if required telemetry/provenance missing.
+
+The B0/P preparation CLI accepts full commit SHAs and writes a new, write-once
+package under `experiments/results/<run-id>/`. The readback CLI independently
+checks the pinned source inventories, bundles, source facts and checksum
+inventory. Preparation does not run B0 or P and does not access the scorer.
 
 ## Constraints and known gaps
 

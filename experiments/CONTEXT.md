@@ -14,6 +14,8 @@ Scientific protocol, scenarios, execution, curated evidence and run results.
 - `schemas/development_evidence_bundle_v1.schema.json`
 - `schemas/fitness_representation_evidence_v1.schema.json`
 - `execution/EXP04_EVIDENCE_ADMISSION.md`
+- `execution/tooling/b0p_development.py` — write-once B0/P DEVELOPMENT input preparation and readback checks
+- `execution/schemas/b0p_development_study_v1.schema.json` — strict preparation manifest
 - `execution/schemas/pilot02_inherited_evaluator_results_v1.schema.json`
 - `results/` (ignored generated run outputs)
 - `pilots/` contains PILOT-01 and PILOT-02 protocols, reports, manuscript subsections, generated tables, evidence archives, and narrow tools
@@ -55,6 +57,13 @@ bytes before admitting exact-pair proofs through the existing TEST_ONLY
 sidecar. Its pair statuses remain DEVELOPMENT diagnostics; they do not
 establish DA01 authorization, independent coverage, G1/G4, or production
 readiness.
+
+The B0/P DEVELOPMENT preparation package binds the frozen B0 and P sources,
+the separately pinned DRAFT/OPEN policy source, allowlisted input bundles, and
+Git-reconstructed module facts. A prepared package is not a method execution;
+the A0-to-A0.1 transition remains CALIBRATION_EXPOSED and the full RQ2
+denominator remains six. See `docs/g1/B0P_READINESS_V1.md` for blockers and
+the run-specific report.
 
 V5's canonical run `pilot02-inherited-20261020-v5d` executed the four inherited
 evaluator rows and its full candidate validator returned `valid` after the

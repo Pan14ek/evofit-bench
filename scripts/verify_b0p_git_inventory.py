@@ -16,6 +16,8 @@ from collections.abc import Mapping
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from experiments.execution.tooling.hashing import pretty_json_bytes
+
 _SHA40 = re.compile(r"[0-9a-f]{40}", re.ASCII)
 _FIELDS = (
     "before_module_names",
@@ -39,7 +41,7 @@ def _git(repository: Path, *args: str) -> bytes:
             check=True,
             capture_output=True,
         )
-    except subprocess.CalledProcessError as error:
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as error:
         raise SourceInventoryError("Cannot read pinned Git source object") from error
     return result.stdout
 
@@ -111,10 +113,25 @@ def assess_observations(
     after_sha: str,
     observations: Mapping[str, Any],
     observations_sha256: str,
+    observations_bytes: bytes | None = None,
 ) -> dict[str, Any]:
     """Compare exported observations to Git facts without calling Method P."""
     if not re.fullmatch(r"[0-9a-f]{64}", observations_sha256):
         raise SourceInventoryError("Observation file requires a real SHA-256")
+    content = (
+        observations_bytes
+        if observations_bytes is not None
+        else pretty_json_bytes(dict(observations))
+    )
+    if hashlib.sha256(content).hexdigest() != observations_sha256:
+        raise SourceInventoryError("Observation digest does not match its exact content")
+    if observations_bytes is not None:
+        try:
+            parsed = json.loads(observations_bytes)
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            raise SourceInventoryError("Observation artifact must be JSON") from error
+        if parsed != dict(observations):
+            raise SourceInventoryError("Observation object does not match its exact content")
     expected = actual_inventory(repository, before_sha, after_sha)
     field_results: dict[str, Any] = {}
     for key in _FIELDS:
@@ -173,6 +190,7 @@ def main() -> int:
         args.after_sha,
         observations,
         hashlib.sha256(raw).hexdigest(),
+        raw,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with args.output.open("x", encoding="utf-8") as stream:
