@@ -10,7 +10,8 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 ## Local landmarks
 
 - `p_applicability_support.py`
-- `test_module_public_apis.py` — ΔA2 facade exports, delegated semantics and import-boundary regression
+- `test_module_public_apis.py` — ΔA2 facade exports, shared `TaskSummary` type, delegated semantics and import-boundary regression
+- `test_architecture_stage_checks.py` — rejects missing/partial interfaces, stale historical pin, unexpected stage, dirty source and vacuous stage test selection.
 - `test_da01_execution.py`
 - `test_da01_inputs_and_isolation.py`
 - `test_experiment_evidence.py`
@@ -38,7 +39,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_b0p_execution.py` — prediction/source/bundle bindings, tamper rejection, P HOLD markers, no-scorer reference rules, unknown denominator/resource metrics, evaluator identity, write-once checks, append-only checksum inventories, and B0/P candidate-validation propagation into direct manifest assembly
 - `test_b0p_e1_execution.py` — exact-run sidecar/signature/source bindings, independent Git fact readback, run-contained semantic-directory readback, complete six-row UNKNOWN RQ2, candidate diagnostics under HOLD, oracle contamination, write-once behavior, and RQ1 abstention gating
 
-This is a selected list (15 direct tracked files), not a complete source inventory.
+This is a selected list of direct tracked files, not a complete source inventory.
 
 ## Established conventions
 
