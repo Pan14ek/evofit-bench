@@ -2365,7 +2365,7 @@
       },
       {
         "path": "analyzers.py",
-        "sha256": "915425b084c1931eddde9f1350121d7238bc8e93b91025813df62d0efe1f24f9"
+        "sha256": "b67b21c1f78a39382a0ed8692d8bd350ff71b1261a448af4b78e83fe7f2eb1a2"
       },
       {
         "path": "cli.py",
@@ -2376,10 +2376,10 @@
         "sha256": "4f23eba6067bce8a2793c8923d216a11c782147c9d95e7881b93b1a8b9c8c9f5"
       }
     ],
-    "source_digest": "c948615d99f674d69419cdc54b2316395cc5f41d53e601869ad09bbdda6bda82",
+    "source_digest": "5fbbed1b42fd6e5d7a49fe036cab31838041338c1b7817038f4c0f60040dcadb",
     "version": "1.0.0"
   },
-  "generated_at": "2026-10-21T20:09:41.226936+00:00",
+  "generated_at": "2026-10-21T20:31:47.000077+00:00",
   "raw_output": {
     "available": true,
     "format": "application/json",
