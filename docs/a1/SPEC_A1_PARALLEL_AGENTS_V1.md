@@ -1,6 +1,6 @@
 # SPEC-A1-02 v1 — Parallel agents, Git worktrees and merge discipline
 
-**Status:** PROPOSED / orchestration contract. Applies after SPEC-A1 docs are reviewed and merged.
+**Status:** PROPOSED / orchestration contract. Agents may start contract/audit/test-scaffold work from a reviewed, pinned SPEC branch before merge; merging the specification is preferred before editing shared application source.
 **Related:** [architecture contracts](SPEC_A1_ARCHITECTURE_AND_CONTRACTS_V1.md), [experiment contract](SPEC_A1_EXPERIMENT_CONTRACT_V1.md), [critical path](SPEC_A1_CRITICAL_PATH_V1.md).
 **Research boundary:** app refactoring is an experimental treatment, not proof of architectural superiority. Do not train/tune Method P on scorer labels or unseen results.
 
@@ -10,7 +10,7 @@ Separate physical Git worktrees and branches do **not** make simultaneously edit
 
 The integrator owns architecture-state sequence, source SHA capture, reference custody, integration test runs, conflict resolution, and PR merging. Individual agents own bounded deliverables. Each branch starts at the same recorded integration-base commit until a dependency has merged; dependent implementation rebases/branches from the new integrated HEAD, never a guessed earlier snapshot.
 
-The integration-base commit should be SPEC-A1's merge SHA. The open PR #25 (evidence-sufficient E1 calibration) is **not** a safe implicit dependency until merged. If its execution utilities are needed, pin its merge SHA separately and re-run compatibility checks. Neither PR #25's E1 nor its status is the monograph MONO-E1.
+The integration-base commit should normally be SPEC-A1's merge SHA; for earlier non-conflicting preparation, W0 may freeze the current SPEC-branch HEAD as a temporary shared base, then explicitly rebase every dependent worktree after merge. The open PR #25 (evidence-sufficient E1 calibration) is **not** a safe implicit dependency until merged. If its execution utilities are needed, pin its merge SHA separately and re-run compatibility checks. Neither PR #25's E1 nor its status is the monograph MONO-E1.
 
 ## 2. Workstream allocation and conflict boundaries
 
@@ -64,7 +64,7 @@ Run **only after the SPEC-A1 docs are merged** and `origin/main` is verified at 
 ```bash
 git fetch origin
 git status --short
-BASE_SHA=$(git rev-parse origin/main)
+BASE_SHA=$(git rev-parse origin/main)   # after SPEC merge\n# Pre-merge preparation alternative, if W0 approves a reviewed/frozen SPEC HEAD:\n# BASE_SHA=$(git rev-parse origin/research/spec-a1-parallel-worktrees-v1)
 printf 'Frozen integration base: %s\n' "$BASE_SHA"
 
 git worktree add ../evofit-wt-a1-public       -b feat/a1-public-contracts "$BASE_SHA"
