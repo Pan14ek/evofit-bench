@@ -115,7 +115,7 @@ The archive's checksum proves byte integrity after capture; it does not independ
 
 | Requirement | Implementation | Synthetic test |
 | --- | --- | --- |
-| Exact source commit/tree and reference sealing | `freeze_reference`, `load_verified_reference`, `verify_source_revision` | `test_reference_freeze_is_source_pinned_and_precedes_method_execution`; `test_freeze_rejects_incorrect_source_tree_sha`; seal/mutation tests |
+| Exact source commit/tree and reference sealing | `freeze_reference`, `load_verified_reference`, `verify_source_revision` | `test_reference_freeze_is_source_pinned_and_precedes_method_execution`; `test_freeze_rejects_incorrect_source_tree_sha`; `test_mono_e2_schema_rejects_a0_1_predecessor`; `test_mono_e2_schema_rejects_incorrect_a0_commit_sha`; `test_mono_e2_schema_rejects_incorrect_final_architecture_state`; `test_mono_e2_reference_cannot_be_sealed_without_real_final_a1_identities`; seal/mutation tests |
 | Full applicable denominator and correct RQ2 denominator | `validate_mono_reference`, `score_mono_rq2` | `test_rq2_rejects_a_wrong_denominator_and_keeps_unknown_applicability`; `test_rq2_uses_one_full_denominator_and_separates_three_coverage_views` |
 | Reference/oracle isolation | `verify_method_input_isolation` | `test_reference_labels_cannot_enter_method_input` |
 | Seal tampering / write-once | reference/prediction seal loaders | `test_reference_readback_rejects_missing_or_forged_seal`; `test_reference_is_write_once_and_post_seal_mutation_is_detected` |

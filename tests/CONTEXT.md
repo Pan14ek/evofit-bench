@@ -23,7 +23,7 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 - `unit/test_pilot02_testonly_execution.py`
 - `unit/test_b0p_git_inventory.py` — pinned Git inventory and digest-tampering checks
 - `unit/test_b0p_development.py` — isolated-copy preparation, source-pin and readback checks
-- `unit/test_mono_a1.py` — synthetic MONO reference custody, sealed scoring prerequisites, denominator/exact-pair boundaries, and archive readback
+- `unit/test_mono_a1.py` — synthetic MONO reference custody, E2 source-binding negative checks, sealed scoring prerequisites, denominator/exact-pair boundaries, and archive readback
 
 ## Established conventions
 

@@ -10,13 +10,13 @@
 
 Do not execute Method P on ΔA4 until W0 records `G-A1-C4-REF-FROZEN` as complete. The E1 reference must also be frozen and read back before either B0 or P starts. An unchecked item, unavailable source, unresolved required obligation, missing evaluator, or failed Git/readback check keeps the checkpoint `NOT_READY`. Do not treat a draft reference as a frozen reference.
 
-The E1 transition labels are A0.3→A0.4. The exact commit and tree SHAs remain `UNASSIGNED` until W0 verifies the intended ΔA4 change and its distinctness from the later Reporting migration.
+The E1 transition labels are A0.3→A0.4. ΔA4 is the Reporting → Tasks public query-port migration. The exact commit and tree SHAs remain `UNASSIGNED` until W0 verifies this source change and confirms it is isolated from subsequent ΔA5 data-ownership and ΔA6 domain-event changes.
 
 ## W0 completion checklist
 
 For every item, record the evidence path or digest and the reviewer/date. Leave the status unchecked until the evidence exists.
 
-- [ ] **Source pair:** record before/after state IDs, full commit SHAs, tree SHAs, and commit lineage from the approved ΔA4 checkpoint. Read both commit and tree objects from Git. Confirm the source diff contains the intended query-port refactor and does not include the later Reporting migration.
+- [ ] **Source pair:** record before/after state IDs, full commit SHAs, tree SHAs, and commit lineage from the approved ΔA4 checkpoint. Read both commit and tree objects from Git. Confirm the source diff contains the ΔA4 Reporting → Tasks public query-port migration and is isolated from subsequent ΔA5 data-ownership and ΔA6 domain-event changes.
 - [ ] **Stable fixture:** pin the workload, database fixture, environment, and permitted source changes shared by both arms.
 - [ ] **Architecture facts:** derive facts independently from the pinned trees. Bind every fact used by the reference to the corresponding source SHA and raw evidence digest; mark unresolved facts `UNKNOWN`.
 - [ ] **Target universe:** enumerate affected and unaffected representations and obligation targets. Independently justify the expected `retain`/no-op labels for this negative control; do not copy labels from B0 or P output.

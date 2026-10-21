@@ -193,6 +193,32 @@ def _reference() -> dict[str, Any]:
     }
 
 
+def _mono_e2_reference() -> dict[str, Any]:
+    """Return a schema fixture with Git-object stand-ins, not verified A1 evidence."""
+    reference = _reference()
+    before = reference["architecture"]["before"]
+    after = reference["architecture"]["after"]
+    a0_sha = "b78b0967be937634b7762baccf5ac6892b279a73"
+    before.update(
+        state_id="A0_MONOLITH",
+        commit_sha=a0_sha,
+        tree_sha=_git_text("rev-parse", f"{a0_sha}^{{tree}}"),
+    )
+    # HEAD supplies a real Git object solely to make the fixture structurally complete.
+    # It is not asserted to be the final A1 source or used as experimental evidence.
+    after.update(state_id="A1_MODULAR_MONOLITH")
+    reference.update(study_id="MONO-E2", reference_id="MONO_E2_REFERENCE_V1")
+    reference["methods"]["B0"]["source_sha"] = before["commit_sha"]
+    reference["methods"]["P"]["source_sha"] = after["commit_sha"]
+    for fact in reference["architecture_facts"]:
+        fact["architecture_source_sha"] = (
+            before["commit_sha"] if fact["fact_id"] == "FACT_BEFORE" else after["commit_sha"]
+        )
+    evaluator = reference["evaluator_artifacts"][0]
+    evaluator.update(source_sha=after["commit_sha"], tree_sha=after["tree_sha"])
+    return reference
+
+
 @pytest.fixture
 def frozen_reference(tmp_path: Path) -> tuple[dict[str, Any], Path, dict[str, Any]]:
     reference = _reference()
@@ -485,6 +511,69 @@ def test_all_mono_schemas_are_valid_json_schema_contracts() -> None:
     )
     for schema_name in schema_names:
         Draft202012Validator.check_schema(load_schema(schema_name))
+
+
+def test_mono_e2_schema_rejects_a0_1_predecessor() -> None:
+    reference = _mono_e2_reference()
+    reference["architecture"]["before"]["state_id"] = "A0_1_CAPABILITY_MODULES"
+
+    with pytest.raises(ContractValidationError):
+        validate_mono_reference(reference)
+
+
+def test_mono_e2_schema_rejects_incorrect_a0_commit_sha() -> None:
+    reference = _mono_e2_reference()
+    reference["architecture"]["before"]["commit_sha"] = "0" * 40
+
+    with pytest.raises(ContractValidationError):
+        validate_mono_reference(reference)
+
+
+def test_mono_e2_schema_rejects_incorrect_final_architecture_state() -> None:
+    reference = _mono_e2_reference()
+    reference["architecture"]["after"]["state_id"] = "A0_1_CAPABILITY_MODULES"
+
+    with pytest.raises(ContractValidationError):
+        validate_mono_reference(reference)
+
+
+@pytest.mark.parametrize(
+    ("identity_case", "expected_error"),
+    [
+        ("missing_commit", ContractValidationError),
+        ("missing_tree", ContractValidationError),
+        ("unavailable_commit_and_tree", MonoA1Error),
+        ("mismatched_tree", MonoA1Error),
+    ],
+)
+def test_mono_e2_reference_cannot_be_sealed_without_real_final_a1_identities(
+    tmp_path: Path,
+    identity_case: str,
+    expected_error: type[Exception],
+) -> None:
+    reference = _mono_e2_reference()
+    after = reference["architecture"]["after"]
+    if identity_case == "missing_commit":
+        after["commit_sha"] = None
+    elif identity_case == "missing_tree":
+        after["tree_sha"] = None
+    elif identity_case == "unavailable_commit_and_tree":
+        after.update(commit_sha="1" * 40, tree_sha="2" * 40)
+    else:
+        after["tree_sha"] = "0" * 40
+
+    # Keep source-bound fixture records consistent so the final A1 revision check is decisive.
+    reference["architecture_facts"][1]["architecture_source_sha"] = after["commit_sha"]
+    reference["methods"]["P"]["source_sha"] = after["commit_sha"]
+    reference["evaluator_artifacts"][0].update(
+        source_sha=after["commit_sha"], tree_sha=after["tree_sha"]
+    )
+    destination = tmp_path / "unverified-mono-e2-reference"
+
+    with pytest.raises(expected_error):
+        freeze_reference(reference, destination, repository=ROOT)
+
+    assert not destination.exists()
 
 
 def test_reference_freeze_is_source_pinned_and_precedes_method_execution(
