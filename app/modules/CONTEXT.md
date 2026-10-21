@@ -10,10 +10,13 @@ Capability-oriented business packages users, tasks, notifications, reporting and
 ## Local landmarks
 
 - `__init__.py`
+- Each capability's `public.py` declares its narrow Python API with explicit `__all__` exports.
 
 ## Established conventions
 
-Read each child CONTEXT.md; dependencies are synchronous and governed by DA01 manifest.
+Read each child CONTEXT.md. Cross-module business calls use the receiving module's public facade;
+facades share the caller's SQLAlchemy session and never own the transaction. Reporting's direct
+Tasks service query remains the documented ΔA4 migration exception.
 
 ## Constraints and known gaps
 

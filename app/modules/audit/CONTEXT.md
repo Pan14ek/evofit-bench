@@ -11,12 +11,14 @@ AuditEvent persistence and synchronous business-event recording.
 
 - `__init__.py`
 - `model.py`
+- `public.py` — `record_event` writes through the caller's session and returns no persistence object.
 - `repository.py`
 - `service.py`
 
 ## Established conventions
 
-Audit rows are written within caller transaction by record_event.
+Audit rows are written within caller transaction by `record_event`; the public facade never commits
+or rolls back that transaction.
 
 ## Constraints and known gaps
 

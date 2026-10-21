@@ -6,8 +6,8 @@ import uuid
 from sqlalchemy.orm import Session
 
 from app.experiment.fault_injector import apply_task_delay
-from app.modules.audit.service import record_event
-from app.modules.notifications.service import create_notification
+from app.modules.audit.public import record_event
+from app.modules.notifications.public import create_notification
 from app.modules.tasks.model import Task, TaskStatus
 from app.modules.tasks.repository import (
     count_by_status,
@@ -15,7 +15,7 @@ from app.modules.tasks.repository import (
     list_tasks,
     task_assignment_counts,
 )
-from app.modules.users.repository import get_user
+from app.modules.users.public import user_exists
 from app.observability.metrics import (
     notifications_created_total,
     task_status_changes_total,
@@ -39,7 +39,7 @@ def create_task(
 ) -> Task:
     """Create a TODO task after validating its creator."""
     apply_task_delay()
-    if get_user(session, creator_id) is None:
+    if not user_exists(session, creator_id):
         raise NotFoundError("Creator user not found")
     with span("task.create"):
         task = Task(title=title.strip(), description=description, created_by=creator_id)
@@ -85,9 +85,9 @@ def assign_task(
 ) -> Task:
     """Assign a task and atomically create notification and audit records."""
     task = retrieve_task(session, task_id)
-    if get_user(session, assignee_id) is None:
+    if not user_exists(session, assignee_id):
         raise NotFoundError("Assignee user not found")
-    if get_user(session, actor_id) is None:
+    if not user_exists(session, actor_id):
         raise NotFoundError("Actor user not found")
     with span("task.assign"):
         try:
@@ -117,7 +117,7 @@ def change_task_status(
     """Apply an allowed lifecycle transition and synchronous side effects."""
     apply_task_delay()
     task = retrieve_task(session, task_id)
-    if get_user(session, actor_id) is None:
+    if not user_exists(session, actor_id):
         raise NotFoundError("Actor user not found")
     if status not in ALLOWED_TRANSITIONS[task.status]:
         raise ConflictError(f"Transition from {task.status.value} to {status.value} is not allowed")
