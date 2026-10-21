@@ -1,0 +1,71 @@
+{
+  "architecture": {
+    "after_sha": "3fdd5c68f8f60fad5757eefa66cc2aa8b24d9306",
+    "before_sha": "b78b0967be937634b7762baccf5ac6892b279a73",
+    "transition": "A0_MONOLITH -> A0_1_CAPABILITY_MODULES"
+  },
+  "classification_universe": {
+    "existing_representations": [
+      "REP_A0_PERF_TEST_HTTP_P95",
+      "REP_A0_PERF_RUNTIME_HTTP_DURATION",
+      "REP_A0_REL_TEST_INTEGRATION",
+      "REP_A0_REL_RUNTIME_FAILURES",
+      "REP_A0_ARCH_CI_LAYERING"
+    ],
+    "new_obligations": [
+      "AC_MODULE_STRUCTURE"
+    ]
+  },
+  "construction_rationale": "Derived only from the published Delta A1 expected-operation row in ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md, the A0 representation catalog, the public DA01 scenario required_obligations_after field, and the obligation catalog. No PILOT-02 output or private oracle file was used.",
+  "expected_operations": {
+    "AC_MODULE_STRUCTURE": "add",
+    "REP_A0_ARCH_CI_LAYERING": "replace",
+    "REP_A0_PERF_RUNTIME_HTTP_DURATION": "retain",
+    "REP_A0_PERF_TEST_HTTP_P95": "retain",
+    "REP_A0_REL_RUNTIME_FAILURES": "retain",
+    "REP_A0_REL_TEST_INTEGRATION": "retain"
+  },
+  "exposure_class": "CALIBRATION_EXPOSED",
+  "exposure_note": "A0 to A0.1 labels and evaluators were exposed during prior research and PILOT-02; this is calibration, not an independent or blind holdout.",
+  "frozen_before_execution": true,
+  "method_input_exclusion": [
+    "expected_operations",
+    "rq2_required_obligations_after",
+    "scorer_outputs",
+    "other_arm_predictions"
+  ],
+  "reference_id": "DEV_B0P_E1_DELTA_A1_REFERENCE_V1",
+  "rq2_required_obligations_after": [
+    "P_EXT_LATENCY",
+    "R_BUSINESS_FAILURE",
+    "R_HTTP_5XX",
+    "R_LOCAL_ATOMICITY",
+    "AC_LAYERING",
+    "AC_MODULE_STRUCTURE"
+  ],
+  "schema_version": 1,
+  "sources": {
+    "a0_representation_catalog": {
+      "git_revision": "3fdd5c68f8f60fad5757eefa66cc2aa8b24d9306",
+      "path": "fitness/catalog/a0-fitness-elements.yaml",
+      "sha256": "d1a019bb5389e64351751fe10dabd685b29a0fac383ab4ea5fd21906c807cfef"
+    },
+    "architecture_evolution_spec": {
+      "git_revision": "3fdd5c68f8f60fad5757eefa66cc2aa8b24d9306",
+      "path": "experiments/design/ARCHITECTURE_EVOLUTION_SCENARIOS_V1.md",
+      "sha256": "506c25edbd8952a1b748808e36595311cd04dc08954a8d85edfeb79edad32391"
+    },
+    "da01_scenario_denominator": {
+      "git_revision": "3fdd5c68f8f60fad5757eefa66cc2aa8b24d9306",
+      "path": "experiments/scenarios/DA01/scenario.yaml",
+      "sha256": "6631bb9dc47b4d783f8601be5915527c580b0f2d93818b595e035db18d528017"
+    },
+    "obligation_catalog": {
+      "git_revision": "3fdd5c68f8f60fad5757eefa66cc2aa8b24d9306",
+      "path": "fitness/catalog/architectural-obligations.yaml",
+      "sha256": "8c5bd8fffe3bdb2af8fb85f8d0012bc34673f72866e52daed99fab96f9763011"
+    }
+  },
+  "status": "AUTHOR_DECLARED_CALIBRATION_EXPOSED",
+  "study_id": "DEV-B0P-V1-E1"
+}

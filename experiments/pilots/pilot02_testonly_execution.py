@@ -109,6 +109,141 @@ class _Pilot02AdaptationEvidenceVerifier:
         return hmac.compare_digest(expected, signature)
 
 
+def verify_testonly_sidecar_signature(sidecar: Mapping[str, Any]) -> bool:
+    """Verify the existing TEST_ONLY sidecar digest and signature before fact use."""
+    unsigned = {
+        key: value for key, value in sidecar.items() if key not in {"signature", "sidecar_sha256"}
+    }
+    digest = sha256_bytes(canonical_json_bytes(unsigned))
+    return (
+        sidecar.get("verifier_id") == ADAPTATION_VERIFIER_ID
+        and sidecar.get("sidecar_sha256") == digest
+        and _Pilot02AdaptationEvidenceVerifier().verify(
+            ADAPTATION_VERIFIER_ID, digest, str(sidecar.get("signature", ""))
+        )
+    )
+
+
+def build_testonly_fact_verifier(
+    sidecar: Mapping[str, Any], *, expected_input_bundle_sha256: str
+) -> Any:
+    """Verify extracted module facts against an independently checked Git report.
+
+    The report is carried as a digest-bound raw artifact in the existing signed
+    TEST_ONLY sidecar. It is admitted only for the exact P bundle and architecture
+    revisions recorded by that sidecar.
+    """
+    if not verify_testonly_sidecar_signature(sidecar):
+        raise ValueError("TEST_ONLY adaptation evidence signature is invalid")
+    if sidecar.get("input_bundle_sha256") != expected_input_bundle_sha256:
+        raise ValueError("TEST_ONLY source facts are bound to another method input bundle")
+    payload = sidecar.get("payload")
+    artifacts = payload.get("artifact_bytes") if isinstance(payload, Mapping) else None
+    if not isinstance(artifacts, list):
+        raise ValueError("TEST_ONLY source fact artifact inventory is missing")
+    matches = [
+        row
+        for row in artifacts
+        if isinstance(row, Mapping) and row.get("path") == "evidence/source_fact_verification.json"
+    ]
+    if len(matches) != 1:
+        raise ValueError("TEST_ONLY source fact verification artifact is missing or duplicated")
+    row = matches[0]
+    try:
+        content = base64.b64decode(str(row.get("content_base64", "")), validate=True)
+        report_sha256 = sha256_bytes(content)
+        report = json.loads(content)
+    except (ValueError, json.JSONDecodeError) as error:
+        raise ValueError("TEST_ONLY source fact verification artifact is invalid") from error
+    if (
+        report_sha256 != row.get("sha256")
+        or not isinstance(report, Mapping)
+        or report.get("assessment") != "VERIFIED_GIT_INVENTORY"
+        or report.get("verification_scope") != "PINNED_GIT_PYTHON_MODULE_INVENTORY_ONLY"
+        or report.get("p_input_bundle_sha256") != expected_input_bundle_sha256
+        or report.get("before_sha") != sidecar.get("architecture_before_sha")
+        or report.get("after_sha") != sidecar.get("architecture_after_sha")
+    ):
+        raise ValueError("TEST_ONLY source fact verification binding is invalid")
+    field_results = report.get("field_results")
+    if not isinstance(field_results, Mapping) or set(field_results) != {
+        "before_module_names",
+        "after_module_names",
+        "added_module_names",
+        "removed_module_names",
+    }:
+        raise ValueError("TEST_ONLY Git inventory report is incomplete")
+    for field, result in field_results.items():
+        if (
+            not isinstance(result, Mapping)
+            or result.get("matches") is not True
+            or result.get("expected") != result.get("reported")
+        ):
+            raise ValueError(f"TEST_ONLY Git inventory field is not verified: {field}")
+
+    field_by_fact = {
+        ("component.python_module_identity", "before"): "before_module_names",
+        ("component.python_module_identity", "after"): "after_module_names",
+        ("component.module_added", "after"): "added_module_names",
+        ("component.module_removed", "after"): "removed_module_names",
+    }
+    expected_revisions = {
+        "before": str(sidecar["architecture_before_sha"]),
+        "after": str(sidecar["architecture_after_sha"]),
+    }
+
+    def verify_fact(
+        fact: Mapping[str, Any],
+        sources: Mapping[str, SourceReference],
+        snapshot: Mapping[str, Any],
+    ) -> bool | None:
+        predicate = str(fact.get("predicate", ""))
+        state = str(fact.get("state", ""))
+        field = field_by_fact.get((predicate, state))
+        if field is None:
+            return None
+        architecture = snapshot.get("architecture")
+        if not isinstance(architecture, Mapping):
+            return None
+        if (
+            architecture.get("before_commit") != expected_revisions["before"]
+            or architecture.get("after_commit") != expected_revisions["after"]
+        ):
+            return False
+        required_source_ids = (
+            {"ARCH_BEFORE"}
+            if field == "before_module_names"
+            else {"ARCH_AFTER"}
+            if field == "after_module_names"
+            else {"ARCH_BEFORE", "ARCH_AFTER"}
+        )
+        if set(sources) != required_source_ids:
+            return False
+        for source_id, source in sources.items():
+            expected_state = "before" if source_id == "ARCH_BEFORE" else "after"
+            if (
+                source.kind != "ARCHITECTURE_SOURCE"
+                or source.state != expected_state
+                or source.revision != expected_revisions[expected_state]
+                or source.content is None
+                or sha256_bytes(source.content) != source.sha256
+            ):
+                return False
+            try:
+                inventory = json.loads(source.content)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                return False
+            if (
+                not isinstance(inventory, Mapping)
+                or inventory.get("state") != expected_state
+                or inventory.get("commit_sha") != expected_revisions[expected_state]
+            ):
+                return False
+        return fact.get("value") == field_results[field]["expected"]
+
+    return verify_fact
+
+
 def create_testonly_policy_source(
     source_directory: Path,
     destination: Path,

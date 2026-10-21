@@ -35,8 +35,9 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_b0p_git_inventory.py`
 - `test_b0p_development.py`
 - `test_b0p_execution.py` — prediction/source/bundle bindings, tamper rejection, P HOLD markers, no-scorer reference rules, unknown denominator/resource metrics, evaluator identity, write-once checks, append-only checksum inventories, and B0/P candidate-validation propagation into direct manifest assembly
+- `test_b0p_e1_execution.py` — exact-run sidecar/signature/source bindings, independent Git fact readback, complete six-row UNKNOWN RQ2, candidate diagnostics under HOLD, oracle contamination, write-once behavior, and RQ1 abstention gating
 
-This is a selected list (14 direct tracked files), not a complete source inventory.
+This is a selected list (15 direct tracked files), not a complete source inventory.
 
 ## Established conventions
 
@@ -69,6 +70,11 @@ write-once behavior, and package readback. `test_b0p_execution.py` checks the
 separate continuation's fail-closed seals, evaluator bindings, P governance
 markers, abstention rules and unknown measurements; synthetic cases do not
 substitute for the isolated real execution or produce RQ scores.
+
+E1-specific unit checks keep calibration labels out of method inputs, reject
+sidecar replay across run IDs or policy revisions, and preserve candidate
+potential as a diagnostic while governance is HOLD. They do not substitute for
+a fresh B0/P container execution or make TEST_ONLY authority independent.
 
 Current coverage gate reports app-only coverage, not research-tool or requirement completeness. EXP-01 source-binding cases use synthetic Docker identity observations; a passing fixture does not supply authoritative source-to-image provenance. SPEC03 fixtures are synthetic and explicitly TEST_ONLY.
 

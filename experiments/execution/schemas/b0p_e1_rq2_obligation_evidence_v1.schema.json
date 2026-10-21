@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:b0p-e1-rq2-obligation-evidence:v1",
+  "title": "B0/P E1 complete-denominator obligation evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "run_id", "status", "required_obligation_set_bound", "same_denominator_for_arms", "denominator_source", "rows", "coverage_percentage", "reason", "P_governance", "B0_execution_status"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "run_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,95}$"},
+    "status": {"const": "UNKNOWN"},
+    "required_obligation_set_bound": {"const": true},
+    "same_denominator_for_arms": {"const": true},
+    "denominator_source": {"type": "object", "additionalProperties": false, "required": ["reference_id", "reference_sha256", "count"], "properties": {"reference_id": {"const": "DEV_B0P_E1_DELTA_A1_REFERENCE_V1"}, "reference_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "count": {"const": 6}}},
+    "rows": {"type": "array", "minItems": 6, "maxItems": 6, "items": {"$ref": "#/$defs/obligationRow"}},
+    "coverage_percentage": {"type": "null"},
+    "reason": {"type": "string", "minLength": 1},
+    "P_governance": {"enum": ["ACCEPT", "REJECT", "HOLD", "INPUT_REJECTED", "UNKNOWN"]},
+    "B0_execution_status": {"enum": ["COMPLETED", "UNKNOWN"]}
+  },
+  "$defs": {
+    "obligationRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["obligation_id", "applicability", "B0_coverage", "P_candidate_potential", "P_governance_accepted_coverage", "exact_pair_evidence", "final_result", "missing_proof"],
+      "properties": {
+        "obligation_id": {"type": "string", "minLength": 1},
+        "applicability": {"const": "APPLICABLE_PUBLIC_DA01_DENOMINATOR"},
+        "B0_coverage": {"const": "UNKNOWN"},
+        "P_candidate_potential": {"enum": ["DIAGNOSTIC_ONLY", "UNKNOWN"]},
+        "P_governance_accepted_coverage": {"enum": ["ABSENT", "UNKNOWN"]},
+        "exact_pair_evidence": {"type": "array", "items": {"type": "object"}},
+        "final_result": {"const": "UNKNOWN"},
+        "missing_proof": {"type": ["string", "null"]}
+      }
+    }
+  }
+}
