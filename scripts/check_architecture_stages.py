@@ -11,7 +11,7 @@ import argparse
 import io
 import os
 import shutil
-import subprocess
+import subprocess  # nosec B404 - fixed local Git and interpreter commands only
 import sys
 import tarfile
 import tempfile
@@ -33,7 +33,7 @@ def _git(root: Path, *arguments: str) -> str:
     git = shutil.which("git")
     if git is None:
         raise StageCheckError("Git executable unavailable")
-    result = subprocess.run(  # noqa: S603 - fixed Git subcommands, no shell
+    result = subprocess.run(  # noqa: S603  # nosec B603 - fixed Git argv, no shell
         [git, "-C", str(root), *arguments],
         check=False,
         capture_output=True,
@@ -99,7 +99,7 @@ def _run_pytest(root: Path, testpaths: list[str], *, historical: bool) -> None:
         *testpaths,
     ]
     print(f"[stage-ci] pytest cwd={root} targets={testpaths}", flush=True)
-    result = subprocess.run(command, cwd=root, env=env, check=False)  # noqa: S603
+    result = subprocess.run(command, cwd=root, env=env, check=False)  # noqa: S603  # nosec B603
     if result.returncode:
         raise StageCheckError(f"Architecture pytest failed ({result.returncode}) for {testpaths}")
 
@@ -114,7 +114,7 @@ def historical_a01_acceptance(repo: Path) -> None:
     git = shutil.which("git")
     if git is None:
         raise StageCheckError("Git executable unavailable")
-    process = subprocess.run(  # noqa: S603 - fixed Git archive inputs, no shell
+    process = subprocess.run(  # noqa: S603  # nosec B603 - fixed Git argv, no shell
         [
             git,
             "-C",
