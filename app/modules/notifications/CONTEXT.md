@@ -12,13 +12,15 @@ Synchronous in-app notification persistence.
 - `__init__.py`
 - `api.py`
 - `model.py`
+- `public.py` — `create_notification` writes in the supplied caller transaction.
 - `repository.py`
 - `schemas.py`
 - `service.py`
 
 ## Established conventions
 
-Notification faults exercise rollback in caller's transaction.
+Notification faults exercise rollback in caller's transaction. The public facade is synchronous,
+returns no persistence object and does not commit or roll back.
 
 ## Constraints and known gaps
 

@@ -10,6 +10,8 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 ## Local landmarks
 
 - `p_applicability_support.py`
+- `test_module_public_apis.py` — ΔA2 facade exports, shared `TaskSummary` type, delegated semantics and import-boundary regression
+- `test_architecture_stage_checks.py` — rejects missing/partial interfaces, stale historical pin, unexpected stage, dirty source and vacuous stage test selection.
 - `test_da01_execution.py`
 - `test_da01_inputs_and_isolation.py`
 - `test_experiment_evidence.py`
@@ -39,7 +41,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_mono_a1.py` — synthetic MONO reference seals, denominator/scoring gates, exact-pair mapping, W2 JSON readback adapter, input isolation, timing, and archive integrity; no MONO runs or authentic evaluator outputs
 - `test_mono_a1.py` — synthetic MONO reference seals/source pins, E2 predecessor/A0 SHA/final-state negative schema cases and Git-object seal rejection, RQ1 prediction seals/abstention, RQ2 denominator/exact-pair/verifier boundary and TEST_ONLY separation, timer/source-image gaps, isolation, and clean archive readback
 
-This is a selected list (15 direct tracked files), not a complete source inventory.
+This is a selected list of direct tracked files, not a complete source inventory.
 
 ## Established conventions
 
