@@ -59,7 +59,7 @@ Do not integrate ΔA5 before the ΔA4 before/after source SHAs and reference are
 
 ## 5. Example local worktree creation
 
-Run **only after the SPEC-A1 docs are merged** and `origin/main` is verified at the intended base. The code below creates independent branches/worktrees, not active agents automatically.
+Run after the SPEC-A1 documents and interface decisions have been reviewed, and the exact common base has been frozen. Prefer the merged SPEC SHA on `origin/main`; pre-merge non-conflicting preparation may instead use a W0-approved reviewed SPEC-branch SHA. The commands create independent branches/worktrees, not active agents automatically.
 
 ```bash
 git fetch origin
