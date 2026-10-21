@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MONO-A1 exact-pair evidence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "evidence_id",
+    "study_id",
+    "run_id",
+    "arm",
+    "configuration_role",
+    "configuration_sha256",
+    "representation_id",
+    "obligation_id",
+    "architecture_state",
+    "architecture_source_sha",
+    "evaluator",
+    "execution",
+    "inspection",
+    "semantic_suitability",
+    "compliance",
+    "trust_scope",
+    "raw_evidence_artifacts"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "mono-a1-exact-pair-evidence-v1"
+    },
+    "evidence_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "study_id": {
+      "enum": [
+        "MONO-E1",
+        "MONO-E2"
+      ]
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{2,95}$"
+    },
+    "arm": {
+      "enum": [
+        "B0",
+        "P"
+      ]
+    },
+    "configuration_role": {
+      "enum": [
+        "B0_FROZEN",
+        "P_PROPOSED_CANDIDATE",
+        "P_GOVERNANCE_ACCEPTED"
+      ]
+    },
+    "configuration_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "representation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "obligation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "architecture_state": {
+      "type": "string",
+      "minLength": 1
+    },
+    "architecture_source_sha": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "evaluator": {
+      "type": "object",
+      "required": [
+        "evaluator_id",
+        "version",
+        "source_sha",
+        "tree_sha",
+        "artifact_sha256",
+        "configuration_sha256"
+      ],
+      "properties": {
+        "evaluator_id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "tree_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "artifact_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "configuration_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "execution": {
+      "type": "object",
+      "required": [
+        "status",
+        "execution_sha256"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "VERIFIED",
+            "FAILED",
+            "UNKNOWN"
+          ]
+        },
+        "execution_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "inspection": {
+      "type": "object",
+      "required": [
+        "scope",
+        "inspected_item_count",
+        "scope_sha256"
+      ],
+      "properties": {
+        "scope": {
+          "type": "string"
+        },
+        "inspected_item_count": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "scope_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "semantic_suitability": {
+      "type": "object",
+      "required": [
+        "status",
+        "assessment_sha256"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "SUITABLE",
+            "UNSUITABLE",
+            "UNKNOWN"
+          ]
+        },
+        "assessment_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "compliance": {
+      "enum": [
+        "COMPLIANT",
+        "NONCOMPLIANT",
+        "UNKNOWN"
+      ]
+    },
+    "trust_scope": {
+      "enum": [
+        "TEST_ONLY",
+        "DEVELOPMENT"
+      ]
+    },
+    "raw_evidence_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "artifact_id",
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "artifact_id": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

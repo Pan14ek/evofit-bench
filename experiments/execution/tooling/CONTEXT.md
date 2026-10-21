@@ -81,6 +81,7 @@ tracked in `docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`.
 - `p_governance.py`
 - `b0p_development.py`
 - `b0p_e1_execution.py` — additive E1 isolated B0/P run envelope with run-bound TEST_ONLY sidecar, reference exclusion, exact-pair readback, canonical RQ1 gating and six-row UNKNOWN RQ2
+- `mono_a1.py` — separate MONO-E1/E2 reference custody, prediction-scoring gates, exact-pair RQ2, W2 A1 readback, runtime prerequisites, and checksum archives
 - `b0p_execution.py` — common immutable container preparation and evaluator helpers; P accepts a read-only evidence sidecar mount only when the caller supplies one
 
 This is a selected list (19 direct tracked files), not a complete source inventory.
@@ -123,6 +124,13 @@ requires the per-obligation table; it does not authorize an RQ2 percentage.
 Canonical `score_rq1()` runs only after both sealed predictions exist, then
 checks agreement with the pre-execution calibration reference. E0 remains an
 immutable historical comparison point and is never rewritten by this path.
+
+`mono_a1.py` is separate preparation infrastructure. Its exact-pair record
+binds representation, obligation, architecture state/source, run, configuration,
+and evaluator ID/version/digests. `W2A1ExactPairReadbackVerifier` requires the
+reference-pinned W2 checkout and report schema, then calls its `verify_evidence()`
+to re-read evaluator, configuration, and inspected subject bytes. Synthetic
+adapter tests do not establish real evaluator or MONO results.
 
 The narrowly scoped post-execution finalizer is for the historical a02
 `candidate_validation` aggregation failure only; a new direct run must not use
@@ -173,6 +181,18 @@ the existing `run_adaptation()` call. Candidate proof reuse is recorded only
 when the materialized evaluator row and its evaluator artifact exactly match
 the prevalidated template. These reports do not authorize DA01 measurement or
 independent coverage.
+
+MONO-A1's `mono_a1.py` is a new additive study namespace and does not modify
+the existing B0/P, DA01, or DEV-B0P-E1 execution paths. It requires a verified
+sealed reference before RQ1/RQ2, validates that both runs start after freeze,
+and binds evidence to a common source/state/run/exact-pair identity.
+`W2A1ExactPairReadbackVerifier` consumes W2's versioned JSON schema and invokes
+`verify_evidence()` from the exact reference-pinned checkout. Missing, changed,
+or mismatched reports remain UNKNOWN. TEST_ONLY is diagnostic only, and no
+production authority value or trust anchor is implemented. The RQ3 source-image
+helper validates shape/source binding for an externally verified attestation;
+it does not authenticate signatures. Synthetic unit fixtures prove contract
+behavior only and are not MONO-E1/E2 or authentic W2 evaluator evidence.
 
 ## Verification and further reading
 

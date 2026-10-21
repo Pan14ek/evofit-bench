@@ -5,6 +5,7 @@ PROFILE ?= a0-smoke-v1
 DURATION ?= 30
 RUN_STARTED_AT_UTC ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 EXP01_RUN_ID ?= exp01-dev-$(shell date -u +%Y%m%dT%H%M%SZ)
+ARCHITECTURE_STAGE ?= auto
 DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_p_input_contract_v11.py \
 	tests/unit/test_p_input_authority_validation.py \
@@ -18,6 +19,7 @@ DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_p_adaptation_evidence_v1.py \
 	tests/unit/test_g1_method_decision_register.py \
 	tests/unit/test_context_documents.py \
+	tests/unit/test_architecture_stage_checks.py \
 	tests/unit/test_exp01_evidence.py \
 	tests/unit/test_exp02_fitness_evidence.py \
 	tests/unit/test_pilot01_results.py \
@@ -66,7 +68,7 @@ security:
 
 architecture-test:
 	$(UV) run lint-imports --config architecture/acceptance/importlinter.toml
-	$(UV) run python -m pytest --no-cov tests/architecture
+	$(UV) run python -m scripts.check_architecture_stages --stage $(ARCHITECTURE_STAGE)
 
 quality: lint typecheck security architecture-test migration-test test
 

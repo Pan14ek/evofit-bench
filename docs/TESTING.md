@@ -373,3 +373,33 @@ uv run python -m pytest -q --no-cov -p no:cacheprovider \
 These tests verify contracts and known adversarial inputs. They do not
 substitute for running both isolated arms, fresh evaluators, current-run
 semantic readback, or the post-run archive verification.
+
+### MONO-E1/E2 custody and scoring preparation
+
+MONO-A1 is a separate monograph-study namespace. The focused tests use synthetic
+Git-bound fixtures and a synthetic exact-pair verifier adapter; they do not
+represent MONO-E1/E2 measurements or W2 evaluator evidence.
+
+| Requirement | Expected behavior | Test owner | Status |
+| --- | --- | --- | --- |
+| MONO-A1-01 | Reference source commit/tree SHAs verify against Git; canonical reference and seal are write-once; missing, forged, or changed seal bytes fail closed. | `test_reference_freeze_is_source_pinned_and_precedes_method_execution`, `test_freeze_rejects_incorrect_source_tree_sha`, `test_reference_readback_rejects_missing_or_forged_seal`, `test_reference_is_write_once_and_post_seal_mutation_is_detected` | Synthetic contract checks |
+| MONO-A1-02 | The RQ2 denominator matches all active mandatory obligations; unknown mandatory applicability remains unresolved and suppresses percentages. | `test_rq2_rejects_a_wrong_denominator_and_keeps_unknown_applicability`, `test_rq2_uses_one_full_denominator_and_separates_three_coverage_views` | Synthetic scorer checks |
+| MONO-A1-03 | Reference labels, oracle/scorer paths, symlinks, cross-arm material, and cross-run or duplicate exact-pair evidence are rejected. | `test_reference_labels_cannot_enter_method_input`, `test_exact_pair_rejects_cross_run_evidence_reuse`, `test_rq2_rejects_duplicate_exact_pair_rows` | Adversarial synthetic checks |
+| MONO-A1-04 | RQ1 uses only both authentic sealed predictions after reference freeze; P HOLD without a prediction is NOT_EVALUABLE and cannot invoke the scorer. | `test_rq1_scores_only_sealed_predictions_and_reports_operation_confusion`, `test_p_hold_without_prediction_preserves_rq1_not_evaluable`, `test_study_gate_rejects_scoring_when_p_hold_has_no_prediction` | Synthetic seal/scorer checks |
+| MONO-A1-05 | TEST_ONLY proofs stay diagnostic and do not become governance-accepted coverage; accepted coverage remains separate from candidate potential. | `test_rq2_keeps_governance_acceptance_separate_from_test_only_proof` | Synthetic verifier adapter only; no production trust anchor |
+| MONO-A1-06 | Missing timers, invalid source-to-image bindings, and uncollected resources remain UNKNOWN rather than fabricated values. | `test_incomplete_runtime_metrics_and_invalid_image_binding_remain_unknown` | Synthetic precondition checks; attestation authentication remains external |
+| MONO-A1-07 | Evidence inventory/archive checksums survive clean extraction and detect archive mutation. | `test_evidence_archive_integrity_and_clean_extraction_readback` | Synthetic archive readback |
+| MONO-A1-08 | W2 evidence binds evaluator version, architecture state/source, complete inspected paths, and exact raw bytes; a pinned W2 checkout's `verify_evidence()` must pass. | `test_w2_readback_binds_the_pinned_evaluator_state_and_source` | Synthetic W2-shaped fixture only; no actual W2 report admitted |
+| MONO-A1-09 | E2 references reject an A0.1 predecessor, incorrect A0 commit, or non-A1 final state; missing or unavailable final A1 commit/tree identities cannot be sealed. | `test_mono_e2_schema_rejects_a0_1_predecessor`, `test_mono_e2_schema_rejects_incorrect_a0_commit_sha`, `test_mono_e2_schema_rejects_incorrect_final_architecture_state`, `test_mono_e2_reference_cannot_be_sealed_without_real_final_a1_identities` | Synthetic schema and Git-object custody checks; no final A1 source or MONO run is represented |
+
+Run the focused suite with:
+
+```bash
+PATH=/private/tmp/b0p-venv/bin:$PATH PYTHONPATH="$PWD" \
+  pytest -q tests/unit/test_mono_a1.py
+```
+
+`W2A1ExactPairReadbackVerifier` consumes the report contract from Draft PR #28
+and invokes `verify_evidence()` from the exact pinned W2 checkout. This suite
+uses a synthetic W2-shaped source tree and report only; it does not validate
+authentic W2 output or establish MONO-E1/E2 results.

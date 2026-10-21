@@ -25,6 +25,9 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 - `unit/test_pilot02_testonly_execution.py`
 - `unit/test_b0p_git_inventory.py` — pinned Git inventory and digest-tampering checks
 - `unit/test_b0p_development.py` — isolated-copy preparation, source-pin and readback checks
+- `unit/test_mono_a1.py` — synthetic MONO reference custody, E2 source-binding negative checks, sealed scoring prerequisites, denominator/exact-pair boundaries, and archive readback
+- `unit/test_module_public_apis.py` — ΔA2 exports, cross-module public imports and Reporting exception
+- `integration/test_public_module_contracts.py` — public facade session ownership and task rollback
 
 ## Established conventions
 
@@ -50,6 +53,11 @@ The B0/P DEVELOPMENT preparation tests use an isolated Git clone, exercise
 write-once input export and strict readback, and reject source, denominator,
 path, and evaluator-digest mismatches. They verify preparation only; they do
 not run either arm or produce experimental scores.
+
+The MONO-A1 tests validate only additive preparation contracts. Their
+synthetic reference and verifier fixtures are not MONO-E1/E2 measurements or
+independent W2 evaluator evidence. See
+`experiments/execution/MONO_A1_PROTOCOL_V1.md` for readiness gates.
 
 ## PILOT-02 tests
 
