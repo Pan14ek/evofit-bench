@@ -89,7 +89,13 @@ def _run_pytest(root: Path, testpaths: list[str], *, historical: bool) -> None:
         # Do not import any current-worktree Python modules while testing pinned history.
         env["PYTHONPATH"] = str(root)
     command = [
-        sys.executable, "-m", "pytest", "-q", "--no-cov", "-p", "no:cacheprovider",
+        sys.executable,
+        "-m",
+        "pytest",
+        "-q",
+        "--no-cov",
+        "-p",
+        "no:cacheprovider",
         *testpaths,
     ]
     print(f"[stage-ci] pytest cwd={root} targets={testpaths}", flush=True)
@@ -102,8 +108,7 @@ def historical_a01_acceptance(repo: Path) -> None:
     """Execute the original test code and its original source, not today's files."""
     verify_historical_pin(repo)
     print(
-        f"[stage-ci] HISTORICAL_A01 source={HISTORICAL_A01_SHA} "
-        f"app_tree={HISTORICAL_APP_TREE}",
+        f"[stage-ci] HISTORICAL_A01 source={HISTORICAL_A01_SHA} app_tree={HISTORICAL_APP_TREE}",
         flush=True,
     )
     git = shutil.which("git")
@@ -111,9 +116,16 @@ def historical_a01_acceptance(repo: Path) -> None:
         raise StageCheckError("Git executable unavailable")
     process = subprocess.run(  # noqa: S603 - fixed Git archive inputs, no shell
         [
-            git, "-C", str(repo), "archive", "--format=tar", HISTORICAL_A01_SHA,
-            "app", "architecture/states/A0_1_CAPABILITY_MODULES.yaml",
-            "tests/architecture", "pyproject.toml",
+            git,
+            "-C",
+            str(repo),
+            "archive",
+            "--format=tar",
+            HISTORICAL_A01_SHA,
+            "app",
+            "architecture/states/A0_1_CAPABILITY_MODULES.yaml",
+            "tests/architecture",
+            "pyproject.toml",
         ],
         capture_output=True,
         check=False,
