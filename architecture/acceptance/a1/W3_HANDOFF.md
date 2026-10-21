@@ -47,7 +47,7 @@ This output identifies an evaluator and architecture obligation. It does **not**
 
 ## W3 artifact interface
 
-The machine-readable outputs are the three `a0_1_*_observation.json` files. They expose evaluator ID/version, evaluator/config digests, target source SHA, source inspection paths and byte digests, scope completeness/uncertainty, diagnostic observations, active violations, execution status, compliance, raw diagnostic digest, and coverage limits. W3's exact-pair sidecar should use `(representation_id, obligation_id, architecture_state, target_source_sha)`; W2 does not provide `representation_id` or claim semantic adequacy.
+The machine-readable outputs include the three historical `a0_1_*_observation.json` diagnostics and the source-bound `a0_2_public_api_observation.json` record. The A0.2 record covers AC_PUBLIC_API only; graph and data ownership are `NOT_APPLICABLE` at that state. These records expose evaluator ID/version, evaluator/config/manifest digests, target source SHA, inspected source paths and byte digests, scope completeness/uncertainty, diagnostics, violations, execution status, compliance, raw diagnostic digest, and coverage limits. W3's exact-pair sidecar should use `(representation_id, obligation_id, architecture_state, target_source_sha)`; W2 does not provide `representation_id` or claim semantic adequacy.
 
 `verify_evidence()` is an exact-byte readback helper for the state-input manifest, evaluator, config, and subject source. It does not upgrade evaluator execution into semantic adequacy or evidence authority.
 
