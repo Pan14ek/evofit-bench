@@ -137,3 +137,16 @@ Stop and report a concrete blocker if:
 6. **Monograph results update**, using independently checked observed artifacts rather than engineering-green assumptions.
 
 Review all PRs before merge. No automatic merging, no mandatory expansion beyond A1.
+
+## 8. Immediate CI compatibility issue (must be addressed before ΔA2 merge)
+
+The existing `Makefile` runs `architecture-test` as part of `development-quality`; that target executes **all** `tests/architecture`, including `test_module_structure.py`. This historical test asserts the DA01 exact Python file inventory. Adding `public.py` to the live A1 source will therefore **correctly make the legacy test fail** if the test continues to treat today's HEAD as A0.1. This is a known stage-transition mismatch, not justification for editing the frozen historical manifest or deleting assertions.
+
+**W0 owns a mandatory CI/profile migration before activating ΔA2 on main:**
+1. Preserve and continue to execute the historical A0.1 acceptance on the exact **pinned A0.1 Git revision** (detached clean worktree or a versioned fixture with independently verified source provenance). Record its source SHA and test result.
+2. Execute **new A1/current-stage** module/public-API/graph/ownership tests against the live stage SHA and declare that stage in a verified manifest. Never implicitly infer stage from unrelated file names or skip a failure as a pass.
+3. Implement an explicit state-aware `architecture-test` / `development-quality` CI profile or an equivalent clearly reported two-check matrix. Existing code must not silently stop running baseline fidelity checks. Each profile reports PASS/FAIL/SKIP separately, including the original frozen Import Linter B0 (whose inability to inspect A1 is an expected research observation, not a live engineering CI gate).
+4. Do not weaken `test_module_structure.py` to accept arbitrary files in all architectures, nor alter its historical expected module inventory and dependencies. If source-level code changes to test orchestration are unavoidable, use a new wrapper/selection mechanism, with direct source-revision proof, and preserve historical assertions byte-for-byte.
+5. Gate ΔA2 integration on demonstrably green **both** historical A0.1 and stage-specific A1 tests plus the rest of the development-quality requirements.
+
+If this migration cannot be achieved safely in the available time, stop and report the blocker; do not declare ΔA2's new files compatible with the current default CI by assertion.
