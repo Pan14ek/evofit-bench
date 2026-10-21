@@ -80,8 +80,10 @@ tracked in `docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`.
 - `p_candidate.py`
 - `p_governance.py`
 - `b0p_development.py`
+- `b0p_e1_execution.py` — additive E1 isolated B0/P run envelope with run-bound TEST_ONLY sidecar, reference exclusion, exact-pair readback, canonical RQ1 gating and six-row UNKNOWN RQ2
+- `b0p_execution.py` — common immutable container preparation and evaluator helpers; P accepts a read-only evidence sidecar mount only when the caller supplies one
 
-This is a selected list (17 direct tracked files), not a complete source inventory.
+This is a selected list (19 direct tracked files), not a complete source inventory.
 
 ## Established conventions
 
@@ -111,6 +113,16 @@ distinct from the preparation schema and package. An unavailable presealed refer
 an unbound denominator or missing independent exact-pair proof keeps RQ2
 UNKNOWN. Do not turn this calibration-exposed execution into holdout evidence,
 G1/G4 approval or measured DA01 results.
+
+`b0p_e1_execution.py` leaves the legacy continuation manifest unchanged. It
+uses the same generic preparation and B0/P runtime helpers, while binding a
+separately prepared P bundle and signed TEST_ONLY sidecar to one E1 run ID.
+The presealed reference is never mounted into either method container. The E1
+schema permits a bound six-obligation denominator with `UNKNOWN` coverage and
+requires the per-obligation table; it does not authorize an RQ2 percentage.
+Canonical `score_rq1()` runs only after both sealed predictions exist, then
+checks agreement with the pre-execution calibration reference. E0 remains an
+immutable historical comparison point and is never rewritten by this path.
 
 The narrowly scoped post-execution finalizer is for the historical a02
 `candidate_validation` aggregation failure only; a new direct run must not use

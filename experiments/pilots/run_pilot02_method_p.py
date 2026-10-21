@@ -60,6 +60,7 @@ from experiments.pilots.pilot02_testonly_execution import (
 from scripts import exp02_fitness_evidence as exp02
 from scripts.exp01_evidence_contract import BUNDLE_FILENAME, _safe_relative_path, validate_bundle
 from scripts.exp03_method_bridge import _adaptation_trace
+from scripts.verify_b0p_git_inventory import assess_observations
 
 ROOT = Path(__file__).resolve().parents[2]
 POLICY_SOURCE = ROOT / "experiments/execution/policy-pilot/v1/source"
@@ -825,10 +826,11 @@ def _assess_profile_pairs(
     exp02_evidence: dict[str, Any],
     p_bundle: Any,
     output_dir: Path,
+    architecture_source_sha: str,
     semantic_pair_inputs: dict[tuple[str, str], dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Use authentic validated runs in the existing exact-pair assessment function."""
-    source_revision = str(exp02_evidence["source_revision"])
+    source_revision = architecture_source_sha
     records = {str(row["record_id"]): row for row in exp02_bundle["records"]}
     observations = {str(row["representation_id"]): row for row in exp02_evidence["representations"]}
     obligations = {str(row["id"]): row for row in p_bundle.obligations}
@@ -1118,6 +1120,9 @@ def run_pilot(
     test_only_assumptions_path: Path | None = None,
     semantic_verification_dir: Path | None = None,
     profile_version: int = 2,
+    architecture_after_sha: str | None = None,
+    prepare_only: bool = False,
+    evidence_run_id: str | None = None,
 ) -> dict[str, Any]:
     """Validate authentic EXP-02 evidence, execute P, and write a reproducible trace."""
     root = ROOT.resolve(strict=True)
@@ -1130,10 +1135,21 @@ def run_pilot(
         raise ValueError("source checkout must be clean before the PILOT-02 Method P run")
     if _git("rev-parse", f"{source_revision}:app") != "cdff9a6c3cee870e1eca2a5f5f3eb3202b0b1f08":
         raise ValueError("A0.1 app tree differs from the protocol-pinned source tree")
+    selected_architecture_sha = architecture_after_sha or source_revision
+    if _git("rev-parse", f"{selected_architecture_sha}:app") != _git(
+        "rev-parse", f"{source_revision}:app"
+    ):
+        raise ValueError("PILOT-02 evaluator checkout differs from the selected architecture tree")
     if test_only_assumptions_path is not None and not test_only_continuation:
         raise ValueError("TEST_ONLY assumptions require --test-only-continuation")
     if semantic_verification_dir is not None and not test_only_continuation:
         raise ValueError("semantic verification requires --test-only-continuation")
+    if prepare_only and not test_only_continuation:
+        raise ValueError("preparing isolated Method P inputs requires --test-only-continuation")
+    if prepare_only and (
+        evidence_run_id is None or not re.fullmatch(r"[a-z0-9][a-z0-9._-]{2,95}", evidence_run_id)
+    ):
+        raise ValueError("isolated TEST_ONLY preparation requires a valid evidence run ID")
     profile_pin = PILOT02_PROFILE_PINS.get(profile_version)
     if profile_pin is None:
         raise ValueError("unsupported PILOT-02 profile version")
@@ -1199,7 +1215,7 @@ def run_pilot(
                 temporary_root,
                 evaluation_as_of=str(registry["as_of"]),
                 before_sha=FROZEN_A0_SHA,
-                after_sha=source_revision,
+                after_sha=selected_architecture_sha,
                 obligation_catalog_sha256=str(profile["obligation_catalog_sha256"]),
                 target_obligation_ids=list(assumptions["transition"]["target_obligation_ids"]),
                 applicability_by_obligation=assumptions["transition"].get(
@@ -1209,7 +1225,11 @@ def run_pilot(
             obligation_ids = {item.obligation_id for item in ruleset.obligations}
             if not set(assumptions["transition"]["target_obligation_ids"]).issubset(obligation_ids):
                 raise ValueError("PILOT-02 assumption names an obligation outside the catalog")
-            policy_revision = f"PILOT02_TEST_ONLY_{source_revision[:12]}"
+            policy_revision = (
+                f"PILOT02_TEST_ONLY_{evidence_run_id}"
+                if evidence_run_id is not None
+                else f"PILOT02_TEST_ONLY_{selected_architecture_sha[:12]}"
+            )
             policy_bundle = temporary_root / "policy-source-v3"
             policy_manifest = package_policy_source_v3(
                 policy_source, policy_bundle, policy_revision
@@ -1227,13 +1247,13 @@ def run_pilot(
             p_input_dir,
             "P",
             FROZEN_A0_SHA,
-            source_revision,
+            selected_architecture_sha,
             str(registry["as_of"]),
         )
         profile = json.loads(_source_blob(source_revision, profile_path))
         if sha256_bytes(_source_blob(source_revision, profile_path)) != profile_sha256:
             raise ProtocolError("PILOT02_PROFILE_DEFINITION_SOURCE_MISMATCH")
-        profile["architecture_source_sha"] = source_revision
+        profile["architecture_source_sha"] = selected_architecture_sha
         profile["a0_1_app_tree_sha"] = v3_manifest["after_tree_sha"]
         _embedded_artifacts(profile, source_revision)
         _install_profile(p_input_dir, profile)
@@ -1270,7 +1290,7 @@ def run_pilot(
             load_verified_pair_inputs(
                 semantic_verification_dir.resolve(strict=True),
                 repository_root=root,
-                expected_architecture_source_sha=source_revision,
+                expected_architecture_source_sha=selected_architecture_sha,
             )
             if semantic_verification_dir is not None
             else None
@@ -1289,6 +1309,7 @@ def run_pilot(
             exp02_evidence=exp02_evidence,
             p_bundle=p_bundle,
             output_dir=destination,
+            architecture_source_sha=selected_architecture_sha,
             semantic_pair_inputs=semantic_pair_inputs,
         )
         adaptation_sidecar: dict[str, Any] | None = None
@@ -1325,6 +1346,47 @@ def run_pilot(
                 for row in pair_assessments
                 if isinstance(row.get("semantic_pair_proof"), dict)
             ]
+            fact_field_by_predicate = {
+                ("component.python_module_identity", "before"): "before_module_names",
+                ("component.python_module_identity", "after"): "after_module_names",
+                ("component.module_added", "after"): "added_module_names",
+                ("component.module_removed", "after"): "removed_module_names",
+            }
+            observed_facts: dict[str, Any] = {}
+            for fact in p_bundle.snapshot.get("facts", []):
+                if not isinstance(fact, Mapping) or fact.get("epistemic_kind") != "EXTRACTED":
+                    continue
+                field = fact_field_by_predicate.get(
+                    (str(fact.get("predicate")), str(fact.get("state")))
+                )
+                if field is None or field in observed_facts:
+                    raise ValueError("P Snapshot contains unsupported or duplicate extracted facts")
+                observed_facts[field] = fact.get("value")
+            if set(observed_facts) != {
+                "before_module_names",
+                "after_module_names",
+                "added_module_names",
+                "removed_module_names",
+            }:
+                raise ValueError("P Snapshot does not contain the complete module inventory facts")
+            fact_observations = pretty_json_bytes(observed_facts)
+            source_fact_verification = assess_observations(
+                root,
+                FROZEN_A0_SHA,
+                selected_architecture_sha,
+                observed_facts,
+                sha256_bytes(fact_observations),
+                fact_observations,
+            )
+            source_fact_verification["p_input_bundle_sha256"] = p_bundle.manifest["bundle_sha256"]
+            if source_fact_verification.get("assessment") != "VERIFIED_GIT_INVENTORY":
+                raise ValueError("Independent Git inventory does not match P Snapshot facts")
+            fact_report_bytes = pretty_json_bytes(source_fact_verification)
+            fact_report_relative = "evidence/source_fact_verification.json"
+            fact_report_path = destination / fact_report_relative
+            fact_report_path.parent.mkdir(parents=True, exist_ok=True)
+            fact_report_path.write_bytes(fact_report_bytes)
+            extra_artifacts[fact_report_relative] = fact_report_bytes
             adaptation_sidecar = build_adaptation_sidecar(
                 p_bundle,
                 assumptions=assumptions,
@@ -1337,6 +1399,82 @@ def run_pilot(
             (destination / "adaptation_evidence_test_only.json").write_bytes(
                 pretty_json_bytes(adaptation_sidecar)
             )
+
+        if prepare_only:
+            shutil.copytree(p_input_dir, destination / "verified_method_input")
+            artifacts = []
+            for artifact_path in sorted(destination.rglob("*")):
+                if artifact_path.is_file() and artifact_path.name not in {
+                    "run_manifest.json",
+                    "run_manifest.sha256",
+                }:
+                    relative = artifact_path.relative_to(destination).as_posix()
+                    content = artifact_path.read_bytes()
+                    artifacts.append(
+                        {
+                            "path": relative,
+                            "size_bytes": len(content),
+                            "sha256": sha256_bytes(content),
+                        }
+                    )
+            manifest = {
+                "schema_version": 1,
+                "pilot_id": "PILOT-02-E1-INPUT-PREPARATION",
+                "execution_status": "prepared_only_not_executed",
+                "architecture": {
+                    "before_sha": FROZEN_A0_SHA,
+                    "after_sha": selected_architecture_sha,
+                    "after_app_tree_sha": v3_manifest["after_tree_sha"],
+                    "transition": "A0_MONOLITH -> A0_1_CAPABILITY_MODULES",
+                },
+                "source_revision": {
+                    "commit_sha": source_revision,
+                    "architecture_source_sha": selected_architecture_sha,
+                    "app_tree_sha": v3_manifest["after_tree_sha"],
+                    "git_dirty": False,
+                },
+                "p_method_input": {
+                    "bundle_sha256": p_bundle.manifest["bundle_sha256"],
+                    "policy_bundle_sha256": policy_manifest["policy_bundle_sha256"],
+                    "policy_source_revision": policy_revision,
+                    "profile_definition_sha256": profile_sha256,
+                    "profile_source_revision": source_revision,
+                    "evidence_run_id": evidence_run_id,
+                    "trust_scope": "TEST_ONLY",
+                    "test_only_assumptions_sha256": assumptions_digest,
+                    "adaptation_sidecar_sha256": adaptation_sidecar["sidecar_sha256"],
+                    "source_fact_verification_sha256": sha256_bytes(fact_report_bytes),
+                },
+                "semantic_pair_verification": {
+                    "status": "supplied" if semantic_pair_inputs is not None else "not_supplied",
+                    "trust_scope": "TEST_ONLY" if semantic_pair_inputs is not None else "none",
+                    "pairs": [
+                        {
+                            "representation_id": row["source_representation_id"],
+                            "obligation_id": row["assessment"]["obligation_id"],
+                            "report_status": row.get("semantic_report_status"),
+                            "proof_status": (
+                                row["semantic_pair_proof"].get("status")
+                                if isinstance(row.get("semantic_pair_proof"), dict)
+                                else "not_supplied"
+                            ),
+                        }
+                        for row in pair_assessments
+                    ],
+                    "human_independent_assessment": False,
+                },
+                "b0_evaluator_preparation_observation": b0_evaluation,
+                "method_p_execution": "NOT_RUN",
+                "reference_operation_labels_included": False,
+                "research_gates": {"G1": "INCOMPLETE", "G4": "NOT AUTHORIZED"},
+                "artifact_inventory": artifacts,
+            }
+            manifest_bytes = pretty_json_bytes(manifest)
+            (destination / "run_manifest.json").write_bytes(manifest_bytes)
+            (destination / "run_manifest.sha256").write_text(
+                f"{sha256_bytes(manifest_bytes)}  run_manifest.json\n", encoding="ascii"
+            )
+            return manifest
 
         started_ns = time.perf_counter_ns()
         result = run_adaptation(p_bundle, evidence_context=adaptation_sidecar)
@@ -1450,7 +1588,7 @@ def run_pilot(
             destination,
             profile,
             candidate,
-            source_revision=source_revision,
+            source_revision=selected_architecture_sha,
             after_tree_sha=v3_manifest["after_tree_sha"],
             input_bundle_sha256=p_bundle.manifest["bundle_sha256"],
         )
@@ -1536,12 +1674,13 @@ def run_pilot(
         "generated_at_utc": datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z"),
         "architecture": {
             "before_sha": FROZEN_A0_SHA,
-            "after_sha": source_revision,
+            "after_sha": selected_architecture_sha,
             "after_app_tree_sha": v3_manifest["after_tree_sha"],
             "transition": "A0_MONOLITH -> A0_1_CAPABILITY_MODULES",
         },
         "source_revision": {
             "commit_sha": source_revision,
+            "architecture_source_sha": selected_architecture_sha,
             "app_tree_sha": v3_manifest["after_tree_sha"],
             "git_dirty": False,
             "python_version": platform.python_version(),
@@ -1556,6 +1695,7 @@ def run_pilot(
                 {str(row.get("normative_status")) for row in registry["policies"]}
             ),
             "profile_definition_sha256": profile_sha256,
+            "profile_source_revision": source_revision,
             "trust_scope": result.evidence_trust_scope or "none",
             "test_only_assumptions_sha256": (
                 assumptions_digest if test_only_continuation else None
@@ -1632,6 +1772,32 @@ def run_pilot(
     return manifest
 
 
+def _cli_summary(manifest: Mapping[str, Any], output_dir: Path) -> dict[str, Any]:
+    """Project either a preparation-only or executed manifest into a CLI summary."""
+    exp02 = manifest.get("exp02")
+    p_input = manifest.get("p_method_input")
+    method_p = manifest.get("method_p")
+    source_revision = manifest.get("source_revision")
+    if not isinstance(exp02, Mapping):
+        exp02 = {}
+    if not isinstance(p_input, Mapping):
+        p_input = {}
+    if not isinstance(method_p, Mapping):
+        method_p = {}
+    if not isinstance(source_revision, Mapping):
+        source_revision = {}
+    run_id = exp02.get("run_id") or p_input.get("evidence_run_id")
+    if not isinstance(run_id, str):
+        raise ProtocolError("PILOT-02 manifest has no run or evidence identity")
+    return {
+        "status": manifest["execution_status"],
+        "run_id": run_id,
+        "source_revision": source_revision.get("commit_sha"),
+        "governance": method_p.get("governance_result", "NOT_RUN"),
+        "output_dir": str(output_dir.resolve()),
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run PILOT-02 using one digest-validated EXP-02 source bundle."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -1653,6 +1819,16 @@ def main(argv: list[str] | None = None) -> int:
         help="Read back digest-verified TEST_ONLY semantic reports and bind exact-pair proofs.",
     )
     parser.add_argument("--profile-version", type=int, choices=[1, 2], default=2)
+    parser.add_argument(
+        "--architecture-after-sha",
+        help="Pin the target architecture separately from the evaluator-tool checkout revision.",
+    )
+    parser.add_argument(
+        "--prepare-only",
+        action="store_true",
+        help="Prepare and verify TEST_ONLY inputs without invoking Method P.",
+    )
+    parser.add_argument("--evidence-run-id")
     args = parser.parse_args(argv)
     try:
         manifest = run_pilot(
@@ -1662,19 +1838,16 @@ def main(argv: list[str] | None = None) -> int:
             test_only_assumptions_path=args.test_only_assumptions,
             semantic_verification_dir=args.semantic_verification_dir,
             profile_version=args.profile_version,
+            architecture_after_sha=args.architecture_after_sha,
+            prepare_only=args.prepare_only,
+            evidence_run_id=args.evidence_run_id,
         )
     except (OSError, ValueError, KeyError, ProtocolError) as error:
         print(json.dumps({"status": "rejected", "reason": str(error)}, sort_keys=True))
         return 1
     print(
         json.dumps(
-            {
-                "status": manifest["execution_status"],
-                "run_id": manifest["exp02"]["run_id"],
-                "source_revision": manifest["source_revision"]["commit_sha"],
-                "governance": manifest["method_p"]["governance_result"],
-                "output_dir": str(args.output_dir.resolve()),
-            },
+            _cli_summary(manifest, args.output_dir),
             indent=2,
             sort_keys=True,
         )

@@ -13,9 +13,24 @@ from typing import Any
 
 from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.hashing import pretty_json_bytes, sha256_bytes
-from experiments.execution.tooling.p_adaptation import run_adaptation, verify_v3_p_bundle
+from experiments.execution.tooling.p_adaptation import (
+    run_adaptation,
+    verify_v3_p_bundle,
+)
 from experiments.execution.tooling.p_applicability import EvidenceLedger
+from experiments.execution.tooling.p_input_validation import (
+    ValidationStatus,
+    load_verified_source_manifest,
+)
+from experiments.execution.tooling.p_policy_source_v3 import verify_method_bundle_v3
 from experiments.execution.tooling.sealing import seal_prediction
+from experiments.pilots.pilot02_testonly_execution import (
+    Pilot02TestOnlyTrustContext,
+    build_testonly_evidence_ledger,
+    build_testonly_fact_verifier,
+    testonly_completeness_verifier,
+    verify_testonly_sidecar_signature,
+)
 
 
 def _write_once(path: Path, payload: Any) -> str:
@@ -31,7 +46,12 @@ def _write_once(path: Path, payload: Any) -> str:
     return sha256_bytes(content)
 
 
-def _adaptation_trace(bundle: Any, result: Any) -> dict[str, Any]:
+def _adaptation_trace(
+    bundle: Any,
+    result: Any,
+    *,
+    evidence_sidecar: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
     """Serialize the existing P result; this wrapper does not add a decision rule."""
     input_manifest = (bundle.root / "method_input_v3.json").read_bytes()
     return {
@@ -64,8 +84,15 @@ def _adaptation_trace(bundle: Any, result: Any) -> dict[str, Any]:
         "candidate_v1": dict(result.candidate_v1) if result.candidate_v1 is not None else None,
         "prediction_v1": dict(result.prediction_v1) if result.prediction_v1 is not None else None,
         "adaptation_evidence_trust_scope": result.evidence_trust_scope,
-        "adaptation_evidence_sidecar_supplied": False,
-        "independent_pair_proof_supplied": False,
+        "adaptation_evidence_sidecar_supplied": evidence_sidecar is not None,
+        "adaptation_evidence_sidecar_sha256": (
+            evidence_sidecar.get("sidecar_sha256") if evidence_sidecar is not None else None
+        ),
+        "independent_pair_proof_supplied": bool(
+            evidence_sidecar
+            and isinstance(evidence_sidecar.get("payload"), Mapping)
+            and evidence_sidecar["payload"].get("pair_proofs")
+        ),
         "unresolved_prerequisites": sorted(
             set(result.governance.to_dict()["reason_codes"])
             | set(result.operation_plan.hold_reasons)
@@ -80,22 +107,59 @@ def run_p(
     *,
     architecture_source_sha: str,
     expected_bundle_sha256: str,
+    evidence_sidecar_path: Path | None = None,
 ) -> dict[str, Any]:
-    """Run frozen P with its verified bundle and no sidecar or external evidence."""
+    """Run frozen P in isolation, with optional contract-verified TEST_ONLY evidence."""
     started_ns = time.perf_counter_ns()
+    evidence_sidecar: dict[str, Any] | None = None
+    trust_context: Pilot02TestOnlyTrustContext | None = None
+    fact_verifier = None
+    completeness_verifier = None
+    evidence_ledger = EvidenceLedger({}, {}, {})
+    if evidence_sidecar_path is not None:
+        evidence_sidecar = json.loads(evidence_sidecar_path.read_bytes())
+        if not isinstance(evidence_sidecar, dict) or not verify_testonly_sidecar_signature(
+            evidence_sidecar
+        ):
+            raise ValueError("TEST_ONLY adaptation evidence signature is invalid")
+        if evidence_sidecar.get("input_bundle_sha256") != expected_bundle_sha256:
+            raise ValueError("TEST_ONLY adaptation evidence is bound to another method input")
+        if evidence_sidecar.get("architecture_after_sha") != architecture_source_sha:
+            raise ValueError("TEST_ONLY adaptation evidence is bound to another architecture")
+        trust_context = Pilot02TestOnlyTrustContext()
+        method_manifest = verify_method_bundle_v3(input_directory, expected_method_id="P")
+        snapshot = json.loads((input_directory / "architecture-policy-snapshot.json").read_bytes())
+        source_manifest, source_report = load_verified_source_manifest(
+            snapshot, method_manifest, input_directory
+        )
+        if source_report.status is not ValidationStatus.VALID:
+            raise ValueError("Method P source manifest failed TEST_ONLY verification")
+        evidence_ledger = build_testonly_evidence_ledger(
+            snapshot,
+            source_manifest,
+            source_integrity_valid=True,
+            trust_context=trust_context,
+        )
+        fact_verifier = build_testonly_fact_verifier(
+            evidence_sidecar, expected_input_bundle_sha256=expected_bundle_sha256
+        )
+        completeness_verifier = testonly_completeness_verifier
     bundle = verify_v3_p_bundle(
         input_directory,
-        evidence_ledger=EvidenceLedger({}, {}, {}),
+        evidence_ledger=evidence_ledger,
+        trust_context=trust_context,
+        fact_verifier=fact_verifier,
+        completeness_verifier=completeness_verifier,
     )
     if bundle.manifest.get("bundle_sha256") != expected_bundle_sha256:
         raise ValueError("Method P input bundle digest does not match the execution manifest")
     if bundle.snapshot.get("architecture", {}).get("after_commit") != architecture_source_sha:
         raise ValueError("Method P input is bound to another architecture revision")
     adaptation_started_ns = time.perf_counter_ns()
-    result = run_adaptation(bundle)
+    result = run_adaptation(bundle, evidence_context=evidence_sidecar)
     adaptation_duration_ns = time.perf_counter_ns() - adaptation_started_ns
     method_duration_ns = time.perf_counter_ns() - started_ns
-    trace = _adaptation_trace(bundle, result)
+    trace = _adaptation_trace(bundle, result, evidence_sidecar=evidence_sidecar)
     trace["method_execution_time_ns"] = method_duration_ns
     trace["adaptation_time_ns"] = adaptation_duration_ns
     trace_sha256 = _write_once(output_directory / "method_p_trace.json", trace)
@@ -153,6 +217,10 @@ def run_p(
         "prediction_status": prediction_status,
         "prediction_sha256": prediction_sha256,
         "method_trace_sha256": trace_sha256,
+        "adaptation_evidence_sidecar_sha256": (
+            evidence_sidecar.get("sidecar_sha256") if evidence_sidecar is not None else None
+        ),
+        "adaptation_evidence_trust_scope": result.evidence_trust_scope,
         "runtime": {"python": platform.python_version(), "platform": platform.platform()},
     }
     execution_sha256 = _write_once(output_directory / "execution_result.json", execution)
@@ -165,12 +233,14 @@ def main() -> int:
     parser.add_argument("--output", type=Path, default=Path("/output"))
     parser.add_argument("--architecture-source-sha", required=True)
     parser.add_argument("--expected-bundle-sha256", required=True)
+    parser.add_argument("--evidence-sidecar", type=Path)
     args = parser.parse_args()
     result = run_p(
         args.input,
         args.output,
         architecture_source_sha=args.architecture_source_sha,
         expected_bundle_sha256=args.expected_bundle_sha256,
+        evidence_sidecar_path=args.evidence_sidecar,
     )
     print(json.dumps(result, indent=2, sort_keys=True))
     return 0

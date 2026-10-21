@@ -23,6 +23,7 @@ Seed/reset, metrics capture, workload runners, method prep and reproducibility t
 - `prepare_b0p_development_comparison.py`
 - `verify_b0p_development_comparison.py`
 - `run_b0p_development_execution.py` — continues one verified preparation with isolated B0/P arms, fresh evaluators, and a separate ZIP plus SHA-256 sidecar; direct runs require evaluator development dependencies in the host environment
+- `execute_b0p_e1.py` — runs the evidence-sufficient calibration with a run-bound TEST_ONLY P input, presealed reference exclusion, independent pair readback, RQ1 gating, and clean-extraction archive verification
 - `finalize_b0p_development_execution.py` — append-only recovery for the specifically bound historical a02 post-arm aggregation failure; do not use for a new direct verification
 - `verify_b0p_development_execution.py` — verifies execution inputs, sealed/withheld predictions, evaluator outputs, runtime contexts, and archive inventory
 - `verify_b0p_git_inventory.py`
@@ -48,6 +49,12 @@ forwards candidate validation from both persisted isolated-arm outputs through
 manifest construction. Configure the direct-run host with its required evaluator
 dependencies before starting a write-once run; a missing host tool is preserved
 as an unsuccessful evaluator observation, not silently recovered.
+
+`execute_b0p_e1.py` uses the additive E1 contract without changing the legacy
+continuation. It keeps the reference outside B0/P mounts, rejects cross-run
+sidecars, binds the public six-obligation denominator, and leaves RQ2 UNKNOWN
+without a percentage when full independent coverage is unavailable. Its ZIP
+is checked by checksum and verified after clean extraction.
 
 ## Constraints and known gaps
 

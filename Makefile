@@ -26,6 +26,7 @@ DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_pilot02_testonly_execution.py \
 	tests/unit/test_b0p_development.py \
 	tests/unit/test_b0p_git_inventory.py \
+	tests/unit/test_b0p_e1_execution.py \
 	tests/integration/test_exp03_method_bridge.py \
 	tests/integration/test_exp04_evidence_admission.py \
 	tests/unit/test_da01_inputs_and_isolation.py::test_container_negative_probes_cannot_reach_oracle_history_network_or_other_output \

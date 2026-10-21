@@ -24,7 +24,10 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - `schemas/exp04_method_p_execution_trace_v1.schema.json`
 - `schemas/exp04_evidence_verifier_config_v1.schema.json`
 - `tooling/b0p_development.py`
+- `tooling/b0p_e1_execution.py` — versioned E1 envelope that composes the unchanged isolated B0/P runners with exact-run TEST_ONLY evidence, a presealed exposed-calibration reference, independent pair readback, canonical RQ1 only after both sealed predictions, and a complete UNKNOWN RQ2 table
 - `schemas/b0p_development_study_v1.schema.json`
+- `schemas/b0p_evidence_sufficient_execution_v1.schema.json`
+- `schemas/b0p_e1_rq2_obligation_evidence_v1.schema.json`
 - `../../scripts/prepare_b0p_development_comparison.py`
 - `../../scripts/verify_b0p_development_comparison.py`
 - `P_GOVERNED_ADAPTATION_V1.md`
@@ -52,6 +55,16 @@ inventory fields. Its status remains `PREPARED_NOT_EXECUTED`; it does not
 create predictions, open the scorer, assert pair coverage, or change G1/G4.
 The selected A0-to-A0.1 transition is `CALIBRATION_EXPOSED`. Readiness and
 exact blockers are recorded in `docs/g1/B0P_READINESS_V1.md`.
+
+The additive E1 execution contract is separate from the generic continuation
+schema. It may consume an exact-run PILOT-02 TEST_ONLY sidecar, copies the
+semantic-verification input into the immutable run, and reads back two semantic
+control pairs from that run-contained directory; that scope does not grant
+production authority or establish full six-obligation RQ2 coverage. Its
+reference is copied outside the P method mounts, RQ1 is scored only after both
+outputs are sealed, and an abstaining P remains NOT_EVALUABLE without a
+manufactured prediction. Resource CPU/RSS remain UNKNOWN unless a sampler
+supplies real measurements.
 
 The EXP-03 bridge in `scripts/exp03_method_bridge.py` reads validated EXP-02
 artifacts and optionally executes the verified V3 pipeline. EXP-02 execution

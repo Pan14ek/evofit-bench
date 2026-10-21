@@ -798,36 +798,56 @@ def _validate_runtime_versions(pinned: dict[str, Any]) -> dict[str, str]:
 
 
 def _validate_method_source(repository_root: Path, revision: str) -> dict[str, Any]:
-    """Bind the target Method P run revision to the exact pinned A0.1 source."""
+    """Bind an exact architecture commit to the separately pinned TEST_ONLY verifier inputs."""
     if not re.fullmatch(r"[a-f0-9]{40}", revision):
         raise SemanticValidationError(
             "method architecture source revision is not a full commit SHA"
         )
-    if _run_git(repository_root, "rev-parse", "HEAD", text=True).stdout.strip() != revision:
-        raise SemanticValidationError("method architecture source revision is not repository HEAD")
     if _run_git(
         repository_root, "status", "--porcelain", "--untracked-files=all", text=True
     ).stdout.strip():
-        raise SemanticValidationError("method source checkout must be clean for semantic controls")
+        raise SemanticValidationError("semantic control source checkout must be clean")
     app_tree = _run_git(repository_root, "rev-parse", f"{revision}:app", text=True).stdout.strip()
     if app_tree != APP_TREE_SHA1:
         raise SemanticValidationError(
             "method architecture source has a different A0.1 application tree"
         )
-    source_digests: dict[str, str] = {}
+    architecture_paths = {
+        "app",
+        "architecture/acceptance/importlinter.toml",
+        "architecture/states/A0_1_CAPABILITY_MODULES.yaml",
+        "tests/architecture/test_module_structure.py",
+        "fitness/catalog/architectural-obligations.yaml",
+        "fitness/configs/a0_1-capability-modules.dev.yaml",
+    }
+    architecture_digests: dict[str, str] = {}
+    evaluator_digests: dict[str, str] = {}
     for path, expected in SOURCE_FILE_PINS.items():
+        evaluator_content = _run_git(repository_root, "show", f"{SOURCE_REVISION}:{path}").stdout
+        actual = sha256_bytes(evaluator_content)
+        if actual != expected:
+            raise SemanticValidationError(
+                f"pinned TEST_ONLY evaluator input digest mismatch: {path}"
+            )
+        evaluator_digests[path] = actual
+        if path not in architecture_paths:
+            continue
         content = _run_git(repository_root, "show", f"{revision}:{path}").stdout
         actual = sha256_bytes(content)
         if actual != expected:
             raise SemanticValidationError(
-                f"method revision differs from pinned evaluator input: {path}"
+                f"architecture source differs from pinned evaluator input: {path}"
             )
-        source_digests[path] = actual
+        if sha256_bytes(content) != sha256_bytes(evaluator_content):
+            raise SemanticValidationError(f"architecture and evaluator source bytes differ: {path}")
+        architecture_digests[path] = actual
     return {
         "schema_version": 1,
         "architecture_source_sha": revision,
+        "evaluator_source_revision": SOURCE_REVISION,
         "application_tree_sha1": app_tree,
-        "source_file_sha256": source_digests,
+        "architecture_source_file_sha256": architecture_digests,
+        "evaluator_source_file_sha256": evaluator_digests,
     }
 
 
@@ -1064,7 +1084,22 @@ def _control_expectations(
                 )
             )
             and method_source_binding.get("application_tree_sha1") == APP_TREE_SHA1
-            and method_source_binding.get("source_file_sha256") == SOURCE_FILE_PINS,
+            and method_source_binding.get("evaluator_source_revision") == SOURCE_REVISION
+            and method_source_binding.get("evaluator_source_file_sha256") == SOURCE_FILE_PINS
+            and method_source_binding.get("architecture_source_file_sha256")
+            == {
+                path: digest
+                for path, digest in SOURCE_FILE_PINS.items()
+                if path
+                in {
+                    "architecture/acceptance/importlinter.toml",
+                    "architecture/states/A0_1_CAPABILITY_MODULES.yaml",
+                    "tests/architecture/test_module_structure.py",
+                    "fitness/catalog/architectural-obligations.yaml",
+                    "fitness/configs/a0_1-capability-modules.dev.yaml",
+                    "app",
+                }
+            },
             "evaluator_artifact_verified": mapping["evaluator_artifact_sha256"]
             == mapping["representation"]["evaluator_artifact"]["sha256"],
             "evidence_contract_verified": mapping["evidence_contract_sha256"]

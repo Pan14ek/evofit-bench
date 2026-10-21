@@ -21,6 +21,7 @@ from experiments.pilots.pilot02_testonly_execution import (
 from experiments.pilots.run_pilot02_method_p import (
     _candidate_evaluator_records,
     _candidate_template_match,
+    _cli_summary,
     _exp02_execution_evidence_admission,
     _prevalidated_template_binding,
 )
@@ -39,6 +40,25 @@ def test_execution_evidence_admission_trace_matches_verified_sidecar_scope() -> 
         "admitted_execution_evidence",
         True,
     )
+
+
+def test_prepare_only_manifest_has_a_successful_not_run_cli_summary(tmp_path: Path) -> None:
+    summary = _cli_summary(
+        {
+            "execution_status": "prepared_only_not_executed",
+            "source_revision": {"commit_sha": "a" * 40},
+            "p_method_input": {"evidence_run_id": "b0p-e1-calibration-a1"},
+        },
+        tmp_path / "prepared",
+    )
+
+    assert summary == {
+        "status": "prepared_only_not_executed",
+        "run_id": "b0p-e1-calibration-a1",
+        "source_revision": "a" * 40,
+        "governance": "NOT_RUN",
+        "output_dir": str((tmp_path / "prepared").resolve()),
+    }
 
 
 def test_semantic_proof_is_not_reusable_after_candidate_row_changes() -> None:

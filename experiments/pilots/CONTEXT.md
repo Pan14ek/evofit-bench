@@ -36,6 +36,7 @@ Store pilot-specific protocols, reports, derived result tables, and narrow tools
 - `generate_pilot01_results.py` — validates existing EXP-01/02 artifacts, independently derives runtime metrics from raw Locust/process CSV files, cross-checks the manifest values with documented tolerances, and writes the CSV table and descriptive summary.
 - `run_pilot01_measurement.py` — invokes the existing Import Linter, module test, Locust task file, runtime sampler, and EXP-01/02 validators for this pilot only.
 - `B0P_DEVELOPMENT_REPORT.md` and `B0P_DEVELOPMENT_MANUSCRIPT_UA.md` — preparation and comparative DEVELOPMENT report; a04 is the primary direct execution, while a02 recovery and a03 evaluator-environment failure remain separately preserved; preserve UNKNOWN/HOLD and do not infer RQ1/RQ2 scores
+- `DEV_B0P_E1_REPORT_UK.md` and `DEV_B0P_E1_CALIBRATION_20261021.zip` — evidence-sufficient but calibration-exposed E1 result, Ukrainian report, complete raw package, and SHA-256 sidecar
 
 ## Constraints and known limits
 
@@ -91,6 +92,18 @@ evaluators after both arms. A missing presealed target-operation reference
 keeps RQ1 unscored; absence of current independent exact-pair proofs and an
 exact-target denominator keeps RQ2 UNKNOWN. This calibration execution is not
 a holdout, an independent validation, or a G1/G4-authorized DA01 measurement.
+
+The E1 calibration run `b0p-e1-cal-20261021-a4` completed on source revision
+`14fc8b1bbec2aad2f2968e96e04a02b81a9ed720`. It used a pre-execution,
+author-declared exposed reference, fresh digest-bound evaluator observations
+(runtime source-to-image provenance remains unverified), and two exact-pair
+proofs with `TEST_ONLY` trust. P's candidate was structurally
+VALID and its plan contained ADD/REPLACE operations, but governance stayed HOLD;
+RQ1 remains NOT_EVALUABLE and RQ2 UNKNOWN over all six obligations. The raw
+package preserves the E1 archive, fresh raw evaluator runs, exact P inputs,
+semantic controls, and excluded failed readback attempts. It includes a pointer
+to the immutable E0 archive rather than rewriting or duplicating E0 bytes.
+See `DEV_B0P_E1_REPORT_UK.md` for measured details and limitations.
 
 ## Verification
 

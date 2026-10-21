@@ -39,6 +39,8 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `pilot02_inherited_evaluator_inventory_v1.schema.json`
 - `b0p_development_study_v1.schema.json` — strict source-pinned preparation record; `PREPARED_NOT_EXECUTED` is not a comparative outcome
 - `b0p_development_execution_v1.schema.json` — separate source-bound execution continuation; preserves partial execution, P governance, unavailable scoring, runtime images and unknown metrics
+- `b0p_evidence_sufficient_execution_v1.schema.json` — additive, calibration-exposed E1 execution envelope with separate TEST_ONLY input binding and explicit RQ1/RQ2 states
+- `b0p_e1_rq2_obligation_evidence_v1.schema.json` — complete six-row denominator with per-obligation unknowns and no percentage when independent coverage is incomplete
 
 This is a selected list, not a complete source inventory.
 
@@ -71,6 +73,12 @@ construction-time governance and publication restrictions after digest
 resealing. The CLI verifier-config schema is TEST_ONLY and cannot assert
 research authority. These contracts do not establish canonical A0.1-to-V3
 mappings, positive coverage, or research readiness.
+
+The E1 schemas are versioned DEVELOPMENT evidence. The RQ2 table requires all
+six public DA01 obligations and an explicit null coverage percentage when
+proof is incomplete. TEST_ONLY pair evidence can support only exact pairs
+whose source, evaluator, controls and artifact digests read back successfully;
+it does not establish production authority or full-method coverage.
 
 ## PILOT-02 profile schema
 

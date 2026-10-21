@@ -342,3 +342,34 @@ The test invokes pinned Grimp/Import Linter and pytest evaluators in disposable
 source copies. The preserved experiment archive is generated separately by
 `python -m experiments.pilots.pilot02_semantic_validation`; test executions are
 engineering verification, not independent architecture-transition samples.
+
+### B0/P E1 evidence-sufficient calibration
+
+The E1 envelope is separate from the legacy B0/P continuation and uses the
+same frozen B0 and P runtimes. The following traceability rows map its core
+requirements to focused adversarial checks:
+
+| Requirement | Expected behavior | Test owner | Status |
+| --- | --- | --- | --- |
+| B0P-E1-01 | Bind the P input, extracted architecture facts, and TEST_ONLY sidecar to exact source SHAs and one run-specific policy revision. | `test_git_fact_verifier_recomputes_each_reported_inventory_field`, `test_e1_sidecar_requires_signature_digest_source_and_exact_run_binding`, `test_pinned_git_inventory_recomputes_all_four_fields`, `test_a_tampered_observation_is_not_admitted` | Unit and Git-object adversarial checks |
+| B0P-E1-02 | Reject missing/invalid signatures, another run's sidecar, wrong policy/source/bundle binding, and oracle, scorer, Git-history, or other-arm files in P input. | `test_e1_sidecar_requires_signature_digest_source_and_exact_run_binding`, `test_oracle_contamination_and_historical_overwrite_are_rejected`, `test_oracle_git_and_scorer_paths_are_forbidden_method_inputs` | Unit and isolation contract checks |
+| B0P-E1-03 | Reject missing/vacuous evaluator scope and source/configuration/run mismatches; do not infer compliance from exit zero alone. | `test_import_linter_scope_mismatch_is_not_evaluable_even_on_exit_zero`, `test_reused_evaluator_record_from_another_run_is_rejected`, `test_evaluator_rejects_wrong_source_revision_and_configuration`, `test_readback_rejects_digest_resealed_adversarial_evidence` | Unit and TEST_ONLY readback checks |
+| B0P-E1-04 | Keep the author-declared calibration reference outside method mounts; do not call the canonical RQ1 scorer or manufacture a prediction after P abstains. | `test_hold_cannot_invoke_canonical_rq1_or_emit_score`, `test_rq1_scorer_requires_a_reference_established_before_predictions`, `test_prediction_must_bind_method_architecture_and_bundle` | Unit contract checks; real mount command is recorded per run |
+| B0P-E1-05 | Bind the full six-obligation denominator; preserve per-obligation UNKNOWN and no percentage when evidence is incomplete. | `test_rq2_requires_exact_complete_denominator_and_never_fabricates_percent`, `test_unknown_rq2_cannot_claim_shared_or_bound_denominator`, `test_rq2_cannot_score_method_pair_diagnostics_as_independent_proof` | Unit/schema checks; complete measurement requires a real E1 run |
+| B0P-E1-06 | Keep a structurally valid candidate separate from governance ACCEPT; HOLD has no accepted coverage. | `test_candidate_potential_is_diagnostic_when_governance_holds`, `test_p_hold_requires_matching_no_prediction_marker`, `test_prevalidated_template_binding_rejects_missing_or_conflicting_template` | Unit and TEST_ONLY checks |
+| B0P-E1-07 | Preserve write-once history, reject post-seal mutation, and verify ZIP/checksum readback after clean extraction. | `test_oracle_contamination_and_historical_overwrite_are_rejected`, `test_sealed_prediction_tampering_is_rejected`, `test_run_inventory_leaves_nested_checksum_manifests_to_their_scope` | Unit checks plus per-run archive readback |
+| B0P-E1-08 | Revalidate copied semantic evidence from a regular run-contained directory; reject path traversal and non-directory substitutions. | `test_e1_semantic_pair_readback_requires_run_contained_directory` | Focused unit and E1 clean-extraction readback |
+
+Run the E1-focused suite with:
+
+```bash
+uv run python -m pytest -q --no-cov -p no:cacheprovider \
+  tests/unit/test_b0p_e1_execution.py \
+  tests/unit/test_b0p_execution.py \
+  tests/unit/test_b0p_git_inventory.py \
+  tests/unit/test_pilot02_testonly_execution.py
+```
+
+These tests verify contracts and known adversarial inputs. They do not
+substitute for running both isolated arms, fresh evaluators, current-run
+semantic readback, or the post-run archive verification.

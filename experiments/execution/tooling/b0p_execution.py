@@ -805,6 +805,14 @@ def _build_runtime_context(
             content = _git_blob(repository, source_sha, path)
             _write_context_file(context, path, content)
             source_rows[path] = sha256_bytes(content)
+        testonly_helper = "experiments/pilots/pilot02_testonly_execution.py"
+        helper_bytes = (repository / testonly_helper).read_bytes()
+        _write_context_file(context, testonly_helper, helper_bytes)
+        source_rows[testonly_helper] = sha256_bytes(helper_bytes)
+        pilots_init = "experiments/pilots/__init__.py"
+        pilots_init_bytes = b'''"""TEST_ONLY verifier support for isolated B0/P runs."""\n'''
+        _write_context_file(context, pilots_init, pilots_init_bytes)
+        source_rows[pilots_init] = sha256_bytes(pilots_init_bytes)
         _copy_git_blob(
             repository,
             prep_manifest["source_revisions"]["b0_source_sha"],
@@ -1101,6 +1109,7 @@ def _run_isolated_arm(
     preparation: Mapping[str, Any],
     docker_executable: str,
     repository: Path,
+    evidence_sidecar: Path | None = None,
 ) -> dict[str, Any]:
     docker = shutil.which(docker_executable)
     if docker is None:
@@ -1128,31 +1137,39 @@ def _run_isolated_arm(
         f"type=bind,source={input_root},target=/input,readonly",
         "--mount",
         f"type=bind,source={output_root},target=/output",
-        str(image["tag"]),
     ]
     source = preparation["source_revisions"]
     if method_id == "B0":
-        command.extend(
-            [
-                "--architecture-source-sha",
-                source["architecture_after_sha"],
-                "--expected-bundle-sha256",
-                preparation["b0"]["input_bundle_sha256"],
-                "--configuration-sha256",
-                preparation["b0"]["configuration_sha256"],
-                "--evaluator-configuration-sha256",
-                preparation["b0"]["evaluator_configuration_sha256"],
-            ]
-        )
+        runtime_args = [
+            "--architecture-source-sha",
+            source["architecture_after_sha"],
+            "--expected-bundle-sha256",
+            preparation["b0"]["input_bundle_sha256"],
+            "--configuration-sha256",
+            preparation["b0"]["configuration_sha256"],
+            "--evaluator-configuration-sha256",
+            preparation["b0"]["evaluator_configuration_sha256"],
+        ]
     else:
-        command.extend(
-            [
-                "--architecture-source-sha",
-                source["architecture_after_sha"],
-                "--expected-bundle-sha256",
-                preparation["method_p"]["input_bundle_sha256"],
-            ]
-        )
+        runtime_args = [
+            "--architecture-source-sha",
+            source["architecture_after_sha"],
+            "--expected-bundle-sha256",
+            preparation["method_p"]["input_bundle_sha256"],
+        ]
+        if evidence_sidecar is not None:
+            sidecar_path = evidence_sidecar.resolve(strict=True)
+            if sidecar_path.is_symlink() or not sidecar_path.is_file():
+                raise B0PExecutionError("Method P evidence sidecar must be a regular file")
+            command.extend(
+                [
+                    "--mount",
+                    f"type=bind,source={sidecar_path},target=/adaptation_evidence_test_only.json,readonly",
+                ]
+            )
+            runtime_args.extend(["--evidence-sidecar", "/adaptation_evidence_test_only.json"])
+    command.append(str(image["tag"]))
+    command.extend(runtime_args)
     raw_root = output_directory.parent / "raw"
     raw_root.mkdir(exist_ok=True)
     stdout_path = raw_root / f"{method_id.lower()}_container.stdout.bin"
