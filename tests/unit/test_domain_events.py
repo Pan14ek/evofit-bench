@@ -2,6 +2,7 @@
 
 import asyncio
 from threading import get_ident
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 from uuid import UUID
 
@@ -20,7 +21,9 @@ from app.events.dispatcher import (
     EventDispatcher,
     MissingEventHandlerError,
 )
+from app.modules import notifications as notifications_module
 from app.modules.notifications import event_handlers
+from app.modules.tasks.model import TaskStatus
 
 TASK_ID = UUID("00000000-0000-0000-0000-000000000001")
 ASSIGNEE_ID = UUID("00000000-0000-0000-0000-000000000002")
@@ -58,6 +61,13 @@ def test_event_contract_is_versioned_typed_validated_and_immutable() -> None:
             previous_status="UNKNOWN",
             new_status="DONE",
         )
+
+
+def test_event_task_status_values_match_canonical_task_status_enum() -> None:
+    """Keep the event-owned status mirror exactly aligned with TaskStatus."""
+    assert {name: member.value for name, member in TaskStatusValue.__members__.items()} == {
+        name: member.value for name, member in TaskStatus.__members__.items()
+    }
 
 
 def test_dispatch_passes_exact_session_and_event_inline() -> None:
@@ -188,7 +198,12 @@ def test_notification_handlers_preserve_existing_notification_contract(
     expected_message: str,
 ) -> None:
     create_notification = MagicMock()
-    monkeypatch.setattr(event_handlers, "create_notification", create_notification)
+    monkeypatch.setattr(
+        notifications_module,
+        "public",
+        SimpleNamespace(create_notification=create_notification),
+        raising=False,
+    )
     session = MagicMock(spec=Session)
 
     if isinstance(event, TaskAssignedV1):
@@ -205,7 +220,12 @@ def test_unassigned_status_change_does_not_create_notification(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     create_notification = MagicMock()
-    monkeypatch.setattr(event_handlers, "create_notification", create_notification)
+    monkeypatch.setattr(
+        notifications_module,
+        "public",
+        SimpleNamespace(create_notification=create_notification),
+        raising=False,
+    )
     event = TaskStatusChangedV1(
         task_id=TASK_ID,
         actor_id=ACTOR_ID,
@@ -240,7 +260,12 @@ def test_notification_bootstrap_is_idempotent(monkeypatch: pytest.MonkeyPatch) -
     dispatcher = EventDispatcher()
     session = MagicMock(spec=Session)
     create_notification = MagicMock()
-    monkeypatch.setattr(event_handlers, "create_notification", create_notification)
+    monkeypatch.setattr(
+        notifications_module,
+        "public",
+        SimpleNamespace(create_notification=create_notification),
+        raising=False,
+    )
     event = TaskAssignedV1(task_id=TASK_ID, assignee_id=ASSIGNEE_ID, actor_id=ACTOR_ID)
 
     event_handlers.register_notification_handlers(dispatcher)

@@ -4,12 +4,15 @@ from sqlalchemy.orm import Session
 
 from app.events.contracts import TaskAssignedV1, TaskStatusChangedV1
 from app.events.dispatcher import EventDispatcher
-from app.modules.notifications.service import create_notification
 
 
 def handle_task_assigned(session: Session, event: TaskAssignedV1) -> None:
     """Create the existing assignment notification in the caller's transaction."""
-    create_notification(
+    from app.modules.notifications import (  # type: ignore[attr-defined]
+        public as notifications_public,
+    )
+
+    notifications_public.create_notification(
         session,
         event.assignee_id,
         "TASK_ASSIGNED",
@@ -21,7 +24,11 @@ def handle_task_status_changed(session: Session, event: TaskStatusChangedV1) -> 
     """Notify the assignee of a status change, if the task has an assignee."""
     if event.assignee_id is None:
         return
-    create_notification(
+    from app.modules.notifications import (  # type: ignore[attr-defined]
+        public as notifications_public,
+    )
+
+    notifications_public.create_notification(
         session,
         event.assignee_id,
         "TASK_STATUS_CHANGED",

@@ -12,6 +12,9 @@ evidence bridges.
 ## Local landmarks
 
 - `conftest.py`
+- `test_a1_domain_events.py` — PostgreSQL preparation checks for synchronous
+  handler delivery, caller-owned rollback and recovery; final Task REST wiring
+  remains pending ΔA6 integration
 - `test_api_flows.py`
 - `test_p_applicability_v3.py`
 - `test_p_governed_adaptation_v1.py`

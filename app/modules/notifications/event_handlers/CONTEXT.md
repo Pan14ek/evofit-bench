@@ -15,8 +15,10 @@ Notification-side handlers for versioned, synchronous Task domain events.
 ## Established conventions
 
 Use shared event contracts and the caller-provided SQLAlchemy session. Persist
-through the local Notification service, which does not commit. Keep registration
-explicit and deterministic; dispatcher registration is idempotent.
+through `notifications.public.create_notification`, which does not commit. Keep
+registration explicit and deterministic; dispatcher registration is idempotent.
+The local import remains lazy so this preparation branch has no partial ΔA2
+facade inventory; its mypy attribute ignore is removed when W1's facade lands.
 
 ## Constraints and known gaps
 

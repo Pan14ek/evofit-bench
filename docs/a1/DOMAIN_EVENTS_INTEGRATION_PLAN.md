@@ -1,17 +1,27 @@
 # ΔA6 domain-event PostgreSQL integration plan
 
-**Status:** planned; not executed. This document defines the application-level
-rollback proof required after the event dispatcher is integrated into the final
-ΔA6 source state. It does not claim that the current A0.1 application uses
-domain events or that full application rollback has been verified.
+**Status:** W4 preparation tests added; full Task-operation acceptance remains
+pending. `tests/integration/test_a1_domain_events.py` exercises actual
+PostgreSQL-backed Notification persistence through the synchronous dispatcher,
+an injected post-insert handler failure, caller-owned rollback, and recovery.
+It does not claim that the current A0.1 Task operations use domain events or
+that Task/Notification/Audit REST atomicity has been verified.
 
 ## Scope and prerequisites
 
-Run the integration checks only after the approved event contract is frozen and
-the dependent ΔA2–ΔA5 changes are present in the integration source. The final test
-must call the public REST API through the application's real composition root,
-registered Notification handler, and PostgreSQL session factory. Dispatcher
-unit tests alone cannot satisfy A1-EVENT-02 or the ΔA6 seeded-failure control.
+The preparation tests may run before Task service wiring: they dispatch a
+`TaskAssignedV1` directly through the registered Notification handler and use
+the integration fixture's real PostgreSQL session factory. They assert the row
+is visible on the caller's connection before commit, survives commit, is absent
+after an explicit caller rollback, and can be created by a healthy subsequent
+dispatch on the recovered session. This verifies the prepared dispatcher and
+Notification transaction boundary only; it does not cover a Task operation.
+
+The final acceptance checks below must run only after the dependent ΔA2–ΔA5
+changes are present and W0 authorizes the ΔA6 source change. They must call the
+public REST API through the application's final composition root and registered
+Notification handler. Dispatcher and Notification-only PostgreSQL tests cannot
+satisfy full A1-EVENT-02 or the ΔA6 seeded-failure control.
 
 Use the existing `tests/integration/client` fixture and a dedicated disposable
 PostgreSQL database whose name contains `evofit`. That fixture drops and
@@ -28,6 +38,27 @@ regressions intact. The new test file should be isolated, for example
 notification service files while preparing W4's dispatcher.
 
 ## Required cases
+
+### W4 preparation-stage PostgreSQL cases
+
+Implemented in `tests/integration/test_a1_domain_events.py`:
+
+1. **Successful synchronous delivery:** dispatch an assignment event, assert
+   the Notification row is flushed and queryable in the same caller session
+   before commit, then assert it remains after commit.
+2. **Injected handler failure:** register a deterministic failing handler
+   after the real Notification handler and assert the exception propagates
+   unchanged after the real notification insert has flushed.
+3. **Caller-owned rollback:** explicitly roll back and assert that the flushed
+   row is absent from the same session.
+4. **Recovery:** dispatch a healthy event using the recovered session, commit,
+   and assert exactly one expected row is persisted.
+
+These are PostgreSQL preparation checks, not final Task service integration.
+The tests have a guard requiring `TEST_DATABASE_URL` to name a database
+containing `evofit` before the shared fixture resets its `public` schema. They
+skip until W1's approved `notifications.public` facade is integrated, then can
+run before ΔA6 Task-service wiring.
 
 ### Successful assignment
 
@@ -74,11 +105,11 @@ notification service files while preparing W4's dispatcher.
 
 | Requirement | Planned test evidence | Level | Current status |
 | --- | --- | --- | --- |
-| A1-EVENT-01: synchronous in-process dispatch on caller session | Real API flow plus focused dispatcher unit tests for call-stack execution and shared session identity | Unit + PostgreSQL integration | Unit verified; PostgreSQL integration pending event wiring |
-| A1-EVENT-02: Task/Notification/Audit atomicity | Assignment and status handler failures after notification flush; assert all attempted state is absent after rollback | PostgreSQL integration | Planned; **not verified by dispatcher unit tests** |
+| A1-EVENT-01: synchronous in-process dispatch on caller session | Dispatcher unit tests plus PostgreSQL Notification delivery before/after caller commit | Unit + PostgreSQL preparation | Unit verified; preparation test added; Task operation event source remains unwired |
+| A1-EVENT-02: Task/Notification/Audit atomicity | Assignment and status handler failures after notification flush; assert all attempted state is absent after rollback | PostgreSQL REST integration | **Pending ΔA2–ΔA5 integration and W0 authorization of ΔA6; not verified by preparation tests** |
 | A1-EVENT-03: permitted event dependency and no direct Task→Notification implementation import | W2 source-derived A1 architecture evaluator on the exact integrated source SHA | Static + controlled negative case | W2-owned; not part of this integration test |
 | A1-EVENT-04: idempotent registration per bootstrap | Focused test configures the same dispatcher twice and confirms each handler runs once | Unit or application bootstrap test | Unit verified; application bootstrap test pending ΔA6 integration |
-| REST compatibility and failure observability | Assert response body/status and before/after failure and success metrics for both operations | PostgreSQL integration | Planned; current baseline behavior is documented in `test_api_flows.py` |
+| REST compatibility and failure observability | Assert response body/status and before/after failure and success metrics for both operations | PostgreSQL REST integration | **Pending ΔA6 integration**; current baseline behavior is documented in `test_api_flows.py` |
 
 ## Execution and reporting
 
@@ -97,6 +128,7 @@ actual reason. Do not label a dispatcher-only test, the current pre-event
 failure test, or a mocked session as the full ΔA6 transaction proof.
 
 At the W4 preparation stage the full application cases above remain
-**not executed**. Their result stays pending until the event handler is wired
-into Task assignment and status changes after the preceding architecture
-stages merge.
+**not implemented and not executed**. Keep them pending until the event handler
+is wired into Task assignment and status changes after the preceding
+architecture stages merge and W0 authorizes ΔA6. The new preparation tests do
+not change this status.

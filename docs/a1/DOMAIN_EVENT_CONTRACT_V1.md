@@ -33,6 +33,19 @@ import Task internals. Its values are `TODO`, `IN_PROGRESS`, `DONE`, and
 `CANCELLED`. Contract v1 has no event ID or timestamp because events are neither
 queued nor persisted; this makes no claim about replay or duplicate delivery.
 
+### Accepted Python representation deviation
+
+The W0 freeze fixes the event names, payload fields and types, immutability,
+unknown-field rejection, status vocabulary, and dispatch/transaction semantics.
+The implementation encodes those frozen semantics with Pydantic `BaseModel`
+payloads, `Literal` event tags, and a `StrEnum` status mirror. These concrete
+Python representation choices are the accepted deviation from the freeze's
+technology-neutral typed-contract description; they do not change the event
+interface or promise a wire format. `TaskStatusValue` stays owned by the event
+contract to avoid a production dependency on Task internals;
+`test_event_task_status_values_match_canonical_task_status_enum` checks that its
+member names and values exactly match the canonical `TaskStatus` enum.
+
 ## Registration and dispatch
 
 - `EventDispatcher.register(event_type, handler)` explicitly appends a
@@ -76,8 +89,8 @@ database precautions, and commands are recorded in
 
 | Requirement | Test evidence | Current status |
 | --- | --- | --- |
-| A1-EVENT-01: typed v1 contract and synchronous dispatch | `tests/unit/test_domain_events.py` payload validation, inline invocation, order, and caller-session cases | Unit verified; application integration pending |
-| A1-EVENT-02: handler failures propagate without autonomous transaction decisions | Unit exception and no-commit/no-rollback tests; future full Task/Notification/Audit PostgreSQL rollback cases in integration plan | Unit verified; full application proof pending integration |
+| A1-EVENT-01: typed v1 contract and synchronous dispatch | `tests/unit/test_domain_events.py` payload validation, status-enum compatibility, inline invocation, order, and caller-session cases; `tests/integration/test_a1_domain_events.py` PostgreSQL delivery checks | Unit verified; dispatcher/Notification PostgreSQL preparation tests added; Task operation integration pending |
+| A1-EVENT-02: handler failures propagate without autonomous transaction decisions | Unit exception and no-commit/no-rollback tests; PostgreSQL injected-handler rollback/recovery preparation test; future Task/Notification/Audit REST rollback cases in integration plan | Unit verified; Notification transaction preparation covered by PostgreSQL test; full application proof pending integration |
 | A1-EVENT-03: allowed event dependency and forbidden direct service dependency | W2-owned A1 source evaluator on the integrated source SHA | Not implemented by W4 |
 | A1-EVENT-04: idempotent registration | Duplicate-registration and Notification registration bootstrap tests | Unit verified; application bootstrap wiring pending |
 | External-infrastructure boundary | Dispatcher construction and synchronous dispatch unit test with an in-memory Session mock | Unit verified; no new infrastructure required by this code path |
