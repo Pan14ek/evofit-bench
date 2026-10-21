@@ -23,6 +23,8 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 - `unit/test_pilot02_testonly_execution.py`
 - `unit/test_b0p_git_inventory.py` — pinned Git inventory and digest-tampering checks
 - `unit/test_b0p_development.py` — isolated-copy preparation, source-pin and readback checks
+- `unit/test_module_public_apis.py` — ΔA2 exports, cross-module public imports and Reporting exception
+- `integration/test_public_module_contracts.py` — public facade session ownership and task rollback
 
 ## Established conventions
 

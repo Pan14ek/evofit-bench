@@ -6,7 +6,7 @@ import uuid
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.modules.audit.service import record_event
+from app.modules.audit.public import record_event
 from app.modules.users.model import User
 from app.modules.users.repository import add_user, get_by_email, get_user
 from app.observability.metrics import users_created_total

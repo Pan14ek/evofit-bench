@@ -10,6 +10,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 ## Local landmarks
 
 - `p_applicability_support.py`
+- `test_module_public_apis.py` — ΔA2 facade exports, delegated semantics and import-boundary regression
 - `test_da01_execution.py`
 - `test_da01_inputs_and_isolation.py`
 - `test_experiment_evidence.py`
