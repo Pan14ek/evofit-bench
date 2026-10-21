@@ -1,4 +1,4 @@
-"""Adversarial source fixtures for the proposed A1 architecture evaluators."""
+"""Adversarial source fixtures for W0-approved A1 architecture evaluator policies."""
 
 from __future__ import annotations
 
@@ -171,6 +171,96 @@ def _run(
 
 def _codes(evidence: dict[str, Any]) -> set[str]:
     return {finding["code"] for finding in evidence["result"]["violations"]}
+
+
+def test_w0_approved_state_applicability_graph_and_ownership_policy() -> None:
+    configs = {
+        evaluator_id: yaml.safe_load((EVALUATOR_ROOT / filename).read_text(encoding="utf-8"))
+        for evaluator_id, filename in CONFIG_FILES.items()
+    }
+    expected_states = {
+        "A0_1_CAPABILITY_MODULES",
+        "A0_2_PUBLIC_MODULE_APIS",
+        "A0_3_GOVERNED_MODULE_GRAPH",
+        "A0_4_REPORT_QUERY_PORT",
+        "A0_5_MODULE_DATA_OWNERSHIP",
+        FINAL_STATE,
+    }
+
+    public_states = configs["AC_PUBLIC_API"]["states"]
+    assert set(public_states) == expected_states
+    assert public_states["A0_1_CAPABILITY_MODULES"]["applicability"] == "NOT_APPLICABLE"
+    assert all(
+        public_states[state]["applicability"] == "ACTIVE"
+        for state in expected_states - {"A0_1_CAPABILITY_MODULES"}
+    )
+    legacy_exception = configs["AC_PUBLIC_API"]["public_api"]["legacy_exception"]
+    assert legacy_exception["allowed_architecture_states"] == [
+        "A0_2_PUBLIC_MODULE_APIS",
+        "A0_3_GOVERNED_MODULE_GRAPH",
+    ]
+
+    graph = configs["AC_MODULE_GRAPH"]
+    assert set(graph["states"]) == expected_states
+    assert all(
+        graph["states"][state]["applicability"] == "NOT_APPLICABLE"
+        for state in ("A0_1_CAPABILITY_MODULES", "A0_2_PUBLIC_MODULE_APIS")
+    )
+    assert all(
+        graph["states"][state]["applicability"] == "ACTIVE"
+        for state in (
+            "A0_3_GOVERNED_MODULE_GRAPH",
+            "A0_4_REPORT_QUERY_PORT",
+            "A0_5_MODULE_DATA_OWNERSHIP",
+            FINAL_STATE,
+        )
+    )
+    baseline_edges = {
+        ("tasks", "users"),
+        ("tasks", "notifications"),
+        ("tasks", "audit"),
+        ("users", "audit"),
+        ("reporting", "tasks"),
+    }
+    allowed = graph["module_graph"]["allowed_dependencies_by_state"]
+    for state in (
+        "A0_3_GOVERNED_MODULE_GRAPH",
+        "A0_4_REPORT_QUERY_PORT",
+        "A0_5_MODULE_DATA_OWNERSHIP",
+    ):
+        assert {(edge["from"], edge["to"]) for edge in allowed[state]} == baseline_edges
+    assert {(edge["from"], edge["to"]) for edge in allowed[FINAL_STATE]} == {
+        ("tasks", "users"),
+        ("tasks", "audit"),
+        ("users", "audit"),
+        ("reporting", "tasks"),
+    }
+    assert graph["module_graph"]["forbidden_dependencies_by_state"][FINAL_STATE] == [
+        {"from": "tasks", "to": "notifications"}
+    ]
+    assert "app.events" in graph["module_graph"]["shared_infrastructure_roots"]
+
+    ownership = configs["AC_DATA_OWNERSHIP"]
+    assert set(ownership["states"]) == expected_states
+    assert all(
+        ownership["states"][state]["applicability"] == "NOT_APPLICABLE"
+        for state in expected_states - {"A0_5_MODULE_DATA_OWNERSHIP", FINAL_STATE}
+    )
+    assert ownership["states"]["A0_5_MODULE_DATA_OWNERSHIP"]["applicability"] == "ACTIVE"
+    assert ownership["states"][FINAL_STATE]["applicability"] == "ACTIVE"
+    assert ownership["data_ownership"]["table_owners"] == {
+        "users": "users",
+        "tasks": "tasks",
+        "notifications": "notifications",
+        "audit_events": "audit",
+    }
+    assert ownership["data_ownership"]["model_registry_exception"] == {
+        "path": "app/db/model_registry.py",
+        "module": "app.db.model_registry",
+        "allowed_target_suffix": ".model",
+        "required_import_kind": "from",
+        "require_declared_model_symbol": True,
+    }
 
 
 def test_clean_source_fixture_is_non_vacuous_and_emits_schema_valid_evidence(
@@ -362,6 +452,37 @@ def test_shared_infrastructure_import_is_recorded_outside_capability_graph(tmp_p
     ]
 
 
+def test_app_events_import_is_shared_infrastructure(tmp_path: Path) -> None:
+    root, sha = _fixture_repo(
+        tmp_path,
+        {
+            "app/modules/tasks/service.py": "from app.events import publish\n",
+            "app/events/__init__.py": '"""Shared in-process event contract."""\n',
+        },
+    )
+    evidence, _ = _run(root, sha, "AC_MODULE_GRAPH")
+    assert evidence["result"]["compliance"] == "COMPLIANT"
+    assert evidence["diagnostics"]["shared_infrastructure_imports"][0]["target_module"] == (
+        "app.events"
+    )
+
+
+def test_task_to_notification_import_is_forbidden_in_final_a1(tmp_path: Path) -> None:
+    imports = (
+        "from app.modules.notifications.service import create_notification\n",
+        "from app.modules.notifications.public import create_notification\n",
+    )
+    for index, import_statement in enumerate(imports):
+        root, sha = _fixture_repo(
+            tmp_path / str(index),
+            {"app/modules/tasks/service.py": import_statement},
+            state=FINAL_STATE,
+        )
+        evidence, _ = _run(root, sha, "AC_MODULE_GRAPH", state=FINAL_STATE)
+        assert evidence["result"]["compliance"] == "NON_COMPLIANT"
+        assert "FORBIDDEN_DEPENDENCY" in _codes(evidence)
+
+
 def test_graph_configuration_is_state_specific_and_final_edge_is_forbidden(
     tmp_path: Path,
 ) -> None:
@@ -387,24 +508,23 @@ def test_legacy_reporting_edge_is_allowed_only_in_intermediate_state(tmp_path: P
     source = {
         "app/modules/reporting/service.py": "from app.modules.tasks.service import task_summary\n"
     }
-    intermediate_root, intermediate_sha = _fixture_repo(
-        tmp_path / "intermediate", source, state="A0_2_PUBLIC_MODULE_APIS"
-    )
-    intermediate, _ = _run(
-        intermediate_root, intermediate_sha, "AC_PUBLIC_API", state="A0_2_PUBLIC_MODULE_APIS"
-    )
-    assert intermediate["result"]["compliance"] == "COMPLIANT"
-    assert (
-        intermediate["diagnostics"]["cross_capability_imports"][0]["classification"]
-        == "legacy_exception"
-    )
-    final_root, final_sha = _fixture_repo(tmp_path / "final", source, state=FINAL_STATE)
-    final, _ = _run(final_root, final_sha, "AC_PUBLIC_API", state=FINAL_STATE)
-    assert any(
-        item["classification"] == "private_or_undeclared_contract"
-        for item in final["diagnostics"]["cross_capability_imports"]
-    )
-    assert final["result"]["compliance"] == "NON_COMPLIANT"
+    for state in ("A0_2_PUBLIC_MODULE_APIS", "A0_3_GOVERNED_MODULE_GRAPH"):
+        intermediate_root, intermediate_sha = _fixture_repo(tmp_path / state, source, state=state)
+        intermediate, _ = _run(intermediate_root, intermediate_sha, "AC_PUBLIC_API", state=state)
+        assert intermediate["result"]["compliance"] == "COMPLIANT"
+        assert (
+            intermediate["diagnostics"]["cross_capability_imports"][0]["classification"]
+            == "legacy_exception"
+        )
+
+    for state in ("A0_4_REPORT_QUERY_PORT", FINAL_STATE):
+        later_root, later_sha = _fixture_repo(tmp_path / state, source, state=state)
+        later, _ = _run(later_root, later_sha, "AC_PUBLIC_API", state=state)
+        assert any(
+            item["classification"] == "private_or_undeclared_contract"
+            for item in later["diagnostics"]["cross_capability_imports"]
+        )
+        assert later["result"]["compliance"] == "NON_COMPLIANT"
 
 
 def test_legacy_exception_configuration_cannot_include_final_a1(tmp_path: Path) -> None:
@@ -433,6 +553,38 @@ def test_legacy_exception_configuration_cannot_include_final_a1(tmp_path: Path) 
     assert evidence["result"]["compliance"] == "NOT_EVALUABLE"
     assert (
         "CONFIG_LEGACY_EXCEPTION_INCLUDES_FINAL_STATE" in evidence["result"]["configuration_errors"]
+    )
+
+
+def test_legacy_exception_configuration_cannot_include_a04(tmp_path: Path) -> None:
+    root, sha = _fixture_repo(
+        tmp_path,
+        {
+            "app/modules/reporting/service.py": (
+                "from app.modules.tasks.service import task_summary\n"
+            )
+        },
+        state="A0_4_REPORT_QUERY_PORT",
+    )
+    _, config_path = _run(root, sha, "AC_PUBLIC_API", state="A0_4_REPORT_QUERY_PORT")
+    config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    config["public_api"]["legacy_exception"]["allowed_architecture_states"].append(
+        "A0_4_REPORT_QUERY_PORT"
+    )
+    _write(config_path, yaml.safe_dump(config, sort_keys=False))
+    evidence = run_evaluator(
+        "AC_PUBLIC_API",
+        root,
+        config_path,
+        root / "architecture/states/state.yaml",
+        "A0_4_REPORT_QUERY_PORT",
+        sha,
+        ANALYZERS["AC_PUBLIC_API"],
+    )
+    assert evidence["result"]["execution_status"] == "FAILED"
+    assert evidence["result"]["compliance"] == "NOT_EVALUABLE"
+    assert (
+        "CONFIG_LEGACY_EXCEPTION_STATE_SET_MISMATCH" in evidence["result"]["configuration_errors"]
     )
 
 
@@ -496,6 +648,26 @@ def test_foreign_model_and_known_foreign_table_access_are_detected(tmp_path: Pat
     )
 
 
+def test_model_registry_exception_requires_declared_model_imports(tmp_path: Path) -> None:
+    root, sha = _fixture_repo(
+        tmp_path,
+        {
+            "app/db/model_registry.py": (
+                "from app.modules.users.model import User\n"
+                "from app.modules.tasks.model import UnknownModel\n"
+                "from app.modules.notifications.service import create_notification\n"
+            )
+        },
+    )
+    evidence, _ = _run(root, sha, "AC_DATA_OWNERSHIP")
+    assert evidence["result"]["compliance"] == "NON_COMPLIANT"
+    assert "UNJUSTIFIED_INFRASTRUCTURE_EXCEPTION" in _codes(evidence)
+    allowed = evidence["diagnostics"]["model_registry_exception"]["observed_allowed_imports"]
+    assert [(item["target_module"], item["imported_name"]) for item in allowed] == [
+        ("app.modules.users.model", "User")
+    ]
+
+
 def test_metadata_table_index_and_disallowed_engine_creation_are_detected(tmp_path: Path) -> None:
     root, sha = _fixture_repo(
         tmp_path,
@@ -530,6 +702,14 @@ def test_evidence_re_readback_rejects_changed_config_evaluator_and_subject_bytes
     )
     _write(config_path, changed_config.removesuffix("\n# changed after evidence capture\n"))
 
+    manifest_path = root / "architecture/states/state.yaml"
+    original_manifest = manifest_path.read_text(encoding="utf-8")
+    _write(manifest_path, original_manifest + "source_sha: changed\n")
+    assert "ARCHITECTURE_MANIFEST_DIGEST_MISMATCH" in verify_evidence(
+        evidence, root, config_path, EVALUATOR_ROOT
+    )
+    _write(manifest_path, original_manifest)
+
     evaluator_copy = tmp_path / "evaluator-copy"
     evaluator_copy.mkdir()
     for artifact in evidence["evaluator"]["source_artifacts"]:
@@ -551,9 +731,26 @@ def test_evidence_re_readback_rejects_changed_config_evaluator_and_subject_bytes
     )
 
 
-def test_evaluator_runs_against_current_a01_sources_only_as_not_applicable() -> None:
-    base_sha = _git(ROOT, "rev-parse", "HEAD", capture_output=True).stdout.strip()
-    manifest = ROOT / "architecture/states/A0_1_CAPABILITY_MODULES.yaml"
+def test_non_applicable_state_keeps_diagnostics_without_compliance_claim(
+    tmp_path: Path,
+) -> None:
+    root, source_sha = _fixture_repo(
+        tmp_path,
+        {
+            "app/modules/tasks/service.py": (
+                "from app.modules.users.repository import get_user\n"
+                "from app.modules.notifications.service import create_notification\n"
+                "from app.modules.audit.service import record_event\n"
+            ),
+            "app/modules/users/repository.py": '"""User repository fixture."""\n',
+            "app/modules/users/service.py": "from app.modules.audit.service import record_event\n",
+            "app/modules/reporting/service.py": (
+                "from app.modules.tasks.service import task_summary\n"
+            ),
+        },
+        state="A0_1_CAPABILITY_MODULES",
+    )
+    manifest = root / "architecture/states/state.yaml"
     outputs = {}
     for evaluator_id, config_name in (
         ("AC_PUBLIC_API", "public_api_v1.yaml"),
@@ -562,17 +759,19 @@ def test_evaluator_runs_against_current_a01_sources_only_as_not_applicable() -> 
     ):
         evidence = run_evaluator(
             evaluator_id,
-            ROOT,
+            root,
             EVALUATOR_ROOT / config_name,
             manifest,
             "A0_1_CAPABILITY_MODULES",
-            base_sha,
+            source_sha,
             ANALYZERS[evaluator_id],
         )
         assert evidence["result"]["execution_status"] == "COMPLETED"
         assert evidence["result"]["compliance"] == "NOT_APPLICABLE"
         assert evidence["source_scope"]["complete"] is True
-        assert evidence["architecture"]["target_source_sha"] == base_sha
+        assert evidence["architecture"]["target_source_sha"] == source_sha
+        assert evidence["architecture"]["source_sha_status"] == "MATCHED"
+        assert evidence["result"]["violation_count"] == 0
         outputs[evaluator_id] = evidence
     graph = outputs["AC_MODULE_GRAPH"]["diagnostics"]
     assert {tuple((edge["from"], edge["to"])) for edge in graph["edges"]} == {
@@ -585,6 +784,6 @@ def test_evaluator_runs_against_current_a01_sources_only_as_not_applicable() -> 
     ownership = outputs["AC_DATA_OWNERSHIP"]["diagnostics"]
     assert any(
         item["code"] == "FOREIGN_REPOSITORY_IMPORT"
-        for item in outputs["AC_DATA_OWNERSHIP"]["diagnostics"]["observed_policy_findings"]
+        for item in ownership["observed_policy_findings"]
     )
     assert ownership["model_registry_exception"]["observed_allowed_imports"]

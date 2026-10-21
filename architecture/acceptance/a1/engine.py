@@ -562,8 +562,20 @@ def verify_evidence(
     config_path: Path,
     evaluator_root: Path | None = None,
 ) -> list[str]:
-    """Re-read exact source, config, and evaluator bytes referenced by one evidence record."""
+    """Re-read exact manifest, source, config, and evaluator bytes referenced by evidence."""
     failures: list[str] = []
+    manifest_value = evidence.get("architecture", {}).get("manifest_path")
+    manifest_digest = evidence.get("architecture", {}).get("manifest_digest")
+    if isinstance(manifest_value, str):
+        manifest_path = Path(manifest_value)
+        if not manifest_path.is_absolute():
+            manifest_path = repo_root / manifest_path
+        if not manifest_path.is_file():
+            failures.append("ARCHITECTURE_MANIFEST_MISSING")
+        elif file_sha256(manifest_path) != manifest_digest:
+            failures.append("ARCHITECTURE_MANIFEST_DIGEST_MISMATCH")
+    else:
+        failures.append("ARCHITECTURE_MANIFEST_PATH_MISSING")
     if not config_path.is_file() or file_sha256(config_path) != evidence.get("evaluator", {}).get(
         "configuration_digest"
     ):

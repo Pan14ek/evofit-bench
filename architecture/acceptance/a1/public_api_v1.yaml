@@ -17,7 +17,7 @@ states:
   A0_5_MODULE_DATA_OWNERSHIP: {applicability: ACTIVE}
   A1_MODULAR_MONOLITH: {applicability: ACTIVE}
 public_api:
-  # W0 approved these ΔA2 public surfaces; remaining state policy is still a proposal.
+  # W0-approved ΔA2 public surfaces and state policy.
   public_module_pattern: app.modules.{capability}.public
   require_public_module_per_capability: true
   # W0-approved ΔA2 exports. Function signatures beyond names and TaskSummary fields are not inspected.

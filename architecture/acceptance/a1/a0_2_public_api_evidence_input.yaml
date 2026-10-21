@@ -1,0 +1,6 @@
+# Evaluation input only; this is not an architecture-state manifest or stage acceptance.
+schema_version: 1
+architecture_state: A0_2_PUBLIC_MODULE_APIS
+source_sha: 934f5e045af473acdb197604c761597ba39b026c
+source_tree_sha: cd3e64e32674ec21c011365dcb044b7e2129da22
+binding_kind: W0-provided canonical ΔA2 checkpoint

@@ -1,14 +1,14 @@
 # Context — `tests/architecture/a1`
 
-> **Audience:** human developers and AI coding agents. **Type:** maintained test context; fixtures are synthetic engineering checks, not research predictions or oracle labels.
+> **Audience:** human developers and AI coding agents. **Type:** maintained test context; fixtures are synthetic engineering checks for W0-approved policy, not research predictions or oracle labels.
 
 ## Responsibility
 
-Exercise W2's proposed A1 architecture evaluators with fixed, source-level valid and adversarial Python fixtures.
+Exercise W2's A1 architecture evaluators and W0-approved policy configurations with fixed, source-level valid and adversarial Python fixtures.
 
 ## Local landmarks
 
-- `test_evaluators.py` — public/private imports, the intermediate Reporting exception, source-derived graph edges and cycles, shared infrastructure, module/data ownership, incomplete scope, revision mismatch, digest readback, and schema validation.
+- `test_evaluators.py` — public/private imports, the A0.2/A0.3 Reporting exception, final Tasks → Notifications prohibition, `app.events` shared infrastructure, exact model-registry exception, source-derived graph edges and cycles, module/data ownership, incomplete scope, revision mismatch, digest readback, and schema validation.
 - `REQUIREMENT_TEST_MATRIX.md` — requirement-to-test traceability and exact acceptance boundaries.
 
 ## Established conventions

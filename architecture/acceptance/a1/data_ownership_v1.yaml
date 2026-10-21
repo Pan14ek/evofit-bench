@@ -19,7 +19,7 @@ states:
   A0_5_MODULE_DATA_OWNERSHIP: {applicability: ACTIVE}
   A1_MODULAR_MONOLITH: {applicability: ACTIVE}
 data_ownership:
-  # Proposal: ownership labels must be checked against source model declarations.
+  # W0-approved table owners; evaluator checks these against literal model declarations.
   table_owners:
     users: users
     tasks: tasks
@@ -29,6 +29,8 @@ data_ownership:
     path: app/db/model_registry.py
     module: app.db.model_registry
     allowed_target_suffix: .model
+    required_import_kind: from
+    require_declared_model_symbol: true
   disallowed_persistence_modules:
     - app.db.model_registry
   disallowed_persistence_symbols:

@@ -1,1 +1,1 @@
-"""Source-based architecture fitness evaluators for the proposed A1 states."""
+"""Source-based architecture fitness evaluators for W0-approved A1 policies."""

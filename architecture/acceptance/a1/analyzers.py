@@ -208,6 +208,12 @@ def analyze_public_api(
         if isinstance(exception, dict)
         else set()
     )
+    expected_legacy_states = {
+        "A0_2_PUBLIC_MODULE_APIS",
+        "A0_3_GOVERNED_MODULE_GRAPH",
+    }
+    if allowed_states != expected_legacy_states:
+        errors.append("CONFIG_LEGACY_EXCEPTION_STATE_SET_MISMATCH")
     if final_state in allowed_states:
         errors.append("CONFIG_LEGACY_EXCEPTION_INCLUDES_FINAL_STATE")
 
@@ -613,7 +619,22 @@ def analyze_data_ownership(
 
         if source_path == exception_path:
             allowed_suffix = str(exception.get("allowed_target_suffix", ".model"))
-            if target_capability and target_module.endswith(allowed_suffix):
+            required_import_kind = str(exception.get("required_import_kind", "from"))
+            requires_declared_symbol = bool(exception.get("require_declared_model_symbol", False))
+            is_declared_model_import = (
+                target_capability in model_symbols
+                and target_module == f"app.modules.{target_capability}.model"
+                and item["kind"] == required_import_kind
+                and (
+                    not requires_declared_symbol
+                    or imported_name in model_symbols[target_capability]
+                )
+            )
+            if (
+                target_capability
+                and target_module.endswith(allowed_suffix)
+                and is_declared_model_import
+            ):
                 allowed_registry_imports.append(
                     {
                         "source_path": source_path,

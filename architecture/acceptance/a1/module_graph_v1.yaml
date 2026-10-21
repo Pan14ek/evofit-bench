@@ -17,7 +17,7 @@ states:
   A0_5_MODULE_DATA_OWNERSHIP: {applicability: ACTIVE}
   A1_MODULAR_MONOLITH: {applicability: ACTIVE}
 module_graph:
-  # Capability graph proposed from the A1 SPEC and current source; W0 must freeze it.
+  # W0-approved capability graph; shared infrastructure imports are recorded outside this graph.
   strict_local_import_roots: [app]
   shared_infrastructure_roots:
     - app.config
