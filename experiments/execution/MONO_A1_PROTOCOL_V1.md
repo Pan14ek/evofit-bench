@@ -14,11 +14,20 @@ The experiment evaluates whether frozen Method P adapts a fitness configuration 
 | `MONO-E1` | ΔA4 Reporting query-port refactor, A0.3→A0.4 | Negative control. The source changes while no new fitness obligation arises solely from using the established public query API. Score whether P proposes an unjustified change instead of RETAIN/no-op. W0 owns the source change. |
 | `MONO-E2` | Compound transition to final `A1_MODULAR_MONOLITH` | Main B0/P comparison on the exact same final A1 source SHA and full, source-grounded `Q(A_after)`. Do not seed P with the prior A0.1 HOLD candidate as an accepted configuration. |
 
-### Source-state discrepancy that blocks E2 reference freeze
+### W0-approved MONO-E2 comparison
 
-The W3 task brief and `SPEC_A1_EXPERIMENT_CONTRACT_V1.md` name E2 `A0→A1`. `SPEC_A1_ARCHITECTURE_AND_CONTRACTS_V1.md` and `SPEC_A1_CRITICAL_PATH_V1.md` define the active implementation path as `A0.1→A1`; the required integration base `632d9c9615efb71d103b0acc0964141d223596cc` is A0.1. W0 must record the chosen predecessor state ID and exact source SHA before the E2 reference is prepared. The schema intentionally requires real pinned revisions and does not supply a default A0/A0.1 SHA.
+| Role | Architecture state | Source commit SHA |
+| --- | --- | --- |
+| Before | `A0_MONOLITH` | `b78b0967be937634b7762baccf5ac6892b279a73` |
+| After | `A1_MODULAR_MONOLITH` | `UNASSIGNED` until final A1 verification |
 
-The W3 task names E1's actual ΔA4 source change as A0.3→A0.4. W0 must supply the exact source revisions and ensure ΔA4 remains distinct from the later Reporting migration. Freeze the E1 reference before the first P execution on that delta.
+MONO-E2's experimental comparison is `A0_MONOLITH → A1_MODULAR_MONOLITH`. The `A0.1→A1` sequence remains the engineering implementation trajectory. The reference schema binds E2's before state and commit to the approved A0 baseline and requires the after state to be final A1 with a full commit and tree SHA. The after SHA remains unset until final A1 verification; do not seal an E2 reference before then.
+
+### MONO-E1 source-freeze gate
+
+`G-A1-C4-REF-FROZEN` is a required W0 checkpoint before any Method P execution on ΔA4. The transition labels remain A0.3→A0.4; its exact before/after commit and tree SHAs are `UNASSIGNED` until W0 verifies them. Complete [the reference-freeze procedure and checklist](MONO_A1_REFERENCE_FREEZE_CHECKLIST.md), then freeze and read back the scorer-only reference before starting either study arm. A planned reference or a filled-in SHA string without Git object readback does not pass the checkpoint.
+
+**Current checkpoint state:** `NOT_READY`. ΔA4 source SHAs and the complete source-derived reference inputs have not been supplied or verified in this update; no reference is frozen and no MONO-E1/E2 run is authorized by this protocol change.
 
 ## 2. RQ crosswalk
 
@@ -39,17 +48,17 @@ The scorer-only reference is the answer key for RQ1 and the denominator/expected
 
 Before either new study's first method run:
 
-1. W0 confirms the named before/after architecture states, exact full commit SHAs, Git tree SHAs, commit lineage, permitted changes, and stable workload/DB fixture. Verify both revisions against Git object readback.
+1. For E1, W0 confirms the A0.3/A0.4 source pair and passes `G-A1-C4-REF-FROZEN`. For E2, use the canonical A0 commit above and final `A1_MODULAR_MONOLITH`; record the final A1 commit only after verification. For both studies, record exact full commit and Git tree SHAs, commit lineage, permitted changes, and stable workload/DB fixture, then verify revisions against Git object readback.
 2. Recompute architecture facts from the pinned trees. Bind each fact to a source SHA and evidence artifact digest. A target label may only cite verified source facts; unresolved target truth blocks a complete reference.
 3. Construct the typed target universe, including affected and unaffected representations and obligation targets. Independently justify `retain/add/replace/deactivate/adjust`; do not derive the expected labels from B0 or P output.
 4. Derive the entire mandatory, applicable `Q(A_after)` from the architecture and obligation sources. Record `ACTIVE`, `INACTIVE`, or `UNKNOWN` with rationale and source fact IDs. Do not reuse DA01's six obligations, PILOT-02's two diagnostic pairs, or any earlier partial denominator by default.
 5. For each mandatory active obligation, define all required exact pairs, inspection scope, evaluator ID, and evidence requirement. Pin evaluator source commit/tree, artifact digest, configuration digest, capabilities, and scope. A missing or inadequate evaluator means the pair stays UNKNOWN.
 6. Record frozen B0 and P algorithm versions/source SHAs/configuration digests, method bundle allowlist digests, runner identity, and any source-to-image provenance. B0 remains unchanged. P remains the frozen Method P implementation.
-7. Validate against `mono_a1_reference_v1.schema.json`; call `freeze_reference(...)` in a scorer-only custody directory before either arm starts. The function checks source commit/tree identities, writes canonical reference bytes and a separate SHA-256 seal exactly once, and marks custody `AUTHOR_DECLARED`.
+7. Complete the linked W0 checklist for E1 or verify final A1 and the canonical A0 predecessor for E2. Validate against `mono_a1_reference_v1.schema.json`; call `freeze_reference(...)` in a scorer-only custody directory before either arm starts. The function checks source commit/tree identities, writes canonical reference bytes and a separate SHA-256 seal exactly once, and marks custody `AUTHOR_DECLARED`.
 8. Read back the exact bytes with `load_verified_reference(...)`. Verify the seal, source revisions, timestamp ordering, and expected study ID. Record the returned reference digest in the study record.
 9. Create separately allowlisted B0 and P bundles. `verify_method_input_isolation(...)` rejects root/nested symlinks, reference-tree overlap, reference digest/payload, and suspicious oracle/scorer/cross-arm paths or JSON keys. This scanner is supplemental: independently review the allowlist and bundle inventory; a clean scan is not semantic proof that arbitrary prose contains no labels.
 
-Never seal a complete E2 reference until final A1 exists and W0 confirms the chosen predecessor. Never invent A1 SHAs or expected labels. Do not place the private reference or expected operations in a public PR artifact, method input, or committed result template.
+Never seal a complete E2 reference until final A1 exists and its exact commit/tree are verified. E2's predecessor is fixed to `A0_MONOLITH` at `b78b0967be937634b7762baccf5ac6892b279a73`; do not substitute the engineering A0.1 predecessor. Never invent A1 or ΔA4 SHAs or expected labels. Do not place the private reference or expected operations in a public PR artifact, method input, or committed result template.
 
 ## 4. Run order and sealed output
 
@@ -126,6 +135,6 @@ This is a synthetic infrastructure suite, not an actual MONO run. Run repository
 
 ## 8. Readiness and stop rules
 
-This preparation is consumable only after W0 records the correct source-state sequence and freezes exact E1/E2 source revisions, and W2 supplies the final evaluator IDs, pinned sources/configs, artifact readback interface, and non-vacuous control evidence. RQ2 must remain UNKNOWN until the independent W2 adapter exists and verifies the real source-bound raw artifacts. RQ3 remains UNKNOWN until timer and source-image attestations have real provenance. RQ4 remains UNKNOWN for every unexecuted control. No measured values, significance, ACCEPT, G1/G4 status, or architecture-superiority claim may be inferred from these synthetic checks.
+This preparation is consumable only after W0 applies the approved E2 source-state sequence, verifies the final A1 source, freezes exact E1/E2 revisions, and passes the E1 reference gate, and W2 supplies the final evaluator IDs, pinned sources/configs, artifact readback interface, and non-vacuous control evidence. RQ2 must remain UNKNOWN until the independent W2 adapter exists and verifies the real source-bound raw artifacts. RQ3 remains UNKNOWN until timer and source-image attestations have real provenance. RQ4 remains UNKNOWN for every unexecuted control. No measured values, significance, ACCEPT, G1/G4 status, or architecture-superiority claim may be inferred from these synthetic checks.
 
 If A1 is not frozen by the planned deadline, preserve the last verified intermediate state and report the missing dependency. Do not relabel an intermediate state as A1, substitute the already exposed A0.1 calibration, or fabricate MONO-E1/E2 outputs.

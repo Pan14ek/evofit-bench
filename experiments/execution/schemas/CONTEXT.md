@@ -42,7 +42,7 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `b0p_evidence_sufficient_execution_v1.schema.json` — additive, calibration-exposed E1 execution envelope with separate TEST_ONLY input binding and explicit RQ1/RQ2 states
 - `b0p_e1_rq2_obligation_evidence_v1.schema.json` — complete six-row denominator with per-obligation unknowns and no percentage when independent coverage is incomplete
 - `mono_a1_study_v1.schema.json` — additive MONO-E0/E1/E2 study record with explicit manuscript/legacy RQ mapping and separate endpoint states
-- `mono_a1_reference_v1.schema.json` — scorer-only, source-pinned MONO reference and complete target/obligation denominator
+- `mono_a1_reference_v1.schema.json` — scorer-only, source-pinned MONO reference and complete target/obligation denominator; E2 is bound to the approved A0 commit and final A1 state
 - `mono_a1_exact_pair_evidence_v1.schema.json` — raw-artifact-bound exact-pair record; excludes self-declared production-authority scope
 
 This is a selected list, not a complete source inventory.
@@ -84,10 +84,16 @@ whose source, evaluator, controls and artifact digests read back successfully;
 it does not establish production authority or full-method coverage.
 
 MONO-A1 schemas are a separate namespace and do not relax frozen DA01 or
-DEV-B0P-E1 contracts. Their study record is validated with the additional
-cross-field checks in `tooling/mono_a1.py`. The exact-pair schema has no
-production-authority enum; the independent W2 readback adapter is not yet
-integrated, so absent verifier evidence must remain UNKNOWN.
+DEV-B0P-E1 contracts. The E2 reference requires `A0_MONOLITH` at the approved
+`b78b0967be937634b7762baccf5ac6892b279a73` predecessor and final
+`A1_MODULAR_MONOLITH`; its source commit/tree must be full Git SHAs. The E2
+study record can keep its after commit/tree null while final A1 is unverified.
+E1 remains structurally compatible with the existing generic source-pinned
+reference shape; the W0 `G-A1-C4-REF-FROZEN` procedure is documented separately.
+No E1/E2 reference was frozen by this update. Their study record is validated
+with the additional cross-field checks in `tooling/mono_a1.py`. The exact-pair
+schema has no production-authority enum; the independent W2 readback adapter is
+not yet integrated, so absent verifier evidence must remain UNKNOWN.
 
 ## PILOT-02 profile schema
 

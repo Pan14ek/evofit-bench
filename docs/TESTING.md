@@ -390,6 +390,7 @@ represent MONO-E1/E2 measurements or W2 evaluator evidence.
 | MONO-A1-06 | Missing timers, invalid source-to-image bindings, and uncollected resources remain UNKNOWN rather than fabricated values. | `test_incomplete_runtime_metrics_and_invalid_image_binding_remain_unknown` | Synthetic precondition checks; attestation authentication remains external |
 | MONO-A1-07 | Evidence inventory/archive checksums survive clean extraction and detect archive mutation. | `test_evidence_archive_integrity_and_clean_extraction_readback` | Synthetic archive readback |
 | MONO-A1-08 | W2 evidence binds evaluator version, architecture state/source, complete inspected paths, and exact raw bytes; a pinned W2 checkout's `verify_evidence()` must pass. | `test_w2_readback_binds_the_pinned_evaluator_state_and_source` | Synthetic W2-shaped fixture only; no actual W2 report admitted |
+| MONO-A1-09 | E2 references use `A0_MONOLITH` at the approved A0 commit and final `A1_MODULAR_MONOLITH`; an unassigned after SHA cannot validate as a frozen reference. | Conditional rules in `mono_a1_reference_v1.schema.json` and `mono_a1_study_v1.schema.json` | Manually exercised for this schema update; no checked-in E2 regression fixture |
 
 Run the focused suite with:
 

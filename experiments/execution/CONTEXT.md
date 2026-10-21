@@ -18,7 +18,8 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - `tooling/p_impact.py`
 - `EXP03_METHOD_INTEGRATION.md`
 - `EXP04_EVIDENCE_ADMISSION.md`
-- `MONO_A1_PROTOCOL_V1.md` — separate MONO-E0/E1/E2 preparation protocol, freeze-before-run reference custody, RQ mapping, denominator rules, control inventory, and W0/W2 stop conditions; no observed MONO results
+- `MONO_A1_PROTOCOL_V1.md` — separate MONO-E0/E1/E2 preparation protocol; W0-approved A0→A1 E2 source binding; E1 freeze-before-run custody, RQ mapping, denominator rules, and W0/W2 stop conditions; no observed MONO results
+- `MONO_A1_REFERENCE_FREEZE_CHECKLIST.md` — W0 evidence checklist for `G-A1-C4-REF-FROZEN`; exact ΔA4 SHAs remain unassigned until Git readback
 - `MONO_A1_RESULTS_TEMPLATE_UK.md` — Ukrainian report template with explicit UNKNOWN/NOT_RUN states and evidence placeholders
 - `schemas/mono_a1_study_v1.schema.json`
 - `schemas/mono_a1_reference_v1.schema.json`

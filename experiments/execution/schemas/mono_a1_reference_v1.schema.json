@@ -133,6 +133,35 @@
       }
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"study_id": {"const": "MONO-E2"}},
+        "required": ["study_id"]
+      },
+      "then": {
+        "properties": {
+          "architecture": {
+            "properties": {
+              "before": {
+                "properties": {
+                  "state_id": {"const": "A0_MONOLITH"},
+                  "commit_sha": {
+                    "const": "b78b0967be937634b7762baccf5ac6892b279a73"
+                  }
+                }
+              },
+              "after": {
+                "properties": {
+                  "state_id": {"const": "A1_MODULAR_MONOLITH"}
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "$defs": {
     "sha1": {
       "type": "string",

@@ -9,7 +9,7 @@ scoring. It does not execute measured DA01 B0/B1/P trials.
 
 `MONO_A1_PROTOCOL_V1.md` defines the separate MONO-E0/E1/E2 namespace, RQ
 crosswalk, freeze-before-run custody process, common RQ2 denominator, and
-source/evaluator evidence requirements. The additive contracts are
+source/evaluator evidence requirements. W0 has fixed MONO-E2 to `A0_MONOLITH` at `b78b0967be937634b7762baccf5ac6892b279a73` → final `A1_MODULAR_MONOLITH`; the after SHA remains unassigned until verification. MONO-E1 Method P execution remains blocked by the `G-A1-C4-REF-FROZEN` checkpoint and [W0 reference-freeze checklist](MONO_A1_REFERENCE_FREEZE_CHECKLIST.md). The additive contracts are
 `schemas/mono_a1_study_v1.schema.json`,
 `schemas/mono_a1_reference_v1.schema.json`, and
 `schemas/mono_a1_exact_pair_evidence_v1.schema.json`; the synthetic custody and
@@ -19,7 +19,7 @@ These contracts do not alter DA01 or the DEV-B0P-E1 calibration. They do not
 execute MONO-E1/E2. W2 Draft PR #28 defines the report interface consumed by
 `W2A1ExactPairReadbackVerifier`; use the evaluator's exact pinned checkout for
 readback. Missing or mismatched evaluator bytes keep exact-pair results
-UNKNOWN. W0 must still freeze the architecture states and ΔA4 checkpoint. The
+UNKNOWN. W0 must still verify final A1, freeze exact source revisions, and pass the E1 ΔA4 checkpoint. The
 Ukrainian reporting template is
 [`MONO_A1_RESULTS_TEMPLATE_UK.md`](MONO_A1_RESULTS_TEMPLATE_UK.md).
 
