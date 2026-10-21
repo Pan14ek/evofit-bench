@@ -1,0 +1,391 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:evofitbench:b0p-development-execution:v1",
+    "title": "B0/P DEVELOPMENT execution continuation",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "schema_version",
+        "study_id",
+        "run_id",
+        "execution_status",
+        "execution_mode",
+        "exposure_class",
+        "preparation",
+        "source_revisions",
+        "arms",
+        "candidate_validation",
+        "governance_decision",
+        "evaluator_execution",
+        "semantic_pair_verification",
+        "rq1_scoring",
+        "rq2_scoring",
+        "runtime_contexts",
+        "runtime_images",
+        "resource_metrics",
+        "evidence_completeness",
+        "research_gates",
+        "artifacts"
+    ],
+    "properties": {
+        "schema_version": {"const": 1},
+        "study_id": {"const": "DEV-B0P-V1"},
+        "run_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,95}$"},
+        "execution_status": {
+            "enum": [
+                "EXECUTED_COMPLETE",
+                "EXECUTED_PARTIAL",
+                "BLOCKED_PRE_EXECUTION",
+                "EXECUTION_FAILED"
+            ]
+        },
+        "execution_mode": {"$ref": "#/$defs/executionMode"},
+        "exposure_class": {"const": "CALIBRATION_EXPOSED"},
+        "preparation": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["run_id", "manifest_path", "manifest_sha256", "verified", "snapshot_path"],
+            "properties": {
+                "run_id": {"type": "string", "minLength": 3},
+                "manifest_path": {"type": "string", "minLength": 1},
+                "manifest_sha256": {"$ref": "#/$defs/sha256"},
+                "verified": {"const": true},
+                "snapshot_path": {"type": "string", "minLength": 1}
+            }
+        },
+        "source_revisions": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "architecture_before_sha",
+                "architecture_after_sha",
+                "b0_source_sha",
+                "p_source_sha",
+                "policy_source_sha"
+            ],
+            "properties": {
+                "architecture_before_sha": {"$ref": "#/$defs/sha1"},
+                "architecture_after_sha": {"$ref": "#/$defs/sha1"},
+                "b0_source_sha": {"$ref": "#/$defs/sha1"},
+                "p_source_sha": {"$ref": "#/$defs/sha1"},
+                "policy_source_sha": {"$ref": "#/$defs/sha1"}
+            }
+        },
+        "arms": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["B0", "P"],
+            "properties": {"B0": {"$ref": "#/$defs/arm"}, "P": {"$ref": "#/$defs/arm"}}
+        },
+        "candidate_validation": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["B0", "P"],
+            "properties": {
+                "B0": {"enum": ["VALID", "INVALID", "UNKNOWN", "NOT_RUN"]},
+                "P": {"enum": ["VALID", "INVALID", "UNKNOWN", "NOT_MATERIALIZED", "NOT_RUN"]}
+            }
+        },
+        "governance_decision": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["B0", "P"],
+            "properties": {
+                "B0": {"const": "NOT_APPLICABLE"},
+                "P": {"enum": ["ACCEPT", "REJECT", "HOLD", "INPUT_REJECTED", "NOT_RUN", "UNKNOWN"]},
+                "P_reason_codes": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {"type": "string"}
+                }
+            }
+        },
+        "evaluator_execution": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["status", "observations", "evaluator_time_ns", "verification_time_ns"],
+            "properties": {
+                "status": {"enum": ["COMPLETED", "PARTIAL", "FAILED", "NOT_RUN"]},
+                "observations": {"type": "array", "items": {"$ref": "#/$defs/evaluator"}},
+                "evaluator_time_ns": {"type": "integer", "minimum": 0},
+                "verification_time_ns": {"type": "integer", "minimum": 0}
+            }
+        },
+        "semantic_pair_verification": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "status",
+                "independently_verified_pair_count",
+                "unknown_pair_count",
+                "pairs",
+                "reason_codes"
+            ],
+            "properties": {
+                "status": {"enum": ["VERIFIED", "PARTIAL", "UNKNOWN", "INVALID", "NOT_RUN"]},
+                "independently_verified_pair_count": {"type": "integer", "minimum": 0},
+                "unknown_pair_count": {"type": "integer", "minimum": 0},
+                "pairs": {"type": "array", "items": {"type": "object"}},
+                "reason_codes": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}
+            }
+        },
+        "rq1_scoring": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "status",
+                "reason",
+                "reference_path",
+                "reference_sha256",
+                "scorer_invoked"
+            ],
+            "properties": {
+                "status": {"enum": ["SCORED", "NOT_EVALUABLE", "UNKNOWN"]},
+                "reason": {"type": "string", "minLength": 1},
+                "reference_path": {"type": ["string", "null"]},
+                "reference_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+                "scorer_invoked": {"type": "boolean"},
+                "result_path": {"type": ["string", "null"]}
+            }
+        },
+        "rq2_scoring": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "status",
+                "reason",
+                "required_obligation_set_bound",
+                "same_denominator_for_arms",
+                "result_path"
+            ],
+            "properties": {
+                "status": {"enum": ["SCORED", "PARTIAL", "UNKNOWN", "NOT_EVALUABLE"]},
+                "reason": {"type": "string", "minLength": 1},
+                "required_obligation_set_bound": {"type": "boolean"},
+                "same_denominator_for_arms": {"type": "boolean"},
+                "result_path": {"type": ["string", "null"]},
+                "diagnostic_pairs_path": {"type": ["string", "null"]}
+            }
+        },
+        "runtime_contexts": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["B0", "P"],
+            "properties": {"B0": {"$ref": "#/$defs/sha256"}, "P": {"$ref": "#/$defs/sha256"}}
+        },
+        "runtime_images": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["B0", "P"],
+            "properties": {
+                "B0": {"$ref": "#/$defs/runtimeImage"},
+                "P": {"$ref": "#/$defs/runtimeImage"}
+            }
+        },
+        "resource_metrics": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "status",
+                "host_cpu_time_ns",
+                "container_cpu_time_ns",
+                "peak_rss_bytes",
+                "reason"
+            ],
+            "properties": {
+                "status": {"enum": ["MEASURED", "PARTIAL", "UNKNOWN"]},
+                "host_cpu_time_ns": {"type": ["integer", "null"], "minimum": 0},
+                "container_cpu_time_ns": {"type": ["integer", "null"], "minimum": 0},
+                "peak_rss_bytes": {"type": ["integer", "null"], "minimum": 0},
+                "reason": {"type": "string", "minLength": 1}
+            }
+        },
+        "evidence_completeness": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["status", "missing_or_unknown"],
+            "properties": {
+                "status": {"enum": ["COMPLETE", "PARTIAL", "INCOMPLETE"]},
+                "missing_or_unknown": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {"type": "string"}
+                }
+            }
+        },
+        "research_gates": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["G1", "G4", "P_ALGORITHM_STATUS"],
+            "properties": {
+                "G1": {"const": "INCOMPLETE"},
+                "G4": {"const": "NOT AUTHORIZED"},
+                "P_ALGORITHM_STATUS": {"const": "NOT_READY"}
+            }
+        },
+        "artifacts": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": {"$ref": "#/$defs/sha256"}
+        }
+    },
+    "$defs": {
+        "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "executionMode": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "source_attempt_run_id", "method_invocations_reused", "detail"],
+            "properties": {
+                "kind": {"enum": ["DIRECT", "POST_EXECUTION_FINALIZATION"]},
+                "source_attempt_run_id": {
+                    "oneOf": [
+                        {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,95}$"},
+                        {"type": "null"}
+                    ]
+                },
+                "method_invocations_reused": {"type": "boolean"},
+                "detail": {"type": "string", "minLength": 1}
+            },
+            "allOf": [
+                {
+                    "if": {"properties": {"kind": {"const": "DIRECT"}}},
+                    "then": {
+                        "properties": {
+                            "source_attempt_run_id": {"type": "null"},
+                            "method_invocations_reused": {"const": false}
+                        }
+                    }
+                },
+                {
+                    "if": {"properties": {"kind": {"const": "POST_EXECUTION_FINALIZATION"}}},
+                    "then": {
+                        "properties": {
+                            "source_attempt_run_id": {"type": "string"},
+                            "method_invocations_reused": {"const": true}
+                        }
+                    }
+                }
+            ]
+        },
+        "runtimeImage": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "tag",
+                "image_id",
+                "context_sha256",
+                "build_stdout_path",
+                "build_stdout_sha256",
+                "build_stderr_path",
+                "build_stderr_sha256"
+            ],
+            "properties": {
+                "tag": {"type": "string", "minLength": 1},
+                "image_id": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+                "context_sha256": {"$ref": "#/$defs/sha256"},
+                "build_stdout_path": {"type": "string", "minLength": 1},
+                "build_stdout_sha256": {"$ref": "#/$defs/sha256"},
+                "build_stderr_path": {"type": "string", "minLength": 1},
+                "build_stderr_sha256": {"$ref": "#/$defs/sha256"}
+            }
+        },
+        "arm": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "method_id",
+                "status",
+                "method_version",
+                "source_sha",
+                "input_bundle_sha256",
+                "method_execution_time_ns",
+                "adaptation_time_ns",
+                "prediction_status",
+                "prediction_sha256",
+                "prediction_path",
+                "trace_path",
+                "trace_sha256",
+                "runtime_image_id",
+                "stdout_path",
+                "stdout_sha256",
+                "stderr_path",
+                "stderr_sha256"
+            ],
+            "properties": {
+                "method_id": {"enum": ["B0", "P"]},
+                "status": {"enum": ["COMPLETED", "FAILED", "NOT_RUN"]},
+                "method_version": {"type": "string", "minLength": 1},
+                "source_sha": {"$ref": "#/$defs/sha1"},
+                "input_bundle_sha256": {"$ref": "#/$defs/sha256"},
+                "method_execution_time_ns": {"type": ["integer", "null"], "minimum": 0},
+                "adaptation_time_ns": {"type": ["integer", "null"], "minimum": 0},
+                "prediction_status": {
+                    "enum": [
+                        "SEALED",
+                        "NOT_EMITTED_GOVERNANCE_HOLD",
+                        "NOT_EMITTED_REJECT",
+                        "NOT_EMITTED_INPUT_REJECTED",
+                        "FAILED",
+                        "NOT_RUN"
+                    ]
+                },
+                "prediction_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+                "prediction_path": {"type": ["string", "null"]},
+                "trace_path": {"type": ["string", "null"]},
+                "trace_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+                "candidate_path": {"type": ["string", "null"]},
+                "candidate_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+                "runtime_image_id": {"type": ["string", "null"]},
+                "stdout_path": {"type": ["string", "null"]},
+                "stdout_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+                "stderr_path": {"type": ["string", "null"]},
+                "stderr_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]}
+            }
+        },
+        "evaluator": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "run_id",
+                "evaluator_id",
+                "command",
+                "exit_status",
+                "duration_ns",
+                "source_revision",
+                "source_tree_sha",
+                "configuration_path",
+                "configuration_sha256",
+                "stdout_path",
+                "stdout_sha256",
+                "stderr_path",
+                "stderr_sha256",
+                "evidence_validity",
+                "compliance_verdict",
+                "semantic_adequacy",
+                "scope_assessment"
+            ],
+            "properties": {
+                "run_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,95}$"},
+                "evaluator_id": {"type": "string", "minLength": 1},
+                "command": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+                "exit_status": {"type": ["integer", "null"]},
+                "duration_ns": {"type": "integer", "minimum": 0},
+                "source_revision": {"$ref": "#/$defs/sha1"},
+                "source_tree_sha": {"type": "string", "minLength": 1},
+                "configuration_path": {"type": "string", "minLength": 1},
+                "configuration_sha256": {"$ref": "#/$defs/sha256"},
+                "stdout_path": {"type": "string", "minLength": 1},
+                "stdout_sha256": {"$ref": "#/$defs/sha256"},
+                "stderr_path": {"type": "string", "minLength": 1},
+                "stderr_sha256": {"$ref": "#/$defs/sha256"},
+                "evidence_validity": {"enum": ["VALID", "INVALID", "UNKNOWN"]},
+                "compliance_verdict": {
+                    "enum": ["COMPLIANT", "NON_COMPLIANT", "NOT_EVALUABLE", "UNKNOWN"]
+                },
+                "semantic_adequacy": {"enum": ["PROVEN", "UNKNOWN", "INVALID"]},
+                "scope_assessment": {"type": "object"}
+            }
+        }
+    }
+}

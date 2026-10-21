@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import shutil
 import subprocess
 from pathlib import Path
 
 import pytest
 
+from experiments.execution.tooling.hashing import pretty_json_bytes
 from scripts.verify_b0p_git_inventory import (
     SourceInventoryError,
     actual_inventory,
@@ -81,7 +81,7 @@ def test_pinned_git_inventory_recomputes_all_four_fields(
     ]
     assert expected["added_module_names"] == ["app.modules", "app.modules.tasks.service"]
     assert expected["removed_module_names"] == ["app.api"]
-    digest = hashlib.sha256(json.dumps(expected, sort_keys=True).encode()).hexdigest()
+    digest = hashlib.sha256(pretty_json_bytes(expected)).hexdigest()
     result = assess_observations(repository, before, after, expected, digest)
     assert result["source_fact_verified"] is True
     assert result["assessment"] == "VERIFIED_GIT_INVENTORY"
@@ -105,7 +105,7 @@ def test_a_tampered_observation_is_not_admitted(
     repository, before, after = revision_pair
     observations = actual_inventory(repository, before, after)
     observations[field] = ["app.invented"]
-    digest = hashlib.sha256(json.dumps(observations).encode()).hexdigest()
+    digest = hashlib.sha256(pretty_json_bytes(observations)).hexdigest()
     result = assess_observations(repository, before, after, observations, digest)
     assert result["source_fact_verified"] is False
     assert result["field_results"][field]["matches"] is False
@@ -125,7 +125,8 @@ def test_observations_must_be_canonical_unique_sorted(
     repository, before, after = revision_pair
     observations = actual_inventory(repository, before, after)
     observations["added_module_names"] = list(reversed(observations["added_module_names"]))
-    result = assess_observations(repository, before, after, observations, "a" * 64)
+    digest = hashlib.sha256(pretty_json_bytes(observations)).hexdigest()
+    result = assess_observations(repository, before, after, observations, digest)
     assert result["assessment"] == "MISMATCH"
 
 
@@ -155,3 +156,63 @@ def test_invalid_observation_digest_is_rejected(
     repository, before, after = revision_pair
     with pytest.raises(SourceInventoryError, match="SHA-256"):
         assess_observations(repository, before, after, {}, "bad")
+
+
+def test_observation_digest_must_bind_exact_canonical_content(
+    revision_pair: tuple[Path, str, str],
+) -> None:
+    repository, before, after = revision_pair
+    observations = actual_inventory(repository, before, after)
+    with pytest.raises(SourceInventoryError, match="does not match"):
+        assess_observations(repository, before, after, observations, "f" * 64)
+
+
+def test_raw_observation_digest_must_match_parsed_object(
+    revision_pair: tuple[Path, str, str],
+) -> None:
+    repository, before, after = revision_pair
+    observations = actual_inventory(repository, before, after)
+    raw = pretty_json_bytes(observations)
+    tampered = {**observations, "added_module_names": []}
+    with pytest.raises(SourceInventoryError, match="exact content"):
+        assess_observations(
+            repository,
+            before,
+            after,
+            tampered,
+            hashlib.sha256(raw).hexdigest(),
+            raw,
+        )
+
+
+def test_missing_source_revision_fails_closed(
+    revision_pair: tuple[Path, str, str],
+) -> None:
+    repository, before, _ = revision_pair
+    with pytest.raises(SourceInventoryError, match="pinned Git source object"):
+        committed_modules(repository, "0" * 40)
+
+
+def test_empty_python_source_inventory_fails_closed(tmp_path: Path) -> None:
+    repository = tmp_path / "empty-source"
+    repository.mkdir()
+    _git(repository, "init", "-q")
+    _git(repository, "config", "user.name", "Fixture")
+    _git(repository, "config", "user.email", "fixture@example.invalid")
+    _write(repository, "app/README.md", "no Python modules\n")
+    revision = _commit(repository, "empty python source")
+    with pytest.raises(SourceInventoryError, match="no Python application modules"):
+        committed_modules(repository, revision)
+
+
+def test_conflicting_source_observations_fail_closed(
+    revision_pair: tuple[Path, str, str],
+) -> None:
+    repository, before, after = revision_pair
+    observations = actual_inventory(repository, before, after)
+    observations["added_module_names"] = ["app.api"]
+    digest = hashlib.sha256(pretty_json_bytes(observations)).hexdigest()
+    report = assess_observations(repository, before, after, observations, digest)
+    assert report["assessment"] == "MISMATCH"
+    assert report["source_fact_verified"] is False
+    assert report["field_results"]["added_module_names"]["matches"] is False

@@ -24,6 +24,7 @@ DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_pilot02_method_input_profile.py \
 	tests/unit/test_pilot02_candidate_evaluators.py \
 	tests/unit/test_pilot02_testonly_execution.py \
+	tests/unit/test_b0p_development.py \
 	tests/unit/test_b0p_git_inventory.py \
 	tests/integration/test_exp03_method_bridge.py \
 	tests/integration/test_exp04_evidence_admission.py \

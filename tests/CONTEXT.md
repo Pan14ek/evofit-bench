@@ -21,6 +21,8 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 - `unit/test_pilot01_results.py`
 - `unit/test_pilot02_method_input_profile.py`
 - `unit/test_pilot02_testonly_execution.py`
+- `unit/test_b0p_git_inventory.py` — pinned Git inventory and digest-tampering checks
+- `unit/test_b0p_development.py` — isolated-copy preparation, source-pin and readback checks
 
 ## Established conventions
 
@@ -41,6 +43,11 @@ adversarial canonical mappings, verifier failures, TEST_ONLY sidecar
 consumption without semantic proof, noncompliance versus evaluator adequacy,
 and contradictory readback. These fixtures do not claim production authority
 or represent measured EXP-02 runs.
+
+The B0/P DEVELOPMENT preparation tests use an isolated Git clone, exercise
+write-once input export and strict readback, and reject source, denominator,
+path, and evaluator-digest mismatches. They verify preparation only; they do
+not run either arm or produce experimental scores.
 
 ## PILOT-02 tests
 

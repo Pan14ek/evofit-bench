@@ -79,6 +79,7 @@ tracked in `docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`.
 - `p_operations.py`
 - `p_candidate.py`
 - `p_governance.py`
+- `b0p_development.py`
 
 This is a selected list (17 direct tracked files), not a complete source inventory.
 
@@ -89,6 +90,37 @@ Use deterministic source hashes and method-input isolation; keep scorer oracle-s
 ## Constraints and known gaps
 
 SPEC03 is a DEVELOPMENT implementation only. It uses SPEC02 applicability, exact-pair evidence, conservative impact, materialized templates, bounded deterministic operations, governance, provenance and conditional rollback. Do not use oracle/scorer inputs or claim G1/G4 readiness; unresolved authority, mandatory classifications, templates, costs, multi-stage contracts and method review produce HOLD or remain blockers.
+
+`b0p_development.py` prepares a write-once B0/P DEVELOPMENT package and
+verifies its manifest, Git source inventories, frozen configuration bytes,
+policy bundle and checksums. It is a preflight stage only: it does not execute
+either arm, produce predictions, or score a result. Keep `PREPARED_NOT_EXECUTED`
+distinct from an experiment outcome. Its B0, P, policy and architecture source
+revisions are separate fields; do not infer authority from the policy digest.
+
+`b0p_execution.py` continues a verified preparation in a separate write-once
+run. It builds two source-pinned container contexts, executes B0 and frozen P
+separately without network access, then records fresh Import Linter and
+architecture-test outputs. `b0p_isolated_b0_runner.py` and
+`b0p_isolated_p_runner.py` are run wrappers; the frozen algorithm modules stay
+unchanged. The direct arm-result mappings must carry B0 validation from the
+persisted execution trace and P validation from the persisted execution result
+into manifest assembly; `test_candidate_validation_from_both_isolated_arms_reaches_manifest`
+regresses the prior aggregation KeyError. The execution schema and archive are
+distinct from the preparation schema and package. An unavailable presealed reference keeps RQ1 NOT_EVALUABLE;
+an unbound denominator or missing independent exact-pair proof keeps RQ2
+UNKNOWN. Do not turn this calibration-exposed execution into holdout evidence,
+G1/G4 approval or measured DA01 results.
+
+The narrowly scoped post-execution finalizer is for the historical a02
+`candidate_validation` aggregation failure only; a new direct run must not use
+it. The corrected direct path is verified separately by a04. The finalizer
+verifies the original
+inventory, preparation snapshot, runtime contexts, persisted runner output and
+prediction seal, reuses both method outputs, reruns only fresh evaluator
+commands under recovery-specific names, and adds a final checksum inventory
+without replacing the original failed-attempt inventory. Its execution mode
+must remain explicit in the manifest.
 
 ## PILOT-02 profile boundary
 
