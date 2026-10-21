@@ -15,7 +15,7 @@ Synchronous in-app notification persistence.
 - `repository.py`
 - `schemas.py`
 - `service.py`
-- `event_handlers.py` — explicit reactions to versioned Task events, prepared
+- `event_handlers/` — explicit reactions to versioned Task events, prepared
   for later ΔA6 composition-root registration.
 
 ## Established conventions

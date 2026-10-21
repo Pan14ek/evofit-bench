@@ -15,7 +15,7 @@ event store, durable event log, or delivery guarantee.
 
 The contract is owned by `app/events/contracts.py`; synchronous dispatch is
 owned by `app/events/dispatcher.py`; Notification-side reaction is owned by
-`app/modules/notifications/event_handlers.py`. The application composition
+`app/modules/notifications/event_handlers/__init__.py`. The application composition
 root must register handlers explicitly. No dynamic module scan is permitted.
 
 ## Event schema
