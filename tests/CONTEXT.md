@@ -10,6 +10,8 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 ## Local landmarks
 
 - `__init__.py`
+- `architecture/a1/test_evaluators.py`
+- `architecture/a1/REQUIREMENT_TEST_MATRIX.md`
 - `fixtures/p_method/`
 - `unit/test_p_impact_v1.py`
 - `unit/test_p_semantic_pairs_v1.py`

@@ -1,0 +1,44 @@
+schema_version: 1
+evaluator:
+  id: AC_DATA_OWNERSHIP
+  obligation_id: AC_DATA_OWNERSHIP
+  version: 1.0.0
+source_scope:
+  module_root: app/modules
+  expected_modules: [users, tasks, notifications, reporting, audit]
+  minimum_source_files_per_module: 1
+  minimum_inspected_files: 11
+  additional_source_files:
+    - path: app/db/model_registry.py
+      purpose: centralized ORM model registration exception
+states:
+  A0_1_CAPABILITY_MODULES: {applicability: NOT_APPLICABLE}
+  A0_2_PUBLIC_MODULE_APIS: {applicability: NOT_APPLICABLE}
+  A0_3_GOVERNED_MODULE_GRAPH: {applicability: NOT_APPLICABLE}
+  A0_4_REPORT_QUERY_PORT: {applicability: NOT_APPLICABLE}
+  A0_5_MODULE_DATA_OWNERSHIP: {applicability: ACTIVE}
+  A1_MODULAR_MONOLITH: {applicability: ACTIVE}
+data_ownership:
+  # Proposal: ownership labels must be checked against source model declarations.
+  table_owners:
+    users: users
+    tasks: tasks
+    notifications: notifications
+    audit_events: audit
+  model_registry_exception:
+    path: app/db/model_registry.py
+    module: app.db.model_registry
+    allowed_target_suffix: .model
+  disallowed_persistence_modules:
+    - app.db.model_registry
+  disallowed_persistence_symbols:
+    - {module: sqlalchemy, names: [create_engine, create_async_engine]}
+    - {module: sqlalchemy.orm, names: [sessionmaker, async_sessionmaker, scoped_session]}
+    - {module: sqlalchemy.ext.asyncio, names: [create_async_engine, async_sessionmaker]}
+  table_constructors: [Table]
+  orm_access_calls: [select, update, delete, insert, query, get, add, merge, refresh, execute]
+coverage_limits:
+  - Detects foreign repository/model imports, known ORM model symbols in persistence calls, SQLAlchemy Table constructors, and metadata.tables string indexing.
+  - Does not inspect raw SQL text, SQLAlchemy text() contents, dynamically selected tables, reflection, runtime access, or database permissions.
+  - The centralized app.db.model_registry.py model imports are exempt only at that exact path and are recorded in evidence.
+  - ForeignKey declarations are not treated as table reads or writes; one shared database and relational keys remain allowed.

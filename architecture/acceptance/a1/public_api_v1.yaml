@@ -1,0 +1,33 @@
+schema_version: 1
+evaluator:
+  id: AC_PUBLIC_API
+  obligation_id: AC_PUBLIC_API
+  version: 1.0.0
+source_scope:
+  module_root: app/modules
+  expected_modules: [users, tasks, notifications, reporting, audit]
+  minimum_source_files_per_module: 1
+  minimum_inspected_files: 10
+  additional_source_files: []
+states:
+  A0_1_CAPABILITY_MODULES: {applicability: NOT_APPLICABLE}
+  A0_2_PUBLIC_MODULE_APIS: {applicability: ACTIVE}
+  A0_3_GOVERNED_MODULE_GRAPH: {applicability: ACTIVE}
+  A0_4_REPORT_QUERY_PORT: {applicability: ACTIVE}
+  A0_5_MODULE_DATA_OWNERSHIP: {applicability: ACTIVE}
+  A1_MODULAR_MONOLITH: {applicability: ACTIVE}
+public_api:
+  # Proposal for W0 review; W1 owns the actual public.py interfaces.
+  public_module_pattern: app.modules.{capability}.public
+  require_public_module_per_capability: true
+  final_architecture_state: A1_MODULAR_MONOLITH
+  legacy_exception:
+    id: reporting_tasks_query_intermediate_v1
+    source_module: app.modules.reporting.service
+    target_module: app.modules.tasks.service
+    imported_names: [task_summary]
+    allowed_architecture_states: [A0_2_PUBLIC_MODULE_APIS, A0_3_GOVERNED_MODULE_GRAPH]
+coverage_limits:
+  - AST source imports only; runtime import hooks and dynamically constructed imports are not inspected.
+  - Re-export behavior and public symbol signatures are not validated; W0 must freeze the public export contract.
+  - Conditional imports are reported as source dependencies regardless of runtime branch reachability.
