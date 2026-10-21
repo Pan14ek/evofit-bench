@@ -47,6 +47,7 @@ def test_public_modules_declare_narrow_exports() -> None:
         "assigned_task_count",
         "unassigned_task_count",
     }
+    assert reporting_public.get_task_summary.__annotations__["return"] is tasks_public.TaskSummary
 
 
 def test_users_public_contract_returns_existence_only(monkeypatch: pytest.MonkeyPatch) -> None:

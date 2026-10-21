@@ -43,6 +43,8 @@ Ownership: each capability owns its tables/models/repositories and query logic; 
 
 **Req A1-API-03:** preserve return shapes, typed not-found behavior, session ownership and transaction decisions. A public facade must not issue hidden `session.commit()` for an operation whose caller owns the transaction.
 
+**Agreed W1/W2 naming amendment (2026-10-21):** the canonical cross-module task-summary result is `app.modules.tasks.public.TaskSummary`, a `TypedDict` with `total_task_count`, `count_by_status`, `assigned_task_count` and `unassigned_task_count`. `tasks.public.get_task_summary` and `reporting.public.get_task_summary` use this result type. `reporting.schemas.TaskSummary` remains the REST response model. This names the draft's Task query public contract without changing its fields or external response. `reporting.service` retains its direct `Tasks.service.task_summary` call until the distinct ΔA4 change.
+
 **Req A1-API-04:** implement new-source AST/import controls with positive and controlled forbidden-internal-import cases; verify real subject scope and counts. Do not alter the frozen DA01 architecture tests.
 
 ### ΔA3 — Governed dependency graph (target `A0_3_GOVERNED_MODULE_GRAPH`)

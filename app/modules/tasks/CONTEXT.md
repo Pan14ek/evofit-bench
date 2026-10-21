@@ -12,7 +12,7 @@ Task workflows and atomic assignment/status notifications and audit.
 - `__init__.py`
 - `api.py`
 - `model.py`
-- `public.py` — `TaskSummary` and `get_task_summary` expose the typed task-count query.
+- `public.py` — `TaskSummary` and `get_task_summary` expose the canonical typed task-count query.
 - `repository.py`
 - `schemas.py`
 - `service.py`
@@ -21,8 +21,8 @@ Task workflows and atomic assignment/status notifications and audit.
 
 Task status: TODO→IN_PROGRESS/CANCELLED; IN_PROGRESS→DONE/CANCELLED; terminal DONE/CANCELLED.
 The service coordinates SQLAlchemy commit and calls Users, Audit and Notifications through their
-public facades. The task summary API is available for later module migration; Reporting's current
-direct Tasks service call remains reserved for ΔA4.
+public facades. `tasks.public.TaskSummary` is the shared module-query result shape; Reporting's
+service retains its direct Tasks service call for ΔA4.
 
 ## Constraints and known gaps
 

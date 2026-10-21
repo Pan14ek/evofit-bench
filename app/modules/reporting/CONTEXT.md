@@ -11,15 +11,15 @@ Task status and assignment aggregate reporting.
 
 - `__init__.py`
 - `api.py`
-- `public.py` — exports the existing task-summary query through Reporting's module API.
+- `public.py` — exports the existing task-summary query with the canonical `tasks.public.TaskSummary` return type.
 - `schemas.py`
 - `service.py`
 
 ## Established conventions
 
-Delegates to Tasks service and shared database. `service.py` intentionally keeps the direct
-`Tasks.service.task_summary` call as the source-visible ΔA4 migration exception; `public.py` wraps
-Reporting's current query without changing that dependency.
+Delegates to Tasks service and shared database. `public.py` returns the canonical `tasks.public.TaskSummary`
+shape. `service.py` intentionally keeps the direct `Tasks.service.task_summary` call as the
+source-visible ΔA4 migration exception.
 
 ## Constraints and known gaps
 
