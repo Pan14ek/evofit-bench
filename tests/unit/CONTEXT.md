@@ -73,8 +73,9 @@ substitute for the isolated real execution or produce RQ scores.
 
 E1-specific unit checks keep calibration labels out of method inputs, reject
 sidecar replay across run IDs or policy revisions, verify run-contained semantic
-evidence directory readback, and preserve candidate potential as a diagnostic while governance is HOLD. They do not substitute for
-a fresh B0/P container execution or make TEST_ONLY authority independent.
+evidence directory readback, and preserve candidate potential as a diagnostic
+while governance is HOLD. They do not substitute for a fresh B0/P container
+execution or make TEST_ONLY authority independent.
 
 Current coverage gate reports app-only coverage, not research-tool or requirement completeness. EXP-01 source-binding cases use synthetic Docker identity observations; a passing fixture does not supply authoritative source-to-image provenance. SPEC03 fixtures are synthetic and explicitly TEST_ONLY.
 

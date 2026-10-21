@@ -358,6 +358,7 @@ requirements to focused adversarial checks:
 | B0P-E1-05 | Bind the full six-obligation denominator; preserve per-obligation UNKNOWN and no percentage when evidence is incomplete. | `test_rq2_requires_exact_complete_denominator_and_never_fabricates_percent`, `test_unknown_rq2_cannot_claim_shared_or_bound_denominator`, `test_rq2_cannot_score_method_pair_diagnostics_as_independent_proof` | Unit/schema checks; complete measurement requires a real E1 run |
 | B0P-E1-06 | Keep a structurally valid candidate separate from governance ACCEPT; HOLD has no accepted coverage. | `test_candidate_potential_is_diagnostic_when_governance_holds`, `test_p_hold_requires_matching_no_prediction_marker`, `test_prevalidated_template_binding_rejects_missing_or_conflicting_template` | Unit and TEST_ONLY checks |
 | B0P-E1-07 | Preserve write-once history, reject post-seal mutation, and verify ZIP/checksum readback after clean extraction. | `test_oracle_contamination_and_historical_overwrite_are_rejected`, `test_sealed_prediction_tampering_is_rejected`, `test_run_inventory_leaves_nested_checksum_manifests_to_their_scope` | Unit checks plus per-run archive readback |
+| B0P-E1-08 | Revalidate copied semantic evidence from a regular run-contained directory; reject path traversal and non-directory substitutions. | `test_e1_semantic_pair_readback_requires_run_contained_directory` | Focused unit and E1 clean-extraction readback |
 
 Run the E1-focused suite with:
 
