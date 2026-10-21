@@ -13,8 +13,10 @@ import pytest
 
 from experiments.execution.tooling.b0p_e1_execution import (
     B0PE1ExecutionError,
+    _execution_status,
     _require_new_run_directory,
     _rq2_obligation_table,
+    _verify_e1_method_input,
     _verify_no_oracle_contamination,
     validate_e1_rq1_gate,
     validate_e1_sidecar_binding,
@@ -253,6 +255,57 @@ def test_oracle_contamination_and_historical_overwrite_are_rejected(tmp_path: Pa
     existing.mkdir()
     with pytest.raises(B0PE1ExecutionError, match="write-once"):
         _require_new_run_directory(existing)
+
+
+def test_e1_p_input_readback_requires_directory_and_exact_bindings(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import experiments.execution.tooling.b0p_e1_execution as e1
+
+    run_root = tmp_path / "run"
+    run_root.mkdir()
+    (run_root / "p-input").mkdir()
+    bundle = {"bundle_sha256": BUNDLE_SHA, "policy_source_revision": POLICY_REVISION}
+    calls: list[tuple[Path, str]] = []
+
+    def verify_method_input(path: Path, *, expected_method_id: str) -> dict[str, str]:
+        calls.append((path, expected_method_id))
+        return bundle
+
+    monkeypatch.setattr(e1, "verify_method_bundle_v3", verify_method_input)
+    evidence = {
+        "p_input_path": "p-input",
+        "p_input_bundle_sha256": BUNDLE_SHA,
+        "p_policy_source_revision": POLICY_REVISION,
+    }
+
+    assert _verify_e1_method_input(run_root, evidence) == bundle
+    assert calls == [(run_root / "p-input", "P")]
+
+    (run_root / "p-input-file").write_text("not a directory")
+    with pytest.raises(B0PE1ExecutionError, match="regular directory"):
+        _verify_e1_method_input(run_root, {**evidence, "p_input_path": "p-input-file"})
+    with pytest.raises(B0PE1ExecutionError, match="bundle digest changed"):
+        _verify_e1_method_input(run_root, {**evidence, "p_input_bundle_sha256": "b" * 64})
+
+
+def test_hold_is_a_completed_method_outcome_when_both_arms_and_evaluators_ran() -> None:
+    assert (
+        _execution_status(
+            {"docker_exit_status": 0},
+            {"docker_exit_status": 0, "prediction_status": "NOT_EMITTED_GOVERNANCE_HOLD"},
+            [{"evaluator_id": "import_linter"}, {"evaluator_id": "pytest_architecture"}],
+        )
+        == "EXECUTED_COMPLETE"
+    )
+    assert (
+        _execution_status(
+            {"docker_exit_status": 0},
+            {"docker_exit_status": 0},
+            [{"evaluator_id": "import_linter"}],
+        )
+        == "EXECUTED_PARTIAL"
+    )
 
 
 def test_hold_cannot_invoke_canonical_rq1_or_emit_score() -> None:

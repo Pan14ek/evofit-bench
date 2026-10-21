@@ -323,13 +323,7 @@ def verify_e1_execution(run_directory: Path, *, repository: Path | None = None) 
         or manifest["e1_evidence"]["p_policy_source_revision"] != f"PILOT02_TEST_ONLY_{root.name}"
     ):
         raise B0PE1ExecutionError("E1 TEST_ONLY sidecar failed readback verification")
-    p_bundle = verify_method_bundle_v3(
-        _safe(root, manifest["e1_evidence"]["p_input_path"]), expected_method_id="P"
-    )
-    if p_bundle["bundle_sha256"] != manifest["e1_evidence"]["p_input_bundle_sha256"]:
-        raise B0PE1ExecutionError("E1 P input bundle digest changed")
-    if p_bundle["policy_source_revision"] != manifest["e1_evidence"]["p_policy_source_revision"]:
-        raise B0PE1ExecutionError("E1 policy revision binding changed")
+    p_bundle = _verify_e1_method_input(root, manifest["e1_evidence"])
     validate_e1_sidecar_binding(
         sidecar,
         p_bundle,
@@ -905,7 +899,7 @@ def _build_manifest(
         "schema_version": 1,
         "study_id": "DEV-B0P-V1-E1",
         "run_id": run_root.name,
-        "execution_status": "EXECUTED_PARTIAL",
+        "execution_status": _execution_status(b0_execution, p_execution, evaluator_records),
         "exposure_class": "CALIBRATION_EXPOSED",
         "e0": {
             "run_id": "dev-b0p-20261020-execution-a04",
@@ -1037,3 +1031,30 @@ def _safe_dir(root: Path, relative: str) -> Path:
     if not resolved.is_relative_to(root.resolve(strict=True)) or not resolved.is_dir():
         raise B0PE1ExecutionError("E1 directory is outside its run or is not a regular directory")
     return resolved
+
+
+def _verify_e1_method_input(root: Path, evidence: Mapping[str, Any]) -> dict[str, Any]:
+    """Verify the P input directory and its exact digest and policy revision bindings."""
+    bundle = verify_method_bundle_v3(
+        _safe_dir(root, str(evidence["p_input_path"])), expected_method_id="P"
+    )
+    if bundle["bundle_sha256"] != evidence["p_input_bundle_sha256"]:
+        raise B0PE1ExecutionError("E1 P input bundle digest changed")
+    if bundle["policy_source_revision"] != evidence["p_policy_source_revision"]:
+        raise B0PE1ExecutionError("E1 policy revision binding changed")
+    return cast(dict[str, Any], bundle)
+
+
+def _execution_status(
+    b0_execution: Mapping[str, Any],
+    p_execution: Mapping[str, Any],
+    evaluator_records: list[Mapping[str, Any]],
+) -> str:
+    """Distinguish completed executions from missing arms or evaluator streams."""
+    if (
+        b0_execution.get("docker_exit_status") == 0
+        and p_execution.get("docker_exit_status") == 0
+        and len(evaluator_records) == 2
+    ):
+        return "EXECUTED_COMPLETE"
+    return "EXECUTED_PARTIAL"
