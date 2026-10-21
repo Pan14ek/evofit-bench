@@ -18,6 +18,12 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - `tooling/p_impact.py`
 - `EXP03_METHOD_INTEGRATION.md`
 - `EXP04_EVIDENCE_ADMISSION.md`
+- `MONO_A1_PROTOCOL_V1.md` — separate MONO-E0/E1/E2 preparation protocol, freeze-before-run reference custody, RQ mapping, denominator rules, control inventory, and W0/W2 stop conditions; no observed MONO results
+- `MONO_A1_RESULTS_TEMPLATE_UK.md` — Ukrainian report template with explicit UNKNOWN/NOT_RUN states and evidence placeholders
+- `schemas/mono_a1_study_v1.schema.json`
+- `schemas/mono_a1_reference_v1.schema.json`
+- `schemas/mono_a1_exact_pair_evidence_v1.schema.json`
+- `tooling/mono_a1.py` — additive MONO reference seal/readback, input isolation, W2 A1 exact-pair adapter, endpoint helpers, and archive readback; no actual trial runner
 - `schemas/exp03_method_integration_v1.schema.json`
 - `schemas/exp03_method_p_execution_trace_v1.schema.json`
 - `schemas/exp04_evidence_admission_v1.schema.json`
@@ -65,6 +71,16 @@ reference is copied outside the P method mounts, RQ1 is scored only after both
 outputs are sealed, and an abstaining P remains NOT_EVALUABLE without a
 manufactured prediction. Resource CPU/RSS remain UNKNOWN unless a sampler
 supplies real measurements.
+
+MONO-E1/E2 preparation uses its own `mono_a1` namespace: source-pinned,
+author-declared reference seals; exact-run predictions; complete mandatory
+denominators; pair sidecars; timing and RQ4 evidence; and checksum archives.
+`W2A1ExactPairReadbackVerifier` consumes the W2 versioned JSON report and
+invokes the exact pinned W2 checkout's `verify_evidence()` for byte readback.
+Its synthetic test fixture proves only the adapter contract, not evaluator or
+experiment outcomes. No MONO run is authorized until W0 freezes the required
+source revisions and resolves the A0/A0.1 versus A0.1/A1 transition conflict.
+These contracts do not change DA01, B0, Method P, or PR #25 results.
 
 The EXP-03 bridge in `scripts/exp03_method_bridge.py` reads validated EXP-02
 artifacts and optionally executes the verified V3 pipeline. EXP-02 execution

@@ -41,6 +41,9 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `b0p_development_execution_v1.schema.json` — separate source-bound execution continuation; preserves partial execution, P governance, unavailable scoring, runtime images and unknown metrics
 - `b0p_evidence_sufficient_execution_v1.schema.json` — additive, calibration-exposed E1 execution envelope with separate TEST_ONLY input binding and explicit RQ1/RQ2 states
 - `b0p_e1_rq2_obligation_evidence_v1.schema.json` — complete six-row denominator with per-obligation unknowns and no percentage when independent coverage is incomplete
+- `mono_a1_study_v1.schema.json` — additive MONO-E0/E1/E2 study record with explicit manuscript/legacy RQ mapping and separate endpoint states
+- `mono_a1_reference_v1.schema.json` — scorer-only, source-pinned MONO reference and complete target/obligation denominator
+- `mono_a1_exact_pair_evidence_v1.schema.json` — raw-artifact-bound exact-pair record; excludes self-declared production-authority scope
 
 This is a selected list, not a complete source inventory.
 
@@ -79,6 +82,12 @@ six public DA01 obligations and an explicit null coverage percentage when
 proof is incomplete. TEST_ONLY pair evidence can support only exact pairs
 whose source, evaluator, controls and artifact digests read back successfully;
 it does not establish production authority or full-method coverage.
+
+MONO-A1 schemas are a separate namespace and do not relax frozen DA01 or
+DEV-B0P-E1 contracts. Their study record is validated with the additional
+cross-field checks in `tooling/mono_a1.py`. The exact-pair schema has no
+production-authority enum; the independent W2 readback adapter is not yet
+integrated, so absent verifier evidence must remain UNKNOWN.
 
 ## PILOT-02 profile schema
 

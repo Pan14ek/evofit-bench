@@ -1,0 +1,282 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MONO-A1 B0/P study record v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "study_id", "study_status", "exposure", "architecture",
+    "methods", "architecture_facts", "obligations", "method_input_bundles",
+    "evaluator_artifacts", "reference", "arms", "exact_pair_evidence",
+    "rq_mapping", "endpoints", "evidence_archive"
+  ],
+  "properties": {
+    "schema_version": {"const": "mono-a1-study-v1"},
+    "study_id": {"enum": ["MONO-E0", "MONO-E1", "MONO-E2"]},
+    "study_status": {"enum": ["HISTORICAL", "PLANNED", "FROZEN", "EXECUTED", "SCORED", "BLOCKED"]},
+    "exposure": {"enum": ["KNOWN_SCENARIO_AUTHOR_DECLARED", "HISTORICAL_CALIBRATION"]},
+    "architecture": {
+      "type": "object", "additionalProperties": false,
+      "required": ["before", "after"],
+      "properties": {"before": {"$ref": "#/$defs/revision"}, "after": {"$ref": "#/$defs/revision"}}
+    },
+    "methods": {
+      "type": "object", "additionalProperties": false, "required": ["B0", "P"],
+      "properties": {"B0": {"$ref": "#/$defs/method"}, "P": {"$ref": "#/$defs/method"}}
+    },
+    "architecture_facts": {"type": "array", "items": {"$ref": "#/$defs/fact"}},
+    "obligations": {
+      "type": "object", "additionalProperties": false,
+      "required": ["universe", "required_obligation_ids", "unresolved_obligation_ids", "denominator_complete", "universe_sha256"],
+      "properties": {
+        "universe": {"type": "array", "items": {"$ref": "#/$defs/obligation"}},
+        "required_obligation_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "unresolved_obligation_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "denominator_complete": {"type": "boolean"},
+        "universe_sha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]}
+      }
+    },
+    "method_input_bundles": {"type": "array", "items": {"$ref": "#/$defs/input_bundle"}},
+    "evaluator_artifacts": {"type": "array", "items": {"$ref": "#/$defs/evaluator"}},
+    "reference": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "custody_status", "reference_sha256", "seal_path", "frozen_at_utc"],
+      "properties": {
+        "status": {"enum": ["NOT_FROZEN", "SEALED", "HISTORICAL_REFERENCE"]},
+        "custody_status": {"enum": ["AUTHOR_DECLARED", "NOT_ESTABLISHED", "HISTORICAL"]},
+        "reference_sha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+        "seal_path": {"type": ["string", "null"]},
+        "frozen_at_utc": {"type": ["string", "null"], "format": "date-time"}
+      }
+    },
+    "arms": {
+      "type": "object", "additionalProperties": false, "required": ["B0", "P"],
+      "properties": {"B0": {"$ref": "#/$defs/arm"}, "P": {"$ref": "#/$defs/arm"}}
+    },
+    "exact_pair_evidence": {"type": "array", "items": {"$ref": "#/$defs/exact_pair"}},
+    "rq_mapping": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "manuscript_RQ1", "manuscript_RQ2", "manuscript_RQ3", "manuscript_RQ4", "legacy_executable_RQ3", "legacy_executable_RQ4"],
+      "properties": {
+        "version": {"const": "MONO_A1_RQ_CROSSWALK_V1"},
+        "manuscript_RQ1": {"const": "impact_identification_and_operation_correctness"},
+        "manuscript_RQ2": {"const": "valid_obligation_coverage"},
+        "manuscript_RQ3": {"const": "adaptation_evaluation_verification_overhead"},
+        "manuscript_RQ4": {"const": "architecture_controls_negative_control_and_governance"},
+        "legacy_executable_RQ3": {"const": "controlled_degradation_detection"},
+        "legacy_executable_RQ4": {"const": "runtime_and_CI_overhead"}
+      }
+    },
+    "endpoints": {
+      "type": "object", "additionalProperties": false, "required": ["RQ1", "RQ2", "RQ3", "RQ4"],
+      "properties": {
+        "RQ1": {"$ref": "#/$defs/rq1"},
+        "RQ2": {"$ref": "#/$defs/rq2"},
+        "RQ3": {"$ref": "#/$defs/rq3"},
+        "RQ4": {"$ref": "#/$defs/rq4"}
+      }
+    },
+    "evidence_archive": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "archive_sha256", "inventory", "clean_extraction_readback"],
+      "properties": {
+        "status": {"enum": ["NOT_CREATED", "CREATED", "VERIFIED", "UNKNOWN"]},
+        "archive_sha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+        "inventory": {"type": "array", "items": {"$ref": "#/$defs/inventory_item"}},
+        "clean_extraction_readback": {"enum": ["NOT_RUN", "PASS", "FAIL", "UNKNOWN"]}
+      }
+    }
+  },
+  "$defs": {
+    "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "revision": {
+      "type": "object", "additionalProperties": false, "required": ["state_id", "commit_sha", "tree_sha"],
+      "properties": {
+        "state_id": {"type": ["string", "null"]},
+        "commit_sha": {"anyOf": [{"$ref": "#/$defs/sha1"}, {"type": "null"}]},
+        "tree_sha": {"anyOf": [{"$ref": "#/$defs/sha1"}, {"type": "null"}]}
+      }
+    },
+    "method": {
+      "type": "object", "additionalProperties": false,
+      "required": ["version", "source_sha", "configuration_id", "configuration_sha256"],
+      "properties": {
+        "version": {"type": ["string", "null"]},
+        "source_sha": {"anyOf": [{"$ref": "#/$defs/sha1"}, {"type": "null"}]},
+        "configuration_id": {"type": ["string", "null"]},
+        "configuration_sha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]}
+      }
+    },
+    "fact": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fact_id", "architecture_source_sha", "claim", "status", "evidence_artifact_id", "evidence_sha256"],
+      "properties": {
+        "fact_id": {"type": "string"}, "architecture_source_sha": {"$ref": "#/$defs/sha1"},
+        "claim": {"type": "string"}, "status": {"enum": ["VERIFIED", "UNKNOWN"]},
+        "evidence_artifact_id": {"type": "string"}, "evidence_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "exact_pair": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "evidence_id", "study_id", "run_id", "arm", "configuration_role", "configuration_sha256", "representation_id", "obligation_id", "architecture_source_sha", "evaluator", "execution", "inspection", "semantic_suitability", "compliance", "trust_scope", "raw_evidence_artifacts"],
+      "properties": {
+        "schema_version": {"const": "mono-a1-exact-pair-evidence-v1"}, "evidence_id": {"type": "string"},
+        "study_id": {"enum": ["MONO-E1", "MONO-E2"]}, "run_id": {"type": "string"},
+        "arm": {"enum": ["B0", "P"]},
+        "configuration_role": {"enum": ["B0_FROZEN", "P_PROPOSED_CANDIDATE", "P_GOVERNANCE_ACCEPTED"]},
+        "configuration_sha256": {"$ref": "#/$defs/sha256"}, "representation_id": {"type": "string"},
+        "obligation_id": {"type": "string"}, "architecture_source_sha": {"$ref": "#/$defs/sha1"},
+        "evaluator": {"type": "object"}, "execution": {"type": "object"}, "inspection": {"type": "object"},
+        "semantic_suitability": {"type": "object"}, "compliance": {"enum": ["COMPLIANT", "NONCOMPLIANT", "UNKNOWN"]},
+        "trust_scope": {"enum": ["TEST_ONLY", "DEVELOPMENT"]},
+        "raw_evidence_artifacts": {"type": "array", "items": {"$ref": "#/$defs/raw_artifact"}}
+      }
+    },
+    "target_pair": {
+      "type": "object", "additionalProperties": false,
+      "required": ["representation_id", "evaluator_id", "inspection_scope"],
+      "properties": {"representation_id": {"type": "string"}, "evaluator_id": {"type": "string"}, "inspection_scope": {"type": "string"}}
+    },
+    "obligation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["obligation_id", "applicability", "mandatory", "rationale", "applicability_fact_ids", "evidence_requirements", "required_exact_pairs"],
+      "properties": {
+        "obligation_id": {"type": "string"}, "applicability": {"enum": ["ACTIVE", "INACTIVE", "UNKNOWN"]},
+        "mandatory": {"type": "boolean"}, "rationale": {"type": "string"},
+        "applicability_fact_ids": {"type": "array", "items": {"type": "string"}},
+        "evidence_requirements": {"type": "array", "items": {"type": "string"}},
+        "required_exact_pairs": {"type": "array", "items": {"$ref": "#/$defs/target_pair"}}
+      }
+    },
+    "evaluator": {
+      "type": "object", "additionalProperties": false,
+      "required": ["evaluator_id", "source_sha", "tree_sha", "artifact_sha256", "configuration_sha256", "capabilities", "inspection_scope"],
+      "properties": {
+        "evaluator_id": {"type": "string"}, "source_sha": {"$ref": "#/$defs/sha1"},
+        "tree_sha": {"$ref": "#/$defs/sha1"}, "artifact_sha256": {"$ref": "#/$defs/sha256"},
+        "configuration_sha256": {"$ref": "#/$defs/sha256"}, "capabilities": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "inspection_scope": {"type": "string"}
+      }
+    },
+    "input_bundle": {
+      "type": "object", "additionalProperties": false,
+      "required": ["arm", "bundle_id", "bundle_sha256", "allowlist_sha256", "reference_excluded", "oracle_excluded", "other_arm_excluded"],
+      "properties": {
+        "arm": {"enum": ["B0", "P"]}, "bundle_id": {"type": "string"},
+        "bundle_sha256": {"$ref": "#/$defs/sha256"}, "allowlist_sha256": {"$ref": "#/$defs/sha256"},
+        "reference_excluded": {"const": true}, "oracle_excluded": {"const": true}, "other_arm_excluded": {"const": true}
+      }
+    },
+    "source_image": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "source_sha", "image_digest", "attestation_sha256", "reason"],
+      "properties": {
+        "status": {"enum": ["VERIFIED", "UNVERIFIED", "INVALID", "NOT_APPLICABLE"]},
+        "source_sha": {"anyOf": [{"$ref": "#/$defs/sha1"}, {"type": "null"}]},
+        "image_digest": {"type": ["string", "null"]},
+        "attestation_sha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+        "reason": {"type": ["string", "null"]}
+      }
+    },
+    "arm": {
+      "type": "object", "additionalProperties": false,
+      "required": ["run_id", "execution_started_at_utc", "execution_status", "prediction_status", "prediction_sha256", "candidate_validation", "governance_status", "source_image_provenance"],
+      "properties": {
+        "run_id": {"type": ["string", "null"]},
+        "execution_started_at_utc": {"type": ["string", "null"], "format": "date-time"},
+        "execution_status": {"enum": ["NOT_RUN", "COMPLETED", "FAILED", "HISTORICAL"]},
+        "prediction_status": {"enum": ["NOT_EMITTED", "SEALED", "NOT_EMITTED_GOVERNANCE_HOLD", "HISTORICAL_REFERENCE"]},
+        "prediction_sha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+        "candidate_validation": {"enum": ["NOT_RUN", "VALID", "INVALID", "UNKNOWN", "NOT_APPLICABLE"]},
+        "governance_status": {"enum": ["NOT_RUN", "ACCEPT", "REJECT", "HOLD", "UNKNOWN", "HISTORICAL"]},
+        "source_image_provenance": {"$ref": "#/$defs/source_image"}
+      }
+    },
+    "operation_confusion": {
+      "type": "object", "additionalProperties": false, "required": ["retain", "add", "replace", "deactivate", "adjust"],
+      "properties": {
+        "retain": {"$ref": "#/$defs/operation_row"}, "add": {"$ref": "#/$defs/operation_row"},
+        "replace": {"$ref": "#/$defs/operation_row"}, "deactivate": {"$ref": "#/$defs/operation_row"},
+        "adjust": {"$ref": "#/$defs/operation_row"}
+      }
+    },
+    "operation_row": {
+      "type": "object", "additionalProperties": false, "required": ["retain", "add", "replace", "deactivate", "adjust"],
+      "properties": {"retain": {"type": ["integer", "null"], "minimum": 0}, "add": {"type": ["integer", "null"], "minimum": 0}, "replace": {"type": ["integer", "null"], "minimum": 0}, "deactivate": {"type": ["integer", "null"], "minimum": 0}, "adjust": {"type": ["integer", "null"], "minimum": 0}}
+    },
+    "score": {
+      "type": "object", "additionalProperties": false,
+      "required": ["TP", "FP_in", "FP_extra", "FN", "TN", "precision", "recall", "F1", "operation_accuracy", "operation_confusion", "target_count"],
+      "properties": {
+        "TP": {"type": ["integer", "null"], "minimum": 0}, "FP_in": {"type": ["integer", "null"], "minimum": 0},
+        "FP_extra": {"type": ["integer", "null"], "minimum": 0}, "FN": {"type": ["integer", "null"], "minimum": 0},
+        "TN": {"type": ["integer", "null"], "minimum": 0}, "precision": {"type": ["number", "null"]},
+        "recall": {"type": ["number", "null"]}, "F1": {"type": ["number", "null"]},
+        "operation_accuracy": {"type": ["number", "null"]}, "operation_confusion": {"$ref": "#/$defs/operation_confusion"},
+        "target_count": {"type": ["integer", "null"], "minimum": 0}
+      }
+    },
+    "rq1": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "scorer_invoked", "reason", "B0", "P"],
+      "properties": {
+        "status": {"enum": ["NOT_EVALUABLE", "SCORED", "DIAGNOSTIC_ONLY"]}, "scorer_invoked": {"type": "boolean"},
+        "reason": {"type": ["string", "null"]}, "B0": {"$ref": "#/$defs/score"}, "P": {"$ref": "#/$defs/score"}
+      }
+    },
+    "rq2_row": {
+      "type": "object", "additionalProperties": false,
+      "required": ["obligation_id", "B0", "P_candidate_potential", "P_governance_accepted"],
+      "properties": {
+        "obligation_id": {"type": "string"},
+        "B0": {"enum": ["COVERED", "DIAGNOSTIC_ONLY", "UNKNOWN", "ABSENT"]},
+        "P_candidate_potential": {"enum": ["COVERED", "DIAGNOSTIC_ONLY", "UNKNOWN", "ABSENT"]},
+        "P_governance_accepted": {"enum": ["COVERED", "DIAGNOSTIC_ONLY", "UNKNOWN", "ABSENT"]}
+      }
+    },
+    "rq2": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "denominator_complete", "denominator_obligation_ids", "B0_coverage_percentage", "P_candidate_potential_coverage_percentage", "P_governance_accepted_coverage_percentage", "rows"],
+      "properties": {
+        "status": {"enum": ["SCORED", "UNKNOWN", "NOT_EVALUABLE"]}, "denominator_complete": {"type": "boolean"},
+        "denominator_obligation_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "B0_coverage_percentage": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+        "P_candidate_potential_coverage_percentage": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+        "P_governance_accepted_coverage_percentage": {"type": ["number", "null"], "minimum": 0, "maximum": 100},
+        "rows": {"type": "array", "items": {"$ref": "#/$defs/rq2_row"}}
+      }
+    },
+    "timings": {
+      "type": "object", "additionalProperties": false,
+      "required": ["adaptation_ns", "evaluator_ns", "verification_ns", "total_ns"],
+      "properties": {"adaptation_ns": {"type": ["integer", "null"], "minimum": 0}, "evaluator_ns": {"type": ["integer", "null"], "minimum": 0}, "verification_ns": {"type": ["integer", "null"], "minimum": 0}, "total_ns": {"type": ["integer", "null"], "minimum": 0}}
+    },
+    "resource": {
+      "type": "object", "additionalProperties": false,
+      "required": ["cpu_status", "cpu_millicores", "rss_status", "rss_bytes"],
+      "properties": {"cpu_status": {"enum": ["MEASURED", "NOT_COLLECTED", "UNKNOWN"]}, "cpu_millicores": {"type": ["number", "null"], "minimum": 0}, "rss_status": {"enum": ["MEASURED", "NOT_COLLECTED", "UNKNOWN"]}, "rss_bytes": {"type": ["integer", "null"], "minimum": 0}}
+    },
+    "rq3": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "timing_boundary_id", "B0", "P", "resource_measurements"],
+      "properties": {"status": {"enum": ["UNKNOWN", "DESCRIPTIVE", "NOT_COLLECTED", "NOT_COMPARABLE"]}, "timing_boundary_id": {"type": ["string", "null"]}, "B0": {"$ref": "#/$defs/timings"}, "P": {"$ref": "#/$defs/timings"}, "resource_measurements": {"$ref": "#/$defs/resource"}}
+    },
+    "control": {
+      "type": "object", "additionalProperties": false,
+      "required": ["control_id", "status", "source_sha", "evaluator_id", "execution_sha256", "raw_evidence_sha256", "inspected_item_count", "reason"],
+      "properties": {"control_id": {"type": "string"}, "status": {"enum": ["NOT_RUN", "PASS", "FAIL", "UNKNOWN", "NOT_APPLICABLE"]}, "source_sha": {"anyOf": [{"$ref": "#/$defs/sha1"}, {"type": "null"}]}, "evaluator_id": {"type": ["string", "null"]}, "execution_sha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]}, "raw_evidence_sha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]}, "inspected_item_count": {"type": ["integer", "null"], "minimum": 0}, "reason": {"type": ["string", "null"]}}
+    },
+    "rq4": {
+      "type": "object", "additionalProperties": false, "required": ["status", "controls"],
+      "properties": {"status": {"enum": ["PASS", "FAIL", "PARTIAL", "UNKNOWN", "NOT_RUN"]}, "controls": {"type": "array", "items": {"$ref": "#/$defs/control"}}}
+    },
+    "raw_artifact": {
+      "type": "object", "additionalProperties": false, "required": ["artifact_id", "path", "sha256"],
+      "properties": {"artifact_id": {"type": "string"}, "path": {"type": "string", "minLength": 1}, "sha256": {"$ref": "#/$defs/sha256"}}
+    },
+    "inventory_item": {
+      "type": "object", "additionalProperties": false, "required": ["path", "sha256", "size_bytes"],
+      "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"$ref": "#/$defs/sha256"}, "size_bytes": {"type": "integer", "minimum": 0}}
+    }
+  }
+}

@@ -5,6 +5,24 @@ allowlisted method-input bundles, a network-isolated container launcher, write-o
 prediction sealing, independent semantic-evidence assessment, and generic RQ1/RQ2
 scoring. It does not execute measured DA01 B0/B1/P trials.
 
+## MONO-A1 monograph evaluation preparation
+
+`MONO_A1_PROTOCOL_V1.md` defines the separate MONO-E0/E1/E2 namespace, RQ
+crosswalk, freeze-before-run custody process, common RQ2 denominator, and
+source/evaluator evidence requirements. The additive contracts are
+`schemas/mono_a1_study_v1.schema.json`,
+`schemas/mono_a1_reference_v1.schema.json`, and
+`schemas/mono_a1_exact_pair_evidence_v1.schema.json`; the synthetic custody and
+scoring helpers are in `tooling/mono_a1.py`.
+
+These contracts do not alter DA01 or the DEV-B0P-E1 calibration. They do not
+execute MONO-E1/E2. W2 Draft PR #28 defines the report interface consumed by
+`W2A1ExactPairReadbackVerifier`; use the evaluator's exact pinned checkout for
+readback. Missing or mismatched evaluator bytes keep exact-pair results
+UNKNOWN. W0 must still freeze the architecture states and ΔA4 checkpoint. The
+Ukrainian reporting template is
+[`MONO_A1_RESULTS_TEMPLATE_UK.md`](MONO_A1_RESULTS_TEMPLATE_UK.md).
+
 ## Method boundaries
 
 ```mermaid

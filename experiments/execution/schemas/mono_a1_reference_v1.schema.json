@@ -1,0 +1,389 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MONO-A1 scorer-only reference v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "study_id",
+    "reference_id",
+    "exposure",
+    "custody_status",
+    "author_id",
+    "prepared_before_method_execution",
+    "architecture",
+    "methods",
+    "architecture_facts",
+    "target_universe",
+    "obligation_universe",
+    "obligation_denominator",
+    "evaluator_artifacts"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "mono-a1-reference-v1"
+    },
+    "study_id": {
+      "enum": [
+        "MONO-E1",
+        "MONO-E2"
+      ]
+    },
+    "reference_id": {
+      "type": "string",
+      "pattern": "^MONO_E[12]_REFERENCE_V1$"
+    },
+    "exposure": {
+      "const": "KNOWN_SCENARIO_AUTHOR_DECLARED"
+    },
+    "custody_status": {
+      "const": "AUTHOR_DECLARED"
+    },
+    "author_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "prepared_before_method_execution": {
+      "const": true
+    },
+    "architecture": {
+      "type": "object",
+      "required": [
+        "before",
+        "after"
+      ],
+      "properties": {
+        "before": {
+          "$ref": "#/$defs/revision"
+        },
+        "after": {
+          "$ref": "#/$defs/revision"
+        }
+      },
+      "additionalProperties": false
+    },
+    "methods": {
+      "type": "object",
+      "required": [
+        "B0",
+        "P"
+      ],
+      "properties": {
+        "B0": {
+          "$ref": "#/$defs/method"
+        },
+        "P": {
+          "$ref": "#/$defs/method"
+        }
+      },
+      "additionalProperties": false
+    },
+    "architecture_facts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/fact"
+      }
+    },
+    "target_universe": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/target"
+      }
+    },
+    "obligation_universe": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/obligation"
+      }
+    },
+    "obligation_denominator": {
+      "type": "object",
+      "required": [
+        "required_obligation_ids",
+        "unresolved_obligation_ids",
+        "complete"
+      ],
+      "properties": {
+        "required_obligation_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "unresolved_obligation_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "complete": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "evaluator_artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evaluator"
+      }
+    }
+  },
+  "$defs": {
+    "sha1": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "revision": {
+      "type": "object",
+      "required": [
+        "state_id",
+        "commit_sha",
+        "tree_sha"
+      ],
+      "properties": {
+        "state_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit_sha": {
+          "$ref": "#/$defs/sha1"
+        },
+        "tree_sha": {
+          "$ref": "#/$defs/sha1"
+        }
+      },
+      "additionalProperties": false
+    },
+    "method": {
+      "type": "object",
+      "required": [
+        "version",
+        "source_sha",
+        "configuration_id",
+        "configuration_sha256"
+      ],
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "source_sha": {
+          "$ref": "#/$defs/sha1"
+        },
+        "configuration_id": {
+          "type": "string"
+        },
+        "configuration_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "additionalProperties": false
+    },
+    "fact": {
+      "type": "object",
+      "required": [
+        "fact_id",
+        "architecture_source_sha",
+        "claim",
+        "status",
+        "evidence_artifact_id",
+        "evidence_sha256"
+      ],
+      "properties": {
+        "fact_id": {
+          "type": "string"
+        },
+        "architecture_source_sha": {
+          "$ref": "#/$defs/sha1"
+        },
+        "claim": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "VERIFIED",
+            "UNKNOWN"
+          ]
+        },
+        "evidence_artifact_id": {
+          "type": "string"
+        },
+        "evidence_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "required": [
+        "target_type",
+        "target_id",
+        "expected_disposition",
+        "expected_operation",
+        "rationale",
+        "source_fact_ids"
+      ],
+      "properties": {
+        "target_type": {
+          "enum": [
+            "representation",
+            "obligation"
+          ]
+        },
+        "target_id": {
+          "type": "string"
+        },
+        "expected_disposition": {
+          "enum": [
+            "AFFECTED",
+            "UNAFFECTED"
+          ]
+        },
+        "expected_operation": {
+          "enum": [
+            "retain",
+            "add",
+            "replace",
+            "deactivate",
+            "adjust"
+          ]
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "source_fact_ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "pair": {
+      "type": "object",
+      "required": [
+        "representation_id",
+        "evaluator_id",
+        "inspection_scope"
+      ],
+      "properties": {
+        "representation_id": {
+          "type": "string"
+        },
+        "evaluator_id": {
+          "type": "string"
+        },
+        "inspection_scope": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "obligation": {
+      "type": "object",
+      "required": [
+        "obligation_id",
+        "applicability",
+        "mandatory",
+        "rationale",
+        "applicability_fact_ids",
+        "evidence_requirements",
+        "required_exact_pairs"
+      ],
+      "properties": {
+        "obligation_id": {
+          "type": "string"
+        },
+        "applicability": {
+          "enum": [
+            "ACTIVE",
+            "INACTIVE",
+            "UNKNOWN"
+          ]
+        },
+        "mandatory": {
+          "type": "boolean"
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "applicability_fact_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evidence_requirements": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "required_exact_pairs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/pair"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "evaluator": {
+      "type": "object",
+      "required": [
+        "evaluator_id",
+        "version",
+        "source_sha",
+        "tree_sha",
+        "artifact_sha256",
+        "configuration_sha256",
+        "capabilities",
+        "inspection_scope"
+      ],
+      "properties": {
+        "evaluator_id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_sha": {
+          "$ref": "#/$defs/sha1"
+        },
+        "tree_sha": {
+          "$ref": "#/$defs/sha1"
+        },
+        "artifact_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "configuration_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "capabilities": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "inspection_scope": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
