@@ -42,7 +42,9 @@ def test_requires_concrete_w1_contract_tests_for_complete_stage(tmp_path: Path) 
     assert stage.detect_stage(tmp_path) == stage.A02
 
 
-def test_historical_pin_rejects_unknown_commit(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_historical_pin_rejects_unknown_commit(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     def wrong_commit(_root: Path, *_args: str) -> str:
         return "0" * 40
 
@@ -51,7 +53,9 @@ def test_historical_pin_rejects_unknown_commit(monkeypatch: pytest.MonkeyPatch, 
         stage.verify_historical_pin(tmp_path)
 
 
-def test_historical_pin_rejects_stale_app_tree(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_historical_pin_rejects_stale_app_tree(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     def changed_tree(_root: Path, *args: str) -> str:
         return stage.HISTORICAL_A01_SHA if "^{commit}" in args[-1] else "0" * 40
 
