@@ -4,12 +4,13 @@
 pending. `tests/integration/test_a1_domain_events.py` exercises actual
 PostgreSQL-backed Notification persistence through the synchronous dispatcher,
 an injected post-insert handler failure, caller-owned rollback, and recovery.
-It does not claim that the current A0.1 Task operations use domain events or
-that Task/Notification/Audit REST atomicity has been verified.
+It does not claim that current Task operations use domain events or that
+Task/Notification/Audit REST atomicity has been verified.
 
 ## Scope and prerequisites
 
-The preparation tests may run before Task service wiring: they dispatch a
+The W1 ΔA2 `notifications.public` facade is part of the current integration
+base. The preparation tests dispatch a
 `TaskAssignedV1` directly through the registered Notification handler and use
 the integration fixture's real PostgreSQL session factory. They assert the row
 is visible on the caller's connection before commit, survives commit, is absent
@@ -57,8 +58,7 @@ Implemented in `tests/integration/test_a1_domain_events.py`:
 These are PostgreSQL preparation checks, not final Task service integration.
 The tests have a guard requiring `TEST_DATABASE_URL` to name a database
 containing `evofit` before the shared fixture resets its `public` schema. They
-skip until W1's approved `notifications.public` facade is integrated, then can
-run before ΔA6 Task-service wiring.
+run before ΔA6 Task-service wiring and do not call Task endpoints.
 
 ### Successful assignment
 

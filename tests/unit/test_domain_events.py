@@ -2,7 +2,6 @@
 
 import asyncio
 from threading import get_ident
-from types import SimpleNamespace
 from unittest.mock import MagicMock
 from uuid import UUID
 
@@ -21,8 +20,8 @@ from app.events.dispatcher import (
     EventDispatcher,
     MissingEventHandlerError,
 )
-from app.modules import notifications as notifications_module
 from app.modules.notifications import event_handlers
+from app.modules.notifications import public as notifications_public
 from app.modules.tasks.model import TaskStatus
 
 TASK_ID = UUID("00000000-0000-0000-0000-000000000001")
@@ -198,12 +197,7 @@ def test_notification_handlers_preserve_existing_notification_contract(
     expected_message: str,
 ) -> None:
     create_notification = MagicMock()
-    monkeypatch.setattr(
-        notifications_module,
-        "public",
-        SimpleNamespace(create_notification=create_notification),
-        raising=False,
-    )
+    monkeypatch.setattr(notifications_public, "create_notification", create_notification)
     session = MagicMock(spec=Session)
 
     if isinstance(event, TaskAssignedV1):
@@ -220,12 +214,7 @@ def test_unassigned_status_change_does_not_create_notification(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     create_notification = MagicMock()
-    monkeypatch.setattr(
-        notifications_module,
-        "public",
-        SimpleNamespace(create_notification=create_notification),
-        raising=False,
-    )
+    monkeypatch.setattr(notifications_public, "create_notification", create_notification)
     event = TaskStatusChangedV1(
         task_id=TASK_ID,
         actor_id=ACTOR_ID,
@@ -260,12 +249,7 @@ def test_notification_bootstrap_is_idempotent(monkeypatch: pytest.MonkeyPatch) -
     dispatcher = EventDispatcher()
     session = MagicMock(spec=Session)
     create_notification = MagicMock()
-    monkeypatch.setattr(
-        notifications_module,
-        "public",
-        SimpleNamespace(create_notification=create_notification),
-        raising=False,
-    )
+    monkeypatch.setattr(notifications_public, "create_notification", create_notification)
     event = TaskAssignedV1(task_id=TASK_ID, assignee_id=ASSIGNEE_ID, actor_id=ACTOR_ID)
 
     event_handlers.register_notification_handlers(dispatcher)

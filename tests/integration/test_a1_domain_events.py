@@ -6,7 +6,6 @@ pending W0 authorization of the integrated ΔA6 source state.
 """
 
 import os
-from importlib.util import find_spec
 from typing import Any, cast
 from uuid import UUID, uuid4
 
@@ -24,9 +23,7 @@ from app.modules.notifications.model import Notification
 
 @pytest.fixture(autouse=True)
 def require_disposable_evofit_database() -> None:
-    """Wait for W1's facade and guard before the fixture resets the public schema."""
-    if find_spec("app.modules.notifications.public") is None:
-        pytest.skip("requires the approved notifications.public facade from W1 ΔA2")
+    """Guard the shared integration fixture before it resets the public schema."""
     database_url = os.environ.get("TEST_DATABASE_URL")
     if not database_url:
         pytest.skip("TEST_DATABASE_URL must point to a disposable PostgreSQL database")
