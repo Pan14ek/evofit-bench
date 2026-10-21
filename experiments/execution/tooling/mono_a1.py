@@ -11,13 +11,14 @@ import json
 import os
 import re
 import stat
-import subprocess  # nosec B404 - fixed Git argv, no shell
+import subprocess  # nosec B404
 import sys
 import tempfile
 import zipfile
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path, PurePosixPath
+from shutil import which
 from typing import Any, Protocol, cast
 
 from experiments.execution.tooling.contracts import validate_payload, validate_prediction
@@ -446,16 +447,21 @@ def verify_source_revision(repository: Path, commit_sha: str, tree_sha: str) -> 
     """Require a Git commit and exact tree object matching the declared revision."""
     if not SHA1_RE.fullmatch(commit_sha) or not SHA1_RE.fullmatch(tree_sha):
         raise MonoA1Error("Source commit and tree identities must be full lowercase Git SHAs")
+    git_executable = which("git")
+    if git_executable is None:
+        raise MonoA1Error("Git executable is unavailable for pinned source verification")
     try:
         root = repository.resolve(strict=True)
-        commit = subprocess.run(  # noqa: S603 - fixed Git argv and validated full SHA
-            ["git", "-C", str(root), "rev-parse", "--verify", f"{commit_sha}^{{commit}}"],  # noqa: S607
+        # Use only the resolved Git binary and literal rev-parse arguments; never invoke a shell.
+        commit = subprocess.run(  # noqa: S603  # nosec B603
+            [git_executable, "-C", str(root), "rev-parse", "--verify", f"{commit_sha}^{{commit}}"],
             capture_output=True,
             check=True,
             text=True,
         ).stdout.strip()
-        tree = subprocess.run(  # noqa: S603 - fixed Git argv and validated full SHA
-            ["git", "-C", str(root), "rev-parse", "--verify", f"{commit_sha}^{{tree}}"],  # noqa: S607
+        # The validated full SHA is data to Git, not a command or option fragment.
+        tree = subprocess.run(  # noqa: S603  # nosec B603
+            [git_executable, "-C", str(root), "rev-parse", "--verify", f"{commit_sha}^{{tree}}"],
             capture_output=True,
             check=True,
             text=True,
@@ -472,16 +478,20 @@ def _checkout_matches(repository: Path, commit_sha: str, tree_sha: str | None) -
     """Require a checkout to be at the requested commit and, when supplied, tree."""
     if repository.is_symlink() or not SHA1_RE.fullmatch(commit_sha):
         return False
+    git_executable = which("git")
+    if git_executable is None:
+        return False
     try:
         root = repository.resolve(strict=True)
-        head = subprocess.run(  # noqa: S603 - fixed Git argv, no shell
-            ["git", "-C", str(root), "rev-parse", "--verify", "HEAD"],  # noqa: S607
+        # Read only the current commit and its tree with fixed rev-parse arguments.
+        head = subprocess.run(  # noqa: S603  # nosec B603
+            [git_executable, "-C", str(root), "rev-parse", "--verify", "HEAD"],
             capture_output=True,
             check=True,
             text=True,
         ).stdout.strip()
-        tree = subprocess.run(  # noqa: S603 - fixed Git argv, no shell
-            ["git", "-C", str(root), "rev-parse", "--verify", "HEAD^{tree}"],  # noqa: S607
+        tree = subprocess.run(  # noqa: S603  # nosec B603
+            [git_executable, "-C", str(root), "rev-parse", "--verify", "HEAD^{tree}"],
             capture_output=True,
             check=True,
             text=True,
