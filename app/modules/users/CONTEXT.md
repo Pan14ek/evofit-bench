@@ -12,13 +12,15 @@ User identity creation/read with unique normalized email.
 - `__init__.py`
 - `api.py`
 - `model.py`
+- `public.py` — `user_exists` exposes identity existence without exposing the ORM model.
 - `repository.py`
 - `schemas.py`
 - `service.py`
 
 ## Established conventions
 
-Creation and audit are committed atomically.
+Creation and audit are committed atomically. Other modules check identity through `public.py`;
+this module owns the repository lookup.
 
 ## Constraints and known gaps
 

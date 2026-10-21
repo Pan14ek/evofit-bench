@@ -12,7 +12,8 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `p_applicability_support.py`
 - `test_domain_events.py` — event payload validation, deterministic synchronous
   dispatch, registration, propagation, and caller-session ownership
-- `test_architecture_stage_checks.py` — preserves the historical pin, rejects partial interfaces and dirty source, and bounds the W4 preparation overlay to exact paths and focused checks.
+- `test_module_public_apis.py` — ΔA2 facade exports, shared `TaskSummary` type, delegated semantics and import-boundary regression
+- `test_architecture_stage_checks.py` — rejects missing/partial interfaces, stale historical pin, unexpected stage, dirty source and vacuous stage test selection.
 - `test_da01_execution.py`
 - `test_da01_inputs_and_isolation.py`
 - `test_experiment_evidence.py`
@@ -39,8 +40,9 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_b0p_development.py`
 - `test_b0p_execution.py` — prediction/source/bundle bindings, tamper rejection, P HOLD markers, no-scorer reference rules, unknown denominator/resource metrics, evaluator identity, write-once checks, append-only checksum inventories, and B0/P candidate-validation propagation into direct manifest assembly
 - `test_b0p_e1_execution.py` — exact-run sidecar/signature/source bindings, independent Git fact readback, run-contained semantic-directory readback, complete six-row UNKNOWN RQ2, candidate diagnostics under HOLD, oracle contamination, write-once behavior, and RQ1 abstention gating
+- `test_mono_a1.py` — synthetic MONO reference seals/source pins, E2 predecessor/A0 SHA/final-state negative schema cases and Git-object seal rejection, RQ1 prediction seals/abstention, RQ2 denominator/exact-pair/verifier boundary and TEST_ONLY separation, timer/source-image gaps, isolation, and clean archive readback
 
-This is a selected list (15 direct tracked files), not a complete source inventory.
+This is a selected list of direct tracked files, not a complete source inventory.
 
 ## Established conventions
 
@@ -64,6 +66,11 @@ descriptor authorization. Verifier-sidecar tests bind signed evidence to source
 digests and immutable snapshots, including V1 compatibility and V2 replay
 rejection. The G1 register test audits required decision IDs and pending gate
 status; it cannot approve a decision.
+
+`test_mono_a1.py` exercises preparation contracts only. Its synthetic Git
+SHAs, raw records, and verifier adapter are not MONO-E1/E2 observations or W2
+evaluator evidence. Requirement traceability is in
+`experiments/execution/MONO_A1_PROTOCOL_V1.md`.
 
 ## Constraints and known gaps
 
