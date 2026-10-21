@@ -10,11 +10,12 @@ from __future__ import annotations
 import argparse
 import io
 import os
-from pathlib import Path
 import subprocess
 import sys
 import tarfile
 import tempfile
+from pathlib import Path
+import shutil
 
 HISTORICAL_A01_SHA = "3fdd5c68f8f60fad5757eefa66cc2aa8b24d9306"
 HISTORICAL_APP_TREE = "cdff9a6c3cee870e1eca2a5f5f3eb3202b0b1f08"
@@ -29,8 +30,11 @@ class StageCheckError(RuntimeError):
 
 
 def _git(root: Path, *arguments: str) -> str:
-    result = subprocess.run(
-        ["git", "-C", str(root), *arguments],
+    git = shutil.which("git")
+    if git is None:
+        raise StageCheckError("Git executable unavailable")
+    result = subprocess.run(  # noqa: S603 - fixed Git subcommands, no shell
+        [git, "-C", str(root), *arguments],
         check=False,
         capture_output=True,
         text=True,
@@ -55,7 +59,9 @@ def detect_stage(root: Path) -> str:
         raise StageCheckError(f"Partial public API modules: {present}; expected all {MODULES}")
     contract_test = root / "tests/unit/test_module_public_apis.py"
     if not contract_test.is_file():
-        raise StageCheckError(f"New public interfaces lack mandatory contract tests: {contract_test}")
+        raise StageCheckError(
+            f"New public interfaces lack mandatory contract tests: {contract_test}"
+        )
     return A02
 
 
@@ -87,7 +93,7 @@ def _run_pytest(root: Path, testpaths: list[str], *, historical: bool) -> None:
         *testpaths,
     ]
     print(f"[stage-ci] pytest cwd={root} targets={testpaths}", flush=True)
-    result = subprocess.run(command, cwd=root, env=env, check=False)
+    result = subprocess.run(command, cwd=root, env=env, check=False)  # noqa: S603
     if result.returncode:
         raise StageCheckError(f"Architecture pytest failed ({result.returncode}) for {testpaths}")
 
@@ -100,9 +106,12 @@ def historical_a01_acceptance(repo: Path) -> None:
         f"app_tree={HISTORICAL_APP_TREE}",
         flush=True,
     )
-    process = subprocess.run(
+    git = shutil.which("git")
+    if git is None:
+        raise StageCheckError("Git executable unavailable")
+    process = subprocess.run(  # noqa: S603 - fixed Git archive inputs, no shell
         [
-            "git", "-C", str(repo), "archive", "--format=tar", HISTORICAL_A01_SHA,
+            git, "-C", str(repo), "archive", "--format=tar", HISTORICAL_A01_SHA,
             "app", "architecture/states/A0_1_CAPABILITY_MODULES.yaml",
             "tests/architecture", "pyproject.toml",
         ],
@@ -118,7 +127,10 @@ def historical_a01_acceptance(repo: Path) -> None:
             archive.extractall(checkout, filter="data")
         _run_pytest(
             checkout,
-            ["tests/architecture/test_module_structure.py", "tests/architecture/test_layer_rules.py"],
+            [
+                "tests/architecture/test_module_structure.py",
+                "tests/architecture/test_layer_rules.py",
+            ],
             historical=True,
         )
     print("[stage-ci] HISTORICAL_A01 PASS (6 exact historical tests)", flush=True)
@@ -140,7 +152,10 @@ def current_stage_acceptance(repo: Path, *, requested_stage: str) -> str:
     if current == A01:
         if _git(repo, "rev-parse", "HEAD:app") != HISTORICAL_APP_TREE:
             raise StageCheckError("Claimed A0.1 stage has a nonhistorical app tree")
-        checks = ["tests/architecture/test_module_structure.py", "tests/architecture/test_layer_rules.py"]
+        checks = [
+            "tests/architecture/test_module_structure.py",
+            "tests/architecture/test_layer_rules.py",
+        ]
     else:
         checks = ["tests/architecture/test_layer_rules.py", "tests/unit/test_module_public_apis.py"]
         new_tests = repo / "tests/architecture/a1/test_evaluators.py"
