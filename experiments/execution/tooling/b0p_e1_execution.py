@@ -341,8 +341,9 @@ def verify_e1_execution(run_directory: Path, *, repository: Path | None = None) 
     ):
         raise B0PE1ExecutionError("E1 Method P isolation or reference exclusion failed")
     if repository_root:
-        pairs = load_verified_pair_inputs(
-            _safe(root, manifest["e1_evidence"]["semantic_verification_path"]),
+        pairs = _load_e1_semantic_pairs(
+            root,
+            manifest["e1_evidence"],
             repository_root=repository_root,
             expected_architecture_source_sha=manifest["source_revisions"]["architecture_after_sha"],
         )
@@ -1043,6 +1044,21 @@ def _verify_e1_method_input(root: Path, evidence: Mapping[str, Any]) -> dict[str
     if bundle["policy_source_revision"] != evidence["p_policy_source_revision"]:
         raise B0PE1ExecutionError("E1 policy revision binding changed")
     return cast(dict[str, Any], bundle)
+
+
+def _load_e1_semantic_pairs(
+    root: Path,
+    evidence: Mapping[str, Any],
+    *,
+    repository_root: Path,
+    expected_architecture_source_sha: str,
+) -> list[dict[str, Any]]:
+    """Read exact-pair proofs from the copied, run-contained verification directory."""
+    return load_verified_pair_inputs(
+        _safe_dir(root, str(evidence["semantic_verification_path"])),
+        repository_root=repository_root,
+        expected_architecture_source_sha=expected_architecture_source_sha,
+    )
 
 
 def _execution_status(

@@ -14,6 +14,7 @@ import pytest
 from experiments.execution.tooling.b0p_e1_execution import (
     B0PE1ExecutionError,
     _execution_status,
+    _load_e1_semantic_pairs,
     _require_new_run_directory,
     _rq2_obligation_table,
     _verify_e1_method_input,
@@ -287,6 +288,59 @@ def test_e1_p_input_readback_requires_directory_and_exact_bindings(
         _verify_e1_method_input(run_root, {**evidence, "p_input_path": "p-input-file"})
     with pytest.raises(B0PE1ExecutionError, match="bundle digest changed"):
         _verify_e1_method_input(run_root, {**evidence, "p_input_bundle_sha256": "b" * 64})
+
+
+def test_e1_semantic_pair_readback_requires_run_contained_directory(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import experiments.execution.tooling.b0p_e1_execution as e1
+
+    run_root = tmp_path / "run"
+    semantic_root = run_root / "semantic-verification"
+    semantic_root.mkdir(parents=True)
+    evidence = {"semantic_verification_path": "semantic-verification"}
+    repository_root = tmp_path / "repository"
+    repository_root.mkdir()
+    expected_sha = "3fdd5c68f8f60fad5757eefa66cc2aa8b24d9306"
+    expected_pairs = [{"representation_id": "REP_TEST", "obligation_id": "AC_TEST"}]
+    calls: list[tuple[Path, Path, str]] = []
+
+    def load_pairs(
+        path: Path,
+        *,
+        repository_root: Path,
+        expected_architecture_source_sha: str,
+    ) -> list[dict[str, str]]:
+        calls.append((path, repository_root, expected_architecture_source_sha))
+        return expected_pairs
+
+    monkeypatch.setattr(e1, "load_verified_pair_inputs", load_pairs)
+    assert (
+        _load_e1_semantic_pairs(
+            run_root,
+            evidence,
+            repository_root=repository_root,
+            expected_architecture_source_sha=expected_sha,
+        )
+        == expected_pairs
+    )
+    assert calls == [(semantic_root, repository_root, expected_sha)]
+
+    (run_root / "semantic-file").write_text("not a directory")
+    with pytest.raises(B0PE1ExecutionError, match="regular directory"):
+        _load_e1_semantic_pairs(
+            run_root,
+            {"semantic_verification_path": "semantic-file"},
+            repository_root=repository_root,
+            expected_architecture_source_sha=expected_sha,
+        )
+    with pytest.raises(B0PE1ExecutionError, match="unsafe"):
+        _load_e1_semantic_pairs(
+            run_root,
+            {"semantic_verification_path": "../repository"},
+            repository_root=repository_root,
+            expected_architecture_source_sha=expected_sha,
+        )
 
 
 def test_hold_is_a_completed_method_outcome_when_both_arms_and_evaluators_ran() -> None:

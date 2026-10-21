@@ -57,8 +57,9 @@ The selected A0-to-A0.1 transition is `CALIBRATION_EXPOSED`. Readiness and
 exact blockers are recorded in `docs/g1/B0P_READINESS_V1.md`.
 
 The additive E1 execution contract is separate from the generic continuation
-schema. It may consume an exact-run PILOT-02 TEST_ONLY sidecar and independently
-read back two semantic control pairs; that scope does not grant production
+schema. It may consume an exact-run PILOT-02 TEST_ONLY sidecar, copies the
+semantic-verification input into the immutable run, and reads back two semantic
+control pairs from that run-contained directory; that scope does not grant production
 authority or establish full six-obligation RQ2 coverage. Its reference is
 copied outside the P method mounts, RQ1 is scored only after both outputs are
 sealed, and an abstaining P remains NOT_EVALUABLE without a manufactured
