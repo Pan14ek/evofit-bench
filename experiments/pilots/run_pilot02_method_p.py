@@ -1772,6 +1772,32 @@ def run_pilot(
     return manifest
 
 
+def _cli_summary(manifest: Mapping[str, Any], output_dir: Path) -> dict[str, Any]:
+    """Project either a preparation-only or executed manifest into a CLI summary."""
+    exp02 = manifest.get("exp02")
+    p_input = manifest.get("p_method_input")
+    method_p = manifest.get("method_p")
+    source_revision = manifest.get("source_revision")
+    if not isinstance(exp02, Mapping):
+        exp02 = {}
+    if not isinstance(p_input, Mapping):
+        p_input = {}
+    if not isinstance(method_p, Mapping):
+        method_p = {}
+    if not isinstance(source_revision, Mapping):
+        source_revision = {}
+    run_id = exp02.get("run_id") or p_input.get("evidence_run_id")
+    if not isinstance(run_id, str):
+        raise ProtocolError("PILOT-02 manifest has no run or evidence identity")
+    return {
+        "status": manifest["execution_status"],
+        "run_id": run_id,
+        "source_revision": source_revision.get("commit_sha"),
+        "governance": method_p.get("governance_result", "NOT_RUN"),
+        "output_dir": str(output_dir.resolve()),
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run PILOT-02 using one digest-validated EXP-02 source bundle."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -1821,13 +1847,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     print(
         json.dumps(
-            {
-                "status": manifest["execution_status"],
-                "run_id": manifest["exp02"]["run_id"],
-                "source_revision": manifest["source_revision"]["commit_sha"],
-                "governance": manifest["method_p"]["governance_result"],
-                "output_dir": str(args.output_dir.resolve()),
-            },
+            _cli_summary(manifest, args.output_dir),
             indent=2,
             sort_keys=True,
         )
