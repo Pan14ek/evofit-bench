@@ -1,7 +1,9 @@
 # MONO-A1 reference-freeze procedure and W0 checklist
 
-**Checkpoint:** `G-A1-C4-REF-FROZEN`  
-**Applies to:** MONO-E1 ΔA4 reference freeze  
+**Checkpoint:** `G-A1-C4-REF-FROZEN`
+
+**Applies to:** MONO-E1 ΔA4 reference freeze
+
 **Current status:** `NOT_READY` — exact ΔA4 source revisions and reference inputs remain unassigned/unverified. This checklist does not freeze or authorize a reference.
 
 ## Gate rule
