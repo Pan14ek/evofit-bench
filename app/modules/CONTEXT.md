@@ -14,6 +14,8 @@ Capability-oriented business packages users, tasks, notifications, reporting and
 ## Established conventions
 
 Read each child CONTEXT.md; dependencies are synchronous and governed by DA01 manifest.
+The prepared shared `app.events` contract is a distinct allowed dependency
+proposal for ΔA6; it does not yet change the A0.1 source graph.
 
 ## Constraints and known gaps
 

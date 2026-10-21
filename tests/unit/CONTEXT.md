@@ -10,6 +10,8 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 ## Local landmarks
 
 - `p_applicability_support.py`
+- `test_domain_events.py` — event payload validation, deterministic synchronous
+  dispatch, registration, propagation, and caller-session ownership
 - `test_da01_execution.py`
 - `test_da01_inputs_and_isolation.py`
 - `test_experiment_evidence.py`
