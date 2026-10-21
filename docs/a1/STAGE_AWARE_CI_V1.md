@@ -11,7 +11,18 @@ The *unchanged* `tests/architecture/test_module_structure.py` is the frozen exac
 The new `scripts/check_architecture_stages.py` keeps two independent checks and their results visible:
 
 1. **HISTORICAL_A01:** verifies exact commit/tree, uses `git archive` to materialize the pinned app, original A0.1 architecture manifest, original exact structure and layer tests, and the historical pyproject configuration into an isolated temporary checkout. Runs the original six pytest cases there. No current app/tests, oracle or scorer files are included. The historical acceptance cannot be made to pass by weakening current tests.
-2. **CURRENT:** checks the actual clean Git worktree with stage-appropriate tests. Auto-detection is deliberately limited to `A0_1_CAPABILITY_MODULES` (no public interfaces) or **provisional** `A0_2_PUBLIC_MODULE_APIS` (exactly five capability public modules plus W1 focused tests). A partial module tree, partial public API set, missing W1 contract tests, unexpected stage or dirty source fails closed. A0.1 mode demands the original app tree digest. Current A0.2 mode executes current layer tests, W1 public API tests and, if installed, W2 source evaluator tests.
+2. **CURRENT:** checks the actual clean Git worktree with stage-appropriate tests. Auto-detection recognizes exact `A0_1_CAPABILITY_MODULES`, the exact-path-limited **W4 preparation overlay** below, or provisional `A0_2_PUBLIC_MODULE_APIS` (exactly five capability public modules plus W1 focused tests). A partial module tree, partial public API set, missing W1 contract tests, unexpected stage or dirty source fails closed. A0.1 mode demands the original app tree digest. W4 mode allows only its declared additive preparation paths and runs current layer plus event-contract tests; it is not an A0.2/A1 architecture state. Current A0.2 mode executes current layer tests, W1 public API tests and, if installed, W2 source evaluator tests.
+
+The W4 profile exists so independently prepared ΔA6 code can coexist with the
+exact historical A0.1 gate before W1's full public API set lands. Its app diff
+must be a subset of these paths, with the three event implementation files
+present: `app/CONTEXT.md`, `app/events/{CONTEXT.md,__init__.py,contracts.py,dispatcher.py}`,
+`app/modules/CONTEXT.md`, `app/modules/notifications/CONTEXT.md`, and
+`app/modules/notifications/event_handlers/{CONTEXT.md,__init__.py}`. Any Task
+service, `app/main.py`, Notification service, or other app change fails the
+profile. The ordinary development regression separately runs the W4 unit test
+and the PostgreSQL preparation file; full Task/Notification/Audit REST
+acceptance remains pending ΔA6 integration.
 
 ```bash
 uv sync --frozen --extra dev
@@ -30,6 +41,7 @@ The existing `lint-imports --config architecture/acceptance/importlinter.toml` s
 | --- | --- | --- |
 | Historical A0.1 six cases PASS | Original exact DA01 acceptance still passes on exact pinned history | Today's new architecture also matches A0.1 |
 | Current A0.1 PASS | Current app tree matches original A0.1 and its tests pass | Independent P adaptation result |
+| W4 preparation overlay PASS | Only allowlisted event-preparation app paths differ; layer and event-contract checks pass | A0.2, ΔA6 Task wiring, final A1, Method P or experiment approval |
 | Current A0.2 preliminary PASS | W1's five facades are present, focused public-contract and current layer checks run | Full AC_PUBLIC_API exact-pair adequacy, ΔA3/ΔA5, final A1 |
 | W2 suite PRESENT | W2 synthetic evaluator tests also ran against current checkout | Live source-pinned W2 compliance evidence or human semantic proof |
 | W2 suite PENDING | Suite is not present in the current branch; explicit notification, no W2 result claimed | Full architecture gate or negative-control validation |
@@ -50,6 +62,7 @@ New unit cases in `tests/unit/test_architecture_stage_checks.py` cover:
 - claimed A0.1 against nonhistorical current app tree;
 - dirty source refusing SHA-bound PASS;
 - A0.2 correct focused test selection;
+- W4 preparation overlay exact-path acceptance, Task/service and app-main rejection, and focused test selection;
 - W2 fixture suite present/absent handling.
 
 Historical `tests/architecture/test_module_structure.py`, `tests/architecture/test_layer_rules.py`, `architecture/states/A0_1_CAPABILITY_MODULES.yaml`, frozen evaluators, historical raw evidence and Method P source stay unchanged. The workflow retains lint/type/security/migration/development regression separately; missing runtime authority, source-to-image identity and G1/G4 are unaffected.

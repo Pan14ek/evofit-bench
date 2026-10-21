@@ -22,7 +22,28 @@ HISTORICAL_APP_TREE = "cdff9a6c3cee870e1eca2a5f5f3eb3202b0b1f08"
 MODULES = ("users", "tasks", "notifications", "reporting", "audit")
 A01 = "A0_1_CAPABILITY_MODULES"
 A02 = "A0_2_PUBLIC_MODULE_APIS"
-ALLOWED_STAGES = ("auto", A01, A02)
+W4_PREPARATION = "A0_1_W4_EVENT_PREPARATION"
+W4_ALLOWED_APP_PATHS = frozenset(
+    {
+        "app/CONTEXT.md",
+        "app/events/CONTEXT.md",
+        "app/events/__init__.py",
+        "app/events/contracts.py",
+        "app/events/dispatcher.py",
+        "app/modules/CONTEXT.md",
+        "app/modules/notifications/CONTEXT.md",
+        "app/modules/notifications/event_handlers/CONTEXT.md",
+        "app/modules/notifications/event_handlers/__init__.py",
+    }
+)
+W4_REQUIRED_APP_PATHS = frozenset(
+    {
+        "app/events/contracts.py",
+        "app/events/dispatcher.py",
+        "app/modules/notifications/event_handlers/__init__.py",
+    }
+)
+ALLOWED_STAGES = ("auto", A01, W4_PREPARATION, A02)
 
 
 class StageCheckError(RuntimeError):
@@ -47,14 +68,39 @@ def _git(root: Path, *arguments: str) -> str:
 
 
 def detect_stage(root: Path) -> str:
-    """Infer only the two supported *development* stages; refuse partial APIs."""
+    """Infer supported development profiles; refuse partial APIs and W4 drift."""
     modules = root / "app" / "modules"
     missing_modules = [name for name in MODULES if not (modules / name / "__init__.py").is_file()]
     if missing_modules:
         raise StageCheckError(f"Missing capability modules: {missing_modules}")
     present = [name for name in MODULES if (modules / name / "public.py").is_file()]
     if not present:
-        return A01
+        changed_app_paths = {
+            path
+            for path in _git(
+                root,
+                "diff",
+                "--name-only",
+                f"{HISTORICAL_A01_SHA}..HEAD",
+                "--",
+                "app",
+            ).splitlines()
+            if path
+        }
+        if not changed_app_paths:
+            return A01
+        missing_w4_files = sorted(
+            path
+            for path in W4_REQUIRED_APP_PATHS
+            if path not in changed_app_paths or not (root / path).is_file()
+        )
+        if changed_app_paths <= W4_ALLOWED_APP_PATHS and not missing_w4_files:
+            return W4_PREPARATION
+        unexpected = sorted(changed_app_paths - W4_ALLOWED_APP_PATHS)
+        raise StageCheckError(
+            "Nonhistorical A0.1 app paths are outside the W4 preparation allowlist: "
+            f"{unexpected or ['required W4 files missing: ' + ', '.join(missing_w4_files)]}"
+        )
     if len(present) != len(MODULES):
         raise StageCheckError(f"Partial public API modules: {present}; expected all {MODULES}")
     contract_test = root / "tests/unit/test_module_public_apis.py"
@@ -168,6 +214,12 @@ def current_stage_acceptance(repo: Path, *, requested_stage: str) -> str:
             "tests/architecture/test_module_structure.py",
             "tests/architecture/test_layer_rules.py",
         ]
+    elif current == W4_PREPARATION:
+        print(
+            "[stage-ci] W4 preparation overlay only; no A0.2/A1 architecture state is claimed",
+            flush=True,
+        )
+        checks = ["tests/architecture/test_layer_rules.py", "tests/unit/test_domain_events.py"]
     else:
         checks = ["tests/architecture/test_layer_rules.py", "tests/unit/test_module_public_apis.py"]
         new_tests = repo / "tests/architecture/a1/test_evaluators.py"

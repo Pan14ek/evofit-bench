@@ -16,9 +16,53 @@ def _fake_modules(root: Path, public: tuple[str, ...] = ()) -> None:
             (folder / "public.py").write_text("", encoding="utf-8")
 
 
-def test_detects_exact_baseline_when_no_public_apis(tmp_path: Path) -> None:
+def test_detects_exact_baseline_when_no_public_apis(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     _fake_modules(tmp_path)
+    monkeypatch.setattr(stage, "_git", lambda *_args: "")
     assert stage.detect_stage(tmp_path) == stage.A01
+
+
+def _fake_w4_preparation_files(root: Path) -> None:
+    for path in stage.W4_REQUIRED_APP_PATHS:
+        target = root / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("# W4 preparation fixture\n", encoding="utf-8")
+
+
+def test_detects_allowlisted_w4_preparation_overlay(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _fake_modules(tmp_path)
+    _fake_w4_preparation_files(tmp_path)
+    monkeypatch.setattr(stage, "_git", lambda *_args: "\n".join(stage.W4_ALLOWED_APP_PATHS))
+
+    assert stage.detect_stage(tmp_path) == stage.W4_PREPARATION
+
+
+def test_w4_preparation_requires_event_implementation_files(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _fake_modules(tmp_path)
+    monkeypatch.setattr(stage, "_git", lambda *_args: "\n".join(stage.W4_ALLOWED_APP_PATHS))
+
+    with pytest.raises(stage.StageCheckError, match="required W4 files missing"):
+        stage.detect_stage(tmp_path)
+
+
+def test_w4_preparation_overlay_rejects_task_service_or_app_main_changes(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _fake_modules(tmp_path)
+    monkeypatch.setattr(
+        stage,
+        "_git",
+        lambda *_args: "app/main.py\napp/modules/tasks/service.py",
+    )
+
+    with pytest.raises(stage.StageCheckError, match="outside the W4 preparation allowlist"):
+        stage.detect_stage(tmp_path)
 
 
 def test_rejects_partial_public_interface_inventory(tmp_path: Path) -> None:
@@ -68,6 +112,7 @@ def test_mismatched_declared_and_actual_stage_is_rejected(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     _fake_modules(tmp_path)
+    monkeypatch.setattr(stage, "_git", lambda *_args: "")
     with pytest.raises(stage.StageCheckError, match="Requested architecture stage"):
         stage.current_stage_acceptance(tmp_path, requested_stage=stage.A02)
 
@@ -80,6 +125,8 @@ def test_claimed_baseline_cannot_pass_with_altered_source(
     def wrong_tree(_root: Path, *args: str) -> str:
         if args == ("status", "--porcelain", "--", "app", "architecture", "tests"):
             return ""
+        if args and args[0] == "diff":
+            return ""
         return "not-the-expected-tree"
 
     monkeypatch.setattr(stage, "_git", wrong_tree)
@@ -91,7 +138,11 @@ def test_dirty_application_source_cannot_pass_as_sha_bound(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     _fake_modules(tmp_path)
-    monkeypatch.setattr(stage, "_git", lambda *_args: " M app/modules/tasks/service.py")
+
+    def dirty_git(_root: Path, *args: str) -> str:
+        return "" if args and args[0] == "diff" else " M app/modules/tasks/service.py"
+
+    monkeypatch.setattr(stage, "_git", dirty_git)
     with pytest.raises(stage.StageCheckError, match="dirty"):
         stage.current_stage_acceptance(tmp_path, requested_stage="auto")
 
@@ -114,6 +165,33 @@ def test_new_stage_executes_focused_checks_without_old_exact_inventory(
     assert calls == [
         ["tests/architecture/test_layer_rules.py", "tests/unit/test_module_public_apis.py"]
     ]
+
+
+def test_w4_preparation_runs_layer_and_event_contract_checks(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _fake_modules(tmp_path)
+    _fake_w4_preparation_files(tmp_path)
+    calls: list[list[str]] = []
+
+    def git(_root: Path, *args: str) -> str:
+        if args and args[0] == "diff":
+            return "\n".join(stage.W4_ALLOWED_APP_PATHS)
+        if args and args[0] == "rev-parse":
+            return "source-sha"
+        return ""
+
+    monkeypatch.setattr(stage, "_git", git)
+    monkeypatch.setattr(
+        stage,
+        "_run_pytest",
+        lambda _root, paths, *, historical: calls.append(paths),
+    )
+
+    assert stage.current_stage_acceptance(tmp_path, requested_stage=stage.W4_PREPARATION) == (
+        stage.W4_PREPARATION
+    )
+    assert calls == [["tests/architecture/test_layer_rules.py", "tests/unit/test_domain_events.py"]]
 
 
 def test_w2_evaluator_tests_appear_only_when_present(
