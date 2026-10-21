@@ -53,6 +53,20 @@ def _import_finding(code: str, message: str, item: dict[str, Any]) -> dict[str, 
     )
 
 
+def _public_module_symbols(inventory: SourceInventory, capability: str) -> dict[str, str]:
+    relative = f"app/modules/{capability}/public.py"
+    tree = inventory.trees.get(relative)
+    if tree is None:
+        return {}
+    symbols: dict[str, str] = {}
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            symbols[node.name] = "function"
+        elif isinstance(node, ast.ClassDef):
+            symbols[node.name] = "type"
+    return symbols
+
+
 def analyze_public_api(
     config: dict[str, Any], inventory: SourceInventory, architecture_state: str
 ) -> tuple[dict[str, Any], list[dict[str, Any]], list[str]]:
@@ -62,19 +76,132 @@ def analyze_public_api(
     errors: list[str] = []
     findings: list[dict[str, Any]] = []
     observed: list[dict[str, Any]] = []
+    raw_interfaces = policy.get("interfaces_by_capability", {})
+    interfaces: dict[str, dict[str, str]] = {}
+    if not isinstance(raw_interfaces, dict):
+        errors.append("CONFIG_PUBLIC_INTERFACES_INVALID")
+    else:
+        for capability, entries in raw_interfaces.items():
+            if not isinstance(entries, dict):
+                errors.append(f"CONFIG_PUBLIC_INTERFACES_INVALID:{capability}")
+                continue
+            normalized = {str(name): str(kind) for name, kind in entries.items()}
+            if any(kind not in {"function", "type"} for kind in normalized.values()):
+                errors.append(f"CONFIG_PUBLIC_INTERFACE_KIND_INVALID:{capability}")
+            interfaces[str(capability)] = normalized
+        expected_capabilities = set(config.get("source_scope", {}).get("expected_modules", []))
+        if set(interfaces) != expected_capabilities or any(
+            not entries for entries in interfaces.values()
+        ):
+            errors.append("CONFIG_PUBLIC_INTERFACES_COVERAGE_MISMATCH")
+
     if policy.get("require_public_module_per_capability", False):
         inspected_paths = set(inventory.source_files)
         for module in inventory.modules:
+            if not module["discovered"]:
+                continue
+            capability = str(module["name"])
             expected_path = f"{module['path']}/public.py"
-            if module["discovered"] and expected_path not in inspected_paths:
+            if expected_path not in inspected_paths:
                 findings.append(
                     _finding(
                         "PUBLIC_CONTRACT_MISSING",
                         f"Missing public contract: {expected_path}.",
                         path=expected_path,
-                        source_capability=module["name"],
+                        source_capability=capability,
                     )
                 )
+                continue
+            actual_symbols = _public_module_symbols(inventory, capability)
+            expected_symbols = interfaces.get(capability, {})
+            for name, expected_kind in sorted(expected_symbols.items()):
+                actual_kind = actual_symbols.get(name)
+                if actual_kind != expected_kind:
+                    code = (
+                        "PUBLIC_INTERFACE_MISSING"
+                        if actual_kind is None
+                        else "PUBLIC_INTERFACE_KIND_MISMATCH"
+                    )
+                    findings.append(
+                        _finding(
+                            code,
+                            f"{capability}.public must define {name} as {expected_kind}.",
+                            path=expected_path,
+                            source_capability=capability,
+                        )
+                    )
+            for name in sorted(set(actual_symbols) - set(expected_symbols)):
+                findings.append(
+                    _finding(
+                        "UNDECLARED_PUBLIC_EXPORT",
+                        f"{capability}.public defines undeclared interface {name}.",
+                        path=expected_path,
+                        source_capability=capability,
+                    )
+                )
+
+    typed_dict_fields = policy.get("typed_dict_fields", {})
+    if not isinstance(typed_dict_fields, dict):
+        errors.append("CONFIG_TYPED_DICT_FIELDS_INVALID")
+        typed_dict_fields = {}
+    for qualified_name, raw_fields in typed_dict_fields.items():
+        capability, separator, symbol = str(qualified_name).partition(".")
+        if (
+            not separator
+            or not isinstance(raw_fields, list)
+            or not all(isinstance(field, str) for field in raw_fields)
+        ):
+            errors.append(f"CONFIG_TYPED_DICT_FIELDS_INVALID:{qualified_name}")
+            continue
+        tree = inventory.trees.get(f"app/modules/{capability}/public.py")
+        typed_dict = (
+            next(
+                (
+                    node
+                    for node in tree.body
+                    if isinstance(node, ast.ClassDef)
+                    and node.name == symbol
+                    and any(
+                        (isinstance(base, ast.Name) and base.id == "TypedDict")
+                        or (
+                            isinstance(base, ast.Subscript)
+                            and isinstance(base.value, ast.Name)
+                            and base.value.id == "TypedDict"
+                        )
+                        for base in node.bases
+                    )
+                ),
+                None,
+            )
+            if tree is not None
+            else None
+        )
+        if typed_dict is None:
+            findings.append(
+                _finding(
+                    "PUBLIC_TYPED_DICT_MISSING",
+                    f"{capability}.public.{symbol} is not a TypedDict.",
+                    path=f"app/modules/{capability}/public.py",
+                    source_capability=capability,
+                )
+            )
+            continue
+        actual_fields = {
+            node.target.id
+            for node in typed_dict.body
+            if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name)
+        }
+        expected_fields = set(raw_fields)
+        if actual_fields != expected_fields:
+            findings.append(
+                _finding(
+                    "PUBLIC_TYPED_DICT_FIELDS_MISMATCH",
+                    f"{capability}.public.{symbol} fields differ from the frozen contract.",
+                    path=f"app/modules/{capability}/public.py",
+                    source_capability=capability,
+                )
+            )
+
     final_state = str(policy.get("final_architecture_state", "A1_MODULAR_MONOLITH"))
     allowed_states = (
         set(exception.get("allowed_architecture_states", []))
@@ -95,38 +222,89 @@ def analyze_public_api(
             continue
         public_module = public_pattern.format(capability=target_capability)
         target_module = item["target_module"]
-        is_public = target_module == public_module or target_module.startswith(f"{public_module}.")
-        if is_public:
-            continue
-        is_legacy = (
-            isinstance(exception, dict)
-            and architecture_state in allowed_states
-            and item["source_module"] == exception.get("source_module")
-            and target_module == exception.get("target_module")
-            and item.get("imported_name") in set(exception.get("imported_names", []))
-        )
-        row = {
-            "source_path": item["source_path"],
-            "source_module": item["source_module"],
-            "line": item["line"],
-            "target_module": target_module,
-            "target_capability": target_capability,
-            "imported_name": item.get("imported_name"),
-            "classification": "legacy_exception" if is_legacy else "private_or_undeclared_contract",
-        }
-        observed.append(row)
-        if is_legacy:
-            continue
-        findings.append(
-            _import_finding(
-                "CROSS_MODULE_IMPORT_NOT_PUBLIC",
-                f"Non-public import {target_module}; expected {public_module}.",
-                item,
+        if target_module == public_module:
+            imported_name = item.get("imported_name")
+            module_binding = item["kind"] == "import" or (
+                imported_name == "public" and item.get("imported_module") != public_module
             )
-        )
+            if module_binding:
+                classification = "declared_public_module"
+            else:
+                declared_import_kind = interfaces.get(target_capability, {}).get(str(imported_name))
+                actual_import_kind = _public_module_symbols(inventory, target_capability).get(
+                    str(imported_name)
+                )
+                classification = "declared_public_interface"
+                if declared_import_kind is None or actual_import_kind != declared_import_kind:
+                    classification = "undeclared_public_interface"
+                    findings.append(
+                        _import_finding(
+                            "UNDECLARED_PUBLIC_INTERFACE",
+                            f"{target_capability}.public does not declare {imported_name} "
+                            "as an exported contract.",
+                            item,
+                        )
+                    )
+            observed.append(
+                {
+                    "source_path": item["source_path"],
+                    "source_module": item["source_module"],
+                    "line": item["line"],
+                    "target_module": target_module,
+                    "target_capability": target_capability,
+                    "imported_name": imported_name,
+                    "classification": classification,
+                }
+            )
+            continue
+        if target_module.startswith(f"{public_module}."):
+            findings.append(
+                _import_finding(
+                    "UNDECLARED_PUBLIC_INTERFACE",
+                    f"Nested public import {target_module} is outside the frozen "
+                    "public module contract.",
+                    item,
+                )
+            )
+            continue
+        if target_module.startswith("app.modules."):
+            is_legacy = (
+                isinstance(exception, dict)
+                and architecture_state in allowed_states
+                and item["source_module"] == exception.get("source_module")
+                and target_module == exception.get("target_module")
+                and item.get("imported_name") in set(exception.get("imported_names", []))
+            )
+            row = {
+                "source_path": item["source_path"],
+                "source_module": item["source_module"],
+                "line": item["line"],
+                "target_module": target_module,
+                "target_capability": target_capability,
+                "imported_name": item.get("imported_name"),
+                "classification": "legacy_exception"
+                if is_legacy
+                else "private_or_undeclared_contract",
+            }
+            observed.append(row)
+            if is_legacy:
+                continue
+            findings.append(
+                _import_finding(
+                    "CROSS_MODULE_IMPORT_NOT_PUBLIC",
+                    f"Non-public import {target_module}; expected {public_module}.",
+                    item,
+                )
+            )
     return (
         {
             "public_module_pattern": public_pattern,
+            "interfaces_by_capability": interfaces,
+            "exports_by_capability": {
+                capability: _public_module_symbols(inventory, capability)
+                for capability in sorted(interfaces)
+            },
+            "typed_dict_fields": typed_dict_fields,
             "cross_capability_imports": observed,
             "legacy_exception": exception,
         },

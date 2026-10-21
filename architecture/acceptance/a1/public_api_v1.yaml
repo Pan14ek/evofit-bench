@@ -17,9 +17,18 @@ states:
   A0_5_MODULE_DATA_OWNERSHIP: {applicability: ACTIVE}
   A1_MODULAR_MONOLITH: {applicability: ACTIVE}
 public_api:
-  # Proposal for W0 review; W1 owns the actual public.py interfaces.
+  # W0 approved these ΔA2 public surfaces; remaining state policy is still a proposal.
   public_module_pattern: app.modules.{capability}.public
   require_public_module_per_capability: true
+  # W0-approved ΔA2 exports. Function signatures beyond names and TaskSummary fields are not inspected.
+  interfaces_by_capability:
+    users: {user_exists: function}
+    audit: {record_event: function}
+    notifications: {create_notification: function}
+    tasks: {get_task_summary: function, TaskSummary: type}
+    reporting: {get_task_summary: function}
+  typed_dict_fields:
+    tasks.TaskSummary: [total_task_count, count_by_status, assigned_task_count, unassigned_task_count]
   final_architecture_state: A1_MODULAR_MONOLITH
   legacy_exception:
     id: reporting_tasks_query_intermediate_v1
@@ -29,5 +38,5 @@ public_api:
     allowed_architecture_states: [A0_2_PUBLIC_MODULE_APIS, A0_3_GOVERNED_MODULE_GRAPH]
 coverage_limits:
   - AST source imports only; runtime import hooks and dynamically constructed imports are not inspected.
-  - Re-export behavior and public symbol signatures are not validated; W0 must freeze the public export contract.
+  - Runtime re-export behavior and callable signatures are not validated; the frozen function names and TaskSummary field names are validated statically.
   - Conditional imports are reported as source dependencies regardless of runtime branch reachability.

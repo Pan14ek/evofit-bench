@@ -11,8 +11,9 @@ Provide independent, source-derived evaluators for AC_PUBLIC_API, AC_MODULE_GRAP
 - `engine.py` — capability discovery, complete source inventory, AST import resolution, revision checks, evidence generation, and digest readback.
 - `analyzers.py` — public API, capability graph, and persistence ownership checks.
 - `cli.py` — standalone evaluator entry point.
-- `public_api_v1.yaml`, `module_graph_v1.yaml`, `data_ownership_v1.yaml` — versioned state and policy proposals pending W0 freeze.
+- `public_api_v1.yaml` — W0-approved ΔA2 export names plus proposed state and exception rules; graph and ownership configs remain proposals pending W0 freeze.
 - `evidence.schema.json` — JSON evidence contract consumed by the W3 handoff.
+- `a0_1_*_observation.json` — source-bound A0.1 diagnostics; each is explicitly `NOT_APPLICABLE` to A1 policy.
 - `W3_HANDOFF.md` — evaluator identities, source/config bindings, and exact-pair evidence boundary.
 
 ## Established conventions
@@ -21,7 +22,7 @@ Run an evaluator with the exact architecture manifest and expected Git source SH
 
 ## Constraints and known gaps
 
-The public entrypoint convention (`public.py`), allowed dependency graph, shared infrastructure roots, table-owner matrix, and centralized `app.db.model_registry.py` exception are proposals until W0 freezes them. The Reporting → Tasks service query exception applies only to A0.2/A0.3 and cannot make final A1 compliant. Static AST checks do not inspect raw SQL text, dynamic imports, reflection, runtime access, or runtime behavior. The current A0.1 source is not subject to these future obligations and must report `NOT_APPLICABLE` when evaluated as A0.1.
+The W0-approved ΔA2 `public.py` exports are frozen in `public_api_v1.yaml`; callable signatures beyond names and TaskSummary field names are not inspected. The allowed dependency graph, shared infrastructure roots, table-owner matrix, and centralized `app.db.model_registry.py` exception remain proposals pending W0 freeze. The Reporting → Tasks service query exception applies only to A0.2/A0.3 and cannot make final A1 compliant. Static AST checks do not inspect raw SQL text, dynamic imports, reflection, runtime access, or runtime behavior. The current A0.1 source is not subject to these future obligations and must report `NOT_APPLICABLE` when evaluated as A0.1.
 
 ## Verification
 

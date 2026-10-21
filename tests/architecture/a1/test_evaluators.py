@@ -52,6 +52,50 @@ def _write(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
+def _public_module_fixture(capability: str) -> str:
+    definitions = {
+        "users": [
+            "def user_exists(session: object, user_id: object) -> bool:",
+            "    return True",
+        ],
+        "audit": [
+            "def record_event(",
+            "    session: object,",
+            "    entity_type: str,",
+            "    entity_id: object,",
+            "    action: str,",
+            "    actor_id: object | None,",
+            "    details: dict[str, object] | None = None,",
+            ") -> None:",
+            "    return None",
+        ],
+        "notifications": [
+            "def create_notification(",
+            "    session: object, user_id: object, kind: str, message: str",
+            ") -> None:",
+            "    return None",
+        ],
+        "tasks": [
+            "class TaskSummary(TypedDict):",
+            "    total_task_count: int",
+            "    count_by_status: dict[str, int]",
+            "    assigned_task_count: int",
+            "    unassigned_task_count: int",
+            "",
+            "def get_task_summary(session: object) -> TaskSummary:",
+            "    return {}",
+        ],
+        "reporting": [
+            "def get_task_summary(session: object) -> dict[str, object]:",
+            "    return {}",
+        ],
+    }
+    lines = definitions[capability]
+    if capability == "tasks":
+        lines = ["from typing import TypedDict", "", *lines]
+    return "\n".join(lines) + "\n"
+
+
 def _fixture_repo(
     tmp_path: Path,
     source_overrides: dict[str, str] | None = None,
@@ -69,10 +113,7 @@ def _fixture_repo(
                 continue
             package = root / "app/modules" / capability
             _write(package / "__init__.py", f'"""{capability} capability."""\n')
-            _write(
-                package / "public.py",
-                f'def {capability}_port() -> None:\n    """Public contract fixture."""\n',
-            )
+            _write(package / "public.py", _public_module_fixture(capability))
             _write(package / "service.py", f'"""{capability} source fixture."""\n')
             if capability in TABLES:
                 model, table = TABLES[capability]
@@ -183,7 +224,79 @@ def test_declared_public_module_import_is_accepted(tmp_path: Path) -> None:
     evidence, _ = _run(root, sha, "AC_PUBLIC_API")
     assert evidence["result"]["compliance"] == "COMPLIANT"
     assert evidence["diagnostics"]["imports"]
-    assert evidence["diagnostics"]["cross_capability_imports"] == []
+    assert evidence["diagnostics"]["cross_capability_imports"][0]["classification"] == (
+        "declared_public_interface"
+    )
+
+
+def test_unapproved_public_symbol_is_rejected(tmp_path: Path) -> None:
+    root, sha = _fixture_repo(
+        tmp_path,
+        {"app/modules/tasks/service.py": "from app.modules.users.public import repository\n"},
+    )
+    evidence, _ = _run(root, sha, "AC_PUBLIC_API")
+    assert evidence["result"]["compliance"] == "NON_COMPLIANT"
+    assert "UNDECLARED_PUBLIC_INTERFACE" in _codes(evidence)
+    observed = evidence["diagnostics"]["cross_capability_imports"][0]
+    assert observed["imported_name"] == "repository"
+    assert observed["classification"] == "undeclared_public_interface"
+
+
+def test_missing_frozen_public_export_and_typed_dict_field_are_rejected(
+    tmp_path: Path,
+) -> None:
+    root, sha = _fixture_repo(
+        tmp_path,
+        {
+            "app/modules/users/public.py": textwrap.dedent(
+                """\
+                def user_lookup(session: object, user_id: object) -> bool:
+                    return True
+                """
+            ),
+            "app/modules/tasks/public.py": (
+                "from typing import TypedDict\n\n"
+                "class TaskSummary(TypedDict):\n"
+                "    total_task_count: int\n"
+                "    count_by_status: dict[str, int]\n"
+                "    assigned_task_count: int\n"
+                "    unexpected_count: int\n\n"
+                "def get_task_summary(session: object) -> TaskSummary:\n"
+                "    return {}\n"
+            ),
+        },
+    )
+    evidence, _ = _run(root, sha, "AC_PUBLIC_API")
+    assert evidence["result"]["compliance"] == "NON_COMPLIANT"
+    assert {
+        "PUBLIC_INTERFACE_MISSING",
+        "UNDECLARED_PUBLIC_EXPORT",
+        "PUBLIC_TYPED_DICT_FIELDS_MISMATCH",
+    } <= _codes(evidence)
+
+
+def test_public_evaluator_fails_closed_if_frozen_interface_config_is_incomplete(
+    tmp_path: Path,
+) -> None:
+    root, sha = _fixture_repo(tmp_path)
+    evidence, config_path = _run(root, sha, "AC_PUBLIC_API")
+    config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    config["public_api"]["interfaces_by_capability"].pop("users")
+    _write(config_path, yaml.safe_dump(config, sort_keys=False))
+    evidence = run_evaluator(
+        "AC_PUBLIC_API",
+        root,
+        config_path,
+        root / "architecture/states/state.yaml",
+        FINAL_STATE,
+        sha,
+        ANALYZERS["AC_PUBLIC_API"],
+    )
+    assert evidence["result"]["execution_status"] == "FAILED"
+    assert evidence["result"]["compliance"] == "NOT_EVALUABLE"
+    assert (
+        "CONFIG_PUBLIC_INTERFACES_COVERAGE_MISMATCH" in evidence["result"]["configuration_errors"]
+    )
 
 
 def test_strict_graph_rejects_unresolved_local_imports(tmp_path: Path) -> None:
