@@ -22,8 +22,12 @@ A test described in a specification must have a stable requirement ID, fixture p
 ## ΔA3 governed module graph acceptance
 
 The stage-aware architecture check keeps historical A0.1 acceptance pinned to
-its original Git commit and recognizes A0.3 only when the versioned state
-manifest is present and valid. A0.3 acceptance runs the source-based
+its original Git commit and verifies A0.2 separately at the exact predecessor
+declared by the A0.3 manifest. Development CI explicitly requires A0.3. Stage
+detection recognizes A0.3 only when the versioned state manifest is present
+and valid; deleting it from a commit descended from an established A0.3
+manifest fails closed. A historical A0.2 commit whose own ancestry predates
+A0.3 still resolves and runs its A0.2 checks. A0.3 acceptance runs the source-based
 `AC_PUBLIC_API` and `AC_MODULE_GRAPH` evaluators against the exact clean
 candidate HEAD. Both must report complete source scope, matching source
 identity, no unresolved imports, `COMPLIANT`, and successful digest readback.
@@ -38,13 +42,20 @@ uv run pytest --no-cov -p no:cacheprovider tests/architecture/a1/test_evaluators
 make architecture-test ARCHITECTURE_STAGE=A0_3_GOVERNED_MODULE_GRAPH
 ```
 
-The first two commands cover ΔA3-STATE-01, ΔA3-GOV-01, ΔA3-GRAPH-01 and
-ΔA3-NEG-01 in `tests/architecture/a1/REQUIREMENT_TEST_MATRIX.md`. The stage
-command also runs the pinned historical A0.1 checks and the current A0.3
-architecture test selection. Full development verification uses
+The first two commands cover ΔA3-STATE-01, ΔA3-GOV-01, ΔA3-GRAPH-01,
+ΔA3-NEG-01, and ΔA3-GOV-02 (lineage regression protection) in
+`tests/architecture/a1/REQUIREMENT_TEST_MATRIX.md`. The stage command also runs
+the pinned historical A0.1 checks, the declared historical A0.2 predecessor
+checks, and the current A0.3 architecture test selection. Full development verification uses
 `make development-quality` with a disposable PostgreSQL database. These
 checks establish engineering acceptance only; they do not establish semantic
 fitness coverage, G1/G4, or measured DA01 results.
+
+The checked-in A0.3 evaluator observations and readback sidecar remain
+historical candidate evidence bound to source commit
+`1b7a0c94dfd7c4bbca03def62b870da3e3cce580`. They are not the final canonical
+post-merge A0.3 checkpoint; that checkpoint requires a fresh evaluation of the
+accepted post-merge source revision.
 
 `architecture-test` stores Import Linter's cache under `.import_linter_cache`
 by default. Set `IMPORT_LINTER_CACHE_DIR` to a writable external path when

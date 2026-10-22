@@ -74,6 +74,40 @@ def test_public_api_modules_alone_do_not_identify_a03(tmp_path: Path) -> None:
     stage._validate_a03_policy_bindings(REPOSITORY_ROOT, manifest)
 
 
+def test_committed_a03_manifest_removal_fails_acceptance_and_historical_a02_stays_valid(
+    tmp_path: Path,
+) -> None:
+    """A0.3 cannot regress by deletion; a pre-A0.3 commit still detects as A0.2."""
+    _fake_modules(tmp_path, stage.MODULES)
+    contract_test = tmp_path / "tests/unit/test_module_public_apis.py"
+    contract_test.parent.mkdir(parents=True)
+    contract_test.write_text("def test_contract(): pass\n", encoding="utf-8")
+
+    stage._git(tmp_path, "init", "--quiet")
+    stage._git(tmp_path, "config", "user.name", "Architecture stage test")
+    stage._git(tmp_path, "config", "user.email", "architecture-stage@example.test")
+    stage._git(tmp_path, "add", "-A")
+    stage._git(tmp_path, "commit", "--quiet", "-m", "valid historical A0.2 source")
+    a02_commit = stage._git(tmp_path, "rev-parse", "HEAD")
+    assert stage.detect_stage(tmp_path) == stage.A02
+
+    _install_a03_manifest(tmp_path)
+    stage._git(tmp_path, "add", "-A")
+    stage._git(tmp_path, "commit", "--quiet", "-m", "establish A0.3 state")
+    assert stage.detect_stage(tmp_path) == stage.A03
+
+    (tmp_path / stage.A03_MANIFEST).unlink()
+    stage._git(tmp_path, "add", "-A")
+    stage._git(tmp_path, "commit", "--quiet", "-m", "remove established A0.3 manifest")
+    with pytest.raises(stage.StageCheckError, match="A0.3_MANIFEST_REMOVED_AFTER_ESTABLISHMENT"):
+        stage.current_stage_acceptance(tmp_path, requested_stage=stage.A03)
+
+    # Detection is based on HEAD ancestry, not the presence of later A0.3
+    # commits in the object database or another ref.
+    stage._git(tmp_path, "checkout", "--quiet", a02_commit)
+    assert stage.detect_stage(tmp_path) == stage.A02
+
+
 def test_a03_manifest_cannot_fall_back_to_a01_without_public_apis(tmp_path: Path) -> None:
     _fake_modules(tmp_path)
     _install_a03_manifest(tmp_path)

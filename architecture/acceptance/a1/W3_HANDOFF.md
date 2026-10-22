@@ -87,3 +87,14 @@ The checked-in A0.1 observations were not regenerated or edited. Their recorded 
 The public evaluator validates configured top-level function/type names and `TaskSummary` fields, but not callable signatures, `__all__`, runtime re-exports, or runtime behavior. Static AST checks do not inspect dynamic imports, reflection, dependency injection, raw SQL or `text()` contents, dynamically selected tables, database permissions, or event runtime behavior. The ownership analyzer recognizes configured table/model patterns and ORM calls; unrecognized persistence APIs can escape it. A complete source scope and passing synthetic fixture show evaluator mechanics only, not semantic adequacy or A1 compliance.
 
 The W0 approval freezes these state policies and configuration boundaries; it does not establish that static coverage is sufficient for a scientific fitness claim, provide W3 representation-to-obligation semantic adequacy, or authorize ΔA3/A1 promotion. The ΔA2 source checkpoint has no checked-in A0.2 architecture-state manifest. Any A0.2 run using a separate evidence-input manifest must be labeled as source-bound evaluator evidence, not as a new state manifest or ΔA3 completion. Final source-bound evaluation must be rerun after W1 and W2 are integrated, and later states require their own implemented source, exact manifest/provenance, and W0 acceptance. No full A1 compliance is claimed from synthetic tests or A0.1 diagnostics.
+
+## ΔA3 candidate observation provenance
+
+The checked-in `a0_3_public_api_observation.json`,
+`a0_3_module_graph_observation.json`, and `a0_3_evidence_readback.json` bind
+to intermediate candidate source commit
+`1b7a0c94dfd7c4bbca03def62b870da3e3cce580` and its recorded application tree.
+Keep these bytes as historical candidate observations. They are not the final
+canonical post-merge A0.3 checkpoint. No post-merge canonical checkpoint is
+claimed here; it requires fresh source-bound evaluation after the accepted
+change reaches the canonical main revision.

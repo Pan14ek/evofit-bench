@@ -146,6 +146,29 @@ def _validate_a03_manifest(root: Path) -> dict[str, Any]:
     return manifest
 
 
+def _a03_manifest_was_established(root: Path) -> bool:
+    """Return whether an A0.3 manifest was added on this checkout's ancestry.
+
+    The revision is deliberately resolved from HEAD history rather than from
+    a hardcoded future merge SHA. Historical A0.2 commits therefore remain
+    A0.2 even when later A0.3 commits exist elsewhere in the repository.
+    """
+    if not any((parent / ".git").exists() for parent in (root, *root.parents)):
+        # Pure synthetic source fixtures have no lineage. The architecture
+        # acceptance entry point separately requires a Git-backed checkout.
+        return False
+    additions = _git(
+        root,
+        "log",
+        "--format=%H",
+        "--diff-filter=A",
+        "HEAD",
+        "--",
+        A03_MANIFEST,
+    )
+    return bool(additions)
+
+
 def _validate_a03_policy_bindings(root: Path, manifest: dict[str, Any]) -> None:
     """Reject drift between the state record and the evaluator configurations."""
     evaluator_root = root / "architecture/acceptance/a1"
@@ -217,6 +240,8 @@ def detect_stage(root: Path) -> str:
                 f"A0.3 state lacks mandatory public API contract tests: {contract_test}"
             )
         return A03
+    if _a03_manifest_was_established(root):
+        raise StageCheckError("A0.3_MANIFEST_REMOVED_AFTER_ESTABLISHMENT")
     if not present:
         return A01
     if len(present) != len(MODULES):
@@ -421,7 +446,35 @@ def historical_a01_acceptance(repo: Path) -> None:
     print("[stage-ci] HISTORICAL_A01 PASS (6 exact historical tests)", flush=True)
 
 
-def current_stage_acceptance(repo: Path, *, requested_stage: str) -> str:
+def historical_a02_acceptance(repo: Path) -> None:
+    """Run A0.2 checks at the exact predecessor declared by the A0.3 state."""
+    manifest = _validate_a03_manifest(repo)
+    provenance = manifest.get("source_provenance")
+    predecessor_sha = provenance.get("predecessor_commit") if isinstance(provenance, dict) else None
+    if not isinstance(predecessor_sha, str) or len(predecessor_sha) != 40:
+        raise StageCheckError("A0.3 predecessor commit is missing or malformed")
+    if _git(repo, "rev-parse", f"{predecessor_sha}^{{commit}}") != predecessor_sha:
+        raise StageCheckError("Declared A0.2 predecessor commit is absent or incorrect")
+
+    with tempfile.TemporaryDirectory(prefix="evofit-historical-a02-") as temporary:
+        checkout = Path(temporary) / "source"
+        _git(repo, "worktree", "add", "--detach", str(checkout), predecessor_sha)
+        try:
+            observed = current_stage_acceptance(checkout, requested_stage=A02, historical=True)
+            if observed != A02:
+                raise StageCheckError(
+                    f"Declared A0.2 predecessor resolved to unexpected stage {observed}"
+                )
+        finally:
+            _git(repo, "worktree", "remove", "--force", str(checkout))
+    print(
+        f"[stage-ci] HISTORICAL_A02 PASS source={predecessor_sha}; "
+        "checked independently of current A0.3",
+        flush=True,
+    )
+
+
+def current_stage_acceptance(repo: Path, *, requested_stage: str, historical: bool = False) -> str:
     """Validate actual checkout with only stage-relevant tests, no historical drift."""
     current = detect_stage(repo)
     if requested_stage != "auto" and requested_stage != current:
@@ -460,7 +513,7 @@ def current_stage_acceptance(repo: Path, *, requested_stage: str) -> str:
             "tests/unit/test_module_public_apis.py",
             "tests/architecture/a1/test_evaluators.py",
         ]
-    _run_pytest(repo, checks, historical=False)
+    _run_pytest(repo, checks, historical=historical)
     print(f"[stage-ci] CURRENT {current} CHECKS PASS", flush=True)
     return current
 
@@ -474,6 +527,8 @@ def main() -> int:
     try:
         historical_a01_acceptance(root)
         current = current_stage_acceptance(root, requested_stage=args.stage)
+        if current == A03:
+            historical_a02_acceptance(root)
     except StageCheckError as error:
         print(f"[stage-ci] FAIL: {error}", file=sys.stderr, flush=True)
         return 1
