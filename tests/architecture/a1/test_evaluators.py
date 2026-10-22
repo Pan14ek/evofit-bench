@@ -14,7 +14,7 @@ import jsonschema  # type: ignore[import-untyped]
 import yaml
 
 from architecture.acceptance.a1.analyzers import ANALYZERS
-from architecture.acceptance.a1.engine import run_evaluator, verify_evidence
+from architecture.acceptance.a1.engine import canonical_json, run_evaluator, verify_evidence
 from scripts import check_architecture_stages as stage_checks
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -46,6 +46,65 @@ def _git(
         check=True,
         capture_output=capture_output,
         text=True,
+    )
+
+
+def _materialize_historical_checkout(
+    tmp_path: Path,
+    source_sha: str,
+    *,
+    name: str,
+    git_source: Path = ROOT,
+) -> Path:
+    """Check out the evidence's exact source revision away from the active worktree."""
+    checkout = tmp_path / f"{name}-source"
+    _git(
+        git_source,
+        "clone",
+        "--shared",
+        "--quiet",
+        "--no-checkout",
+        str(git_source),
+        str(checkout),
+    )
+    _git(checkout, "checkout", "--quiet", "--detach", source_sha)
+    assert _git(checkout, "rev-parse", "HEAD", capture_output=True).stdout.strip() == source_sha
+    return checkout
+
+
+def _copy_evidence_bundle(tmp_path: Path, *relative_paths: Path) -> Path:
+    """Copy portable evidence paths byte-for-byte into an isolated bundle."""
+    bundle_root = tmp_path / "evidence-bundle"
+    bundle_root.mkdir()
+    for relative_path in relative_paths:
+        assert not relative_path.is_absolute() and ".." not in relative_path.parts
+        source = EVALUATOR_ROOT / relative_path
+        destination = bundle_root / relative_path
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, destination)
+        assert destination.read_bytes() == source.read_bytes()
+    return bundle_root
+
+
+def _verify_historical_evidence(
+    evidence: dict[str, Any],
+    *,
+    source_sha: str,
+    checkout: Path,
+    evidence_root: Path,
+) -> list[str]:
+    """Re-read evidence using only historical source-side artifacts and its bundle."""
+    assert evidence["architecture"]["target_source_sha"] == source_sha
+    config_path = (
+        checkout / "architecture/acceptance/a1" / CONFIG_FILES[evidence["evaluator"]["id"]]
+    )
+    evaluator_root = checkout / evidence["evaluator"]["source_artifact_root"]
+    return verify_evidence(
+        evidence,
+        checkout,
+        config_path,
+        evaluator_root,
+        evidence_root=evidence_root,
     )
 
 
@@ -758,21 +817,31 @@ def test_a03_stage_readback_rejects_tampered_raw_diagnostics(tmp_path: Path) -> 
         raise AssertionError("A0.3 stage readback accepted tampered raw diagnostics")
 
 
-def test_checked_in_a03_evidence_is_byte_bound_and_reads_back() -> None:
-    readback = json.loads(
-        (EVALUATOR_ROOT / "a0_3_evidence_readback.json").read_text(encoding="utf-8")
-    )
+def test_checked_in_a03_evidence_is_byte_bound_and_reads_back(tmp_path: Path) -> None:
+    readback_relative = Path("a0_3_evidence_readback.json")
+    readback_bytes = (EVALUATOR_ROOT / readback_relative).read_bytes()
+    original_readback = json.loads(readback_bytes)
+    bundle_paths = [readback_relative]
+    for record in original_readback["evaluators"].values():
+        evidence_relative = Path(record["evidence_path"])
+        evidence = json.loads((EVALUATOR_ROOT / evidence_relative).read_bytes())
+        bundle_paths.append(evidence_relative)
+        if evidence["architecture"]["manifest_root"] == "evidence":
+            bundle_paths.append(Path(evidence["architecture"]["manifest_path"]))
+    bundle_root = _copy_evidence_bundle(tmp_path, *bundle_paths)
+    readback = json.loads((bundle_root / readback_relative).read_bytes())
     source_sha = readback["source_sha"]
     assert readback["readback_status"] == "PASS"
+
+    checkout = _materialize_historical_checkout(tmp_path, source_sha, name="candidate-a03")
     assert (
         _git(ROOT, "rev-parse", f"{source_sha}:app", capture_output=True).stdout.strip()
         == readback["application_tree_sha"]
     )
+    schema_path = checkout / "architecture/acceptance/a1/evidence.schema.json"
     for evaluator_id, record in readback["evaluators"].items():
         relative_path = Path(record["evidence_path"])
-        assert not relative_path.is_absolute() and ".." not in relative_path.parts
-        evidence_path = EVALUATOR_ROOT / relative_path
-        evidence_bytes = evidence_path.read_bytes()
+        evidence_bytes = (bundle_root / relative_path).read_bytes()
         assert hashlib.sha256(evidence_bytes).hexdigest() == record["evidence_file_sha256"]
         evidence = json.loads(evidence_bytes)
         assert evidence["architecture"]["target_source_sha"] == source_sha
@@ -783,10 +852,234 @@ def test_checked_in_a03_evidence_is_byte_bound_and_reads_back() -> None:
             evidence,
             evaluator_id=evaluator_id,
             expected_source_sha=source_sha,
-            schema_path=EVALUATOR_ROOT / "evidence.schema.json",
+            schema_path=schema_path,
         )
-        config_path = EVALUATOR_ROOT / CONFIG_FILES[evaluator_id]
-        assert verify_evidence(evidence, ROOT, config_path, EVALUATOR_ROOT) == []
+        assert (
+            _verify_historical_evidence(
+                evidence,
+                source_sha=source_sha,
+                checkout=checkout,
+                evidence_root=bundle_root,
+            )
+            == []
+        )
+
+
+def test_checked_in_canonical_a03_checkpoint_is_byte_bound_and_reads_back(
+    tmp_path: Path,
+) -> None:
+    checkpoint_relative = Path("a0_3_canonical_checkpoint.json")
+    checkpoint_bytes = (EVALUATOR_ROOT / checkpoint_relative).read_bytes()
+    original_checkpoint = json.loads(checkpoint_bytes)
+    bundle_paths = [checkpoint_relative, Path(original_checkpoint["source_manifest_path"])]
+    for record in original_checkpoint["evaluators"].values():
+        bundle_paths.extend([Path(record["evidence_path"]), Path(record["raw_output_path"])])
+    bundle_root = _copy_evidence_bundle(tmp_path, *bundle_paths)
+    checkpoint = json.loads((bundle_root / checkpoint_relative).read_bytes())
+    source_sha = "26a9bb667da7d0938e38aca15d2bf29fd1de4829"
+
+    assert checkpoint["checkpoint"] == "canonical_post_merge_A0_3_GOVERNED_MODULE_GRAPH"
+    assert checkpoint["readback_status"] == "PASS"
+    assert checkpoint["source_sha"] == source_sha
+    assert (
+        _git(ROOT, "rev-parse", f"{source_sha}^{{tree}}", capture_output=True).stdout.strip()
+        == checkpoint["repository_tree_sha"]
+    )
+    assert (
+        _git(ROOT, "rev-parse", f"{source_sha}:app", capture_output=True).stdout.strip()
+        == checkpoint["application_tree_sha"]
+    )
+    checkout = _materialize_historical_checkout(tmp_path, source_sha, name="canonical-a03")
+
+    manifest_relative = Path(checkpoint["source_manifest_path"])
+    manifest_bytes = (bundle_root / manifest_relative).read_bytes()
+    assert hashlib.sha256(manifest_bytes).hexdigest() == checkpoint["source_manifest_sha256"]
+    assert manifest_bytes == (checkout / stage_checks.A03_MANIFEST).read_bytes()
+
+    schema_path = checkout / "architecture/acceptance/a1/evidence.schema.json"
+    for evaluator_id, _config_name in CONFIG_FILES.items():
+        if evaluator_id not in {"AC_PUBLIC_API", "AC_MODULE_GRAPH"}:
+            continue
+        record = checkpoint["evaluators"][evaluator_id]
+        assert record["execution_status"] == "COMPLETED"
+        assert record["compliance"] == "COMPLIANT"
+        assert record["source_scope_complete"] is True
+        assert record["inspected_files"] == record["source_file_digest_count"] == 31
+        assert record["inspected_imports"] == 185
+        assert record["violations"] == []
+        assert record["source_scope_uncertainties"] == []
+        assert record["readback_failures"] == []
+
+        evidence_relative = Path(record["evidence_path"])
+        raw_relative = Path(record["raw_output_path"])
+        evidence_bytes = (bundle_root / evidence_relative).read_bytes()
+        assert hashlib.sha256(evidence_bytes).hexdigest() == record["evidence_file_sha256"]
+        evidence = json.loads(evidence_bytes)
+        assert evidence["architecture"]["target_source_sha"] == source_sha
+        assert evidence["source_scope"]["uncertainties"] == []
+        assert evidence["evaluator"]["source_digest"] == record["evaluator_sha256"]
+        assert evidence["evaluator"]["configuration_digest"] == record["configuration_sha256"]
+        assert evidence["raw_output"]["sha256"] == record["raw_diagnostics_sha256"]
+        raw_bytes = (bundle_root / raw_relative).read_bytes()
+        assert hashlib.sha256(raw_bytes).hexdigest() == record["raw_output_file_sha256"]
+        assert raw_bytes == canonical_json(evidence["diagnostics"])
+
+        stage_checks._validate_a03_evidence(
+            evidence,
+            evaluator_id=evaluator_id,
+            expected_source_sha=source_sha,
+            schema_path=schema_path,
+        )
+        assert (
+            _verify_historical_evidence(
+                evidence,
+                source_sha=source_sha,
+                checkout=checkout,
+                evidence_root=bundle_root,
+            )
+            == []
+        )
+
+
+def test_historical_a03_readback_uses_pinned_source_after_later_changes(
+    tmp_path: Path,
+) -> None:
+    checkpoint = json.loads((EVALUATOR_ROOT / "a0_3_canonical_checkpoint.json").read_bytes())
+    record = checkpoint["evaluators"]["AC_PUBLIC_API"]
+    evidence_relative = Path(record["evidence_path"])
+    raw_relative = Path(record["raw_output_path"])
+    manifest_relative = Path(checkpoint["source_manifest_path"])
+    bundle_root = _copy_evidence_bundle(
+        tmp_path,
+        Path("a0_3_canonical_checkpoint.json"),
+        evidence_relative,
+        raw_relative,
+        manifest_relative,
+    )
+    evidence = json.loads((bundle_root / evidence_relative).read_bytes())
+    source_sha = checkpoint["source_sha"]
+    checkout = _materialize_historical_checkout(tmp_path, source_sha, name="later-change-a03")
+
+    later_checkout = tmp_path / "later-working-tree"
+    _git(
+        ROOT,
+        "clone",
+        "--shared",
+        "--quiet",
+        "--no-checkout",
+        str(ROOT),
+        str(later_checkout),
+    )
+    _git(later_checkout, "checkout", "--quiet", "--detach", "HEAD")
+    later_reporting = later_checkout / "app/modules/reporting/service.py"
+    later_reporting.write_bytes(later_reporting.read_bytes() + b"\n# later architecture stage\n")
+    later_config = later_checkout / "architecture/acceptance/a1/public_api_v1.yaml"
+    later_config.write_bytes(later_config.read_bytes() + b"\n# later evaluator configuration\n")
+
+    historical_reporting = checkout / "app/modules/reporting/service.py"
+    historical_config = checkout / "architecture/acceptance/a1/public_api_v1.yaml"
+    assert later_reporting.read_bytes() != historical_reporting.read_bytes()
+    assert later_config.read_bytes() != historical_config.read_bytes()
+    assert "app/modules/reporting/service.py" in {
+        item["path"] for item in evidence["source_scope"]["source_file_digests"]
+    }
+    stage_checks._validate_a03_evidence(
+        evidence,
+        evaluator_id="AC_PUBLIC_API",
+        expected_source_sha=source_sha,
+        schema_path=checkout / "architecture/acceptance/a1/evidence.schema.json",
+    )
+    assert (
+        _verify_historical_evidence(
+            evidence,
+            source_sha=source_sha,
+            checkout=checkout,
+            evidence_root=bundle_root,
+        )
+        == []
+    )
+
+
+def test_historical_a03_readback_rejects_tampered_pinned_bytes_and_bundle(
+    tmp_path: Path,
+) -> None:
+    checkpoint_relative = Path("a0_3_canonical_checkpoint.json")
+    checkpoint = json.loads((EVALUATOR_ROOT / checkpoint_relative).read_bytes())
+    record = checkpoint["evaluators"]["AC_PUBLIC_API"]
+    evidence_relative = Path(record["evidence_path"])
+    raw_relative = Path(record["raw_output_path"])
+    manifest_relative = Path(checkpoint["source_manifest_path"])
+    bundle_root = _copy_evidence_bundle(
+        tmp_path,
+        checkpoint_relative,
+        evidence_relative,
+        raw_relative,
+        manifest_relative,
+    )
+    evidence_path = bundle_root / evidence_relative
+    evidence_bytes = evidence_path.read_bytes()
+    evidence = json.loads(evidence_bytes)
+    checkout = _materialize_historical_checkout(
+        tmp_path, checkpoint["source_sha"], name="tamper-check-a03"
+    )
+    config_path = checkout / "architecture/acceptance/a1/public_api_v1.yaml"
+    evaluator_path = checkout / "architecture/acceptance/a1/engine.py"
+    source_path = checkout / "app/modules/reporting/service.py"
+    manifest_path = bundle_root / manifest_relative
+
+    assert (
+        _verify_historical_evidence(
+            evidence,
+            source_sha=checkpoint["source_sha"],
+            checkout=checkout,
+            evidence_root=bundle_root,
+        )
+        == []
+    )
+
+    for path, marker, expected_failure in (
+        (source_path, b"\n# tampered source\n", "SUBJECT_SOURCE_DIGEST_MISMATCH"),
+        (config_path, b"\n# tampered configuration\n", "CONFIGURATION_DIGEST_MISMATCH"),
+        (evaluator_path, b"\n# tampered evaluator\n", "EVALUATOR_ARTIFACT_DIGEST_MISMATCH"),
+        (manifest_path, b"\n# tampered manifest\n", "ARCHITECTURE_MANIFEST_DIGEST_MISMATCH"),
+    ):
+        original = path.read_bytes()
+        path.write_bytes(original + marker)
+        assert expected_failure in "\n".join(
+            _verify_historical_evidence(
+                evidence,
+                source_sha=checkpoint["source_sha"],
+                checkout=checkout,
+                evidence_root=bundle_root,
+            )
+        )
+        path.write_bytes(original)
+
+    tampered_evidence_bytes = evidence_bytes + b"\n"
+    evidence_path.write_bytes(tampered_evidence_bytes)
+    assert hashlib.sha256(tampered_evidence_bytes).hexdigest() != record["evidence_file_sha256"]
+    evidence_path.write_bytes(evidence_bytes)
+
+    raw_path = bundle_root / raw_relative
+    original_raw_bytes = raw_path.read_bytes()
+    tampered_raw_bytes = original_raw_bytes + b"\n"
+    raw_path.write_bytes(tampered_raw_bytes)
+    assert hashlib.sha256(tampered_raw_bytes).hexdigest() != record["raw_output_file_sha256"]
+    raw_path.write_bytes(original_raw_bytes)
+
+    tampered_diagnostics = json.loads(evidence_bytes)
+    tampered_diagnostics["diagnostics"]["imports"] = []
+    try:
+        stage_checks._validate_a03_evidence(
+            tampered_diagnostics,
+            evaluator_id="AC_PUBLIC_API",
+            expected_source_sha=checkpoint["source_sha"],
+            schema_path=checkout / "architecture/acceptance/a1/evidence.schema.json",
+        )
+    except stage_checks.StageCheckError as error:
+        assert "RAW_OUTPUT_DIGEST_MISMATCH" in str(error)
+    else:
+        raise AssertionError("Historical A0.3 readback accepted tampered diagnostics")
 
 
 def test_checked_in_delta_a2_evidence_survives_subject_and_bundle_relocation(
