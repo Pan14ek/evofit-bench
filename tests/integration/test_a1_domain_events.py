@@ -5,31 +5,18 @@ Task-service wiring. Final Task/Notification/Audit REST rollback tests remain
 pending W0 authorization of the integrated ΔA6 source state.
 """
 
-import os
 from typing import Any, cast
 from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
-from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.events.contracts import TaskAssignedV1
 from app.events.dispatcher import EventDispatcher
 from app.modules.notifications.event_handlers import register_notification_handlers
 from app.modules.notifications.model import Notification
-
-
-@pytest.fixture(autouse=True)
-def require_disposable_evofit_database() -> None:
-    """Guard the shared integration fixture before it resets the public schema."""
-    database_url = os.environ.get("TEST_DATABASE_URL")
-    if not database_url:
-        pytest.skip("TEST_DATABASE_URL must point to a disposable PostgreSQL database")
-    database_name = make_url(database_url).database or ""
-    if "evofit" not in database_name.lower():
-        pytest.fail("TEST_DATABASE_URL database name must contain 'evofit' before schema reset")
 
 
 def _create_user(client: TestClient) -> UUID:

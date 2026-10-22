@@ -80,6 +80,14 @@ When ΔA2–ΔA5 are integrated and W0 schedules the dependent ΔA6 source chang
 5. The final architecture evaluator proves the event-contract dependency,
    registration, and absence of a direct Task→Notifications service import.
 
+W2's accepted `AC_MODULE_GRAPH` configuration classifies `app.events` as
+shared infrastructure, so Notification handlers may depend on event contracts
+without creating a capability-to-capability graph edge. The handlers call
+their own capability's `notifications.public.create_notification` facade, in
+line with `AC_PUBLIC_API`. The final A1 graph still requires the Task service
+to stop importing Notifications; that check remains pending W0-authorized
+ΔA6 wiring and must not be treated as passed by this preparation stage.
+
 Only application-level PostgreSQL tests after integration can establish the
 full rollback requirement. The exact future cases, response/metric assertions,
 database precautions, and commands are recorded in

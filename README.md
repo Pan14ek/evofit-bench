@@ -24,15 +24,17 @@ The API listens at `http://localhost:8000`; interactive OpenAPI docs are at `/do
 docker compose up -d postgres
 docker compose exec -T postgres createdb -U evofit evofit_test
 make test-unit
+EVOFIT_TEST_DATABASE_ALLOW_SCHEMA_RESET=I_CONFIRM_DISPOSABLE_DATABASE_SCHEMA_RESET \
 TEST_DATABASE_URL=postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test make test-integration
 make lint
 make typecheck
 make security
 make architecture-test
+EVOFIT_TEST_DATABASE_ALLOW_SCHEMA_RESET=I_CONFIRM_DISPOSABLE_DATABASE_SCHEMA_RESET \
 TEST_DATABASE_URL=postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test make quality
 ```
 
-Integration tests require a disposable PostgreSQL database: their fixture drops and recreates its `public` schema, then upgrades it through Alembic before tests. `make migration-test` independently validates a clean migration, required tables, the recorded revision, and basic insert/read behavior. `make quality` includes migration validation and all tests, and creates terminal and XML coverage reports. CI provisions PostgreSQL and runs the same checks.
+Integration tests and migration validation require the exact `evofit_test` database on a loopback PostgreSQL host plus the explicit schema-reset confirmation shown above. Before any destructive action, the guard rejects other database names, remote hosts, URL query overrides for the connection target, or a missing confirmation; it then checks the connected database name before dropping the `public` schema. `make migration-test` also modifies that disposable database. CI provisions its own PostgreSQL service and sets the same explicit confirmation.
 
 ## Reset and seed
 

@@ -14,6 +14,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
   dispatch, registration, propagation, and caller-session ownership
 - `test_module_public_apis.py` — ΔA2 facade exports, shared `TaskSummary` type, delegated semantics and import-boundary regression
 - `test_architecture_stage_checks.py` — rejects missing/partial interfaces, stale historical pin, unexpected stage, dirty source and vacuous stage test selection.
+- `test_disposable_postgres.py` — accepts only an explicitly confirmed local `evofit_test` target and rejects unsafe URL overrides.
 - `test_da01_execution.py`
 - `test_da01_inputs_and_isolation.py`
 - `test_experiment_evidence.py`

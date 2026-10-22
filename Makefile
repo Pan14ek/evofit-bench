@@ -21,6 +21,7 @@ DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_context_documents.py \
 	tests/unit/test_architecture_stage_checks.py \
 	tests/unit/test_domain_events.py \
+	tests/unit/test_disposable_postgres.py \
 	tests/unit/test_exp01_evidence.py \
 	tests/unit/test_exp02_fitness_evidence.py \
 	tests/unit/test_pilot01_results.py \

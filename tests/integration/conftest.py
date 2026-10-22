@@ -13,6 +13,11 @@ from sqlalchemy.orm import Session, sessionmaker
 from alembic import command
 from app.db.session import get_session
 from app.main import app
+from scripts.disposable_postgres import (
+    DISPOSABLE_DATABASE_NAME,
+    SCHEMA_RESET_CONFIRMATION_ENV,
+    validate_disposable_postgres_test_url,
+)
 
 
 @pytest.fixture
@@ -21,7 +26,24 @@ def client() -> Iterator[TestClient]:
     database_url = os.environ.get("TEST_DATABASE_URL")
     if not database_url:
         pytest.skip("TEST_DATABASE_URL must point to PostgreSQL")
+    try:
+        database_url = validate_disposable_postgres_test_url(
+            database_url,
+            schema_reset_confirmation=os.environ.get(SCHEMA_RESET_CONFIRMATION_ENV),
+        )
+    except ValueError as error:
+        pytest.fail(str(error), pytrace=False)
+
     test_engine = create_engine(database_url, pool_pre_ping=True)
+    with test_engine.connect() as connection:
+        actual_database = connection.scalar(text("SELECT current_database()"))
+    if actual_database != DISPOSABLE_DATABASE_NAME:
+        test_engine.dispose()
+        pytest.fail(
+            "PostgreSQL connected to an unexpected database before schema reset: "
+            f"{actual_database!r}",
+            pytrace=False,
+        )
     with test_engine.begin() as connection:
         connection.execute(text("DROP SCHEMA public CASCADE"))
         connection.execute(text("CREATE SCHEMA public"))

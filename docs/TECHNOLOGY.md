@@ -41,15 +41,17 @@ App: `http://localhost:8000`, OpenAPI UI: `/docs`, health endpoints `/health/`, 
 docker compose up -d postgres
 docker compose exec -T postgres createdb -U evofit evofit_test
 make test-unit
+EVOFIT_TEST_DATABASE_ALLOW_SCHEMA_RESET=I_CONFIRM_DISPOSABLE_DATABASE_SCHEMA_RESET \
 TEST_DATABASE_URL=postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test make test-integration
 make lint
 make typecheck
 make security
 make architecture-test
+EVOFIT_TEST_DATABASE_ALLOW_SCHEMA_RESET=I_CONFIRM_DISPOSABLE_DATABASE_SCHEMA_RESET \
 TEST_DATABASE_URL=postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test make quality
 ```
 
-Integration fixtures **drop and recreate the public schema** of the configured test database before applying Alembic. The migration test also modifies its configured disposable database. Never use production or non-disposable database credentials with these commands.
+Integration fixtures **drop and recreate the public schema** of the configured test database before applying Alembic. Before connecting, they require an exact `evofit_test` database, a loopback host, no URL query overrides of the target, and the explicit schema-reset confirmation shown above. They verify `current_database()` before dropping the schema. The migration test uses the same checks and also modifies the database. Never use production or shared database credentials with these commands.
 
 `make quality` runs lint, mypy, Bandit, Import Linter, architecture tests, migration test and coverage tests. The configured **80% minimum is application-code coverage**, because `[tool.coverage.run].source = ["app"]`; it is not 80% coverage of P/SPEC 01/SPEC 02 logic. Track research-module test completeness via `docs/TESTING.md` and explicit focused suites.
 

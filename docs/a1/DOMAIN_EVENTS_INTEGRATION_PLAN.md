@@ -116,10 +116,15 @@ run before ΔA6 Task-service wiring and do not call Task endpoints.
 After ΔA6 integration, run the focused check with a verified disposable DSN:
 
 ```bash
+EVOFIT_TEST_DATABASE_ALLOW_SCHEMA_RESET=I_CONFIRM_DISPOSABLE_DATABASE_SCHEMA_RESET \
 TEST_DATABASE_URL=postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test \
   uv run python -m pytest -q --no-cov -p no:cacheprovider \
   tests/integration/test_a1_domain_events.py
 ```
+
+The shared integration fixture requires the exact loopback `evofit_test`
+database, rejects connection-target query overrides, and verifies the connected
+database name before resetting `public`.
 
 Record the exact integrated source SHA, database identity, command, result, and
 whether all three tables were checked after each injected failure. If no
