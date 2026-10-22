@@ -836,10 +836,7 @@ def test_checked_in_canonical_a03_checkpoint_is_byte_bound_and_reads_back() -> N
         assert evidence["architecture"]["target_source_sha"] == source_sha
         assert evidence["source_scope"]["uncertainties"] == []
         assert evidence["evaluator"]["source_digest"] == record["evaluator_sha256"]
-        assert (
-            evidence["evaluator"]["configuration_digest"]
-            == record["configuration_sha256"]
-        )
+        assert evidence["evaluator"]["configuration_digest"] == record["configuration_sha256"]
         assert evidence["raw_output"]["sha256"] == record["raw_diagnostics_sha256"]
         raw_bytes = (EVALUATOR_ROOT / raw_relative).read_bytes()
         assert hashlib.sha256(raw_bytes).hexdigest() == record["raw_output_file_sha256"]
@@ -851,13 +848,16 @@ def test_checked_in_canonical_a03_checkpoint_is_byte_bound_and_reads_back() -> N
             expected_source_sha=source_sha,
             schema_path=EVALUATOR_ROOT / "evidence.schema.json",
         )
-        assert verify_evidence(
-            evidence,
-            ROOT,
-            EVALUATOR_ROOT / config_name,
-            EVALUATOR_ROOT,
-            evidence_root=EVALUATOR_ROOT,
-        ) == []
+        assert (
+            verify_evidence(
+                evidence,
+                ROOT,
+                EVALUATOR_ROOT / config_name,
+                EVALUATOR_ROOT,
+                evidence_root=EVALUATOR_ROOT,
+            )
+            == []
+        )
 
 
 def test_checked_in_delta_a2_evidence_survives_subject_and_bundle_relocation(
