@@ -19,6 +19,33 @@ uv run pytest --no-cov tests/unit/test_context_documents.py
 
 A test described in a specification must have a stable requirement ID, fixture provenance, preconditions, input, expected behavior, test level, location, and PASS/FAIL/SKIP/BLOCKED outcome. Never mark unimplemented requirements as passed.
 
+## ΔA3 governed module graph acceptance
+
+The stage-aware architecture check keeps historical A0.1 acceptance pinned to
+its original Git commit and recognizes A0.3 only when the versioned state
+manifest is present and valid. A0.3 acceptance runs the source-based
+`AC_PUBLIC_API` and `AC_MODULE_GRAPH` evaluators against the exact clean
+candidate HEAD. Both must report complete source scope, matching source
+identity, no unresolved imports, `COMPLIANT`, and successful digest readback.
+The exact intermediate graph and the A0.2/A0.3-only Reporting query exception
+are checked against the evaluator configurations.
+
+Focused checks:
+
+```bash
+uv run pytest --no-cov -p no:cacheprovider tests/unit/test_architecture_stage_checks.py
+uv run pytest --no-cov -p no:cacheprovider tests/architecture/a1/test_evaluators.py
+make architecture-test ARCHITECTURE_STAGE=A0_3_GOVERNED_MODULE_GRAPH
+```
+
+The first two commands cover ΔA3-STATE-01, ΔA3-GOV-01, ΔA3-GRAPH-01 and
+ΔA3-NEG-01 in `tests/architecture/a1/REQUIREMENT_TEST_MATRIX.md`. The stage
+command also runs the pinned historical A0.1 checks and the current A0.3
+architecture test selection. Full development verification uses
+`make development-quality` with a disposable PostgreSQL database. These
+checks establish engineering acceptance only; they do not establish semantic
+fitness coverage, G1/G4, or measured DA01 results.
+
 ## Source-backed traceability seed
 
 | Requirement | Expected behavior | Existing suite / planned owner | Status |

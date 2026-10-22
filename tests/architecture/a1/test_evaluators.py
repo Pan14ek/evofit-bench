@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import subprocess
@@ -14,6 +15,7 @@ import yaml
 
 from architecture.acceptance.a1.analyzers import ANALYZERS
 from architecture.acceptance.a1.engine import run_evaluator, verify_evidence
+from scripts import check_architecture_stages as stage_checks
 
 ROOT = Path(__file__).resolve().parents[3]
 EVALUATOR_ROOT = ROOT / "architecture/acceptance/a1"
@@ -729,6 +731,62 @@ def test_evidence_re_readback_rejects_changed_config_evaluator_and_subject_bytes
         item.startswith("SUBJECT_SOURCE_DIGEST_MISMATCH")
         for item in verify_evidence(evidence, root, config_path, EVALUATOR_ROOT)
     )
+
+
+def test_a03_stage_readback_rejects_tampered_raw_diagnostics(tmp_path: Path) -> None:
+    root, sha = _fixture_repo(tmp_path, state="A0_3_GOVERNED_MODULE_GRAPH")
+    evidence, _ = _run(root, sha, "AC_MODULE_GRAPH", state="A0_3_GOVERNED_MODULE_GRAPH")
+    stage_checks._validate_a03_evidence(
+        evidence,
+        evaluator_id="AC_MODULE_GRAPH",
+        expected_source_sha=sha,
+        schema_path=EVALUATOR_ROOT / "evidence.schema.json",
+    )
+
+    tampered = json.loads(json.dumps(evidence))
+    tampered["diagnostics"]["cycles"] = [["tasks", "users", "tasks"]]
+    try:
+        stage_checks._validate_a03_evidence(
+            tampered,
+            evaluator_id="AC_MODULE_GRAPH",
+            expected_source_sha=sha,
+            schema_path=EVALUATOR_ROOT / "evidence.schema.json",
+        )
+    except stage_checks.StageCheckError as error:
+        assert "RAW_OUTPUT_DIGEST_MISMATCH" in str(error)
+    else:
+        raise AssertionError("A0.3 stage readback accepted tampered raw diagnostics")
+
+
+def test_checked_in_a03_evidence_is_byte_bound_and_reads_back() -> None:
+    readback = json.loads(
+        (EVALUATOR_ROOT / "a0_3_evidence_readback.json").read_text(encoding="utf-8")
+    )
+    source_sha = readback["source_sha"]
+    assert readback["readback_status"] == "PASS"
+    assert (
+        _git(ROOT, "rev-parse", f"{source_sha}:app", capture_output=True).stdout.strip()
+        == readback["application_tree_sha"]
+    )
+    for evaluator_id, record in readback["evaluators"].items():
+        relative_path = Path(record["evidence_path"])
+        assert not relative_path.is_absolute() and ".." not in relative_path.parts
+        evidence_path = EVALUATOR_ROOT / relative_path
+        evidence_bytes = evidence_path.read_bytes()
+        assert hashlib.sha256(evidence_bytes).hexdigest() == record["evidence_file_sha256"]
+        evidence = json.loads(evidence_bytes)
+        assert evidence["architecture"]["target_source_sha"] == source_sha
+        assert evidence["evaluator"]["configuration_digest"] == record["configuration_sha256"]
+        assert evidence["evaluator"]["source_digest"] == record["evaluator_sha256"]
+        assert evidence["raw_output"]["sha256"] == record["raw_diagnostics_sha256"]
+        stage_checks._validate_a03_evidence(
+            evidence,
+            evaluator_id=evaluator_id,
+            expected_source_sha=source_sha,
+            schema_path=EVALUATOR_ROOT / "evidence.schema.json",
+        )
+        config_path = EVALUATOR_ROOT / CONFIG_FILES[evaluator_id]
+        assert verify_evidence(evidence, ROOT, config_path, EVALUATOR_ROOT) == []
 
 
 def test_checked_in_delta_a2_evidence_survives_subject_and_bundle_relocation(

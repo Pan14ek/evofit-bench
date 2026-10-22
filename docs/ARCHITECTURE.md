@@ -2,7 +2,7 @@
 
 ## Two layers in one repository
 
-**Application layer:** an instrumented, capability-oriented Python monolith (DA01 target `A0_1_CAPABILITY_MODULES`).
+**Application layer:** an instrumented, capability-oriented Python monolith. The current engineering state is `A0_3_GOVERNED_MODULE_GRAPH`; this adds mandatory source-based architecture acceptance without changing deployed application topology or behavior.
 
 **Experiment/method layer:** reproducible architecture/fitness contracts, isolated B0/B1/P inputs, independent scoring/evidence procedures and development-only P preparation. The method code is under `experiments/execution/tooling/`; the benchmark app is under `app/`. Do not import oracle-side logic into the method executor.
 
@@ -23,16 +23,18 @@ flowchart TB
     Reporting --> DB
 ```
 
-The diagram is a **logical** depiction, not separately deployed microservices. Exactly one application process, one database instance, no broker and synchronous Python communication are declared in `architecture/states/A0_1_CAPABILITY_MODULES.yaml`. Docker Compose has one app service and one PostgreSQL service; it does not constitute a distributed service architecture.
+The diagram is a **logical** depiction, not separately deployed microservices. Exactly one application process, one database instance, no broker and synchronous Python communication remain declared in the preserved A0.1 manifest and the additive A0.3 state record. Docker Compose has one app service and one PostgreSQL service; it does not constitute a distributed service architecture.
 
 ### Dependencies and transactions
 
-The preserved allowed cross-capability calls are:
-- Tasks service → Users repository, Notifications service and Audit service.
-- Users service → Audit service.
-- Reporting service → Tasks service.
+The A0.3 source policy preserves exactly these capability edges:
+- Tasks → Users, Notifications and Audit.
+- Users → Audit.
+- Reporting → Tasks.
 
-No enforced public module API, governed cross-module dependency graph, module-owned database boundary or domain event transport has been introduced. `app.db.model_registry` imports capability ORM models into the shared SQLAlchemy `Base`. Task/Notification/Audit effects run within a caller-owned transaction.
+Each capability exposes its W1 public module API. `AC_PUBLIC_API` rejects private cross-capability imports while allowing the exact temporary `Reporting.service → Tasks.service.task_summary` exception in A0.2/A0.3. `AC_MODULE_GRAPH` derives imports from the configured capability source scope and rejects undeclared dependencies, cycles, unresolved local imports, incomplete inspection, or source-identity mismatch. The A0.3 stage gate requires both evaluators to report source-bound `COMPLIANT` results and verifies their manifest, evaluator, configuration, source-file, and raw-diagnostic digests.
+
+The new state is governance-only: it does not migrate the Reporting query port (ΔA4), introduce module-owned databases, change REST behavior, add event transport, or alter transaction ownership. `app.db.model_registry` still imports capability ORM models into the shared SQLAlchemy `Base`. Task/Notification/Audit effects remain within a caller-managed transaction.
 
 Shared infrastructure: `app.api`, `app.db`, `app.config`, `app.experiment`, `app.observability`, `app.models.base`, `app.services.errors`. `app.main` assembles HTTP routers and middleware. Detailed authoritative architecture: `../ARCHITECTURE.md` and `../architecture/states/A0_1_CAPABILITY_MODULES.yaml`.
 
@@ -66,7 +68,7 @@ flowchart TD
 | Path | Responsibility |
 | --- | --- |
 | `app/` | Benchmark service, business modules, DB, telemetry, experimental fault hooks |
-| `architecture/states/` | Declared architecture state; DA01 capability manifest |
+| `architecture/states/` | Preserved A0.1 capability manifest and additive A0.3 governed-graph state record/schema |
 | `architecture/acceptance/` | Current engineering dependency acceptance |
 | `fitness/catalog/` | Obligation and A0 fitness representation registries |
 | `fitness/traceability/` | Baseline links for impact analysis |

@@ -1,10 +1,13 @@
 """Adversarial controls for historical/current architecture-stage separation."""
 
+import shutil
 from pathlib import Path
 
 import pytest
 
 from scripts import check_architecture_stages as stage
+
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _fake_modules(root: Path, public: tuple[str, ...] = ()) -> None:
@@ -14,6 +17,22 @@ def _fake_modules(root: Path, public: tuple[str, ...] = ()) -> None:
         (folder / "__init__.py").write_text("", encoding="utf-8")
         if name in public:
             (folder / "public.py").write_text("", encoding="utf-8")
+
+
+def _install_a03_manifest(root: Path) -> None:
+    for relative in (stage.A03_MANIFEST, stage.A03_SCHEMA):
+        source = REPOSITORY_ROOT / relative
+        target = root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
+
+
+def _fake_a03_subject(root: Path) -> None:
+    _fake_modules(root, stage.MODULES)
+    contract_test = root / "tests/unit/test_module_public_apis.py"
+    contract_test.parent.mkdir(parents=True)
+    contract_test.write_text("def test_contract(): pass\n", encoding="utf-8")
+    _install_a03_manifest(root)
 
 
 def test_detects_exact_baseline_when_no_public_apis(tmp_path: Path) -> None:
@@ -40,6 +59,37 @@ def test_requires_concrete_w1_contract_tests_for_complete_stage(tmp_path: Path) 
     test_file.parent.mkdir(parents=True)
     test_file.write_text("def test_example(): pass\n", encoding="utf-8")
     assert stage.detect_stage(tmp_path) == stage.A02
+
+
+def test_public_api_modules_alone_do_not_identify_a03(tmp_path: Path) -> None:
+    _fake_modules(tmp_path, stage.MODULES)
+    contract_test = tmp_path / "tests/unit/test_module_public_apis.py"
+    contract_test.parent.mkdir(parents=True)
+    contract_test.write_text("def test_contract(): pass\n", encoding="utf-8")
+    assert stage.detect_stage(tmp_path) == stage.A02
+
+    _install_a03_manifest(tmp_path)
+    assert stage.detect_stage(tmp_path) == stage.A03
+    manifest = stage._validate_a03_manifest(tmp_path)
+    stage._validate_a03_policy_bindings(REPOSITORY_ROOT, manifest)
+
+
+def test_a03_manifest_cannot_fall_back_to_a01_without_public_apis(tmp_path: Path) -> None:
+    _fake_modules(tmp_path)
+    _install_a03_manifest(tmp_path)
+    with pytest.raises(stage.StageCheckError, match="A0.3 state lacks complete public APIs"):
+        stage.detect_stage(tmp_path)
+
+
+def test_a03_manifest_rejects_changed_dependency_graph(tmp_path: Path) -> None:
+    _install_a03_manifest(tmp_path)
+    manifest_path = tmp_path / stage.A03_MANIFEST
+    contents = manifest_path.read_text(encoding="utf-8").replace(
+        "{from: reporting, to: tasks}", "{from: reporting, to: notifications}"
+    )
+    manifest_path.write_text(contents, encoding="utf-8")
+    with pytest.raises(stage.StageCheckError, match="A0.3_MANIFEST_GRAPH_MISMATCH"):
+        stage._validate_a03_manifest(tmp_path)
 
 
 def test_historical_pin_rejects_unknown_commit(
@@ -136,3 +186,68 @@ def test_w2_evaluator_tests_appear_only_when_present(
     )
     stage.current_stage_acceptance(tmp_path, requested_stage=stage.A02)
     assert "tests/architecture/a1/test_evaluators.py" in calls[0]
+
+
+def test_a03_acceptance_requires_both_live_evaluators_and_adversarial_suite(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _fake_a03_subject(tmp_path)
+    calls: list[tuple[str, object]] = []
+    pytest_targets: list[list[str]] = []
+
+    def git_result(_root: Path, *args: str) -> str:
+        if args == ("status", "--porcelain", "--", "app", "architecture", "tests"):
+            return ""
+        return "a" * 40
+
+    monkeypatch.setattr(stage, "_git", git_result)
+    monkeypatch.setattr(
+        stage,
+        "_run_a03_evaluators",
+        lambda _root, source_sha: calls.append(("evaluators", source_sha)),
+    )
+    monkeypatch.setattr(
+        stage,
+        "_run_pytest",
+        lambda _root, paths, *, historical: pytest_targets.append(paths),
+    )
+
+    assert stage.current_stage_acceptance(tmp_path, requested_stage=stage.A03) == stage.A03
+    assert calls == [("evaluators", "a" * 40)]
+    assert pytest_targets == [
+        [
+            "tests/architecture/test_layer_rules.py",
+            "tests/unit/test_module_public_apis.py",
+            "tests/architecture/a1/test_evaluators.py",
+        ]
+    ]
+
+
+def test_a03_evaluator_failure_blocks_architecture_tests(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _fake_a03_subject(tmp_path)
+    pytest_called = False
+
+    def reject_graph(_root: Path, _source_sha: str) -> None:
+        raise stage.StageCheckError("AC_MODULE_GRAPH evidence rejected: EVALUATOR_NOT_COMPLIANT")
+
+    def unexpected_pytest(*_args: object, **_kwargs: object) -> None:
+        nonlocal pytest_called
+        pytest_called = True
+
+    monkeypatch.setattr(
+        stage,
+        "_git",
+        lambda _root, *args: (
+            "a" * 40
+            if args != ("status", "--porcelain", "--", "app", "architecture", "tests")
+            else ""
+        ),
+    )
+    monkeypatch.setattr(stage, "_run_a03_evaluators", reject_graph)
+    monkeypatch.setattr(stage, "_run_pytest", unexpected_pytest)
+
+    with pytest.raises(stage.StageCheckError, match="AC_MODULE_GRAPH evidence rejected"):
+        stage.current_stage_acceptance(tmp_path, requested_stage=stage.A03)
+    assert not pytest_called
