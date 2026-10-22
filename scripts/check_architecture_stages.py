@@ -569,7 +569,7 @@ def _validate_a04_canonical_checkpoint(bundle_root: Path, source_root: Path) -> 
     git = shutil.which("git")
     if git is None:
         raise StageCheckError("A0.4_CANONICAL_APPLICATION_DIFF_GIT_UNAVAILABLE")
-    expected_diff = subprocess.run(
+    expected_diff = subprocess.run(  # noqa: S603  # nosec B603 - fixed Git argv, no shell
         [
             git,
             "-C",

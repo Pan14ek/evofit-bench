@@ -1050,9 +1050,9 @@ def test_checked_in_canonical_a04_checkpoint_is_byte_bound_and_reads_back(
     assert manifest_bytes == (checkout / stage_checks.A04_MANIFEST).read_bytes()
     stage_checks._validate_a04_canonical_checkpoint(bundle_root, checkout)
 
-    for evaluator_id, record in (
+    for record in (
         checkpoint["evaluators"] | checkpoint["non_applicable_evaluators"]
-    ).items():
+    ).values():
         evidence_bytes = (bundle_root / record["evidence_path"]).read_bytes()
         evidence = json.loads(evidence_bytes)
         assert hashlib.sha256(evidence_bytes).hexdigest() == record["evidence_file_sha256"]
@@ -1125,7 +1125,9 @@ def test_canonical_a04_readback_rejects_tampered_bytes(
     checkpoint = json.loads((EVALUATOR_ROOT / "a0_4_canonical_checkpoint.json").read_bytes())
     bundle_root = _copy_evidence_bundle(tmp_path, *_a04_canonical_bundle_paths())
     source_sha = checkpoint["source"]["source_sha"]
-    checkout = _materialize_historical_checkout(tmp_path, source_sha, name=f"tampered-{tamper_target}")
+    checkout = _materialize_historical_checkout(
+        tmp_path, source_sha, name=f"tampered-{tamper_target}"
+    )
 
     public = checkpoint["evaluators"]["AC_PUBLIC_API"]
     if tamper_target == "source":
