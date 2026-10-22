@@ -731,45 +731,49 @@ def test_evidence_re_readback_rejects_changed_config_evaluator_and_subject_bytes
     )
 
 
-def test_evidence_manifest_and_subject_roots_survive_relocation(tmp_path: Path) -> None:
-    root, sha = _fixture_repo(tmp_path / "initial")
-    evidence_bundle = tmp_path / "initial" / "evidence-bundle"
-    evaluator_root = evidence_bundle / "evaluator"
-    config_path = evidence_bundle / "public_api_v1.yaml"
-    manifest_path = evidence_bundle / "state.yaml"
-    evaluator_root.mkdir(parents=True)
-    shutil.copy2(EVALUATOR_ROOT / "public_api_v1.yaml", config_path)
-    _write(
-        manifest_path,
-        f"schema_version: 1\narchitecture_state: {FINAL_STATE}\nsource_sha: {sha}\n",
+def test_checked_in_delta_a2_evidence_survives_subject_and_bundle_relocation(
+    tmp_path: Path,
+) -> None:
+    evidence = json.loads(
+        (EVALUATOR_ROOT / "a0_2_public_api_observation.json").read_text(encoding="utf-8")
     )
-    for path in EVALUATOR_ROOT.glob("*.py"):
-        shutil.copy2(path, evaluator_root / path.name)
-
-    evidence = run_evaluator(
-        "AC_PUBLIC_API",
-        root,
-        config_path,
-        manifest_path,
-        FINAL_STATE,
-        sha,
-        ANALYZERS["AC_PUBLIC_API"],
-        evidence_root=evidence_bundle,
-    )
-    assert evidence["architecture"]["manifest_path"] == "state.yaml"
+    source_sha = evidence["architecture"]["target_source_sha"]
+    assert source_sha == "934f5e045af473acdb197604c761597ba39b026c"
     assert evidence["architecture"]["manifest_root"] == "evidence"
     assert not Path(evidence["architecture"]["manifest_path"]).is_absolute()
 
-    relocated_subject = tmp_path / "relocated-checkout"
+    original_subject = tmp_path / "original-subject-checkout"
+    _git(ROOT, "clone", "--shared", "--quiet", "--no-checkout", str(ROOT), str(original_subject))
+    _git(original_subject, "checkout", "--quiet", "--detach", source_sha)
+    assert (
+        _git(original_subject, "rev-parse", "HEAD", capture_output=True).stdout.strip()
+        == source_sha
+    )
+
+    original_bundle = tmp_path / "original-evidence-bundle"
+    original_bundle.mkdir()
+    original_evaluator_root = original_bundle / "evaluator"
+    original_evaluator_root.mkdir()
+    manifest_relative = Path(evidence["architecture"]["manifest_path"])
+    manifest_path = original_bundle / manifest_relative
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(EVALUATOR_ROOT / manifest_relative, manifest_path)
+    config_path = original_bundle / CONFIG_FILES[evidence["evaluator"]["id"]]
+    shutil.copy2(EVALUATOR_ROOT / config_path.name, config_path)
+    for artifact in evidence["evaluator"]["source_artifacts"]:
+        shutil.copy2(EVALUATOR_ROOT / artifact["path"], original_evaluator_root / artifact["path"])
+
+    relocated_subject = tmp_path / "relocated-subject-checkout"
     relocated_bundle = tmp_path / "relocated-evidence-bundle"
-    shutil.copytree(root, relocated_subject)
-    shutil.copytree(evidence_bundle, relocated_bundle)
+    shutil.copytree(original_subject, relocated_subject)
+    shutil.copytree(original_bundle, relocated_bundle)
     relocated_evaluator_root = relocated_bundle / "evaluator"
+    relocated_config_path = relocated_bundle / config_path.name
     assert (
         verify_evidence(
             evidence,
             relocated_subject,
-            relocated_bundle / "public_api_v1.yaml",
+            relocated_config_path,
             relocated_evaluator_root,
             evidence_root=relocated_bundle,
         )
@@ -786,7 +790,7 @@ def test_evidence_manifest_and_subject_roots_survive_relocation(tmp_path: Path) 
     assert "ARCHITECTURE_MANIFEST_PATH_NOT_PORTABLE" in verify_evidence(
         absolute_manifest,
         relocated_subject,
-        relocated_bundle / "public_api_v1.yaml",
+        relocated_config_path,
         relocated_evaluator_root,
         evidence_root=relocated_bundle,
     )
@@ -801,7 +805,7 @@ def test_evidence_manifest_and_subject_roots_survive_relocation(tmp_path: Path) 
     assert "ARCHITECTURE_MANIFEST_PATH_ESCAPES_ROOT" in verify_evidence(
         escaping_manifest,
         relocated_subject,
-        relocated_bundle / "public_api_v1.yaml",
+        relocated_config_path,
         relocated_evaluator_root,
         evidence_root=relocated_bundle,
     )
