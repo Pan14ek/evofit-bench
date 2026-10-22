@@ -24,6 +24,11 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("evaluator", choices=sorted(CONFIGS))
     parser.add_argument("--repo-root", type=Path, default=Path.cwd())
+    parser.add_argument(
+        "--evidence-root",
+        type=Path,
+        help="separate root for portable external evidence manifests",
+    )
     parser.add_argument("--config", type=Path)
     parser.add_argument("--state-manifest", type=Path, required=True)
     parser.add_argument("--architecture-state", required=True)
@@ -47,6 +52,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         args.architecture_state,
         args.expected_source_sha,
         ANALYZERS[args.evaluator],
+        evidence_root=args.evidence_root.resolve() if args.evidence_root else None,
     )
     payload = json.dumps(evidence, indent=2, sort_keys=True) + "\n"
     if args.output:

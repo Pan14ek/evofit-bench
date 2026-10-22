@@ -91,6 +91,13 @@
           "type": "string",
           "minLength": 1
         },
+        "manifest_root": {
+          "enum": [
+            "subject",
+            "evidence"
+          ],
+          "description": "Root used to resolve manifest_path; evidence references are relative to the evidence bundle, never the subject source checkout."
+        },
         "manifest_digest": {
           "type": [
             "string",

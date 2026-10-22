@@ -3,7 +3,8 @@
   "architecture": {
     "expected_source_sha": "934f5e045af473acdb197604c761597ba39b026c",
     "manifest_digest": "d23952ac68148749c6f94ccad47de6bfa1d048a5233359f618c75721d61d64a6",
-    "manifest_path": "/Users/oleksii_makieiev/Documents/startups/evofit-wt-a1-architecture/architecture/acceptance/a1/a0_2_public_api_evidence_input.yaml",
+    "manifest_path": "a0_2_public_api_evidence_input.yaml",
+    "manifest_root": "evidence",
     "manifest_state_status": "MATCHED",
     "source_sha_status": "MATCHED",
     "state": "A0_2_PUBLIC_MODULE_APIS",
@@ -2369,17 +2370,17 @@
       },
       {
         "path": "cli.py",
-        "sha256": "e32cdb9619ebc0a5f834b23e4eb4265e9b0f2e464ea8694ab614625de0d158b0"
+        "sha256": "ad03caa866c09ae71784bbfca428f074a4b54ea097d182717e7f4ce15024997a"
       },
       {
         "path": "engine.py",
-        "sha256": "4f23eba6067bce8a2793c8923d216a11c782147c9d95e7881b93b1a8b9c8c9f5"
+        "sha256": "06359bf5e40ed69291f6a3e3dd827a0e419ac0cd5ff3d4b53c8154d4ddc7718f"
       }
     ],
-    "source_digest": "5fbbed1b42fd6e5d7a49fe036cab31838041338c1b7817038f4c0f60040dcadb",
+    "source_digest": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
     "version": "1.0.0"
   },
-  "generated_at": "2026-10-21T20:31:47.000077+00:00",
+  "generated_at": "2026-10-22T09:31:17.610243+00:00",
   "raw_output": {
     "available": true,
     "format": "application/json",

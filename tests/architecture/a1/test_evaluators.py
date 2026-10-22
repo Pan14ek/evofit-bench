@@ -731,6 +731,82 @@ def test_evidence_re_readback_rejects_changed_config_evaluator_and_subject_bytes
     )
 
 
+def test_evidence_manifest_and_subject_roots_survive_relocation(tmp_path: Path) -> None:
+    root, sha = _fixture_repo(tmp_path / "initial")
+    evidence_bundle = tmp_path / "initial" / "evidence-bundle"
+    evaluator_root = evidence_bundle / "evaluator"
+    config_path = evidence_bundle / "public_api_v1.yaml"
+    manifest_path = evidence_bundle / "state.yaml"
+    evaluator_root.mkdir(parents=True)
+    shutil.copy2(EVALUATOR_ROOT / "public_api_v1.yaml", config_path)
+    _write(
+        manifest_path,
+        f"schema_version: 1\narchitecture_state: {FINAL_STATE}\nsource_sha: {sha}\n",
+    )
+    for path in EVALUATOR_ROOT.glob("*.py"):
+        shutil.copy2(path, evaluator_root / path.name)
+
+    evidence = run_evaluator(
+        "AC_PUBLIC_API",
+        root,
+        config_path,
+        manifest_path,
+        FINAL_STATE,
+        sha,
+        ANALYZERS["AC_PUBLIC_API"],
+        evidence_root=evidence_bundle,
+    )
+    assert evidence["architecture"]["manifest_path"] == "state.yaml"
+    assert evidence["architecture"]["manifest_root"] == "evidence"
+    assert not Path(evidence["architecture"]["manifest_path"]).is_absolute()
+
+    relocated_subject = tmp_path / "relocated-checkout"
+    relocated_bundle = tmp_path / "relocated-evidence-bundle"
+    shutil.copytree(root, relocated_subject)
+    shutil.copytree(evidence_bundle, relocated_bundle)
+    relocated_evaluator_root = relocated_bundle / "evaluator"
+    assert (
+        verify_evidence(
+            evidence,
+            relocated_subject,
+            relocated_bundle / "public_api_v1.yaml",
+            relocated_evaluator_root,
+            evidence_root=relocated_bundle,
+        )
+        == []
+    )
+
+    absolute_manifest = {
+        **evidence,
+        "architecture": {
+            **evidence["architecture"],
+            "manifest_path": str(manifest_path.resolve()),
+        },
+    }
+    assert "ARCHITECTURE_MANIFEST_PATH_NOT_PORTABLE" in verify_evidence(
+        absolute_manifest,
+        relocated_subject,
+        relocated_bundle / "public_api_v1.yaml",
+        relocated_evaluator_root,
+        evidence_root=relocated_bundle,
+    )
+
+    escaping_manifest = {
+        **evidence,
+        "architecture": {
+            **evidence["architecture"],
+            "manifest_path": "../outside/state.yaml",
+        },
+    }
+    assert "ARCHITECTURE_MANIFEST_PATH_ESCAPES_ROOT" in verify_evidence(
+        escaping_manifest,
+        relocated_subject,
+        relocated_bundle / "public_api_v1.yaml",
+        relocated_evaluator_root,
+        evidence_root=relocated_bundle,
+    )
+
+
 def test_non_applicable_state_keeps_diagnostics_without_compliance_claim(
     tmp_path: Path,
 ) -> None:

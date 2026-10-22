@@ -22,7 +22,7 @@ Provide independent, source-derived evaluators for AC_PUBLIC_API, AC_MODULE_GRAP
 
 ## Established conventions
 
-Run an evaluator with the exact architecture manifest and expected Git source SHA. A missing module, unresolved scope, mismatched architecture revision, changed subject source, unpinned revision, or changed manifest/evaluator/config bytes must remain `NOT_EVALUABLE` or `UNKNOWN`; never infer compliance from an empty graph. CLI exits are 0 for COMPLIANT, 1 for NON_COMPLIANT, 2 for UNKNOWN/NOT_EVALUABLE or execution failure, and 3 for NOT_APPLICABLE. Evaluator exit success, complete scope, compliance, and representation-to-obligation adequacy are separate claims.
+Run an evaluator with the exact architecture manifest and expected Git source SHA. For a manifest outside the subject checkout, pass `--evidence-root`; evidence stores `manifest_path` relative to that root and marks `manifest_root: evidence`. `verify_evidence()` keeps the subject checkout root separate from the evidence root and rechecks the exact manifest bytes. It rejects absolute references and relative paths escaping their declared root. A missing module, unresolved scope, mismatched architecture revision, changed subject source, unpinned revision, or changed manifest/evaluator/config bytes must remain `NOT_EVALUABLE` or `UNKNOWN`; never infer compliance from an empty graph. CLI exits are 0 for COMPLIANT, 1 for NON_COMPLIANT, 2 for UNKNOWN/NOT_EVALUABLE or execution failure, and 3 for NOT_APPLICABLE. Evaluator exit success, complete scope, compliance, and representation-to-obligation adequacy are separate claims.
 
 ## Constraints and known gaps
 
@@ -35,7 +35,7 @@ The checked-in A0.1 source observations record 26 inspected Python files/167 imp
 ```bash
 uv run pytest --no-cov -p no:cacheprovider tests/architecture/a1
 python -m architecture.acceptance.a1.cli AC_MODULE_GRAPH --repo-root . --state-manifest architecture/states/A0_1_CAPABILITY_MODULES.yaml --architecture-state A0_1_CAPABILITY_MODULES --expected-source-sha <40-character-git-sha>
-python -m architecture.acceptance.a1.cli AC_PUBLIC_API --repo-root <clean-checkout-at-934f5e0> --state-manifest architecture/acceptance/a1/a0_2_public_api_evidence_input.yaml --architecture-state A0_2_PUBLIC_MODULE_APIS --expected-source-sha 934f5e045af473acdb197604c761597ba39b026c
+python -m architecture.acceptance.a1.cli AC_PUBLIC_API --repo-root <clean-checkout-at-934f5e0> --state-manifest <W2-evidence-bundle>/a0_2_public_api_evidence_input.yaml --evidence-root architecture/acceptance/a1 --architecture-state A0_2_PUBLIC_MODULE_APIS --expected-source-sha 934f5e045af473acdb197604c761597ba39b026c
 ```
 
 Use the target worktree's own environment and an exact, clean subject source revision for evidence intended for independent readback.

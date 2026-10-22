@@ -395,11 +395,14 @@ def run_evaluator(
     architecture_state: str,
     expected_source_sha: str | None,
     analyzer: Analyzer,
+    *,
+    evidence_root: Path | None = None,
 ) -> dict[str, Any]:
     """Run one evaluator and preserve execution, scope, compliance, and provenance separately."""
     root = repo_root.resolve()
     config_file = config_path.resolve()
     manifest_file = manifest_path.resolve()
+    bundle_root = evidence_root.resolve() if evidence_root is not None else None
     errors: list[str] = []
     try:
         config = load_configuration(config_file)
@@ -451,6 +454,16 @@ def run_evaluator(
     evaluator_artifacts = _evaluator_artifacts()
     config_digest = _configuration_digest(config_file) if config_file.is_file() else None
     manifest_digest = file_sha256(manifest_file) if manifest_file.is_file() else None
+    if manifest_file.is_relative_to(root):
+        manifest_root_kind = "subject"
+        manifest_reference = _relative(manifest_file, root)
+    elif bundle_root is not None and manifest_file.is_relative_to(bundle_root):
+        manifest_root_kind = "evidence"
+        manifest_reference = _relative(manifest_file, bundle_root)
+    else:
+        manifest_root_kind = "evidence" if bundle_root is not None else "subject"
+        manifest_reference = "__unresolved_manifest_reference__"
+        errors.append("MANIFEST_PATH_OUTSIDE_EVIDENCE_ROOT")
     hard_revision_problem = state_status != "MATCHED" or source_status == "MISMATCH"
     if errors and any(
         error.startswith(("CONFIG_", "EXPECTED_MODULES_", "EVALUATOR_ID_MISMATCH"))
@@ -498,9 +511,8 @@ def run_evaluator(
         },
         "architecture": {
             "state": architecture_state,
-            "manifest_path": _relative(manifest_file, root)
-            if manifest_file.is_relative_to(root)
-            else str(manifest_file),
+            "manifest_path": manifest_reference,
+            "manifest_root": manifest_root_kind,
             "manifest_digest": manifest_digest,
             "manifest_state_status": state_status,
             "target_source_sha": source_sha,
@@ -561,19 +573,39 @@ def verify_evidence(
     repo_root: Path,
     config_path: Path,
     evaluator_root: Path | None = None,
+    *,
+    evidence_root: Path | None = None,
 ) -> list[str]:
     """Re-read exact manifest, source, config, and evaluator bytes referenced by evidence."""
     failures: list[str] = []
     manifest_value = evidence.get("architecture", {}).get("manifest_path")
     manifest_digest = evidence.get("architecture", {}).get("manifest_digest")
-    if isinstance(manifest_value, str):
-        manifest_path = Path(manifest_value)
-        if not manifest_path.is_absolute():
-            manifest_path = repo_root / manifest_path
-        if not manifest_path.is_file():
-            failures.append("ARCHITECTURE_MANIFEST_MISSING")
-        elif file_sha256(manifest_path) != manifest_digest:
-            failures.append("ARCHITECTURE_MANIFEST_DIGEST_MISMATCH")
+    manifest_root_kind = evidence.get("architecture", {}).get("manifest_root", "subject")
+    if isinstance(manifest_value, str) and not Path(manifest_value).is_absolute():
+        if manifest_root_kind == "subject":
+            manifest_root = repo_root.resolve()
+        elif manifest_root_kind == "evidence":
+            # The fourth positional argument remains the W3 evaluator-package root.
+            manifest_root = evidence_root or evaluator_root
+            if manifest_root is None:
+                failures.append("ARCHITECTURE_EVIDENCE_ROOT_MISSING")
+                manifest_root = Path(".")
+            manifest_root = manifest_root.resolve()
+        else:
+            failures.append("ARCHITECTURE_MANIFEST_ROOT_INVALID")
+            manifest_root = Path(".").resolve()
+        manifest_path = (manifest_root / manifest_value).resolve()
+        try:
+            manifest_path.relative_to(manifest_root)
+        except ValueError:
+            failures.append("ARCHITECTURE_MANIFEST_PATH_ESCAPES_ROOT")
+        else:
+            if not manifest_path.is_file():
+                failures.append("ARCHITECTURE_MANIFEST_MISSING")
+            elif file_sha256(manifest_path) != manifest_digest:
+                failures.append("ARCHITECTURE_MANIFEST_DIGEST_MISMATCH")
+    elif isinstance(manifest_value, str):
+        failures.append("ARCHITECTURE_MANIFEST_PATH_NOT_PORTABLE")
     else:
         failures.append("ARCHITECTURE_MANIFEST_PATH_MISSING")
     if not config_path.is_file() or file_sha256(config_path) != evidence.get("evaluator", {}).get(
