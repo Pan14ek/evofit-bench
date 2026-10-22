@@ -1,11 +1,16 @@
 """Negative checks for destructive PostgreSQL test-database configuration."""
 
+from pathlib import Path
+from types import SimpleNamespace
+
 import pytest
 
+from scripts import disposable_postgres
 from scripts.disposable_postgres import (
     SCHEMA_RESET_CONFIRMATION,
     validate_disposable_postgres_test_url,
 )
+from tests import conftest as pytest_hooks
 
 _URL = "postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test"
 
@@ -61,3 +66,66 @@ def test_rejects_missing_database_url() -> None:
             None,
             schema_reset_confirmation=SCHEMA_RESET_CONFIRMATION,
         )
+
+
+def test_integration_collection_hook_rejects_missing_reset_confirmation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("TEST_DATABASE_URL", _URL)
+    monkeypatch.delenv(disposable_postgres.SCHEMA_RESET_CONFIRMATION_ENV, raising=False)
+    monkeypatch.setattr(
+        pytest_hooks,
+        "create_engine",
+        lambda *_args, **_kwargs: pytest.fail("unsafe target reached database connection"),
+    )
+    session = SimpleNamespace(
+        items=[
+            SimpleNamespace(path=Path(pytest_hooks.__file__).parent / "integration/test_example.py")
+        ]
+    )
+
+    with pytest.raises(pytest.UsageError, match="EVOFIT_TEST_DATABASE_ALLOW_SCHEMA_RESET"):
+        pytest_hooks.pytest_collection_finish(session)  # type: ignore[arg-type]
+
+
+def test_integration_collection_hook_verifies_live_database_before_tests(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("TEST_DATABASE_URL", _URL)
+    monkeypatch.setenv(
+        disposable_postgres.SCHEMA_RESET_CONFIRMATION_ENV,
+        SCHEMA_RESET_CONFIRMATION,
+    )
+
+    class FakeConnection:
+        def __enter__(self) -> "FakeConnection":
+            return self
+
+        def __exit__(self, *_args: object) -> None:
+            return None
+
+        @staticmethod
+        def scalar(_query: object) -> str:
+            return "evofit_test"
+
+    class FakeEngine:
+        disposed = False
+
+        @staticmethod
+        def connect() -> FakeConnection:
+            return FakeConnection()
+
+        def dispose(self) -> None:
+            self.disposed = True
+
+    engine = FakeEngine()
+    monkeypatch.setattr(pytest_hooks, "create_engine", lambda *_args, **_kwargs: engine)
+    session = SimpleNamespace(
+        items=[
+            SimpleNamespace(path=Path(pytest_hooks.__file__).parent / "integration/test_example.py")
+        ]
+    )
+
+    pytest_hooks.pytest_collection_finish(session)  # type: ignore[arg-type]
+
+    assert engine.disposed

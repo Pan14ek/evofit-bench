@@ -29,6 +29,7 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 - `unit/test_module_public_apis.py` — ΔA2 exports, cross-module public imports and Reporting exception
 - `integration/test_public_module_contracts.py` — public facade session ownership and task rollback
 - `unit/test_disposable_postgres.py` — fail-closed checks for local disposable PostgreSQL reset targets
+- `conftest.py` — validates the selected PostgreSQL target before any integration fixture can reset its schema
 
 ## Established conventions
 
