@@ -17,13 +17,14 @@ Task status and assignment aggregate reporting.
 
 ## Established conventions
 
-Delegates to Tasks service and shared database. `public.py` returns the canonical `tasks.public.TaskSummary`
-shape. `service.py` intentionally keeps the direct `Tasks.service.task_summary` call as the
-source-visible ΔA4 migration exception.
+Delegates to `tasks.public.get_task_summary` with the caller's shared database session. `public.py`
+returns the canonical `tasks.public.TaskSummary` shape. A0.4 source acceptance rejects a direct
+Reporting import from `tasks.service`.
 
 ## Constraints and known gaps
 
-No independent read model; a future architecture delta adds different communication.
+No independent read model; the query contract remains a synchronous in-process call and leaves
+transaction ownership with the caller.
 
 ## Verification and further reading
 

@@ -588,6 +588,63 @@ def test_legacy_reporting_edge_is_allowed_only_in_intermediate_state(tmp_path: P
         assert later["result"]["compliance"] == "NON_COMPLIANT"
 
 
+def test_a04_reporting_query_port_accepts_public_import_and_rejects_private_import(
+    tmp_path: Path,
+) -> None:
+    public_root, public_sha = _fixture_repo(
+        tmp_path / "public",
+        {
+            "app/modules/reporting/service.py": (
+                "from app.modules.tasks.public import get_task_summary as _get_task_summary\n"
+            )
+        },
+        state="A0_4_REPORT_QUERY_PORT",
+    )
+    public_api, _ = _run(public_root, public_sha, "AC_PUBLIC_API", state="A0_4_REPORT_QUERY_PORT")
+    public_graph, _ = _run(
+        public_root, public_sha, "AC_MODULE_GRAPH", state="A0_4_REPORT_QUERY_PORT"
+    )
+    assert public_api["result"]["compliance"] == "COMPLIANT"
+    assert public_graph["result"]["compliance"] == "COMPLIANT"
+    reporting_edge = next(
+        edge
+        for edge in public_graph["diagnostics"]["edges"]
+        if edge["from"] == "reporting" and edge["to"] == "tasks"
+    )
+    assert any(
+        reference["target_module"] == "app.modules.tasks.public"
+        for reference in reporting_edge["references"]
+    )
+
+    private_root, private_sha = _fixture_repo(
+        tmp_path / "private",
+        {
+            "app/modules/reporting/service.py": (
+                "from app.modules.tasks.service import task_summary\n"
+            )
+        },
+        state="A0_4_REPORT_QUERY_PORT",
+    )
+    private_api, _ = _run(
+        private_root, private_sha, "AC_PUBLIC_API", state="A0_4_REPORT_QUERY_PORT"
+    )
+    private_graph, _ = _run(
+        private_root, private_sha, "AC_MODULE_GRAPH", state="A0_4_REPORT_QUERY_PORT"
+    )
+    assert private_api["result"]["compliance"] == "NON_COMPLIANT"
+    assert "CROSS_MODULE_IMPORT_NOT_PUBLIC" in _codes(private_api)
+    assert private_graph["result"]["compliance"] == "COMPLIANT"
+    private_edge = next(
+        edge
+        for edge in private_graph["diagnostics"]["edges"]
+        if edge["from"] == "reporting" and edge["to"] == "tasks"
+    )
+    assert any(
+        reference["target_module"] == "app.modules.tasks.service"
+        for reference in private_edge["references"]
+    )
+
+
 def test_legacy_exception_configuration_cannot_include_final_a1(tmp_path: Path) -> None:
     root, sha = _fixture_repo(
         tmp_path,
@@ -978,6 +1035,8 @@ def test_historical_a03_readback_uses_pinned_source_after_later_changes(
 
     historical_reporting = checkout / "app/modules/reporting/service.py"
     historical_config = checkout / "architecture/acceptance/a1/public_api_v1.yaml"
+    current_reporting = ROOT / "app/modules/reporting/service.py"
+    assert current_reporting.read_bytes() != historical_reporting.read_bytes()
     assert later_reporting.read_bytes() != historical_reporting.read_bytes()
     assert later_config.read_bytes() != historical_config.read_bytes()
     assert "app/modules/reporting/service.py" in {

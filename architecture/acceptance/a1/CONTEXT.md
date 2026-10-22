@@ -11,7 +11,7 @@ Provide independent, source-derived evaluators for AC_PUBLIC_API, AC_MODULE_GRAP
 - `engine.py` — capability discovery, complete source inventory, AST import resolution, revision checks, evidence generation, and digest readback.
 - `analyzers.py` — public API, capability graph, and persistence ownership checks.
 - `cli.py` — standalone evaluator entry point.
-- `public_api_v1.yaml` — W0-approved ΔA2 export names, `tasks.public.TaskSummary` fields, state applicability, and the A0.2/A0.3 Reporting exception.
+- `public_api_v1.yaml` — W0-approved ΔA2 export names, `tasks.public.TaskSummary` fields, state applicability, and the historical A0.2/A0.3 Reporting exception.
 - `module_graph_v1.yaml` — W0-approved state-specific capability edges, cycle rule, final Tasks → Notifications prohibition, and shared infrastructure roots.
 - `data_ownership_v1.yaml` — W0-approved table-owner map and exact model-registry exception.
 - `evidence.schema.json` — JSON evidence contract consumed by the W3 handoff.
@@ -21,6 +21,7 @@ Provide independent, source-derived evaluators for AC_PUBLIC_API, AC_MODULE_GRAP
 - `a0_3_public_api_observation.json` and `a0_3_module_graph_observation.json` — source-bound candidate ΔA3 evaluator outputs at intermediate commit `1b7a0c94dfd7c4bbca03def62b870da3e3cce580`; these remain historical candidate observations, not the final canonical post-merge checkpoint.
 - `a0_3_evidence_readback.json` — independent file-byte sidecar for those two ΔA3 candidate outputs, including the evaluated application tree SHA and exact output-file SHA-256 values; preserve its historical provenance unchanged.
 - `a0_3_canonical_checkpoint.json` and `a0_3_canonical_*` — separate post-merge canonical checkpoint outputs bound to merge commit `26a9bb667da7d0938e38aca15d2bf29fd1de4829`; the sidecar records repository/application trees, exact evaluator/config/raw-output digests, complete source scope, and independent readback. These files must not replace the intermediate candidate observations.
+- `../states/A0_4_REPORT_QUERY_PORT.yaml` and schema — current reporting query state and predecessor binding; AC_DATA_OWNERSHIP remains not applicable.
 - `W3_HANDOFF.md` — evaluator identities, source/config bindings, and exact-pair evidence boundary.
 
 ## Established conventions
@@ -31,7 +32,7 @@ Run an evaluator with the exact architecture manifest and expected Git source SH
 
 The W0-approved ΔA2 `public.py` exports and `tasks.public.TaskSummary` field names are recorded in `public_api_v1.yaml`; callable signatures, `__all__`, runtime re-exports and runtime behavior are not inspected. The approved state-specific graph, `app.events` shared-infrastructure treatment, table-owner matrix and exact `app.db.model_registry.py` exception are recorded in their versioned configs and summarized in `W3_HANDOFF.md`. The Reporting → Tasks service query exception applies only to A0.2/A0.3 and cannot make final A1 compliant. The registry exception accepts only declared model symbols from each inspected capability `model.py`; it does not authorize capability code to import the registry.
 
-The A0.3 stage gate requires both AC_PUBLIC_API and AC_MODULE_GRAPH, checks the exact candidate HEAD and complete scope, then validates evidence schema and re-reads the manifest, evaluator/configuration bytes, source files, and raw diagnostics digest. These static checks exclude dynamic imports, reflection, raw SQL contents, runtime behavior, and database permissions; they are engineering acceptance evidence, not semantic coverage or research authority. The historical A0.1 observations remain digest-bound diagnostics and are not evidence for A0.3.
+The A0.4 stage gate requires both AC_PUBLIC_API and AC_MODULE_GRAPH, checks the exact candidate HEAD and complete scope, then validates evidence schema and re-reads the manifest, evaluator/configuration bytes, source files, and raw diagnostics digest. The five capability edges remain unchanged; A0.4's public API evaluator rejects the former Reporting → Tasks.service query import while allowing the Tasks.public query import. A0.3 acceptance and its canonical checkpoint are independently checked at the pinned A0.3 source revision. These static checks exclude dynamic imports, reflection, raw SQL contents, runtime behavior, and database permissions; they are engineering acceptance evidence, not semantic coverage or research authority.
 
 ## Verification
 

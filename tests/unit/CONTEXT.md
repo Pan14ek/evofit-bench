@@ -11,7 +11,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 
 - `p_applicability_support.py`
 - `test_module_public_apis.py` — ΔA2 facade exports, shared `TaskSummary` type, delegated semantics and import-boundary regression
-- `test_architecture_stage_checks.py` — rejects missing/partial interfaces, stale historical pin, A0.2/A0.3 ambiguity, committed A0.3 manifest deletion, invalid A0.3 graph manifest, failed mandatory evaluators, dirty source and vacuous stage test selection; preserves detection of pre-A0.3 A0.2 commits.
+- `test_architecture_stage_checks.py` — rejects missing/partial interfaces, stale historical pins, A0.2/A0.3/A0.4 ambiguity, committed A0.3/A0.4 manifest deletion, invalid state/policy evidence, stage downgrade, failed evaluators, dirty source and vacuous test selection; preserves historical A0.2 detection and pins CI to A0.4.
 - `test_da01_execution.py`
 - `test_da01_inputs_and_isolation.py`
 - `test_experiment_evidence.py`

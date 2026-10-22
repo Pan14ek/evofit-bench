@@ -10,7 +10,7 @@ Seed/reset, metrics capture, workload runners, method prep and reproducibility t
 ## Local landmarks
 
 - `__init__.py`
-- `check_architecture_stages.py` — W0 pinned historical A0.1 archive/test, the declared A0.2 predecessor check, and explicit A0.1/A0.2/A0.3 recognition; A0.3 is pinned in development CI, requires source-bound AC_PUBLIC_API and AC_MODULE_GRAPH evidence, and cannot be downgraded by deleting its manifest from a descendant commit.
+- `check_architecture_stages.py` — W0 pinned historical A0.1/A0.2/A0.3 checks and explicit A0.1/A0.2/A0.3/A0.4 recognition; development CI pins A0.4, requires source-bound AC_PUBLIC_API and AC_MODULE_GRAPH evidence, and rejects stage downgrade or deletion of an established A0.4 manifest.
 - `collect_run_metadata.py`
 - `da01_contracts.py`
 - `da01_execution.py`
@@ -37,6 +37,8 @@ This is a selected list, not a complete source inventory.
 ## Established conventions
 
 Run on disposable databases; fail clearly if required telemetry/provenance missing.
+
+The architecture stage gate recognizes A0.4 as active while preserving the A0.3 manifest and canonical checkpoint. It runs A0.1, declared A0.2, and canonical A0.3 acceptance at their pinned revisions before accepting current A0.4 source. The A0.4 gate requires both active evaluators to be complete, source-bound, compliant, and read back successfully; AC_DATA_OWNERSHIP remains NOT_APPLICABLE.
 
 The B0/P preparation CLI accepts full commit SHAs and writes a new, write-once
 package under `experiments/results/<run-id>/`. The readback CLI independently

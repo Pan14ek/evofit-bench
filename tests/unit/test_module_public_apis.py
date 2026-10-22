@@ -12,6 +12,7 @@ from app.modules import audit, notifications, reporting, tasks, users
 from app.modules.audit import public as audit_public
 from app.modules.notifications import public as notifications_public
 from app.modules.reporting import public as reporting_public
+from app.modules.reporting import service as reporting_service
 from app.modules.tasks import public as tasks_public
 from app.modules.users import public as users_public
 
@@ -152,8 +153,29 @@ def test_task_and_reporting_queries_keep_the_existing_summary_shape(
     assert reporting_public.get_task_summary(session) == summary
 
 
+def test_reporting_service_delegates_to_tasks_public_query(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Reporting calls the existing public query with the caller's session."""
+    session = cast(Session, object())
+    summary = {
+        "total_task_count": 2,
+        "count_by_status": {"TODO": 1, "DONE": 1},
+        "assigned_task_count": 1,
+        "unassigned_task_count": 1,
+    }
+    calls: list[Session] = []
+
+    def fake_summary(actual_session: Session) -> Any:
+        calls.append(actual_session)
+        return summary
+
+    monkeypatch.setattr(reporting_service, "_get_task_summary", fake_summary)
+
+    assert reporting_service.get_task_summary(session) == summary
+    assert calls == [session]
+
+
 def test_foreign_service_callers_import_public_contracts_only() -> None:
-    """Reject foreign repository/service imports while preserving the ΔA4 edge."""
+    """Cross-capability business calls use public facades, including Reporting."""
     assert _foreign_module_imports("tasks") == {
         "app.modules.audit.public",
         "app.modules.notifications.public",
@@ -166,4 +188,5 @@ def test_foreign_service_callers_import_public_contracts_only() -> None:
     assert forbidden_path not in _foreign_module_imports("tasks")
 
     reporting_source = (MODULES_ROOT / "reporting/service.py").read_text(encoding="utf-8")
-    assert "from app.modules.tasks.service import task_summary" in reporting_source
+    assert _foreign_module_imports("reporting") == {"app.modules.tasks.public"}
+    assert "from app.modules.tasks.service import task_summary" not in reporting_source
