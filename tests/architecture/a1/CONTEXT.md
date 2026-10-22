@@ -8,7 +8,7 @@ Exercise W2's A1 architecture evaluators and W0-approved policy configurations w
 
 ## Local landmarks
 
-- `test_evaluators.py` — public/private imports, the A0.2/A0.3 Reporting exception, final Tasks → Notifications prohibition, `app.events` shared infrastructure, exact model-registry exception, source-derived graph edges and cycles, module/data ownership, incomplete scope, revision mismatch, portable manifest readback after subject/evidence relocation, evaluator/config/source/raw-output digest readback, exact-byte ΔA3 evidence sidecar validation, and schema validation.
+- `test_evaluators.py` — public/private imports, the A0.2/A0.3 Reporting exception, final Tasks → Notifications prohibition, `app.events` shared infrastructure, exact model-registry exception, source-derived graph edges and cycles, module/data ownership, incomplete scope, revision mismatch, portable manifest readback after subject/evidence relocation, evaluator/config/source/raw-output digest readback, exact-byte ΔA3 candidate and canonical checkpoint evidence validation, and schema validation.
 - `REQUIREMENT_TEST_MATRIX.md` — W2 evaluator requirements and ΔA3 stage/governance requirement-to-test traceability.
 
 ## Established conventions

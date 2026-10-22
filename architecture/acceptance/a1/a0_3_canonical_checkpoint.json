@@ -1,0 +1,48 @@
+{
+  "application_tree_sha": "b147b8961ea9e76c966663d4832e4c303581151a",
+  "checkpoint": "canonical_post_merge_A0_3_GOVERNED_MODULE_GRAPH",
+  "evaluators": {
+    "AC_MODULE_GRAPH": {
+      "compliance": "COMPLIANT",
+      "configuration_sha256": "1abae6871a477ff2a07685ad645a70defa2f1ac6745598ae4cdc35aab4e95bf6",
+      "evaluator_sha256": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
+      "evidence_file_sha256": "21f2347325d59325501f220476459aef9677c3b7bddd99928b7a62234c1ff0c5",
+      "evidence_path": "a0_3_canonical_module_graph_observation.json",
+      "execution_status": "COMPLETED",
+      "inspected_files": 31,
+      "inspected_imports": 185,
+      "raw_diagnostics_sha256": "890e620d4aba05990580bb31e2cb94c95e064623f22ce39e3cfecd01c192f1f5",
+      "raw_output_file_sha256": "890e620d4aba05990580bb31e2cb94c95e064623f22ce39e3cfecd01c192f1f5",
+      "raw_output_path": "a0_3_canonical_module_graph_diagnostics.json",
+      "readback_failures": [],
+      "source_file_digest_count": 31,
+      "source_scope_complete": true,
+      "source_scope_uncertainties": [],
+      "violations": []
+    },
+    "AC_PUBLIC_API": {
+      "compliance": "COMPLIANT",
+      "configuration_sha256": "8853c3a933b23f698c7ba7c5b6e511f292e8d9285dc0de4378741c53e466f7bb",
+      "evaluator_sha256": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
+      "evidence_file_sha256": "8d1056a69b6e2c45cbe42dae207d8bbe65454572b34032dc5f969e0f877362ad",
+      "evidence_path": "a0_3_canonical_public_api_observation.json",
+      "execution_status": "COMPLETED",
+      "inspected_files": 31,
+      "inspected_imports": 185,
+      "raw_diagnostics_sha256": "9d3db50cc6c95303e41b2f3a2ba3b1ef6e6a42b7953e395a81599571db08a4ea",
+      "raw_output_file_sha256": "9d3db50cc6c95303e41b2f3a2ba3b1ef6e6a42b7953e395a81599571db08a4ea",
+      "raw_output_path": "a0_3_canonical_public_api_diagnostics.json",
+      "readback_failures": [],
+      "source_file_digest_count": 31,
+      "source_scope_complete": true,
+      "source_scope_uncertainties": [],
+      "violations": []
+    }
+  },
+  "readback_status": "PASS",
+  "repository_tree_sha": "7b951421395f532ca403dab09d76902ff08a807d",
+  "schema_version": 1,
+  "source_manifest_path": "a0_3_canonical_source_manifest.yaml",
+  "source_manifest_sha256": "cdb85e758647b0590d954e013079d51d0060fefd8425da87e35335f89b722f32",
+  "source_sha": "26a9bb667da7d0938e38aca15d2bf29fd1de4829"
+}

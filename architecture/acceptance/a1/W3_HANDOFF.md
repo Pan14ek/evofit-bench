@@ -95,6 +95,49 @@ The checked-in `a0_3_public_api_observation.json`,
 to intermediate candidate source commit
 `1b7a0c94dfd7c4bbca03def62b870da3e3cce580` and its recorded application tree.
 Keep these bytes as historical candidate observations. They are not the final
-canonical post-merge A0.3 checkpoint. No post-merge canonical checkpoint is
-claimed here; it requires fresh source-bound evaluation after the accepted
-change reaches the canonical main revision.
+canonical post-merge A0.3 checkpoint. The separately recorded canonical
+checkpoint below was freshly evaluated after the accepted change reached main.
+
+## Canonical post-merge ΔA3 checkpoint
+
+The canonical source is the actual PR #32 merge commit
+`26a9bb667da7d0938e38aca15d2bf29fd1de4829`, whose repository tree is
+`7b951421395f532ca403dab09d76902ff08a807d` and application tree is
+`b147b8961ea9e76c966663d4832e4c303581151a`. The evaluator outputs bind to that
+source commit; the later commit that stores these output files is not used as
+the evaluated source identity.
+
+`a0_3_canonical_checkpoint.json` is the separate readback index.
+`a0_3_canonical_public_api_observation.json` and
+`a0_3_canonical_module_graph_observation.json` contain the schema-validated
+results. Their raw diagnostic bytes are also stored in
+`a0_3_canonical_public_api_diagnostics.json` and
+`a0_3_canonical_module_graph_diagnostics.json`; the exact A0.3 source manifest
+copy is `a0_3_canonical_source_manifest.yaml`.
+
+Both evaluators completed as `COMPLIANT` over the complete five-capability
+scope: 31 Python files and 185 import nodes, with zero violations and no scope
+uncertainties. The evaluator digest is
+`5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c` for both.
+The AC_PUBLIC_API configuration digest is
+`8853c3a933b23f698c7ba7c5b6e511f292e8d9285dc0de4378741c53e466f7bb`; its raw
+diagnostic digest is
+`9d3db50cc6c95303e41b2f3a2ba3b1ef6e6a42b7953e395a81599571db08a4ea`. The
+AC_MODULE_GRAPH configuration digest is
+`1abae6871a477ff2a07685ad645a70defa2f1ac6745598ae4cdc35aab4e95bf6`; its raw
+diagnostic digest is
+`890e620d4aba05990580bb31e2cb94c95e064623f22ce39e3cfecd01c192f1f5`.
+Schema validation and independent byte readback of the source manifest,
+configuration, evaluator artifacts, all inspected application files, raw
+diagnostics, and observation files passed. The Git-backed manifest-deletion
+negative control passed; pinned historical A0.1 and declared-predecessor A0.2
+acceptance also passed. On the exact merge commit, the stage-aware architecture
+gate passed: 6 pinned A0.1 tests, 39 A0.3 tests, and 37 declared-predecessor
+A0.2 tests. Hosted Development quality also succeeded on that merge commit in
+[run 39824756209](https://github.com/Pan14ek/evofit-bench/actions/runs/39824756209).
+The exact recorded output and readback hashes are in the checkpoint JSON.
+
+This is engineering acceptance evidence for A0.3. It does not establish
+representation-to-obligation semantic adequacy, `Coverage_P`, `Coverage_ref`,
+G1/G4, measured DA01 outcomes, or final A1 compliance. The static analyzers'
+documented coverage limits continue to apply.

@@ -20,6 +20,7 @@ Provide independent, source-derived evaluators for AC_PUBLIC_API, AC_MODULE_GRAP
 - `a0_2_public_api_observation.json` — schema-validated AC_PUBLIC_API output for the exact ΔA2 checkpoint.
 - `a0_3_public_api_observation.json` and `a0_3_module_graph_observation.json` — source-bound candidate ΔA3 evaluator outputs at intermediate commit `1b7a0c94dfd7c4bbca03def62b870da3e3cce580`; these remain historical candidate observations, not the final canonical post-merge checkpoint.
 - `a0_3_evidence_readback.json` — independent file-byte sidecar for those two ΔA3 candidate outputs, including the evaluated application tree SHA and exact output-file SHA-256 values; preserve its historical provenance unchanged.
+- `a0_3_canonical_checkpoint.json` and `a0_3_canonical_*` — separate post-merge canonical checkpoint outputs bound to merge commit `26a9bb667da7d0938e38aca15d2bf29fd1de4829`; the sidecar records repository/application trees, exact evaluator/config/raw-output digests, complete source scope, and independent readback. These files must not replace the intermediate candidate observations.
 - `W3_HANDOFF.md` — evaluator identities, source/config bindings, and exact-pair evidence boundary.
 
 ## Established conventions

@@ -14,7 +14,7 @@ import jsonschema  # type: ignore[import-untyped]
 import yaml
 
 from architecture.acceptance.a1.analyzers import ANALYZERS
-from architecture.acceptance.a1.engine import run_evaluator, verify_evidence
+from architecture.acceptance.a1.engine import canonical_json, run_evaluator, verify_evidence
 from scripts import check_architecture_stages as stage_checks
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -787,6 +787,77 @@ def test_checked_in_a03_evidence_is_byte_bound_and_reads_back() -> None:
         )
         config_path = EVALUATOR_ROOT / CONFIG_FILES[evaluator_id]
         assert verify_evidence(evidence, ROOT, config_path, EVALUATOR_ROOT) == []
+
+
+def test_checked_in_canonical_a03_checkpoint_is_byte_bound_and_reads_back() -> None:
+    checkpoint_path = EVALUATOR_ROOT / "a0_3_canonical_checkpoint.json"
+    checkpoint_bytes = checkpoint_path.read_bytes()
+    checkpoint = json.loads(checkpoint_bytes)
+    source_sha = "26a9bb667da7d0938e38aca15d2bf29fd1de4829"
+
+    assert checkpoint["checkpoint"] == "canonical_post_merge_A0_3_GOVERNED_MODULE_GRAPH"
+    assert checkpoint["readback_status"] == "PASS"
+    assert checkpoint["source_sha"] == source_sha
+    assert (
+        _git(ROOT, "rev-parse", f"{source_sha}^{{tree}}", capture_output=True).stdout.strip()
+        == checkpoint["repository_tree_sha"]
+    )
+    assert (
+        _git(ROOT, "rev-parse", f"{source_sha}:app", capture_output=True).stdout.strip()
+        == checkpoint["application_tree_sha"]
+    )
+
+    manifest_relative = Path(checkpoint["source_manifest_path"])
+    assert not manifest_relative.is_absolute() and ".." not in manifest_relative.parts
+    manifest_bytes = (EVALUATOR_ROOT / manifest_relative).read_bytes()
+    assert hashlib.sha256(manifest_bytes).hexdigest() == checkpoint["source_manifest_sha256"]
+    assert manifest_bytes == (ROOT / stage_checks.A03_MANIFEST).read_bytes()
+
+    for evaluator_id, config_name in CONFIG_FILES.items():
+        if evaluator_id not in {"AC_PUBLIC_API", "AC_MODULE_GRAPH"}:
+            continue
+        record = checkpoint["evaluators"][evaluator_id]
+        assert record["execution_status"] == "COMPLETED"
+        assert record["compliance"] == "COMPLIANT"
+        assert record["source_scope_complete"] is True
+        assert record["inspected_files"] == record["source_file_digest_count"] == 31
+        assert record["inspected_imports"] == 185
+        assert record["violations"] == []
+        assert record["source_scope_uncertainties"] == []
+        assert record["readback_failures"] == []
+
+        evidence_relative = Path(record["evidence_path"])
+        raw_relative = Path(record["raw_output_path"])
+        for relative in (evidence_relative, raw_relative):
+            assert not relative.is_absolute() and ".." not in relative.parts
+        evidence_bytes = (EVALUATOR_ROOT / evidence_relative).read_bytes()
+        assert hashlib.sha256(evidence_bytes).hexdigest() == record["evidence_file_sha256"]
+        evidence = json.loads(evidence_bytes)
+        assert evidence["architecture"]["target_source_sha"] == source_sha
+        assert evidence["source_scope"]["uncertainties"] == []
+        assert evidence["evaluator"]["source_digest"] == record["evaluator_sha256"]
+        assert (
+            evidence["evaluator"]["configuration_digest"]
+            == record["configuration_sha256"]
+        )
+        assert evidence["raw_output"]["sha256"] == record["raw_diagnostics_sha256"]
+        raw_bytes = (EVALUATOR_ROOT / raw_relative).read_bytes()
+        assert hashlib.sha256(raw_bytes).hexdigest() == record["raw_output_file_sha256"]
+        assert raw_bytes == canonical_json(evidence["diagnostics"])
+
+        stage_checks._validate_a03_evidence(
+            evidence,
+            evaluator_id=evaluator_id,
+            expected_source_sha=source_sha,
+            schema_path=EVALUATOR_ROOT / "evidence.schema.json",
+        )
+        assert verify_evidence(
+            evidence,
+            ROOT,
+            EVALUATOR_ROOT / config_name,
+            EVALUATOR_ROOT,
+            evidence_root=EVALUATOR_ROOT,
+        ) == []
 
 
 def test_checked_in_delta_a2_evidence_survives_subject_and_bundle_relocation(

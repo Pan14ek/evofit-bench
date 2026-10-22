@@ -54,8 +54,13 @@ fitness coverage, G1/G4, or measured DA01 results.
 The checked-in A0.3 evaluator observations and readback sidecar remain
 historical candidate evidence bound to source commit
 `1b7a0c94dfd7c4bbca03def62b870da3e3cce580`. They are not the final canonical
-post-merge A0.3 checkpoint; that checkpoint requires a fresh evaluation of the
-accepted post-merge source revision.
+post-merge A0.3 checkpoint. The separate canonical post-merge checkpoint is
+recorded in `architecture/acceptance/a1/a0_3_canonical_checkpoint.json` and
+binds fresh AC_PUBLIC_API and AC_MODULE_GRAPH outputs to PR #32 merge commit
+`26a9bb667da7d0938e38aca15d2bf29fd1de4829`. Its source tree is not the later
+commit that stores the evidence files. The canonical checkpoint test validates
+the manifest, exact source/config/evaluator digests, raw diagnostic bytes, and
+independent evidence readback while preserving the candidate observations.
 
 `architecture-test` stores Import Linter's cache under `.import_linter_cache`
 by default. Set `IMPORT_LINTER_CACHE_DIR` to a writable external path when
