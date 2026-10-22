@@ -10,7 +10,8 @@ Seed/reset, metrics capture, workload runners, method prep and reproducibility t
 ## Local landmarks
 
 - `__init__.py`
-- `check_architecture_stages.py` — W0 pinned historical A0.1 archive/test plus current A0.1/ΔA2 stage-specific architecture checks; no frozen files rewritten.
+- `check_architecture_stages.py` — W0 pinned historical A0.1 archive/test plus current A0.1/A0.2 checks; A0.2 requires W1 public-contract and W2 evaluator tests.
+- `disposable_postgres.py` — fail-closed URL and explicit-confirmation guard shared by schema-resetting integration fixtures and migration validation.
 - `collect_run_metadata.py`
 - `da01_contracts.py`
 - `da01_execution.py`
@@ -36,7 +37,7 @@ This is a selected list, not a complete source inventory.
 
 ## Established conventions
 
-Run on disposable databases; fail clearly if required telemetry/provenance missing.
+Run on disposable databases; fail clearly if required telemetry/provenance missing. PostgreSQL reset tools require a loopback `evofit_test` target and the explicit schema-reset confirmation environment variable.
 
 The B0/P preparation CLI accepts full commit SHAs and writes a new, write-once
 package under `experiments/results/<run-id>/`. The readback CLI independently

@@ -22,6 +22,7 @@ HISTORICAL_APP_TREE = "cdff9a6c3cee870e1eca2a5f5f3eb3202b0b1f08"
 MODULES = ("users", "tasks", "notifications", "reporting", "audit")
 A01 = "A0_1_CAPABILITY_MODULES"
 A02 = "A0_2_PUBLIC_MODULE_APIS"
+W2_EVALUATOR_TESTS = "tests/architecture/a1/test_evaluators.py"
 ALLOWED_STAGES = ("auto", A01, A02)
 
 
@@ -47,14 +48,31 @@ def _git(root: Path, *arguments: str) -> str:
 
 
 def detect_stage(root: Path) -> str:
-    """Infer only the two supported *development* stages; refuse partial APIs."""
+    """Infer the repository's actual A0.1 or A0.2 development stage."""
     modules = root / "app" / "modules"
     missing_modules = [name for name in MODULES if not (modules / name / "__init__.py").is_file()]
     if missing_modules:
         raise StageCheckError(f"Missing capability modules: {missing_modules}")
     present = [name for name in MODULES if (modules / name / "public.py").is_file()]
     if not present:
-        return A01
+        changed_app_paths = {
+            path
+            for path in _git(
+                root,
+                "diff",
+                "--name-only",
+                f"{HISTORICAL_A01_SHA}..HEAD",
+                "--",
+                "app",
+            ).splitlines()
+            if path
+        }
+        if not changed_app_paths:
+            return A01
+        raise StageCheckError(
+            "A0.1 app source differs from the pinned historical stage before the complete "
+            f"A0.2 public API set is present: {sorted(changed_app_paths)}"
+        )
     if len(present) != len(MODULES):
         raise StageCheckError(f"Partial public API modules: {present}; expected all {MODULES}")
     contract_test = root / "tests/unit/test_module_public_apis.py"
@@ -168,18 +186,20 @@ def current_stage_acceptance(repo: Path, *, requested_stage: str) -> str:
             "tests/architecture/test_module_structure.py",
             "tests/architecture/test_layer_rules.py",
         ]
-    else:
+    elif current == A02:
         checks = ["tests/architecture/test_layer_rules.py", "tests/unit/test_module_public_apis.py"]
-        new_tests = repo / "tests/architecture/a1/test_evaluators.py"
-        if new_tests.exists():
-            checks.append("tests/architecture/a1/test_evaluators.py")
-            print("[stage-ci] W2 evaluator unit/fixture suite PRESENT", flush=True)
-        else:
-            print(
-                "[stage-ci] W2 AC_PUBLIC_API/AC_MODULE_GRAPH/AC_DATA_OWNERSHIP "
-                "source evaluators PENDING; NOT a complete ΔA2/A1 research gate",
-                flush=True,
+        evaluator_tests = repo / W2_EVALUATOR_TESTS
+        if not evaluator_tests.is_file():
+            raise StageCheckError(
+                f"A0.2 stage requires W2 architecture evaluator tests: {evaluator_tests}"
             )
+        checks.append(W2_EVALUATOR_TESTS)
+        print(
+            "[stage-ci] W2 AC_PUBLIC_API/AC_MODULE_GRAPH/AC_DATA_OWNERSHIP tests PRESENT",
+            flush=True,
+        )
+    else:
+        raise StageCheckError(f"Unsupported architecture stage: {current}")
     _run_pytest(repo, checks, historical=False)
     print(f"[stage-ci] CURRENT {current} CHECKS PASS", flush=True)
     return current

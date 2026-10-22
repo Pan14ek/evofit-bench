@@ -16,15 +16,21 @@ Synchronous in-app notification persistence.
 - `repository.py`
 - `schemas.py`
 - `service.py`
+- `event_handlers/` — explicit reactions to versioned Task events, prepared
+  for later ΔA6 composition-root registration.
 
 ## Established conventions
 
 Notification faults exercise rollback in caller's transaction. The public facade is synchronous,
 returns no persistence object and does not commit or roll back.
+Prepared event handlers call the public facade with the same caller-owned
+session; registration is explicit and idempotent through the shared dispatcher.
 
 ## Constraints and known gaps
 
-No external delivery, broker, consumer, outbox or remote notification service yet.
+No external delivery, broker, durable consumer, outbox or remote notification
+service. The prepared in-process handlers are not wired into Task operations at
+the W4 stage.
 
 ## Verification and further reading
 

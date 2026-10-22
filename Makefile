@@ -20,6 +20,8 @@ DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_g1_method_decision_register.py \
 	tests/unit/test_context_documents.py \
 	tests/unit/test_architecture_stage_checks.py \
+	tests/unit/test_domain_events.py \
+	tests/unit/test_disposable_postgres.py \
 	tests/unit/test_exp01_evidence.py \
 	tests/unit/test_exp02_fitness_evidence.py \
 	tests/unit/test_pilot01_results.py \
@@ -78,6 +80,7 @@ development-regression-test:
 		$(DEVELOPMENT_REGRESSION_TESTS)
 	$(UV) run python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_exp01_evidence.py
 	$(UV) run python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_exp02_fitness_evidence.py
+	$(UV) run python -m pytest -q --no-cov -p no:cacheprovider tests/integration/test_a1_domain_events.py
 
 development-lint:
 	$(UV) run ruff check . \

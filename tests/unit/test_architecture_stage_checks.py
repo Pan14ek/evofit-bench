@@ -16,9 +16,27 @@ def _fake_modules(root: Path, public: tuple[str, ...] = ()) -> None:
             (folder / "public.py").write_text("", encoding="utf-8")
 
 
-def test_detects_exact_baseline_when_no_public_apis(tmp_path: Path) -> None:
+def test_detects_exact_baseline_when_no_public_apis(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     _fake_modules(tmp_path)
+    monkeypatch.setattr(stage, "_git", lambda *_args: "")
     assert stage.detect_stage(tmp_path) == stage.A01
+
+
+def test_rejects_pre_public_api_application_changes_without_a_pseudo_stage(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _fake_modules(tmp_path)
+    changed_path = "app/events/contracts.py"
+    monkeypatch.setattr(
+        stage,
+        "_git",
+        lambda *_args: changed_path,
+    )
+
+    with pytest.raises(stage.StageCheckError, match="before the complete A0.2 public API set"):
+        stage.detect_stage(tmp_path)
 
 
 def test_rejects_partial_public_interface_inventory(tmp_path: Path) -> None:
@@ -68,6 +86,7 @@ def test_mismatched_declared_and_actual_stage_is_rejected(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     _fake_modules(tmp_path)
+    monkeypatch.setattr(stage, "_git", lambda *_args: "")
     with pytest.raises(stage.StageCheckError, match="Requested architecture stage"):
         stage.current_stage_acceptance(tmp_path, requested_stage=stage.A02)
 
@@ -80,6 +99,8 @@ def test_claimed_baseline_cannot_pass_with_altered_source(
     def wrong_tree(_root: Path, *args: str) -> str:
         if args == ("status", "--porcelain", "--", "app", "architecture", "tests"):
             return ""
+        if args and args[0] == "diff":
+            return ""
         return "not-the-expected-tree"
 
     monkeypatch.setattr(stage, "_git", wrong_tree)
@@ -91,18 +112,25 @@ def test_dirty_application_source_cannot_pass_as_sha_bound(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     _fake_modules(tmp_path)
-    monkeypatch.setattr(stage, "_git", lambda *_args: " M app/modules/tasks/service.py")
+
+    def dirty_git(_root: Path, *args: str) -> str:
+        return "" if args and args[0] == "diff" else " M app/modules/tasks/service.py"
+
+    monkeypatch.setattr(stage, "_git", dirty_git)
     with pytest.raises(stage.StageCheckError, match="dirty"):
         stage.current_stage_acceptance(tmp_path, requested_stage="auto")
 
 
-def test_new_stage_executes_focused_checks_without_old_exact_inventory(
+def test_a02_stage_executes_focused_checks_without_old_exact_inventory(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     _fake_modules(tmp_path, stage.MODULES)
     test_file = tmp_path / "tests/unit/test_module_public_apis.py"
     test_file.parent.mkdir(parents=True)
     test_file.write_text("def test_contract(): pass\n", encoding="utf-8")
+    evaluator_file = tmp_path / stage.W2_EVALUATOR_TESTS
+    evaluator_file.parent.mkdir(parents=True, exist_ok=True)
+    evaluator_file.write_text("def test_evaluator(): pass\n", encoding="utf-8")
     calls: list[list[str]] = []
     monkeypatch.setattr(stage, "_git", lambda *_args: "")
     monkeypatch.setattr(
@@ -112,27 +140,22 @@ def test_new_stage_executes_focused_checks_without_old_exact_inventory(
     )
     assert stage.current_stage_acceptance(tmp_path, requested_stage=stage.A02) == stage.A02
     assert calls == [
-        ["tests/architecture/test_layer_rules.py", "tests/unit/test_module_public_apis.py"]
+        [
+            "tests/architecture/test_layer_rules.py",
+            "tests/unit/test_module_public_apis.py",
+            stage.W2_EVALUATOR_TESTS,
+        ]
     ]
 
 
-def test_w2_evaluator_tests_appear_only_when_present(
+def test_public_api_stage_requires_integrated_w2_evaluator_tests(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     _fake_modules(tmp_path, stage.MODULES)
-    for path in (
-        "tests/unit/test_module_public_apis.py",
-        "tests/architecture/a1/test_evaluators.py",
-    ):
-        target = tmp_path / path
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text("def test_contract(): pass\n", encoding="utf-8")
-    calls: list[list[str]] = []
+    contract_file = tmp_path / "tests/unit/test_module_public_apis.py"
+    contract_file.parent.mkdir(parents=True)
+    contract_file.write_text("def test_contract(): pass\n", encoding="utf-8")
     monkeypatch.setattr(stage, "_git", lambda *_args: "")
-    monkeypatch.setattr(
-        stage,
-        "_run_pytest",
-        lambda _root, paths, *, historical: calls.append(paths),
-    )
-    stage.current_stage_acceptance(tmp_path, requested_stage=stage.A02)
-    assert "tests/architecture/a1/test_evaluators.py" in calls[0]
+
+    with pytest.raises(stage.StageCheckError, match="requires W2 architecture evaluator tests"):
+        stage.current_stage_acceptance(tmp_path, requested_stage=stage.A02)

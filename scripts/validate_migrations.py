@@ -8,6 +8,11 @@ from alembic.config import Config
 from sqlalchemy import create_engine, inspect, text
 
 from alembic import command
+from scripts.disposable_postgres import (
+    DISPOSABLE_DATABASE_NAME,
+    SCHEMA_RESET_CONFIRMATION_ENV,
+    validate_disposable_postgres_test_url,
+)
 
 REQUIRED_TABLES = {"users", "tasks", "notifications", "audit_events", "alembic_version"}
 EXPECTED_REVISION = "0001_a0_schema"
@@ -16,13 +21,23 @@ EXPECTED_REVISION = "0001_a0_schema"
 def validate() -> None:
     """Recreate public schema, migrate to head, and verify basic persistence."""
     database_url = os.environ.get("TEST_DATABASE_URL")
-    if not database_url:
-        raise RuntimeError("TEST_DATABASE_URL must name a disposable PostgreSQL database")
-    engine = create_engine(database_url, pool_pre_ping=True)
-    database_name = engine.url.database or ""
-    if "evofit" not in database_name.lower():
-        raise RuntimeError("Refusing migration-test: database name must contain 'evofit'")
     try:
+        database_url = validate_disposable_postgres_test_url(
+            database_url,
+            schema_reset_confirmation=os.environ.get(SCHEMA_RESET_CONFIRMATION_ENV),
+        )
+    except ValueError as error:
+        raise RuntimeError(f"Refusing migration-test: {error}") from error
+
+    engine = create_engine(database_url, pool_pre_ping=True)
+    try:
+        with engine.connect() as connection:
+            actual_database = connection.scalar(text("SELECT current_database()"))
+        if actual_database != DISPOSABLE_DATABASE_NAME:
+            raise RuntimeError(
+                "Refusing migration-test: PostgreSQL connected to unexpected database "
+                f"{actual_database!r}"
+            )
         with engine.begin() as connection:
             connection.execute(text("DROP SCHEMA public CASCADE"))
             connection.execute(text("CREATE SCHEMA public"))

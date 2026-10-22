@@ -11,7 +11,10 @@ evidence bridges.
 
 ## Local landmarks
 
-- `conftest.py`
+- `conftest.py` validates the explicit disposable PostgreSQL target and connected database name before resetting `public`.
+- `test_a1_domain_events.py` — PostgreSQL preparation checks for synchronous
+  handler delivery, caller-owned rollback and recovery; final Task REST wiring
+  remains pending ΔA6 integration
 - `test_api_flows.py`
 - `test_public_module_contracts.py` — ΔA2 public facade transaction ownership, summary shape and assignment rollback
 - `test_p_applicability_v3.py`
@@ -22,7 +25,9 @@ evidence bridges.
 
 ## Established conventions
 
-Use disposable DB and genuine interfaces instead of only mocked modules.
+Use disposable DB and genuine interfaces instead of only mocked modules. Any
+schema-resetting integration run needs a loopback `evofit_test` URL and the
+explicit `EVOFIT_TEST_DATABASE_ALLOW_SCHEMA_RESET` confirmation.
 
 ## Constraints and known gaps
 

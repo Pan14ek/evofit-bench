@@ -17,6 +17,8 @@ Capability-oriented business packages users, tasks, notifications, reporting and
 Read each child CONTEXT.md. Cross-module business calls use the receiving module's public facade;
 facades share the caller's SQLAlchemy session and never own the transaction. Reporting's direct
 Tasks service query remains the documented ΔA4 migration exception.
+The prepared shared `app.events` contract is a separate ΔA6 dependency proposal;
+Task operations are not wired to it yet.
 
 ## Constraints and known gaps
 
