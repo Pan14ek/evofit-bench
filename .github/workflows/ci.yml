@@ -22,6 +22,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
+      ARCHITECTURE_STAGE: A0_3_GOVERNED_MODULE_GRAPH
       DATABASE_URL: postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test
       TEST_DATABASE_URL: postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test
     steps:

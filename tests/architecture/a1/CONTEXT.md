@@ -8,8 +8,8 @@ Exercise W2's A1 architecture evaluators and W0-approved policy configurations w
 
 ## Local landmarks
 
-- `test_evaluators.py` — public/private imports, the A0.2/A0.3 Reporting exception, final Tasks → Notifications prohibition, `app.events` shared infrastructure, exact model-registry exception, source-derived graph edges and cycles, module/data ownership, incomplete scope, revision mismatch, portable manifest readback after subject/evidence relocation, digest readback, and schema validation.
-- `REQUIREMENT_TEST_MATRIX.md` — requirement-to-test traceability and exact acceptance boundaries.
+- `test_evaluators.py` — public/private imports, the A0.2/A0.3 Reporting exception, final Tasks → Notifications prohibition, `app.events` shared infrastructure, exact model-registry exception, source-derived graph edges and cycles, module/data ownership, incomplete scope, revision mismatch, portable manifest readback after subject/evidence relocation, evaluator/config/source/raw-output digest readback, exact-byte ΔA3 evidence sidecar validation, and schema validation.
+- `REQUIREMENT_TEST_MATRIX.md` — W2 evaluator requirements and ΔA3 stage/governance requirement-to-test traceability.
 
 ## Established conventions
 
@@ -17,7 +17,7 @@ Tests create a disposable Git fixture repository, pin its commit SHA, run the sa
 
 ## Constraints and known gaps
 
-These TEST_ONLY fixtures are not A1 application-state implementations, DA01 evidence, P predictions, or measurements. Keep them separate from `tests/architecture/test_module_structure.py` and `tests/architecture/test_layer_rules.py`, which are historical A0.1 architecture checks. Do not use oracle/scorer data or edit frozen expected results.
+These TEST_ONLY fixtures are not A1 application-state implementations, DA01 evidence, P predictions, or measurements. Keep them separate from `tests/architecture/test_module_structure.py` and `tests/architecture/test_layer_rules.py`, which are historical A0.1 architecture checks. Do not use oracle/scorer data or edit frozen expected results. The ΔA3 stage gate separately runs both source evaluators against the clean candidate checkout.
 
 ## Verification
 

@@ -18,6 +18,8 @@ Provide independent, source-derived evaluators for AC_PUBLIC_API, AC_MODULE_GRAP
 - `a0_1_*_observation.json` — source-bound A0.1 diagnostics; each is explicitly `NOT_APPLICABLE` to A1 policy.
 - `a0_2_public_api_evidence_input.yaml` — evaluator-only binding to the W0-provided ΔA2 SHA/tree; not a registered architecture-state manifest.
 - `a0_2_public_api_observation.json` — schema-validated AC_PUBLIC_API output for the exact ΔA2 checkpoint.
+- `a0_3_public_api_observation.json` and `a0_3_module_graph_observation.json` — source-bound candidate ΔA3 evaluator outputs at intermediate commit `1b7a0c94dfd7c4bbca03def62b870da3e3cce580`; these remain historical candidate observations, not the final canonical post-merge checkpoint.
+- `a0_3_evidence_readback.json` — independent file-byte sidecar for those two ΔA3 candidate outputs, including the evaluated application tree SHA and exact output-file SHA-256 values; preserve its historical provenance unchanged.
 - `W3_HANDOFF.md` — evaluator identities, source/config bindings, and exact-pair evidence boundary.
 
 ## Established conventions
@@ -28,7 +30,7 @@ Run an evaluator with the exact architecture manifest and expected Git source SH
 
 The W0-approved ΔA2 `public.py` exports and `tasks.public.TaskSummary` field names are recorded in `public_api_v1.yaml`; callable signatures, `__all__`, runtime re-exports and runtime behavior are not inspected. The approved state-specific graph, `app.events` shared-infrastructure treatment, table-owner matrix and exact `app.db.model_registry.py` exception are recorded in their versioned configs and summarized in `W3_HANDOFF.md`. The Reporting → Tasks service query exception applies only to A0.2/A0.3 and cannot make final A1 compliant. The registry exception accepts only declared model symbols from each inspected capability `model.py`; it does not authorize capability code to import the registry.
 
-The checked-in A0.1 source observations record 26 inspected Python files/167 imports for AC_PUBLIC_API and AC_MODULE_GRAPH, and 27 files/172 imports for AC_DATA_OWNERSHIP, including `app/db/model_registry.py`. These A0.1 observations are `NOT_APPLICABLE` and are historical digest-bound diagnostics, not evidence for W1 or final A1. Static AST checks do not inspect dynamic imports, reflection, runtime dependency injection, raw SQL or `text()` contents, dynamically selected tables, database permissions, or runtime behavior. Source scope is capability packages plus the configured registry path; `app.events` imports can be recorded but its implementation is outside scope. Final source-bound evaluation must be rerun after W1 and W2 integrate.
+The A0.3 stage gate requires both AC_PUBLIC_API and AC_MODULE_GRAPH, checks the exact candidate HEAD and complete scope, then validates evidence schema and re-reads the manifest, evaluator/configuration bytes, source files, and raw diagnostics digest. These static checks exclude dynamic imports, reflection, raw SQL contents, runtime behavior, and database permissions; they are engineering acceptance evidence, not semantic coverage or research authority. The historical A0.1 observations remain digest-bound diagnostics and are not evidence for A0.3.
 
 ## Verification
 

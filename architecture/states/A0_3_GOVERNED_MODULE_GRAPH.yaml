@@ -1,0 +1,51 @@
+schema_version: 1
+architecture_state: A0_3_GOVERNED_MODULE_GRAPH
+predecessor_state: A0_2_PUBLIC_MODULE_APIS
+
+implementation_scope:
+  - Explicitly identify A0.3 using this versioned state manifest.
+  - Require source-based AC_PUBLIC_API and AC_MODULE_GRAPH checks for stage acceptance.
+  - Preserve the existing application behavior and capability dependency edges.
+  - Do not migrate the Reporting query port or change data ownership or event wiring.
+
+invariants:
+  deployment_units: 1
+  application_processes: 1
+  database_instances: 1
+  database_product: PostgreSQL
+  internal_communication: synchronous_python_calls
+  message_broker: none
+  rest_behavior: unchanged
+  transaction_ownership: caller_managed_session
+
+allowed_dependencies:
+  - {from: tasks, to: users}
+  - {from: tasks, to: notifications}
+  - {from: tasks, to: audit}
+  - {from: users, to: audit}
+  - {from: reporting, to: tasks}
+
+temporary_exceptions:
+  - id: reporting_tasks_query_intermediate_v1
+    source_module: app.modules.reporting.service
+    target_module: app.modules.tasks.service
+    imported_names: [task_summary]
+    allowed_architecture_states: [A0_2_PUBLIC_MODULE_APIS, A0_3_GOVERNED_MODULE_GRAPH]
+    expires_at_state: A0_4_REPORT_QUERY_PORT
+
+governance_requirements:
+  required_evaluators: [AC_PUBLIC_API, AC_MODULE_GRAPH]
+  fail_closed:
+    incomplete_source_scope: true
+    source_identity_mismatch: true
+    evaluator_or_configuration_digest_mismatch: true
+    unresolved_imports: true
+    noncompliance: true
+
+source_provenance:
+  predecessor_commit: b003144ae78238707af555aee68a16ffa14e800b
+  predecessor_tree: 894f676d82a8264878ce4fb64a6c28d98a1c5fed
+  evaluated_source_identity: >-
+    Each evaluator invocation pins the exact candidate Git HEAD and records it
+    with inspected source-file digests. This manifest omits its containing
+    commit to avoid a self-referential source hash.

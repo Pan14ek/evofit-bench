@@ -10,7 +10,7 @@ Seed/reset, metrics capture, workload runners, method prep and reproducibility t
 ## Local landmarks
 
 - `__init__.py`
-- `check_architecture_stages.py` — W0 pinned historical A0.1 archive/test plus current A0.1/ΔA2 stage-specific architecture checks; no frozen files rewritten.
+- `check_architecture_stages.py` — W0 pinned historical A0.1 archive/test, the declared A0.2 predecessor check, and explicit A0.1/A0.2/A0.3 recognition; A0.3 is pinned in development CI, requires source-bound AC_PUBLIC_API and AC_MODULE_GRAPH evidence, and cannot be downgraded by deleting its manifest from a descendant commit.
 - `collect_run_metadata.py`
 - `da01_contracts.py`
 - `da01_execution.py`

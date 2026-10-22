@@ -20,7 +20,9 @@ Keep actions aligned with Makefile and pyproject.toml.
 The default push and pull-request workflow runs `make development-quality`.
 That target runs the explicit SPEC 01/02/03 regression set, one synthetic
 Docker isolation probe, static/security/architecture checks, and migration
-validation against the disposable PostgreSQL service. It excludes
+validation against the disposable PostgreSQL service. Its stage-aware
+architecture check pins historical A0.1 tests and, at A0.3, requires current
+source-bound AC_PUBLIC_API and AC_MODULE_GRAPH passes with evidence readback. It excludes
 `tests/unit/test_da01_execution.py` and
 `tests/unit/test_research_schema_foundation.py` from lint, formatting, type
 checking, and pytest discovery. Do not skip other tests to get a green run;

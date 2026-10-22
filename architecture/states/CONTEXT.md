@@ -5,19 +5,20 @@
 
 ## Responsibility
 
-A0.1 capability/deployment manifest and preserved dependencies.
+Versioned architecture-state records for the preserved capability application and additive governance states.
 
 ## Local landmarks
 
 - `A0_1_CAPABILITY_MODULES.yaml`
+- `A0_3_GOVERNED_MODULE_GRAPH.yaml` and its JSON Schema — ΔA3 predecessor, invariants, approved graph, temporary exception, mandatory evaluator set, and source provenance.
 
 ## Established conventions
 
-Only trust pinned, typed, validated declared topology facts for method input.
+The frozen A0.1 manifest remains historical input. A0.3 is an engineering state record; its source SHA is recorded in evaluator evidence rather than embedded in the manifest.
 
 ## Constraints and known gaps
 
-One declared deployment unit does not prove total runtime-dependency absence.
+The A0.3 record preserves one application process, one PostgreSQL database, synchronous Python communication, REST behavior, and caller-managed session/transaction ownership. It does not assert that static AST evidence observes dynamic imports, runtime behavior, or external deployment identity.
 
 ## Verification and further reading
 
