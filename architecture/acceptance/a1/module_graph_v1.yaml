@@ -1,0 +1,74 @@
+schema_version: 1
+evaluator:
+  id: AC_MODULE_GRAPH
+  obligation_id: AC_MODULE_GRAPH
+  version: 1.0.0
+source_scope:
+  module_root: app/modules
+  expected_modules: [users, tasks, notifications, reporting, audit]
+  minimum_source_files_per_module: 1
+  minimum_inspected_files: 10
+  additional_source_files: []
+states:
+  A0_1_CAPABILITY_MODULES: {applicability: NOT_APPLICABLE}
+  A0_2_PUBLIC_MODULE_APIS: {applicability: NOT_APPLICABLE}
+  A0_3_GOVERNED_MODULE_GRAPH: {applicability: ACTIVE}
+  A0_4_REPORT_QUERY_PORT: {applicability: ACTIVE}
+  A0_5_MODULE_DATA_OWNERSHIP: {applicability: ACTIVE}
+  A1_MODULAR_MONOLITH: {applicability: ACTIVE}
+module_graph:
+  # W0-approved capability graph; shared infrastructure imports are recorded outside this graph.
+  strict_local_import_roots: [app]
+  shared_infrastructure_roots:
+    - app.config
+    - app.db
+    - app.experiment
+    - app.observability
+    - app.api
+    - app.models
+    - app.services
+    - app.events
+  allowed_dependencies_by_state:
+    A0_1_CAPABILITY_MODULES:
+      - {from: tasks, to: users}
+      - {from: tasks, to: notifications}
+      - {from: tasks, to: audit}
+      - {from: users, to: audit}
+      - {from: reporting, to: tasks}
+    A0_2_PUBLIC_MODULE_APIS:
+      - {from: tasks, to: users}
+      - {from: tasks, to: notifications}
+      - {from: tasks, to: audit}
+      - {from: users, to: audit}
+      - {from: reporting, to: tasks}
+    A0_3_GOVERNED_MODULE_GRAPH:
+      - {from: tasks, to: users}
+      - {from: tasks, to: notifications}
+      - {from: tasks, to: audit}
+      - {from: users, to: audit}
+      - {from: reporting, to: tasks}
+    A0_4_REPORT_QUERY_PORT:
+      - {from: tasks, to: users}
+      - {from: tasks, to: notifications}
+      - {from: tasks, to: audit}
+      - {from: users, to: audit}
+      - {from: reporting, to: tasks}
+    A0_5_MODULE_DATA_OWNERSHIP:
+      - {from: tasks, to: users}
+      - {from: tasks, to: notifications}
+      - {from: tasks, to: audit}
+      - {from: users, to: audit}
+      - {from: reporting, to: tasks}
+    A1_MODULAR_MONOLITH:
+      - {from: tasks, to: users}
+      - {from: tasks, to: audit}
+      - {from: users, to: audit}
+      - {from: reporting, to: tasks}
+  forbidden_dependencies_by_state:
+    A1_MODULAR_MONOLITH:
+      - {from: tasks, to: notifications}
+coverage_limits:
+  - Direct absolute and relative Python imports are inspected; conditional imports remain graph edges.
+  - Star imports are attributed to their resolved module but imported symbols are unknown.
+  - Dynamic imports, reflection, runtime dependency injection, and import-time control flow are outside this static scope.
+  - Composition-root files outside app/modules are not graph vertices; configured shared infrastructure imports are recorded separately.

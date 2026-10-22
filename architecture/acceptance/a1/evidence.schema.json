@@ -1,0 +1,362 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/a1-architecture-evidence-v1.json",
+  "title": "A1 source-based architecture evaluator evidence",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "evaluator",
+    "architecture",
+    "source_scope",
+    "applicability",
+    "result",
+    "diagnostics",
+    "raw_output",
+    "coverage_limits",
+    "generated_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "evaluator": {
+      "type": "object",
+      "required": [
+        "id",
+        "obligation_id",
+        "version",
+        "source_digest",
+        "source_artifact_root",
+        "source_artifacts",
+        "configuration_digest"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "AC_PUBLIC_API",
+            "AC_MODULE_GRAPH",
+            "AC_DATA_OWNERSHIP"
+          ]
+        },
+        "obligation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "source_artifact_root": {
+          "type": "string"
+        },
+        "source_artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/digestFile"
+          }
+        },
+        "configuration_digest": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": true
+    },
+    "architecture": {
+      "type": "object",
+      "required": [
+        "state",
+        "manifest_path",
+        "manifest_digest",
+        "manifest_state_status",
+        "target_source_sha",
+        "expected_source_sha",
+        "source_sha_status",
+        "subject_source_dirty"
+      ],
+      "properties": {
+        "state": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifest_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manifest_root": {
+          "enum": [
+            "subject",
+            "evidence"
+          ],
+          "description": "Root used to resolve manifest_path; evidence references are relative to the evidence bundle, never the subject source checkout."
+        },
+        "manifest_digest": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "manifest_state_status": {
+          "enum": [
+            "MATCHED",
+            "MISMATCH",
+            "UNAVAILABLE"
+          ]
+        },
+        "target_source_sha": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expected_source_sha": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source_sha_status": {
+          "enum": [
+            "MATCHED",
+            "MISMATCH",
+            "UNAVAILABLE",
+            "UNPINNED"
+          ]
+        },
+        "subject_source_dirty": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "source_scope": {
+      "type": "object",
+      "required": [
+        "module_root",
+        "complete",
+        "modules",
+        "inspected_paths",
+        "inspected_import_count",
+        "source_file_digests",
+        "uncertainties"
+      ],
+      "properties": {
+        "module_root": {
+          "type": "string"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "modules": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "package",
+              "path",
+              "discovered",
+              "expected",
+              "inspected_file_count"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "inspected_paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "inspected_import_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "source_file_digests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/digestFile"
+          }
+        },
+        "uncertainties": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "applicability": {
+      "enum": [
+        "ACTIVE",
+        "NOT_APPLICABLE",
+        "UNKNOWN"
+      ]
+    },
+    "result": {
+      "type": "object",
+      "required": [
+        "execution_status",
+        "compliance",
+        "violation_count",
+        "violations",
+        "configuration_errors"
+      ],
+      "properties": {
+        "execution_status": {
+          "enum": [
+            "COMPLETED",
+            "FAILED"
+          ]
+        },
+        "compliance": {
+          "enum": [
+            "COMPLIANT",
+            "NON_COMPLIANT",
+            "UNKNOWN",
+            "NOT_EVALUABLE",
+            "NOT_APPLICABLE"
+          ]
+        },
+        "violation_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "violations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/finding"
+          }
+        },
+        "configuration_errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "diagnostics": {
+      "type": "object"
+    },
+    "raw_output": {
+      "type": "object",
+      "required": [
+        "available",
+        "format",
+        "sha256"
+      ],
+      "properties": {
+        "available": {
+          "const": true
+        },
+        "format": {
+          "const": "application/json"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "coverage_limits": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "digestFile": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "finding": {
+      "type": "object",
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "source_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "line": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "source_capability": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "target_capability": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "imported_module": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "imported_name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
