@@ -6,6 +6,7 @@ DURATION ?= 30
 RUN_STARTED_AT_UTC ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 EXP01_RUN_ID ?= exp01-dev-$(shell date -u +%Y%m%dT%H%M%SZ)
 ARCHITECTURE_STAGE ?= auto
+IMPORT_LINTER_CACHE_DIR ?= .import_linter_cache
 DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_p_input_contract_v11.py \
 	tests/unit/test_p_input_authority_validation.py \
@@ -67,7 +68,7 @@ security:
 	$(UV) run bandit -q -r app scripts experiments/execution/tooling
 
 architecture-test:
-	$(UV) run lint-imports --config architecture/acceptance/importlinter.toml
+	$(UV) run lint-imports --config architecture/acceptance/importlinter.toml --cache-dir $(IMPORT_LINTER_CACHE_DIR)
 	$(UV) run python -m scripts.check_architecture_stages --stage $(ARCHITECTURE_STAGE)
 
 quality: lint typecheck security architecture-test migration-test test

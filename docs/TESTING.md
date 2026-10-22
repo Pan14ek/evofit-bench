@@ -46,6 +46,10 @@ architecture test selection. Full development verification uses
 checks establish engineering acceptance only; they do not establish semantic
 fitness coverage, G1/G4, or measured DA01 results.
 
+`architecture-test` stores Import Linter's cache under `.import_linter_cache`
+by default. Set `IMPORT_LINTER_CACHE_DIR` to a writable external path when
+running from a restricted worktree.
+
 ## Source-backed traceability seed
 
 | Requirement | Expected behavior | Existing suite / planned owner | Status |
