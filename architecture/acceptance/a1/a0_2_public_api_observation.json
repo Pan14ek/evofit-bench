@@ -1,0 +1,2604 @@
+{
+  "applicability": "ACTIVE",
+  "architecture": {
+    "expected_source_sha": "934f5e045af473acdb197604c761597ba39b026c",
+    "manifest_digest": "d23952ac68148749c6f94ccad47de6bfa1d048a5233359f618c75721d61d64a6",
+    "manifest_path": "a0_2_public_api_evidence_input.yaml",
+    "manifest_root": "evidence",
+    "manifest_state_status": "MATCHED",
+    "source_sha_status": "MATCHED",
+    "state": "A0_2_PUBLIC_MODULE_APIS",
+    "subject_source_dirty": false,
+    "target_source_sha": "934f5e045af473acdb197604c761597ba39b026c"
+  },
+  "coverage_limits": [
+    "AST source imports only; runtime import hooks and dynamically constructed imports are not inspected.",
+    "Runtime re-export behavior and callable signatures are not validated; the frozen function names and TaskSummary field names are validated statically.",
+    "Conditional imports are reported as source dependencies regardless of runtime branch reachability."
+  ],
+  "diagnostics": {
+    "cross_capability_imports": [
+      {
+        "classification": "declared_public_interface",
+        "imported_name": "TaskSummary",
+        "line": 8,
+        "source_module": "app.modules.reporting.public",
+        "source_path": "app/modules/reporting/public.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.public"
+      },
+      {
+        "classification": "legacy_exception",
+        "imported_name": "task_summary",
+        "line": 5,
+        "source_module": "app.modules.reporting.service",
+        "source_path": "app/modules/reporting/service.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.service"
+      },
+      {
+        "classification": "declared_public_interface",
+        "imported_name": "record_event",
+        "line": 9,
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": "audit",
+        "target_module": "app.modules.audit.public"
+      },
+      {
+        "classification": "declared_public_interface",
+        "imported_name": "create_notification",
+        "line": 10,
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": "notifications",
+        "target_module": "app.modules.notifications.public"
+      },
+      {
+        "classification": "declared_public_interface",
+        "imported_name": "user_exists",
+        "line": 18,
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": "users",
+        "target_module": "app.modules.users.public"
+      },
+      {
+        "classification": "declared_public_interface",
+        "imported_name": "record_event",
+        "line": 9,
+        "source_module": "app.modules.users.service",
+        "source_path": "app/modules/users/service.py",
+        "target_capability": "audit",
+        "target_module": "app.modules.audit.public"
+      }
+    ],
+    "exports_by_capability": {
+      "audit": {
+        "record_event": "function"
+      },
+      "notifications": {
+        "create_notification": "function"
+      },
+      "reporting": {
+        "get_task_summary": "function"
+      },
+      "tasks": {
+        "TaskSummary": "type",
+        "get_task_summary": "function"
+      },
+      "users": {
+        "user_exists": "function"
+      }
+    },
+    "imports": [
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.model",
+        "source_path": "app/modules/audit/model.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "datetime",
+        "imported_module": "datetime",
+        "imported_name": "datetime",
+        "kind": "from",
+        "line": 4,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.model",
+        "source_path": "app/modules/audit/model.py",
+        "target_capability": null,
+        "target_module": "datetime"
+      },
+      {
+        "binding": "Any",
+        "imported_module": "typing",
+        "imported_name": "Any",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.model",
+        "source_path": "app/modules/audit/model.py",
+        "target_capability": null,
+        "target_module": "typing"
+      },
+      {
+        "binding": "DateTime",
+        "imported_module": "sqlalchemy",
+        "imported_name": "DateTime",
+        "kind": "from",
+        "line": 7,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.model",
+        "source_path": "app/modules/audit/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "JSON",
+        "imported_module": "sqlalchemy",
+        "imported_name": "JSON",
+        "kind": "from",
+        "line": 7,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.model",
+        "source_path": "app/modules/audit/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "String",
+        "imported_module": "sqlalchemy",
+        "imported_name": "String",
+        "kind": "from",
+        "line": 7,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.model",
+        "source_path": "app/modules/audit/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "UUID",
+        "imported_module": "sqlalchemy.dialects.postgresql",
+        "imported_name": "UUID",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.model",
+        "source_path": "app/modules/audit/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.dialects.postgresql"
+      },
+      {
+        "binding": "Mapped",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Mapped",
+        "kind": "from",
+        "line": 9,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.model",
+        "source_path": "app/modules/audit/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "mapped_column",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "mapped_column",
+        "kind": "from",
+        "line": 9,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.model",
+        "source_path": "app/modules/audit/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "Base",
+        "imported_module": "app.models.base",
+        "imported_name": "Base",
+        "kind": "from",
+        "line": 11,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.model",
+        "source_path": "app/modules/audit/model.py",
+        "target_capability": null,
+        "target_module": "app.models.base"
+      },
+      {
+        "binding": "utc_now",
+        "imported_module": "app.models.base",
+        "imported_name": "utc_now",
+        "kind": "from",
+        "line": 11,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.model",
+        "source_path": "app/modules/audit/model.py",
+        "target_capability": null,
+        "target_module": "app.models.base"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.public",
+        "source_path": "app/modules/audit/public.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "Any",
+        "imported_module": "typing",
+        "imported_name": "Any",
+        "kind": "from",
+        "line": 4,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.public",
+        "source_path": "app/modules/audit/public.py",
+        "target_capability": null,
+        "target_module": "typing"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.public",
+        "source_path": "app/modules/audit/public.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "_record_event",
+        "imported_module": "app.modules.audit.service",
+        "imported_name": "record_event",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.public",
+        "source_path": "app/modules/audit/public.py",
+        "target_capability": "audit",
+        "target_module": "app.modules.audit.service"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.repository",
+        "source_path": "app/modules/audit/repository.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "Any",
+        "imported_module": "typing",
+        "imported_name": "Any",
+        "kind": "from",
+        "line": 4,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.repository",
+        "source_path": "app/modules/audit/repository.py",
+        "target_capability": null,
+        "target_module": "typing"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.repository",
+        "source_path": "app/modules/audit/repository.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "AuditEvent",
+        "imported_module": "app.modules.audit.model",
+        "imported_name": "AuditEvent",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.repository",
+        "source_path": "app/modules/audit/repository.py",
+        "target_capability": "audit",
+        "target_module": "app.modules.audit.model"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.service",
+        "source_path": "app/modules/audit/service.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "Any",
+        "imported_module": "typing",
+        "imported_name": "Any",
+        "kind": "from",
+        "line": 4,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.service",
+        "source_path": "app/modules/audit/service.py",
+        "target_capability": null,
+        "target_module": "typing"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.service",
+        "source_path": "app/modules/audit/service.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "AuditEvent",
+        "imported_module": "app.modules.audit.model",
+        "imported_name": "AuditEvent",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.service",
+        "source_path": "app/modules/audit/service.py",
+        "target_capability": "audit",
+        "target_module": "app.modules.audit.model"
+      },
+      {
+        "binding": "add_audit_event",
+        "imported_module": "app.modules.audit.repository",
+        "imported_name": "add_audit_event",
+        "kind": "from",
+        "line": 9,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.service",
+        "source_path": "app/modules/audit/service.py",
+        "target_capability": "audit",
+        "target_module": "app.modules.audit.repository"
+      },
+      {
+        "binding": "span",
+        "imported_module": "app.observability.tracing",
+        "imported_name": "span",
+        "kind": "from",
+        "line": 10,
+        "source_capability": "audit",
+        "source_module": "app.modules.audit.service",
+        "source_path": "app/modules/audit/service.py",
+        "target_capability": null,
+        "target_module": "app.observability.tracing"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.api",
+        "source_path": "app/modules/notifications/api.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "APIRouter",
+        "imported_module": "fastapi",
+        "imported_name": "APIRouter",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.api",
+        "source_path": "app/modules/notifications/api.py",
+        "target_capability": null,
+        "target_module": "fastapi"
+      },
+      {
+        "binding": "Depends",
+        "imported_module": "fastapi",
+        "imported_name": "Depends",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.api",
+        "source_path": "app/modules/notifications/api.py",
+        "target_capability": null,
+        "target_module": "fastapi"
+      },
+      {
+        "binding": "Query",
+        "imported_module": "fastapi",
+        "imported_name": "Query",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.api",
+        "source_path": "app/modules/notifications/api.py",
+        "target_capability": null,
+        "target_module": "fastapi"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.api",
+        "source_path": "app/modules/notifications/api.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "get_session",
+        "imported_module": "app.api.dependencies",
+        "imported_name": "get_session",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.api",
+        "source_path": "app/modules/notifications/api.py",
+        "target_capability": null,
+        "target_module": "app.api.dependencies"
+      },
+      {
+        "binding": "NotificationRead",
+        "imported_module": "app.modules.notifications.schemas",
+        "imported_name": "NotificationRead",
+        "kind": "from",
+        "line": 9,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.api",
+        "source_path": "app/modules/notifications/api.py",
+        "target_capability": "notifications",
+        "target_module": "app.modules.notifications.schemas"
+      },
+      {
+        "binding": "get_notifications",
+        "imported_module": "app.modules.notifications.service",
+        "imported_name": "get_notifications",
+        "kind": "from",
+        "line": 10,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.api",
+        "source_path": "app/modules/notifications/api.py",
+        "target_capability": "notifications",
+        "target_module": "app.modules.notifications.service"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.model",
+        "source_path": "app/modules/notifications/model.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "datetime",
+        "imported_module": "datetime",
+        "imported_name": "datetime",
+        "kind": "from",
+        "line": 4,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.model",
+        "source_path": "app/modules/notifications/model.py",
+        "target_capability": null,
+        "target_module": "datetime"
+      },
+      {
+        "binding": "DateTime",
+        "imported_module": "sqlalchemy",
+        "imported_name": "DateTime",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.model",
+        "source_path": "app/modules/notifications/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "ForeignKey",
+        "imported_module": "sqlalchemy",
+        "imported_name": "ForeignKey",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.model",
+        "source_path": "app/modules/notifications/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "String",
+        "imported_module": "sqlalchemy",
+        "imported_name": "String",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.model",
+        "source_path": "app/modules/notifications/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "Text",
+        "imported_module": "sqlalchemy",
+        "imported_name": "Text",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.model",
+        "source_path": "app/modules/notifications/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "UUID",
+        "imported_module": "sqlalchemy.dialects.postgresql",
+        "imported_name": "UUID",
+        "kind": "from",
+        "line": 7,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.model",
+        "source_path": "app/modules/notifications/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.dialects.postgresql"
+      },
+      {
+        "binding": "Mapped",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Mapped",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.model",
+        "source_path": "app/modules/notifications/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "mapped_column",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "mapped_column",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.model",
+        "source_path": "app/modules/notifications/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "Base",
+        "imported_module": "app.models.base",
+        "imported_name": "Base",
+        "kind": "from",
+        "line": 10,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.model",
+        "source_path": "app/modules/notifications/model.py",
+        "target_capability": null,
+        "target_module": "app.models.base"
+      },
+      {
+        "binding": "utc_now",
+        "imported_module": "app.models.base",
+        "imported_name": "utc_now",
+        "kind": "from",
+        "line": 10,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.model",
+        "source_path": "app/modules/notifications/model.py",
+        "target_capability": null,
+        "target_module": "app.models.base"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.public",
+        "source_path": "app/modules/notifications/public.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.public",
+        "source_path": "app/modules/notifications/public.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "_create_notification",
+        "imported_module": "app.modules.notifications.service",
+        "imported_name": "create_notification",
+        "kind": "from",
+        "line": 7,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.public",
+        "source_path": "app/modules/notifications/public.py",
+        "target_capability": "notifications",
+        "target_module": "app.modules.notifications.service"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.repository",
+        "source_path": "app/modules/notifications/repository.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "select",
+        "imported_module": "sqlalchemy",
+        "imported_name": "select",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.repository",
+        "source_path": "app/modules/notifications/repository.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.repository",
+        "source_path": "app/modules/notifications/repository.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "Notification",
+        "imported_module": "app.modules.notifications.model",
+        "imported_name": "Notification",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.repository",
+        "source_path": "app/modules/notifications/repository.py",
+        "target_capability": "notifications",
+        "target_module": "app.modules.notifications.model"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.schemas",
+        "source_path": "app/modules/notifications/schemas.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "datetime",
+        "imported_module": "datetime",
+        "imported_name": "datetime",
+        "kind": "from",
+        "line": 4,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.schemas",
+        "source_path": "app/modules/notifications/schemas.py",
+        "target_capability": null,
+        "target_module": "datetime"
+      },
+      {
+        "binding": "BaseModel",
+        "imported_module": "pydantic",
+        "imported_name": "BaseModel",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.schemas",
+        "source_path": "app/modules/notifications/schemas.py",
+        "target_capability": null,
+        "target_module": "pydantic"
+      },
+      {
+        "binding": "ConfigDict",
+        "imported_module": "pydantic",
+        "imported_name": "ConfigDict",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.schemas",
+        "source_path": "app/modules/notifications/schemas.py",
+        "target_capability": null,
+        "target_module": "pydantic"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.service",
+        "source_path": "app/modules/notifications/service.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.service",
+        "source_path": "app/modules/notifications/service.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "apply_notification_faults",
+        "imported_module": "app.experiment.fault_injector",
+        "imported_name": "apply_notification_faults",
+        "kind": "from",
+        "line": 7,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.service",
+        "source_path": "app/modules/notifications/service.py",
+        "target_capability": null,
+        "target_module": "app.experiment.fault_injector"
+      },
+      {
+        "binding": "Notification",
+        "imported_module": "app.modules.notifications.model",
+        "imported_name": "Notification",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.service",
+        "source_path": "app/modules/notifications/service.py",
+        "target_capability": "notifications",
+        "target_module": "app.modules.notifications.model"
+      },
+      {
+        "binding": "add_notification",
+        "imported_module": "app.modules.notifications.repository",
+        "imported_name": "add_notification",
+        "kind": "from",
+        "line": 9,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.service",
+        "source_path": "app/modules/notifications/service.py",
+        "target_capability": "notifications",
+        "target_module": "app.modules.notifications.repository"
+      },
+      {
+        "binding": "list_notifications",
+        "imported_module": "app.modules.notifications.repository",
+        "imported_name": "list_notifications",
+        "kind": "from",
+        "line": 9,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.service",
+        "source_path": "app/modules/notifications/service.py",
+        "target_capability": "notifications",
+        "target_module": "app.modules.notifications.repository"
+      },
+      {
+        "binding": "span",
+        "imported_module": "app.observability.tracing",
+        "imported_name": "span",
+        "kind": "from",
+        "line": 10,
+        "source_capability": "notifications",
+        "source_module": "app.modules.notifications.service",
+        "source_path": "app/modules/notifications/service.py",
+        "target_capability": null,
+        "target_module": "app.observability.tracing"
+      },
+      {
+        "binding": "APIRouter",
+        "imported_module": "fastapi",
+        "imported_name": "APIRouter",
+        "kind": "from",
+        "line": 3,
+        "source_capability": "reporting",
+        "source_module": "app.modules.reporting.api",
+        "source_path": "app/modules/reporting/api.py",
+        "target_capability": null,
+        "target_module": "fastapi"
+      },
+      {
+        "binding": "Depends",
+        "imported_module": "fastapi",
+        "imported_name": "Depends",
+        "kind": "from",
+        "line": 3,
+        "source_capability": "reporting",
+        "source_module": "app.modules.reporting.api",
+        "source_path": "app/modules/reporting/api.py",
+        "target_capability": null,
+        "target_module": "fastapi"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 4,
+        "source_capability": "reporting",
+        "source_module": "app.modules.reporting.api",
+        "source_path": "app/modules/reporting/api.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "get_session",
+        "imported_module": "app.api.dependencies",
+        "imported_name": "get_session",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "reporting",
+        "source_module": "app.modules.reporting.api",
+        "source_path": "app/modules/reporting/api.py",
+        "target_capability": null,
+        "target_module": "app.api.dependencies"
+      },
+      {
+        "binding": "TaskSummary",
+        "imported_module": "app.modules.reporting.schemas",
+        "imported_name": "TaskSummary",
+        "kind": "from",
+        "line": 7,
+        "source_capability": "reporting",
+        "source_module": "app.modules.reporting.api",
+        "source_path": "app/modules/reporting/api.py",
+        "target_capability": "reporting",
+        "target_module": "app.modules.reporting.schemas"
+      },
+      {
+        "binding": "get_task_summary",
+        "imported_module": "app.modules.reporting.service",
+        "imported_name": "get_task_summary",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "reporting",
+        "source_module": "app.modules.reporting.api",
+        "source_path": "app/modules/reporting/api.py",
+        "target_capability": "reporting",
+        "target_module": "app.modules.reporting.service"
+      },
+      {
+        "binding": "cast",
+        "imported_module": "typing",
+        "imported_name": "cast",
+        "kind": "from",
+        "line": 3,
+        "source_capability": "reporting",
+        "source_module": "app.modules.reporting.public",
+        "source_path": "app/modules/reporting/public.py",
+        "target_capability": null,
+        "target_module": "typing"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "reporting",
+        "source_module": "app.modules.reporting.public",
+        "source_path": "app/modules/reporting/public.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "_get_task_summary",
+        "imported_module": "app.modules.reporting.service",
+        "imported_name": "get_task_summary",
+        "kind": "from",
+        "line": 7,
+        "source_capability": "reporting",
+        "source_module": "app.modules.reporting.public",
+        "source_path": "app/modules/reporting/public.py",
+        "target_capability": "reporting",
+        "target_module": "app.modules.reporting.service"
+      },
+      {
+        "binding": "TaskSummary",
+        "imported_module": "app.modules.tasks.public",
+        "imported_name": "TaskSummary",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "reporting",
+        "source_module": "app.modules.reporting.public",
+        "source_path": "app/modules/reporting/public.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.public"
+      },
+      {
+        "binding": "BaseModel",
+        "imported_module": "pydantic",
+        "imported_name": "BaseModel",
+        "kind": "from",
+        "line": 3,
+        "source_capability": "reporting",
+        "source_module": "app.modules.reporting.schemas",
+        "source_path": "app/modules/reporting/schemas.py",
+        "target_capability": null,
+        "target_module": "pydantic"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 3,
+        "source_capability": "reporting",
+        "source_module": "app.modules.reporting.service",
+        "source_path": "app/modules/reporting/service.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "task_summary",
+        "imported_module": "app.modules.tasks.service",
+        "imported_name": "task_summary",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "reporting",
+        "source_module": "app.modules.reporting.service",
+        "source_path": "app/modules/reporting/service.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.service"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.api",
+        "source_path": "app/modules/tasks/api.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "APIRouter",
+        "imported_module": "fastapi",
+        "imported_name": "APIRouter",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.api",
+        "source_path": "app/modules/tasks/api.py",
+        "target_capability": null,
+        "target_module": "fastapi"
+      },
+      {
+        "binding": "Depends",
+        "imported_module": "fastapi",
+        "imported_name": "Depends",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.api",
+        "source_path": "app/modules/tasks/api.py",
+        "target_capability": null,
+        "target_module": "fastapi"
+      },
+      {
+        "binding": "Query",
+        "imported_module": "fastapi",
+        "imported_name": "Query",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.api",
+        "source_path": "app/modules/tasks/api.py",
+        "target_capability": null,
+        "target_module": "fastapi"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.api",
+        "source_path": "app/modules/tasks/api.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "get_session",
+        "imported_module": "app.api.dependencies",
+        "imported_name": "get_session",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.api",
+        "source_path": "app/modules/tasks/api.py",
+        "target_capability": null,
+        "target_module": "app.api.dependencies"
+      },
+      {
+        "binding": "TaskAssign",
+        "imported_module": "app.modules.tasks.schemas",
+        "imported_name": "TaskAssign",
+        "kind": "from",
+        "line": 9,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.api",
+        "source_path": "app/modules/tasks/api.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.schemas"
+      },
+      {
+        "binding": "TaskCreate",
+        "imported_module": "app.modules.tasks.schemas",
+        "imported_name": "TaskCreate",
+        "kind": "from",
+        "line": 9,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.api",
+        "source_path": "app/modules/tasks/api.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.schemas"
+      },
+      {
+        "binding": "TaskRead",
+        "imported_module": "app.modules.tasks.schemas",
+        "imported_name": "TaskRead",
+        "kind": "from",
+        "line": 9,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.api",
+        "source_path": "app/modules/tasks/api.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.schemas"
+      },
+      {
+        "binding": "TaskStatus",
+        "imported_module": "app.modules.tasks.schemas",
+        "imported_name": "TaskStatus",
+        "kind": "from",
+        "line": 9,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.api",
+        "source_path": "app/modules/tasks/api.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.schemas"
+      },
+      {
+        "binding": "TaskStatusChange",
+        "imported_module": "app.modules.tasks.schemas",
+        "imported_name": "TaskStatusChange",
+        "kind": "from",
+        "line": 9,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.api",
+        "source_path": "app/modules/tasks/api.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.schemas"
+      },
+      {
+        "binding": "assign_task",
+        "imported_module": "app.modules.tasks.service",
+        "imported_name": "assign_task",
+        "kind": "from",
+        "line": 10,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.api",
+        "source_path": "app/modules/tasks/api.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.service"
+      },
+      {
+        "binding": "change_task_status",
+        "imported_module": "app.modules.tasks.service",
+        "imported_name": "change_task_status",
+        "kind": "from",
+        "line": 10,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.api",
+        "source_path": "app/modules/tasks/api.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.service"
+      },
+      {
+        "binding": "create_task",
+        "imported_module": "app.modules.tasks.service",
+        "imported_name": "create_task",
+        "kind": "from",
+        "line": 10,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.api",
+        "source_path": "app/modules/tasks/api.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.service"
+      },
+      {
+        "binding": "get_tasks",
+        "imported_module": "app.modules.tasks.service",
+        "imported_name": "get_tasks",
+        "kind": "from",
+        "line": 10,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.api",
+        "source_path": "app/modules/tasks/api.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.service"
+      },
+      {
+        "binding": "retrieve_task",
+        "imported_module": "app.modules.tasks.service",
+        "imported_name": "retrieve_task",
+        "kind": "from",
+        "line": 10,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.api",
+        "source_path": "app/modules/tasks/api.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.service"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.model",
+        "source_path": "app/modules/tasks/model.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "datetime",
+        "imported_module": "datetime",
+        "imported_name": "datetime",
+        "kind": "from",
+        "line": 4,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.model",
+        "source_path": "app/modules/tasks/model.py",
+        "target_capability": null,
+        "target_module": "datetime"
+      },
+      {
+        "binding": "StrEnum",
+        "imported_module": "enum",
+        "imported_name": "StrEnum",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.model",
+        "source_path": "app/modules/tasks/model.py",
+        "target_capability": null,
+        "target_module": "enum"
+      },
+      {
+        "binding": "DateTime",
+        "imported_module": "sqlalchemy",
+        "imported_name": "DateTime",
+        "kind": "from",
+        "line": 7,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.model",
+        "source_path": "app/modules/tasks/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "Enum",
+        "imported_module": "sqlalchemy",
+        "imported_name": "Enum",
+        "kind": "from",
+        "line": 7,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.model",
+        "source_path": "app/modules/tasks/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "ForeignKey",
+        "imported_module": "sqlalchemy",
+        "imported_name": "ForeignKey",
+        "kind": "from",
+        "line": 7,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.model",
+        "source_path": "app/modules/tasks/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "String",
+        "imported_module": "sqlalchemy",
+        "imported_name": "String",
+        "kind": "from",
+        "line": 7,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.model",
+        "source_path": "app/modules/tasks/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "Text",
+        "imported_module": "sqlalchemy",
+        "imported_name": "Text",
+        "kind": "from",
+        "line": 7,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.model",
+        "source_path": "app/modules/tasks/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "UUID",
+        "imported_module": "sqlalchemy.dialects.postgresql",
+        "imported_name": "UUID",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.model",
+        "source_path": "app/modules/tasks/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.dialects.postgresql"
+      },
+      {
+        "binding": "Mapped",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Mapped",
+        "kind": "from",
+        "line": 9,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.model",
+        "source_path": "app/modules/tasks/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "mapped_column",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "mapped_column",
+        "kind": "from",
+        "line": 9,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.model",
+        "source_path": "app/modules/tasks/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "Base",
+        "imported_module": "app.models.base",
+        "imported_name": "Base",
+        "kind": "from",
+        "line": 11,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.model",
+        "source_path": "app/modules/tasks/model.py",
+        "target_capability": null,
+        "target_module": "app.models.base"
+      },
+      {
+        "binding": "utc_now",
+        "imported_module": "app.models.base",
+        "imported_name": "utc_now",
+        "kind": "from",
+        "line": 11,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.model",
+        "source_path": "app/modules/tasks/model.py",
+        "target_capability": null,
+        "target_module": "app.models.base"
+      },
+      {
+        "binding": "TypedDict",
+        "imported_module": "typing",
+        "imported_name": "TypedDict",
+        "kind": "from",
+        "line": 3,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.public",
+        "source_path": "app/modules/tasks/public.py",
+        "target_capability": null,
+        "target_module": "typing"
+      },
+      {
+        "binding": "cast",
+        "imported_module": "typing",
+        "imported_name": "cast",
+        "kind": "from",
+        "line": 3,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.public",
+        "source_path": "app/modules/tasks/public.py",
+        "target_capability": null,
+        "target_module": "typing"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.public",
+        "source_path": "app/modules/tasks/public.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "_task_summary",
+        "imported_module": "app.modules.tasks.service",
+        "imported_name": "task_summary",
+        "kind": "from",
+        "line": 7,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.public",
+        "source_path": "app/modules/tasks/public.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.service"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.repository",
+        "source_path": "app/modules/tasks/repository.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "func",
+        "imported_module": "sqlalchemy",
+        "imported_name": "func",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.repository",
+        "source_path": "app/modules/tasks/repository.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "select",
+        "imported_module": "sqlalchemy",
+        "imported_name": "select",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.repository",
+        "source_path": "app/modules/tasks/repository.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.repository",
+        "source_path": "app/modules/tasks/repository.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "Task",
+        "imported_module": "app.modules.tasks.model",
+        "imported_name": "Task",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.repository",
+        "source_path": "app/modules/tasks/repository.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.model"
+      },
+      {
+        "binding": "TaskStatus",
+        "imported_module": "app.modules.tasks.model",
+        "imported_name": "TaskStatus",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.repository",
+        "source_path": "app/modules/tasks/repository.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.model"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.schemas",
+        "source_path": "app/modules/tasks/schemas.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "datetime",
+        "imported_module": "datetime",
+        "imported_name": "datetime",
+        "kind": "from",
+        "line": 4,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.schemas",
+        "source_path": "app/modules/tasks/schemas.py",
+        "target_capability": null,
+        "target_module": "datetime"
+      },
+      {
+        "binding": "BaseModel",
+        "imported_module": "pydantic",
+        "imported_name": "BaseModel",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.schemas",
+        "source_path": "app/modules/tasks/schemas.py",
+        "target_capability": null,
+        "target_module": "pydantic"
+      },
+      {
+        "binding": "ConfigDict",
+        "imported_module": "pydantic",
+        "imported_name": "ConfigDict",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.schemas",
+        "source_path": "app/modules/tasks/schemas.py",
+        "target_capability": null,
+        "target_module": "pydantic"
+      },
+      {
+        "binding": "Field",
+        "imported_module": "pydantic",
+        "imported_name": "Field",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.schemas",
+        "source_path": "app/modules/tasks/schemas.py",
+        "target_capability": null,
+        "target_module": "pydantic"
+      },
+      {
+        "binding": "field_validator",
+        "imported_module": "pydantic",
+        "imported_name": "field_validator",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.schemas",
+        "source_path": "app/modules/tasks/schemas.py",
+        "target_capability": null,
+        "target_module": "pydantic"
+      },
+      {
+        "binding": "TaskStatus",
+        "imported_module": "app.modules.tasks.model",
+        "imported_name": "TaskStatus",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.schemas",
+        "source_path": "app/modules/tasks/schemas.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.model"
+      },
+      {
+        "binding": "logging",
+        "imported_module": "logging",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": null,
+        "target_module": "logging"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 4,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "apply_task_delay",
+        "imported_module": "app.experiment.fault_injector",
+        "imported_name": "apply_task_delay",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": null,
+        "target_module": "app.experiment.fault_injector"
+      },
+      {
+        "binding": "record_event",
+        "imported_module": "app.modules.audit.public",
+        "imported_name": "record_event",
+        "kind": "from",
+        "line": 9,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": "audit",
+        "target_module": "app.modules.audit.public"
+      },
+      {
+        "binding": "create_notification",
+        "imported_module": "app.modules.notifications.public",
+        "imported_name": "create_notification",
+        "kind": "from",
+        "line": 10,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": "notifications",
+        "target_module": "app.modules.notifications.public"
+      },
+      {
+        "binding": "Task",
+        "imported_module": "app.modules.tasks.model",
+        "imported_name": "Task",
+        "kind": "from",
+        "line": 11,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.model"
+      },
+      {
+        "binding": "TaskStatus",
+        "imported_module": "app.modules.tasks.model",
+        "imported_name": "TaskStatus",
+        "kind": "from",
+        "line": 11,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.model"
+      },
+      {
+        "binding": "count_by_status",
+        "imported_module": "app.modules.tasks.repository",
+        "imported_name": "count_by_status",
+        "kind": "from",
+        "line": 12,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.repository"
+      },
+      {
+        "binding": "get_task",
+        "imported_module": "app.modules.tasks.repository",
+        "imported_name": "get_task",
+        "kind": "from",
+        "line": 12,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.repository"
+      },
+      {
+        "binding": "list_tasks",
+        "imported_module": "app.modules.tasks.repository",
+        "imported_name": "list_tasks",
+        "kind": "from",
+        "line": 12,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.repository"
+      },
+      {
+        "binding": "task_assignment_counts",
+        "imported_module": "app.modules.tasks.repository",
+        "imported_name": "task_assignment_counts",
+        "kind": "from",
+        "line": 12,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": "tasks",
+        "target_module": "app.modules.tasks.repository"
+      },
+      {
+        "binding": "user_exists",
+        "imported_module": "app.modules.users.public",
+        "imported_name": "user_exists",
+        "kind": "from",
+        "line": 18,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": "users",
+        "target_module": "app.modules.users.public"
+      },
+      {
+        "binding": "notifications_created_total",
+        "imported_module": "app.observability.metrics",
+        "imported_name": "notifications_created_total",
+        "kind": "from",
+        "line": 19,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": null,
+        "target_module": "app.observability.metrics"
+      },
+      {
+        "binding": "task_status_changes_total",
+        "imported_module": "app.observability.metrics",
+        "imported_name": "task_status_changes_total",
+        "kind": "from",
+        "line": 19,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": null,
+        "target_module": "app.observability.metrics"
+      },
+      {
+        "binding": "tasks_assigned_total",
+        "imported_module": "app.observability.metrics",
+        "imported_name": "tasks_assigned_total",
+        "kind": "from",
+        "line": 19,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": null,
+        "target_module": "app.observability.metrics"
+      },
+      {
+        "binding": "tasks_created_total",
+        "imported_module": "app.observability.metrics",
+        "imported_name": "tasks_created_total",
+        "kind": "from",
+        "line": 19,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": null,
+        "target_module": "app.observability.metrics"
+      },
+      {
+        "binding": "span",
+        "imported_module": "app.observability.tracing",
+        "imported_name": "span",
+        "kind": "from",
+        "line": 25,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": null,
+        "target_module": "app.observability.tracing"
+      },
+      {
+        "binding": "ConflictError",
+        "imported_module": "app.services.errors",
+        "imported_name": "ConflictError",
+        "kind": "from",
+        "line": 26,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": null,
+        "target_module": "app.services.errors"
+      },
+      {
+        "binding": "NotFoundError",
+        "imported_module": "app.services.errors",
+        "imported_name": "NotFoundError",
+        "kind": "from",
+        "line": 26,
+        "source_capability": "tasks",
+        "source_module": "app.modules.tasks.service",
+        "source_path": "app/modules/tasks/service.py",
+        "target_capability": null,
+        "target_module": "app.services.errors"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "users",
+        "source_module": "app.modules.users.api",
+        "source_path": "app/modules/users/api.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "APIRouter",
+        "imported_module": "fastapi",
+        "imported_name": "APIRouter",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "users",
+        "source_module": "app.modules.users.api",
+        "source_path": "app/modules/users/api.py",
+        "target_capability": null,
+        "target_module": "fastapi"
+      },
+      {
+        "binding": "Depends",
+        "imported_module": "fastapi",
+        "imported_name": "Depends",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "users",
+        "source_module": "app.modules.users.api",
+        "source_path": "app/modules/users/api.py",
+        "target_capability": null,
+        "target_module": "fastapi"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "users",
+        "source_module": "app.modules.users.api",
+        "source_path": "app/modules/users/api.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "get_session",
+        "imported_module": "app.api.dependencies",
+        "imported_name": "get_session",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "users",
+        "source_module": "app.modules.users.api",
+        "source_path": "app/modules/users/api.py",
+        "target_capability": null,
+        "target_module": "app.api.dependencies"
+      },
+      {
+        "binding": "UserCreate",
+        "imported_module": "app.modules.users.schemas",
+        "imported_name": "UserCreate",
+        "kind": "from",
+        "line": 9,
+        "source_capability": "users",
+        "source_module": "app.modules.users.api",
+        "source_path": "app/modules/users/api.py",
+        "target_capability": "users",
+        "target_module": "app.modules.users.schemas"
+      },
+      {
+        "binding": "UserRead",
+        "imported_module": "app.modules.users.schemas",
+        "imported_name": "UserRead",
+        "kind": "from",
+        "line": 9,
+        "source_capability": "users",
+        "source_module": "app.modules.users.api",
+        "source_path": "app/modules/users/api.py",
+        "target_capability": "users",
+        "target_module": "app.modules.users.schemas"
+      },
+      {
+        "binding": "create_user",
+        "imported_module": "app.modules.users.service",
+        "imported_name": "create_user",
+        "kind": "from",
+        "line": 10,
+        "source_capability": "users",
+        "source_module": "app.modules.users.api",
+        "source_path": "app/modules/users/api.py",
+        "target_capability": "users",
+        "target_module": "app.modules.users.service"
+      },
+      {
+        "binding": "retrieve_user",
+        "imported_module": "app.modules.users.service",
+        "imported_name": "retrieve_user",
+        "kind": "from",
+        "line": 10,
+        "source_capability": "users",
+        "source_module": "app.modules.users.api",
+        "source_path": "app/modules/users/api.py",
+        "target_capability": "users",
+        "target_module": "app.modules.users.service"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "users",
+        "source_module": "app.modules.users.model",
+        "source_path": "app/modules/users/model.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "datetime",
+        "imported_module": "datetime",
+        "imported_name": "datetime",
+        "kind": "from",
+        "line": 4,
+        "source_capability": "users",
+        "source_module": "app.modules.users.model",
+        "source_path": "app/modules/users/model.py",
+        "target_capability": null,
+        "target_module": "datetime"
+      },
+      {
+        "binding": "DateTime",
+        "imported_module": "sqlalchemy",
+        "imported_name": "DateTime",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "users",
+        "source_module": "app.modules.users.model",
+        "source_path": "app/modules/users/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "String",
+        "imported_module": "sqlalchemy",
+        "imported_name": "String",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "users",
+        "source_module": "app.modules.users.model",
+        "source_path": "app/modules/users/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "UUID",
+        "imported_module": "sqlalchemy.dialects.postgresql",
+        "imported_name": "UUID",
+        "kind": "from",
+        "line": 7,
+        "source_capability": "users",
+        "source_module": "app.modules.users.model",
+        "source_path": "app/modules/users/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.dialects.postgresql"
+      },
+      {
+        "binding": "Mapped",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Mapped",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "users",
+        "source_module": "app.modules.users.model",
+        "source_path": "app/modules/users/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "mapped_column",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "mapped_column",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "users",
+        "source_module": "app.modules.users.model",
+        "source_path": "app/modules/users/model.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "Base",
+        "imported_module": "app.models.base",
+        "imported_name": "Base",
+        "kind": "from",
+        "line": 10,
+        "source_capability": "users",
+        "source_module": "app.modules.users.model",
+        "source_path": "app/modules/users/model.py",
+        "target_capability": null,
+        "target_module": "app.models.base"
+      },
+      {
+        "binding": "utc_now",
+        "imported_module": "app.models.base",
+        "imported_name": "utc_now",
+        "kind": "from",
+        "line": 10,
+        "source_capability": "users",
+        "source_module": "app.modules.users.model",
+        "source_path": "app/modules/users/model.py",
+        "target_capability": null,
+        "target_module": "app.models.base"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "users",
+        "source_module": "app.modules.users.public",
+        "source_path": "app/modules/users/public.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "users",
+        "source_module": "app.modules.users.public",
+        "source_path": "app/modules/users/public.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "_get_user",
+        "imported_module": "app.modules.users.repository",
+        "imported_name": "get_user",
+        "kind": "from",
+        "line": 7,
+        "source_capability": "users",
+        "source_module": "app.modules.users.public",
+        "source_path": "app/modules/users/public.py",
+        "target_capability": "users",
+        "target_module": "app.modules.users.repository"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "users",
+        "source_module": "app.modules.users.repository",
+        "source_path": "app/modules/users/repository.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "select",
+        "imported_module": "sqlalchemy",
+        "imported_name": "select",
+        "kind": "from",
+        "line": 5,
+        "source_capability": "users",
+        "source_module": "app.modules.users.repository",
+        "source_path": "app/modules/users/repository.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "users",
+        "source_module": "app.modules.users.repository",
+        "source_path": "app/modules/users/repository.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "User",
+        "imported_module": "app.modules.users.model",
+        "imported_name": "User",
+        "kind": "from",
+        "line": 8,
+        "source_capability": "users",
+        "source_module": "app.modules.users.repository",
+        "source_path": "app/modules/users/repository.py",
+        "target_capability": "users",
+        "target_module": "app.modules.users.model"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "users",
+        "source_module": "app.modules.users.schemas",
+        "source_path": "app/modules/users/schemas.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "datetime",
+        "imported_module": "datetime",
+        "imported_name": "datetime",
+        "kind": "from",
+        "line": 4,
+        "source_capability": "users",
+        "source_module": "app.modules.users.schemas",
+        "source_path": "app/modules/users/schemas.py",
+        "target_capability": null,
+        "target_module": "datetime"
+      },
+      {
+        "binding": "BaseModel",
+        "imported_module": "pydantic",
+        "imported_name": "BaseModel",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "users",
+        "source_module": "app.modules.users.schemas",
+        "source_path": "app/modules/users/schemas.py",
+        "target_capability": null,
+        "target_module": "pydantic"
+      },
+      {
+        "binding": "ConfigDict",
+        "imported_module": "pydantic",
+        "imported_name": "ConfigDict",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "users",
+        "source_module": "app.modules.users.schemas",
+        "source_path": "app/modules/users/schemas.py",
+        "target_capability": null,
+        "target_module": "pydantic"
+      },
+      {
+        "binding": "EmailStr",
+        "imported_module": "pydantic",
+        "imported_name": "EmailStr",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "users",
+        "source_module": "app.modules.users.schemas",
+        "source_path": "app/modules/users/schemas.py",
+        "target_capability": null,
+        "target_module": "pydantic"
+      },
+      {
+        "binding": "Field",
+        "imported_module": "pydantic",
+        "imported_name": "Field",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "users",
+        "source_module": "app.modules.users.schemas",
+        "source_path": "app/modules/users/schemas.py",
+        "target_capability": null,
+        "target_module": "pydantic"
+      },
+      {
+        "binding": "field_validator",
+        "imported_module": "pydantic",
+        "imported_name": "field_validator",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "users",
+        "source_module": "app.modules.users.schemas",
+        "source_path": "app/modules/users/schemas.py",
+        "target_capability": null,
+        "target_module": "pydantic"
+      },
+      {
+        "binding": "logging",
+        "imported_module": "logging",
+        "imported_name": null,
+        "kind": "import",
+        "line": 3,
+        "source_capability": "users",
+        "source_module": "app.modules.users.service",
+        "source_path": "app/modules/users/service.py",
+        "target_capability": null,
+        "target_module": "logging"
+      },
+      {
+        "binding": "uuid",
+        "imported_module": "uuid",
+        "imported_name": null,
+        "kind": "import",
+        "line": 4,
+        "source_capability": "users",
+        "source_module": "app.modules.users.service",
+        "source_path": "app/modules/users/service.py",
+        "target_capability": null,
+        "target_module": "uuid"
+      },
+      {
+        "binding": "IntegrityError",
+        "imported_module": "sqlalchemy.exc",
+        "imported_name": "IntegrityError",
+        "kind": "from",
+        "line": 6,
+        "source_capability": "users",
+        "source_module": "app.modules.users.service",
+        "source_path": "app/modules/users/service.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.exc"
+      },
+      {
+        "binding": "Session",
+        "imported_module": "sqlalchemy.orm",
+        "imported_name": "Session",
+        "kind": "from",
+        "line": 7,
+        "source_capability": "users",
+        "source_module": "app.modules.users.service",
+        "source_path": "app/modules/users/service.py",
+        "target_capability": null,
+        "target_module": "sqlalchemy.orm"
+      },
+      {
+        "binding": "record_event",
+        "imported_module": "app.modules.audit.public",
+        "imported_name": "record_event",
+        "kind": "from",
+        "line": 9,
+        "source_capability": "users",
+        "source_module": "app.modules.users.service",
+        "source_path": "app/modules/users/service.py",
+        "target_capability": "audit",
+        "target_module": "app.modules.audit.public"
+      },
+      {
+        "binding": "User",
+        "imported_module": "app.modules.users.model",
+        "imported_name": "User",
+        "kind": "from",
+        "line": 10,
+        "source_capability": "users",
+        "source_module": "app.modules.users.service",
+        "source_path": "app/modules/users/service.py",
+        "target_capability": "users",
+        "target_module": "app.modules.users.model"
+      },
+      {
+        "binding": "add_user",
+        "imported_module": "app.modules.users.repository",
+        "imported_name": "add_user",
+        "kind": "from",
+        "line": 11,
+        "source_capability": "users",
+        "source_module": "app.modules.users.service",
+        "source_path": "app/modules/users/service.py",
+        "target_capability": "users",
+        "target_module": "app.modules.users.repository"
+      },
+      {
+        "binding": "get_by_email",
+        "imported_module": "app.modules.users.repository",
+        "imported_name": "get_by_email",
+        "kind": "from",
+        "line": 11,
+        "source_capability": "users",
+        "source_module": "app.modules.users.service",
+        "source_path": "app/modules/users/service.py",
+        "target_capability": "users",
+        "target_module": "app.modules.users.repository"
+      },
+      {
+        "binding": "get_user",
+        "imported_module": "app.modules.users.repository",
+        "imported_name": "get_user",
+        "kind": "from",
+        "line": 11,
+        "source_capability": "users",
+        "source_module": "app.modules.users.service",
+        "source_path": "app/modules/users/service.py",
+        "target_capability": "users",
+        "target_module": "app.modules.users.repository"
+      },
+      {
+        "binding": "users_created_total",
+        "imported_module": "app.observability.metrics",
+        "imported_name": "users_created_total",
+        "kind": "from",
+        "line": 12,
+        "source_capability": "users",
+        "source_module": "app.modules.users.service",
+        "source_path": "app/modules/users/service.py",
+        "target_capability": null,
+        "target_module": "app.observability.metrics"
+      },
+      {
+        "binding": "ConflictError",
+        "imported_module": "app.services.errors",
+        "imported_name": "ConflictError",
+        "kind": "from",
+        "line": 13,
+        "source_capability": "users",
+        "source_module": "app.modules.users.service",
+        "source_path": "app/modules/users/service.py",
+        "target_capability": null,
+        "target_module": "app.services.errors"
+      },
+      {
+        "binding": "NotFoundError",
+        "imported_module": "app.services.errors",
+        "imported_name": "NotFoundError",
+        "kind": "from",
+        "line": 13,
+        "source_capability": "users",
+        "source_module": "app.modules.users.service",
+        "source_path": "app/modules/users/service.py",
+        "target_capability": null,
+        "target_module": "app.services.errors"
+      }
+    ],
+    "interfaces_by_capability": {
+      "audit": {
+        "record_event": "function"
+      },
+      "notifications": {
+        "create_notification": "function"
+      },
+      "reporting": {
+        "get_task_summary": "function"
+      },
+      "tasks": {
+        "TaskSummary": "type",
+        "get_task_summary": "function"
+      },
+      "users": {
+        "user_exists": "function"
+      }
+    },
+    "legacy_exception": {
+      "allowed_architecture_states": [
+        "A0_2_PUBLIC_MODULE_APIS",
+        "A0_3_GOVERNED_MODULE_GRAPH"
+      ],
+      "id": "reporting_tasks_query_intermediate_v1",
+      "imported_names": [
+        "task_summary"
+      ],
+      "source_module": "app.modules.reporting.service",
+      "target_module": "app.modules.tasks.service"
+    },
+    "observed_policy_findings": [],
+    "public_module_pattern": "app.modules.{capability}.public",
+    "typed_dict_fields": {
+      "tasks.TaskSummary": [
+        "total_task_count",
+        "count_by_status",
+        "assigned_task_count",
+        "unassigned_task_count"
+      ]
+    }
+  },
+  "evaluator": {
+    "configuration_digest": "8853c3a933b23f698c7ba7c5b6e511f292e8d9285dc0de4378741c53e466f7bb",
+    "id": "AC_PUBLIC_API",
+    "obligation_id": "AC_PUBLIC_API",
+    "source_artifact_root": "architecture/acceptance/a1",
+    "source_artifacts": [
+      {
+        "path": "__init__.py",
+        "sha256": "cea0f2f68a149ae8c99c0c114bebf658867c8c8123399d5d1fe76c2f47cac569"
+      },
+      {
+        "path": "analyzers.py",
+        "sha256": "b67b21c1f78a39382a0ed8692d8bd350ff71b1261a448af4b78e83fe7f2eb1a2"
+      },
+      {
+        "path": "cli.py",
+        "sha256": "ad03caa866c09ae71784bbfca428f074a4b54ea097d182717e7f4ce15024997a"
+      },
+      {
+        "path": "engine.py",
+        "sha256": "06359bf5e40ed69291f6a3e3dd827a0e419ac0cd5ff3d4b53c8154d4ddc7718f"
+      }
+    ],
+    "source_digest": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
+    "version": "1.0.0"
+  },
+  "generated_at": "2026-10-22T09:31:17.610243+00:00",
+  "raw_output": {
+    "available": true,
+    "format": "application/json",
+    "sha256": "9d3db50cc6c95303e41b2f3a2ba3b1ef6e6a42b7953e395a81599571db08a4ea"
+  },
+  "result": {
+    "compliance": "COMPLIANT",
+    "configuration_errors": [],
+    "execution_status": "COMPLETED",
+    "violation_count": 0,
+    "violations": []
+  },
+  "schema_version": 1,
+  "source_scope": {
+    "complete": true,
+    "inspected_import_count": 185,
+    "inspected_paths": [
+      "app/modules/audit/__init__.py",
+      "app/modules/audit/model.py",
+      "app/modules/audit/public.py",
+      "app/modules/audit/repository.py",
+      "app/modules/audit/service.py",
+      "app/modules/notifications/__init__.py",
+      "app/modules/notifications/api.py",
+      "app/modules/notifications/model.py",
+      "app/modules/notifications/public.py",
+      "app/modules/notifications/repository.py",
+      "app/modules/notifications/schemas.py",
+      "app/modules/notifications/service.py",
+      "app/modules/reporting/__init__.py",
+      "app/modules/reporting/api.py",
+      "app/modules/reporting/public.py",
+      "app/modules/reporting/schemas.py",
+      "app/modules/reporting/service.py",
+      "app/modules/tasks/__init__.py",
+      "app/modules/tasks/api.py",
+      "app/modules/tasks/model.py",
+      "app/modules/tasks/public.py",
+      "app/modules/tasks/repository.py",
+      "app/modules/tasks/schemas.py",
+      "app/modules/tasks/service.py",
+      "app/modules/users/__init__.py",
+      "app/modules/users/api.py",
+      "app/modules/users/model.py",
+      "app/modules/users/public.py",
+      "app/modules/users/repository.py",
+      "app/modules/users/schemas.py",
+      "app/modules/users/service.py"
+    ],
+    "module_root": "app/modules",
+    "modules": [
+      {
+        "discovered": true,
+        "expected": true,
+        "inspected_file_count": 5,
+        "name": "audit",
+        "package": "app.modules.audit",
+        "path": "app/modules/audit"
+      },
+      {
+        "discovered": true,
+        "expected": true,
+        "inspected_file_count": 7,
+        "name": "notifications",
+        "package": "app.modules.notifications",
+        "path": "app/modules/notifications"
+      },
+      {
+        "discovered": true,
+        "expected": true,
+        "inspected_file_count": 5,
+        "name": "reporting",
+        "package": "app.modules.reporting",
+        "path": "app/modules/reporting"
+      },
+      {
+        "discovered": true,
+        "expected": true,
+        "inspected_file_count": 7,
+        "name": "tasks",
+        "package": "app.modules.tasks",
+        "path": "app/modules/tasks"
+      },
+      {
+        "discovered": true,
+        "expected": true,
+        "inspected_file_count": 7,
+        "name": "users",
+        "package": "app.modules.users",
+        "path": "app/modules/users"
+      }
+    ],
+    "source_file_digests": [
+      {
+        "path": "app/modules/audit/__init__.py",
+        "sha256": "187f4b1ca0f95ecab90aa6d34e990f6f79acda6bb0dd45ef895f3f693814ebf6"
+      },
+      {
+        "path": "app/modules/audit/model.py",
+        "sha256": "7017f08f13274d7d600aaa3a9c54d8eb99d441fa7addbeb2326553f5cea599b5"
+      },
+      {
+        "path": "app/modules/audit/public.py",
+        "sha256": "57a18290fa199fb42d453e012f1304adef35a035268173ae319a180fd1b46c8c"
+      },
+      {
+        "path": "app/modules/audit/repository.py",
+        "sha256": "fd5f270177064b8117c921bc46fb835f3f4afec9f2a8fcb115b29046268c5310"
+      },
+      {
+        "path": "app/modules/audit/service.py",
+        "sha256": "143ed57ee87bcb297621c0794412f77c8f4b8491e3cc36cb3d36a9b2b8be43c2"
+      },
+      {
+        "path": "app/modules/notifications/__init__.py",
+        "sha256": "8fe6c99c7cc6bafe6140a85daccce5ef87cd2569d6bf46e17041f557249848c5"
+      },
+      {
+        "path": "app/modules/notifications/api.py",
+        "sha256": "aedbb12b0945d218f4322e9cf5e583cc17b4c45902397d587fa0791c26d39696"
+      },
+      {
+        "path": "app/modules/notifications/model.py",
+        "sha256": "abdb99798c71c8f5cfee3e313d8a6eae2756d9c49e7b0dba5eaf95ba7caa4ef3"
+      },
+      {
+        "path": "app/modules/notifications/public.py",
+        "sha256": "901fbcc76f8420fc4f045ae33f1933b1ad54c257ee0bdaf1e823839663f97231"
+      },
+      {
+        "path": "app/modules/notifications/repository.py",
+        "sha256": "bc154b83d2dd508294293bec02ad33088ea26b4b866794e7f10f0af6e448ec90"
+      },
+      {
+        "path": "app/modules/notifications/schemas.py",
+        "sha256": "6223a98ef74df83a11fd21bbc5374e2bd9fe2b8c530b1d4da9ccd3081ce374ea"
+      },
+      {
+        "path": "app/modules/notifications/service.py",
+        "sha256": "251bba9a3e0511fe15abe75502aee8d20ebf81adbce2e52b82088641c1153eb5"
+      },
+      {
+        "path": "app/modules/reporting/__init__.py",
+        "sha256": "58a6edc5cab60ae106170289cac81c0ce0c338ba1fe7ab087c56cee1873f3f9f"
+      },
+      {
+        "path": "app/modules/reporting/api.py",
+        "sha256": "ca1b6c7fbf43b16ef276280c0a9b2a1bdf7bf26493436cad0e1f9864eb4c20e8"
+      },
+      {
+        "path": "app/modules/reporting/public.py",
+        "sha256": "bd028ce9f80033e975ac812caba428fc94fdaddb7f51530e77e90ec22b703d5e"
+      },
+      {
+        "path": "app/modules/reporting/schemas.py",
+        "sha256": "351e6b3c2e544d2e7f04938ad6591a1d11397e617dbedbed9e6627f9dd3c0c74"
+      },
+      {
+        "path": "app/modules/reporting/service.py",
+        "sha256": "71e2cada41434191e462a0899c6f182b31a1a1ba0bdc65e251d2b528c0d22ff7"
+      },
+      {
+        "path": "app/modules/tasks/__init__.py",
+        "sha256": "eef43c0a06068549ba980c5244694f7f07116e05a8893424386509394c010e13"
+      },
+      {
+        "path": "app/modules/tasks/api.py",
+        "sha256": "c3ef7bbbdd47484ddc78f8d68c7be1b1dbf4fd954f433faa89ef2233419f245b"
+      },
+      {
+        "path": "app/modules/tasks/model.py",
+        "sha256": "7ada8e516e8d23c28bb44d9efca0d687535d154d8859aff598f1a80a7c90b95c"
+      },
+      {
+        "path": "app/modules/tasks/public.py",
+        "sha256": "62d0212c15bb300c4b47b741df4bdb97c90cabc38a8cfc00daeafd8ea29384e3"
+      },
+      {
+        "path": "app/modules/tasks/repository.py",
+        "sha256": "6dbb8bd5ba5113476e948aadb3ac1bf7ee66c33c5dbd81bd37aca972a795c695"
+      },
+      {
+        "path": "app/modules/tasks/schemas.py",
+        "sha256": "15c37971d4d917fbeb3dce17e01d5901742cbbdbc47e00187cf76466c827598a"
+      },
+      {
+        "path": "app/modules/tasks/service.py",
+        "sha256": "59f33cb4c7c3bb86dc5d4842d05c6a74b074ed467125c5fea88b2061d396f068"
+      },
+      {
+        "path": "app/modules/users/__init__.py",
+        "sha256": "b87c1f809e37920e7f13bf3f8a37d7fb94ab1b054aee9e3bdda3d4073de74df3"
+      },
+      {
+        "path": "app/modules/users/api.py",
+        "sha256": "7abde5453e43cb156d7abee64ef5154ac8174fa03d5e0cc5933d2de49525e8f3"
+      },
+      {
+        "path": "app/modules/users/model.py",
+        "sha256": "46fdb7963990981e28a119dcc9cb233e20f065df402200615ec01a8dace0988c"
+      },
+      {
+        "path": "app/modules/users/public.py",
+        "sha256": "6248891fd4b8e1b8910a668ef2b3aa6bc0f718caa516a24e231a33f905a98d34"
+      },
+      {
+        "path": "app/modules/users/repository.py",
+        "sha256": "b6293b3b45dbdeb5c6d39df9dde0fd8c49cf5aec5abe4e19326da2f75498a293"
+      },
+      {
+        "path": "app/modules/users/schemas.py",
+        "sha256": "83a18934f3d71740dc430952011ad81b576a939be24920370f7a83f6d85a870e"
+      },
+      {
+        "path": "app/modules/users/service.py",
+        "sha256": "b4e94a8aa979692171d627651da7ec7187a2fd1ea2f20174158d5e3b3262e731"
+      }
+    ],
+    "uncertainties": []
+  }
+}

@@ -5,16 +5,17 @@
 
 ## Responsibility
 
-DA01 module-manifest and import-layer engineering acceptance.
+DA01 module-manifest/import-layer acceptance and additive synthetic A1 architecture evaluator checks.
 
 ## Local landmarks
 
 - `test_layer_rules.py`
+- `a1/` — synthetic source fixtures and evidence-contract checks for W2 architecture evaluators.
 - `test_module_structure.py`
 
 ## Established conventions
 
-Checks expected Python package structure; CONTEXT.md does not change required Python files.
+Existing top-level tests preserve the exact historical Python package structure. A1 evaluator tests live separately under `a1/` and do not rewrite DA01 expectations.
 
 ## Constraints and known gaps
 
