@@ -1,0 +1,36 @@
+diff --git a/app/modules/reporting/public.py b/app/modules/reporting/public.py
+index 65bfba8..8724d39 100644
+--- a/app/modules/reporting/public.py
++++ b/app/modules/reporting/public.py
+@@ -1,7 +1,5 @@
+ """Stable Python API for Reporting queries."""
+ 
+-from typing import cast
+-
+ from sqlalchemy.orm import Session
+ 
+ from app.modules.reporting.service import get_task_summary as _get_task_summary
+@@ -12,4 +10,4 @@ __all__ = ["get_task_summary"]
+ 
+ def get_task_summary(session: Session) -> TaskSummary:
+     """Return the canonical Tasks summary shape through Reporting's API."""
+-    return cast(TaskSummary, _get_task_summary(session))
++    return _get_task_summary(session)
+diff --git a/app/modules/reporting/service.py b/app/modules/reporting/service.py
+index 9e246ba..f23c424 100644
+--- a/app/modules/reporting/service.py
++++ b/app/modules/reporting/service.py
+@@ -2,9 +2,10 @@
+ 
+ from sqlalchemy.orm import Session
+ 
+-from app.modules.tasks.service import task_summary
++from app.modules.tasks.public import TaskSummary
++from app.modules.tasks.public import get_task_summary as _get_task_summary
+ 
+ 
+-def get_task_summary(session: Session) -> dict[str, int | dict[str, int]]:
++def get_task_summary(session: Session) -> TaskSummary:
+     """Return the task summary report."""
+-    return task_summary(session)
++    return _get_task_summary(session)

@@ -1,0 +1,262 @@
+{
+  "checkpoint": "canonical_post_merge_A0_4_REPORT_QUERY_PORT",
+  "checkpoint_schema_path": "a0_4_canonical_checkpoint.schema.json",
+  "checkpoint_schema_sha256": "b62d300650fb1dc10d6b9b404a6548cdbea2e80d878bbb0eeee478bff7128e25",
+  "evaluators": {
+    "AC_MODULE_GRAPH": {
+      "applicability": "ACTIVE",
+      "compliance": "COMPLIANT",
+      "configuration_sha256": "1abae6871a477ff2a07685ad645a70defa2f1ac6745598ae4cdc35aab4e95bf6",
+      "evaluator_artifacts": [
+        {
+          "path": "__init__.py",
+          "sha256": "cea0f2f68a149ae8c99c0c114bebf658867c8c8123399d5d1fe76c2f47cac569"
+        },
+        {
+          "path": "analyzers.py",
+          "sha256": "b67b21c1f78a39382a0ed8692d8bd350ff71b1261a448af4b78e83fe7f2eb1a2"
+        },
+        {
+          "path": "cli.py",
+          "sha256": "ad03caa866c09ae71784bbfca428f074a4b54ea097d182717e7f4ce15024997a"
+        },
+        {
+          "path": "engine.py",
+          "sha256": "06359bf5e40ed69291f6a3e3dd827a0e419ac0cd5ff3d4b53c8154d4ddc7718f"
+        }
+      ],
+      "evaluator_sha256": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
+      "evidence_file_sha256": "31c3cf5ca864f3f47ff37ae50db068ab792bb863d5be0c7e73b54266fbd766da",
+      "evidence_path": "a0_4_canonical_module_graph_observation.json",
+      "execution_status": "COMPLETED",
+      "inspected_files": 31,
+      "inspected_imports": 185,
+      "raw_diagnostics_file_sha256": "5c20421d86cf19f0f916b8c982f17d7d9c5976afddec5b3ff593800f629f57b2",
+      "raw_diagnostics_path": "a0_4_canonical_module_graph_diagnostics.json",
+      "raw_diagnostics_sha256": "5c20421d86cf19f0f916b8c982f17d7d9c5976afddec5b3ff593800f629f57b2",
+      "readback_failures": [],
+      "return_code": 0,
+      "source_file_digest_count": 31,
+      "source_scope_complete": true,
+      "source_scope_uncertainties": [],
+      "violations": []
+    },
+    "AC_PUBLIC_API": {
+      "applicability": "ACTIVE",
+      "compliance": "COMPLIANT",
+      "configuration_sha256": "8853c3a933b23f698c7ba7c5b6e511f292e8d9285dc0de4378741c53e466f7bb",
+      "evaluator_artifacts": [
+        {
+          "path": "__init__.py",
+          "sha256": "cea0f2f68a149ae8c99c0c114bebf658867c8c8123399d5d1fe76c2f47cac569"
+        },
+        {
+          "path": "analyzers.py",
+          "sha256": "b67b21c1f78a39382a0ed8692d8bd350ff71b1261a448af4b78e83fe7f2eb1a2"
+        },
+        {
+          "path": "cli.py",
+          "sha256": "ad03caa866c09ae71784bbfca428f074a4b54ea097d182717e7f4ce15024997a"
+        },
+        {
+          "path": "engine.py",
+          "sha256": "06359bf5e40ed69291f6a3e3dd827a0e419ac0cd5ff3d4b53c8154d4ddc7718f"
+        }
+      ],
+      "evaluator_sha256": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
+      "evidence_file_sha256": "3b894993e088b5ac73a74f1e6c6c410ebcfe9fcbdf2a73cbe551689e2433e351",
+      "evidence_path": "a0_4_canonical_public_api_observation.json",
+      "execution_status": "COMPLETED",
+      "inspected_files": 31,
+      "inspected_imports": 185,
+      "raw_diagnostics_file_sha256": "b85fbab20991dee62b67980f62a3318677784fe89fabcbb83dee7499ab0bd0b4",
+      "raw_diagnostics_path": "a0_4_canonical_public_api_diagnostics.json",
+      "raw_diagnostics_sha256": "b85fbab20991dee62b67980f62a3318677784fe89fabcbb83dee7499ab0bd0b4",
+      "readback_failures": [],
+      "return_code": 0,
+      "source_file_digest_count": 31,
+      "source_scope_complete": true,
+      "source_scope_uncertainties": [],
+      "violations": []
+    }
+  },
+  "non_applicable_evaluators": {
+    "AC_DATA_OWNERSHIP": {
+      "applicability": "NOT_APPLICABLE",
+      "compliance": "NOT_APPLICABLE",
+      "configuration_sha256": "4c8a1b4bfcdc20d49c49d47d4e9fc8192611994dd269a85d362ddc2f62320b6e",
+      "evaluator_artifacts": [
+        {
+          "path": "__init__.py",
+          "sha256": "cea0f2f68a149ae8c99c0c114bebf658867c8c8123399d5d1fe76c2f47cac569"
+        },
+        {
+          "path": "analyzers.py",
+          "sha256": "b67b21c1f78a39382a0ed8692d8bd350ff71b1261a448af4b78e83fe7f2eb1a2"
+        },
+        {
+          "path": "cli.py",
+          "sha256": "ad03caa866c09ae71784bbfca428f074a4b54ea097d182717e7f4ce15024997a"
+        },
+        {
+          "path": "engine.py",
+          "sha256": "06359bf5e40ed69291f6a3e3dd827a0e419ac0cd5ff3d4b53c8154d4ddc7718f"
+        }
+      ],
+      "evaluator_sha256": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
+      "evidence_file_sha256": "8114d87aa1186719525e2c5ae3c08aea068cb712e24fc7aa2992ad78c50b6d4a",
+      "evidence_path": "a0_4_canonical_data_ownership_observation.json",
+      "execution_status": "COMPLETED",
+      "inspected_files": 32,
+      "inspected_imports": 190,
+      "raw_diagnostics_file_sha256": "d183a3cd7b6a982cd2a3e505a55063857fdd61ea578a914a7898e670651cea2f",
+      "raw_diagnostics_path": "a0_4_canonical_data_ownership_diagnostics.json",
+      "raw_diagnostics_sha256": "d183a3cd7b6a982cd2a3e505a55063857fdd61ea578a914a7898e670651cea2f",
+      "readback_failures": [],
+      "return_code": 3,
+      "source_file_digest_count": 32,
+      "source_scope_complete": true,
+      "source_scope_uncertainties": [],
+      "violations": []
+    }
+  },
+  "readback_status": "PASS",
+  "schema_version": 1,
+  "source": {
+    "application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+    "architecture_state": "A0_4_REPORT_QUERY_PORT",
+    "repository_tree_sha": "2b436e0aaf09403ea516d73d20a466a122f86592",
+    "source_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9"
+  },
+  "source_manifest_path": "a0_4_canonical_source_manifest.yaml",
+  "source_manifest_sha256": "9c981442a34830bdc44d77ffc17de5b9f832b0b261d0d92f28bd15dc567febd9",
+  "source_pair": {
+    "after": {
+      "application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+      "architecture_state": "A0_4_REPORT_QUERY_PORT",
+      "repository_tree_sha": "2b436e0aaf09403ea516d73d20a466a122f86592",
+      "source_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9"
+    },
+    "application_context_changed_paths": [
+      "app/modules/CONTEXT.md",
+      "app/modules/reporting/CONTEXT.md"
+    ],
+    "application_source_changed_paths": [
+      "app/modules/reporting/public.py",
+      "app/modules/reporting/service.py"
+    ],
+    "application_source_diff_path": "a0_4_canonical_application_source.diff",
+    "application_source_diff_sha256": "6538147b9aa4fa5075314aaa54a0e24ea51f33cf0d314342e926d41dabec17ac",
+    "before": {
+      "application_tree_sha": "b147b8961ea9e76c966663d4832e4c303581151a",
+      "architecture_state": "A0_3_GOVERNED_MODULE_GRAPH",
+      "repository_tree_sha": "7b951421395f532ca403dab09d76902ff08a807d",
+      "source_sha": "26a9bb667da7d0938e38aca15d2bf29fd1de4829"
+    },
+    "capability_edges_after": [
+      [
+        "reporting",
+        "tasks"
+      ],
+      [
+        "tasks",
+        "audit"
+      ],
+      [
+        "tasks",
+        "notifications"
+      ],
+      [
+        "tasks",
+        "users"
+      ],
+      [
+        "users",
+        "audit"
+      ]
+    ],
+    "capability_edges_before": [
+      [
+        "reporting",
+        "tasks"
+      ],
+      [
+        "tasks",
+        "audit"
+      ],
+      [
+        "tasks",
+        "notifications"
+      ],
+      [
+        "tasks",
+        "users"
+      ],
+      [
+        "users",
+        "audit"
+      ]
+    ],
+    "import_dependency_delta": {
+      "added": [
+        {
+          "imported_name": "TaskSummary",
+          "line": 5,
+          "source_path": "app/modules/reporting/service.py",
+          "target_module": "app.modules.tasks.public"
+        },
+        {
+          "imported_name": "get_task_summary",
+          "line": 6,
+          "source_path": "app/modules/reporting/service.py",
+          "target_module": "app.modules.tasks.public"
+        }
+      ],
+      "removed": [
+        {
+          "imported_name": "task_summary",
+          "line": 5,
+          "source_path": "app/modules/reporting/service.py",
+          "target_module": "app.modules.tasks.service"
+        }
+      ]
+    },
+    "other_application_source_changes": [
+      {
+        "change": "Removed the typing.cast wrapper after the service adopted the Tasks public TaskSummary type.",
+        "path": "app/modules/reporting/public.py"
+      }
+    ],
+    "w0_application_source_paths": []
+  },
+  "w0_change_classification": {
+    "application_source_paths": [],
+    "documentation_paths": [
+      "architecture/acceptance/a1/CONTEXT.md",
+      "architecture/acceptance/a1/W3_HANDOFF.md",
+      "docs/TESTING.md",
+      "scripts/CONTEXT.md",
+      "tests/CONTEXT.md",
+      "tests/architecture/a1/CONTEXT.md",
+      "tests/architecture/a1/REQUIREMENT_TEST_MATRIX.md"
+    ],
+    "evidence_paths": [
+      "architecture/acceptance/a1/a0_4_canonical_application_source.diff",
+      "architecture/acceptance/a1/a0_4_canonical_checkpoint.json",
+      "architecture/acceptance/a1/a0_4_canonical_checkpoint.schema.json",
+      "architecture/acceptance/a1/a0_4_canonical_data_ownership_diagnostics.json",
+      "architecture/acceptance/a1/a0_4_canonical_data_ownership_observation.json",
+      "architecture/acceptance/a1/a0_4_canonical_module_graph_diagnostics.json",
+      "architecture/acceptance/a1/a0_4_canonical_module_graph_observation.json",
+      "architecture/acceptance/a1/a0_4_canonical_public_api_diagnostics.json",
+      "architecture/acceptance/a1/a0_4_canonical_public_api_observation.json",
+      "architecture/acceptance/a1/a0_4_canonical_source_manifest.yaml"
+    ],
+    "governance_paths": [
+      "scripts/check_architecture_stages.py"
+    ],
+    "test_paths": [
+      "tests/architecture/a1/test_evaluators.py"
+    ]
+  }
+}

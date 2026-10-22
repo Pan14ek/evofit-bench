@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/a0-4-canonical-checkpoint-v1.json",
+  "title": "Canonical post-merge A0.4 architecture checkpoint",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "checkpoint",
+    "checkpoint_schema_path",
+    "checkpoint_schema_sha256",
+    "source",
+    "source_manifest_path",
+    "source_manifest_sha256",
+    "evaluators",
+    "non_applicable_evaluators",
+    "source_pair",
+    "w0_change_classification",
+    "readback_status"
+  ],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schema_version": { "const": 1 },
+    "checkpoint": { "const": "canonical_post_merge_A0_4_REPORT_QUERY_PORT" },
+    "checkpoint_schema_path": { "const": "a0_4_canonical_checkpoint.schema.json" },
+    "checkpoint_schema_sha256": { "$ref": "#/$defs/sha256" },
+    "source": {
+      "type": "object",
+      "required": [
+        "architecture_state",
+        "source_sha",
+        "repository_tree_sha",
+        "application_tree_sha"
+      ],
+      "properties": {
+        "architecture_state": { "const": "A0_4_REPORT_QUERY_PORT" },
+        "source_sha": { "const": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9" },
+        "repository_tree_sha": { "const": "2b436e0aaf09403ea516d73d20a466a122f86592" },
+        "application_tree_sha": { "const": "007196f68652bc13f6798805793ffdfae96f95f7" }
+      },
+      "additionalProperties": false
+    },
+    "source_manifest_path": { "const": "a0_4_canonical_source_manifest.yaml" },
+    "source_manifest_sha256": { "$ref": "#/$defs/sha256" },
+    "evaluators": {
+      "type": "object",
+      "required": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"],
+      "properties": {
+        "AC_PUBLIC_API": {
+          "allOf": [
+            { "$ref": "#/$defs/evaluatorRecord" },
+            { "properties": { "applicability": { "const": "ACTIVE" }, "compliance": { "const": "COMPLIANT" } } }
+          ]
+        },
+        "AC_MODULE_GRAPH": {
+          "allOf": [
+            { "$ref": "#/$defs/evaluatorRecord" },
+            { "properties": { "applicability": { "const": "ACTIVE" }, "compliance": { "const": "COMPLIANT" } } }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "non_applicable_evaluators": {
+      "type": "object",
+      "required": ["AC_DATA_OWNERSHIP"],
+      "properties": {
+        "AC_DATA_OWNERSHIP": {
+          "allOf": [
+            { "$ref": "#/$defs/evaluatorRecord" },
+            { "properties": { "applicability": { "const": "NOT_APPLICABLE" }, "compliance": { "const": "NOT_APPLICABLE" } } }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "source_pair": {
+      "type": "object",
+      "required": [
+        "before",
+        "after",
+        "application_source_changed_paths",
+        "application_context_changed_paths",
+        "application_source_diff_path",
+        "application_source_diff_sha256",
+        "w0_application_source_paths",
+        "other_application_source_changes",
+        "import_dependency_delta",
+        "capability_edges_before",
+        "capability_edges_after"
+      ],
+      "properties": {
+        "before": {
+          "const": {
+            "architecture_state": "A0_3_GOVERNED_MODULE_GRAPH",
+            "source_sha": "26a9bb667da7d0938e38aca15d2bf29fd1de4829",
+            "repository_tree_sha": "7b951421395f532ca403dab09d76902ff08a807d",
+            "application_tree_sha": "b147b8961ea9e76c966663d4832e4c303581151a"
+          }
+        },
+        "after": {
+          "const": {
+            "architecture_state": "A0_4_REPORT_QUERY_PORT",
+            "source_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+            "repository_tree_sha": "2b436e0aaf09403ea516d73d20a466a122f86592",
+            "application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7"
+          }
+        },
+        "application_source_changed_paths": {
+          "const": ["app/modules/reporting/public.py", "app/modules/reporting/service.py"]
+        },
+        "application_context_changed_paths": {
+          "const": ["app/modules/CONTEXT.md", "app/modules/reporting/CONTEXT.md"]
+        },
+        "application_source_diff_path": {
+          "const": "a0_4_canonical_application_source.diff"
+        },
+        "application_source_diff_sha256": { "$ref": "#/$defs/sha256" },
+        "w0_application_source_paths": { "const": [] },
+        "other_application_source_changes": {
+          "const": [
+            {
+              "path": "app/modules/reporting/public.py",
+              "change": "Removed the typing.cast wrapper after the service adopted the Tasks public TaskSummary type."
+            }
+          ]
+        },
+        "import_dependency_delta": {
+          "const": {
+            "removed": [
+              {
+                "source_path": "app/modules/reporting/service.py",
+                "line": 5,
+                "target_module": "app.modules.tasks.service",
+                "imported_name": "task_summary"
+              }
+            ],
+            "added": [
+              {
+                "source_path": "app/modules/reporting/service.py",
+                "line": 5,
+                "target_module": "app.modules.tasks.public",
+                "imported_name": "TaskSummary"
+              },
+              {
+                "source_path": "app/modules/reporting/service.py",
+                "line": 6,
+                "target_module": "app.modules.tasks.public",
+                "imported_name": "get_task_summary"
+              }
+            ]
+          }
+        },
+        "capability_edges_before": {
+          "const": [["reporting", "tasks"], ["tasks", "audit"], ["tasks", "notifications"], ["tasks", "users"], ["users", "audit"]]
+        },
+        "capability_edges_after": {
+          "const": [["reporting", "tasks"], ["tasks", "audit"], ["tasks", "notifications"], ["tasks", "users"], ["users", "audit"]]
+        }
+      },
+      "additionalProperties": false
+    },
+    "w0_change_classification": {
+      "type": "object",
+      "required": [
+        "application_source_paths",
+        "governance_paths",
+        "test_paths",
+        "evidence_paths",
+        "documentation_paths"
+      ],
+      "properties": {
+        "application_source_paths": { "const": [] },
+        "governance_paths": { "type": "array", "items": { "type": "string" } },
+        "test_paths": { "type": "array", "items": { "type": "string" } },
+        "evidence_paths": { "type": "array", "items": { "type": "string" } },
+        "documentation_paths": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    },
+    "readback_status": { "const": "PASS" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "digestFile": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      },
+      "additionalProperties": false
+    },
+    "evaluatorRecord": {
+      "type": "object",
+      "required": [
+        "applicability",
+        "compliance",
+        "configuration_sha256",
+        "evidence_file_sha256",
+        "evidence_path",
+        "evaluator_artifacts",
+        "evaluator_sha256",
+        "execution_status",
+        "inspected_files",
+        "inspected_imports",
+        "source_file_digest_count",
+        "source_scope_complete",
+        "source_scope_uncertainties",
+        "violations",
+        "readback_failures",
+        "raw_diagnostics_file_sha256",
+        "raw_diagnostics_path",
+        "raw_diagnostics_sha256",
+        "return_code"
+      ],
+      "properties": {
+        "applicability": { "enum": ["ACTIVE", "NOT_APPLICABLE"] },
+        "compliance": { "enum": ["COMPLIANT", "NOT_APPLICABLE"] },
+        "configuration_sha256": { "$ref": "#/$defs/sha256" },
+        "evidence_file_sha256": { "$ref": "#/$defs/sha256" },
+        "evidence_path": { "type": "string", "minLength": 1 },
+        "evaluator_artifacts": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/digestFile" } },
+        "evaluator_sha256": { "$ref": "#/$defs/sha256" },
+        "execution_status": { "const": "COMPLETED" },
+        "inspected_files": { "type": "integer", "minimum": 1 },
+        "inspected_imports": { "type": "integer", "minimum": 0 },
+        "source_file_digest_count": { "type": "integer", "minimum": 1 },
+        "source_scope_complete": { "const": true },
+        "source_scope_uncertainties": { "type": "array", "maxItems": 0 },
+        "violations": { "type": "array", "maxItems": 0 },
+        "readback_failures": { "type": "array", "maxItems": 0 },
+        "raw_diagnostics_file_sha256": { "$ref": "#/$defs/sha256" },
+        "raw_diagnostics_path": { "type": "string", "minLength": 1 },
+        "raw_diagnostics_sha256": { "$ref": "#/$defs/sha256" },
+        "return_code": { "type": "integer", "enum": [0, 3] }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
