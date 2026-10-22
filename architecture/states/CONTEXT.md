@@ -11,14 +11,15 @@ Versioned architecture-state records for the preserved capability application an
 
 - `A0_1_CAPABILITY_MODULES.yaml`
 - `A0_3_GOVERNED_MODULE_GRAPH.yaml` and its JSON Schema — ΔA3 predecessor, invariants, approved graph, temporary exception, mandatory evaluator set, and source provenance.
+- `A0_4_REPORT_QUERY_PORT.yaml` and its JSON Schema — ΔA4 current state, existing public query port, preserved graph, expired exception, evaluator applicability, and pinned A0.3 provenance.
 
 ## Established conventions
 
-The frozen A0.1 manifest remains historical input. A0.3 is an engineering state record; its source SHA is recorded in evaluator evidence rather than embedded in the manifest.
+The frozen A0.1 manifest remains historical input. A0.3 remains the historical predecessor record and canonical evaluator evidence is pinned to its exact source. A0.4 records the current reporting query transition and its source SHA, repository tree, and application tree predecessors.
 
 ## Constraints and known gaps
 
-The A0.3 record preserves one application process, one PostgreSQL database, synchronous Python communication, REST behavior, and caller-managed session/transaction ownership. It does not assert that static AST evidence observes dynamic imports, runtime behavior, or external deployment identity.
+The A0.4 record preserves one application process, one PostgreSQL database, synchronous Python communication, REST behavior, and caller-managed session/transaction ownership. Static AST acceptance does not observe dynamic imports, runtime behavior, or external deployment identity.
 
 ## Verification and further reading
 

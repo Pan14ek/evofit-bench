@@ -1,0 +1,56 @@
+schema_version: 1
+architecture_state: A0_4_REPORT_QUERY_PORT
+predecessor_state: A0_3_GOVERNED_MODULE_GRAPH
+
+implementation_scope:
+  - Replace the private Reporting to Tasks service query with the existing Tasks public query contract.
+  - Preserve REST response behavior, summary counts, the shared database, and caller-managed transaction ownership.
+  - Preserve the five approved capability dependency edges and all A0.3 historical state and evidence.
+
+invariants:
+  deployment_units: 1
+  application_processes: 1
+  database_instances: 1
+  database_product: PostgreSQL
+  internal_communication: synchronous_python_calls
+  message_broker: none
+  rest_behavior: unchanged
+  transaction_ownership: caller_managed_session
+
+allowed_dependencies:
+  - {from: tasks, to: users}
+  - {from: tasks, to: notifications}
+  - {from: tasks, to: audit}
+  - {from: users, to: audit}
+  - {from: reporting, to: tasks}
+
+reporting_query_port:
+  source_module: app.modules.reporting.service
+  public_target_module: app.modules.tasks.public
+  public_imported_name: get_task_summary
+  forbidden_target_module: app.modules.tasks.service
+  forbidden_imported_name: task_summary
+
+temporary_exceptions: []
+
+governance_requirements:
+  required_evaluators: [AC_PUBLIC_API, AC_MODULE_GRAPH]
+  not_applicable_evaluators:
+    AC_DATA_OWNERSHIP: NOT_APPLICABLE
+  fail_closed:
+    incomplete_source_scope: true
+    source_identity_mismatch: true
+    evaluator_or_configuration_digest_mismatch: true
+    unresolved_imports: true
+    undeclared_dependencies: true
+    cycles: true
+    noncompliance: true
+
+source_provenance:
+  predecessor_commit: 26a9bb667da7d0938e38aca15d2bf29fd1de4829
+  predecessor_tree: 7b951421395f532ca403dab09d76902ff08a807d
+  predecessor_application_tree: b147b8961ea9e76c966663d4832e4c303581151a
+  evaluated_source_identity: >-
+    Each evaluator invocation pins the exact candidate Git HEAD and records it
+    with inspected source-file digests. This manifest omits its containing
+    commit to avoid a self-referential source hash.

@@ -27,12 +27,25 @@ def _install_a03_manifest(root: Path) -> None:
         shutil.copyfile(source, target)
 
 
+def _install_a04_manifest(root: Path) -> None:
+    for relative in (stage.A04_MANIFEST, stage.A04_SCHEMA):
+        source = REPOSITORY_ROOT / relative
+        target = root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
+
+
 def _fake_a03_subject(root: Path) -> None:
     _fake_modules(root, stage.MODULES)
     contract_test = root / "tests/unit/test_module_public_apis.py"
     contract_test.parent.mkdir(parents=True)
     contract_test.write_text("def test_contract(): pass\n", encoding="utf-8")
     _install_a03_manifest(root)
+
+
+def _fake_a04_subject(root: Path) -> None:
+    _fake_a03_subject(root)
+    _install_a04_manifest(root)
 
 
 def test_detects_exact_baseline_when_no_public_apis(tmp_path: Path) -> None:
@@ -74,6 +87,14 @@ def test_public_api_modules_alone_do_not_identify_a03(tmp_path: Path) -> None:
     stage._validate_a03_policy_bindings(REPOSITORY_ROOT, manifest)
 
 
+def test_a04_manifest_is_latest_state_and_policy_bindings_are_explicit(tmp_path: Path) -> None:
+    _fake_a04_subject(tmp_path)
+
+    assert stage.detect_stage(tmp_path) == stage.A04
+    manifest = stage._validate_a04_manifest(tmp_path)
+    stage._validate_a04_policy_bindings(REPOSITORY_ROOT, manifest)
+
+
 def test_committed_a03_manifest_removal_fails_acceptance_and_historical_a02_stays_valid(
     tmp_path: Path,
 ) -> None:
@@ -106,6 +127,76 @@ def test_committed_a03_manifest_removal_fails_acceptance_and_historical_a02_stay
     # commits in the object database or another ref.
     stage._git(tmp_path, "checkout", "--quiet", a02_commit)
     assert stage.detect_stage(tmp_path) == stage.A02
+
+
+def test_a04_manifest_removal_or_stage_downgrade_fails_and_history_stays_detectable(
+    tmp_path: Path,
+) -> None:
+    _fake_modules(tmp_path, stage.MODULES)
+    contract_test = tmp_path / "tests/unit/test_module_public_apis.py"
+    contract_test.parent.mkdir(parents=True)
+    contract_test.write_text("def test_contract(): pass\n", encoding="utf-8")
+
+    stage._git(tmp_path, "init", "--quiet")
+    stage._git(tmp_path, "config", "user.name", "Architecture stage test")
+    stage._git(tmp_path, "config", "user.email", "architecture-stage@example.test")
+    stage._git(tmp_path, "add", "-A")
+    stage._git(tmp_path, "commit", "--quiet", "-m", "valid historical A0.2 source")
+    a02_commit = stage._git(tmp_path, "rev-parse", "HEAD")
+
+    _install_a03_manifest(tmp_path)
+    stage._git(tmp_path, "add", "-A")
+    stage._git(tmp_path, "commit", "--quiet", "-m", "establish A0.3 state")
+    a03_commit = stage._git(tmp_path, "rev-parse", "HEAD")
+    assert stage.detect_stage(tmp_path) == stage.A03
+
+    _install_a04_manifest(tmp_path)
+    stage._git(tmp_path, "add", "-A")
+    stage._git(tmp_path, "commit", "--quiet", "-m", "establish A0.4 state")
+    assert stage.detect_stage(tmp_path) == stage.A04
+    with pytest.raises(stage.StageCheckError, match="Requested architecture stage"):
+        stage.current_stage_acceptance(tmp_path, requested_stage=stage.A03)
+
+    (tmp_path / stage.A04_MANIFEST).unlink()
+    stage._git(tmp_path, "add", "-A")
+    stage._git(tmp_path, "commit", "--quiet", "-m", "remove established A0.4 manifest")
+    with pytest.raises(stage.StageCheckError, match="A0.4_MANIFEST_REMOVED_AFTER_ESTABLISHMENT"):
+        stage.current_stage_acceptance(tmp_path, requested_stage=stage.A03)
+
+    stage._git(tmp_path, "checkout", "--quiet", a03_commit)
+    assert stage.detect_stage(tmp_path) == stage.A03
+    stage._git(tmp_path, "checkout", "--quiet", a02_commit)
+    assert stage.detect_stage(tmp_path) == stage.A02
+
+
+def test_a04_manifest_requires_valid_preserved_a03_record_and_schema(tmp_path: Path) -> None:
+    _fake_a04_subject(tmp_path)
+    (tmp_path / stage.A04_SCHEMA).unlink()
+    with pytest.raises(stage.StageCheckError, match="A0.4_MANIFEST_SCHEMA_INVALID"):
+        stage.detect_stage(tmp_path)
+
+    (tmp_path / stage.A04_SCHEMA).write_bytes((REPOSITORY_ROOT / stage.A04_SCHEMA).read_bytes())
+    (tmp_path / stage.A03_MANIFEST).unlink()
+    with pytest.raises(stage.StageCheckError, match="A0.3_MANIFEST_INVALID"):
+        stage.detect_stage(tmp_path)
+
+
+def test_a04_policy_rejects_data_ownership_activation(tmp_path: Path) -> None:
+    _fake_a04_subject(tmp_path)
+    evaluator_root = tmp_path / "architecture/acceptance/a1"
+    evaluator_root.mkdir(parents=True, exist_ok=True)
+    for name in ("public_api_v1.yaml", "module_graph_v1.yaml", "data_ownership_v1.yaml"):
+        source = REPOSITORY_ROOT / "architecture/acceptance/a1" / name
+        shutil.copyfile(source, evaluator_root / name)
+    ownership_path = evaluator_root / "data_ownership_v1.yaml"
+    ownership = ownership_path.read_text(encoding="utf-8").replace(
+        "A0_4_REPORT_QUERY_PORT: {applicability: NOT_APPLICABLE}",
+        "A0_4_REPORT_QUERY_PORT: {applicability: ACTIVE}",
+    )
+    ownership_path.write_text(ownership, encoding="utf-8")
+    manifest = stage._validate_a04_manifest(tmp_path)
+    with pytest.raises(stage.StageCheckError, match="A0.4_OWNERSHIP_NOT_NOT_APPLICABLE"):
+        stage._validate_a04_policy_bindings(tmp_path, manifest)
 
 
 def test_a03_manifest_cannot_fall_back_to_a01_without_public_apis(tmp_path: Path) -> None:
@@ -285,3 +376,73 @@ def test_a03_evaluator_failure_blocks_architecture_tests(
     with pytest.raises(stage.StageCheckError, match="AC_MODULE_GRAPH evidence rejected"):
         stage.current_stage_acceptance(tmp_path, requested_stage=stage.A03)
     assert not pytest_called
+
+
+def test_a04_acceptance_requires_both_evaluators_and_adversarial_suite(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _fake_a04_subject(tmp_path)
+    calls: list[tuple[str, object]] = []
+    pytest_targets: list[list[str]] = []
+
+    def git_result(_root: Path, *args: str) -> str:
+        if args == ("status", "--porcelain", "--", "app", "architecture", "tests"):
+            return ""
+        return "a" * 40
+
+    monkeypatch.setattr(stage, "_git", git_result)
+    monkeypatch.setattr(
+        stage,
+        "_run_a04_evaluators",
+        lambda _root, source_sha: calls.append(("evaluators", source_sha)),
+    )
+    monkeypatch.setattr(
+        stage,
+        "_run_pytest",
+        lambda _root, paths, *, historical: pytest_targets.append(paths),
+    )
+
+    assert stage.current_stage_acceptance(tmp_path, requested_stage=stage.A04) == stage.A04
+    assert calls == [("evaluators", "a" * 40)]
+    assert pytest_targets == [
+        [
+            "tests/architecture/test_layer_rules.py",
+            "tests/unit/test_module_public_apis.py",
+            "tests/architecture/a1/test_evaluators.py",
+        ]
+    ]
+
+
+def test_a04_evaluator_failure_blocks_architecture_tests(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _fake_a04_subject(tmp_path)
+    pytest_called = False
+
+    def reject_public_api(_root: Path, _source_sha: str) -> None:
+        raise stage.StageCheckError("AC_PUBLIC_API evidence rejected: EVALUATOR_NOT_COMPLIANT")
+
+    def unexpected_pytest(*_args: object, **_kwargs: object) -> None:
+        nonlocal pytest_called
+        pytest_called = True
+
+    monkeypatch.setattr(
+        stage,
+        "_git",
+        lambda _root, *args: (
+            "a" * 40
+            if args != ("status", "--porcelain", "--", "app", "architecture", "tests")
+            else ""
+        ),
+    )
+    monkeypatch.setattr(stage, "_run_a04_evaluators", reject_public_api)
+    monkeypatch.setattr(stage, "_run_pytest", unexpected_pytest)
+
+    with pytest.raises(stage.StageCheckError, match="AC_PUBLIC_API evidence rejected"):
+        stage.current_stage_acceptance(tmp_path, requested_stage=stage.A04)
+    assert not pytest_called
+
+
+def test_development_ci_pins_a04_architecture_stage() -> None:
+    workflow = (REPOSITORY_ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
+    assert "ARCHITECTURE_STAGE: A0_4_REPORT_QUERY_PORT" in workflow

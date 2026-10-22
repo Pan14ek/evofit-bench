@@ -15,8 +15,8 @@ Capability-oriented business packages users, tasks, notifications, reporting and
 ## Established conventions
 
 Read each child CONTEXT.md. Cross-module business calls use the receiving module's public facade;
-facades share the caller's SQLAlchemy session and never own the transaction. Reporting's direct
-Tasks service query remains the documented ΔA4 migration exception.
+facades share the caller's SQLAlchemy session and never own the transaction. Reporting uses
+`tasks.public.get_task_summary`; A0.4 acceptance rejects its former private service dependency.
 
 ## Constraints and known gaps
 

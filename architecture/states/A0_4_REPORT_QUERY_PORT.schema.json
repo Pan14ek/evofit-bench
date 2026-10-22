@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/a0-4-report-query-port-v1.json",
+  "title": "A0.4 reporting query port state record",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "architecture_state",
+    "predecessor_state",
+    "implementation_scope",
+    "invariants",
+    "allowed_dependencies",
+    "reporting_query_port",
+    "temporary_exceptions",
+    "governance_requirements",
+    "source_provenance"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "architecture_state": { "const": "A0_4_REPORT_QUERY_PORT" },
+    "predecessor_state": { "const": "A0_3_GOVERNED_MODULE_GRAPH" },
+    "implementation_scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "invariants": {
+      "type": "object",
+      "required": [
+        "deployment_units",
+        "application_processes",
+        "database_instances",
+        "database_product",
+        "internal_communication",
+        "message_broker",
+        "rest_behavior",
+        "transaction_ownership"
+      ],
+      "properties": {
+        "deployment_units": { "const": 1 },
+        "application_processes": { "const": 1 },
+        "database_instances": { "const": 1 },
+        "database_product": { "const": "PostgreSQL" },
+        "internal_communication": { "const": "synchronous_python_calls" },
+        "message_broker": { "const": "none" },
+        "rest_behavior": { "const": "unchanged" },
+        "transaction_ownership": { "const": "caller_managed_session" }
+      },
+      "additionalProperties": false
+    },
+    "allowed_dependencies": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["from", "to"],
+        "properties": {
+          "from": { "enum": ["tasks", "users", "reporting"] },
+          "to": { "enum": ["users", "notifications", "audit", "tasks"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "reporting_query_port": {
+      "type": "object",
+      "required": [
+        "source_module",
+        "public_target_module",
+        "public_imported_name",
+        "forbidden_target_module",
+        "forbidden_imported_name"
+      ],
+      "properties": {
+        "source_module": { "const": "app.modules.reporting.service" },
+        "public_target_module": { "const": "app.modules.tasks.public" },
+        "public_imported_name": { "const": "get_task_summary" },
+        "forbidden_target_module": { "const": "app.modules.tasks.service" },
+        "forbidden_imported_name": { "const": "task_summary" }
+      },
+      "additionalProperties": false
+    },
+    "temporary_exceptions": { "type": "array", "maxItems": 0 },
+    "governance_requirements": {
+      "type": "object",
+      "required": ["required_evaluators", "not_applicable_evaluators", "fail_closed"],
+      "properties": {
+        "required_evaluators": { "const": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"] },
+        "not_applicable_evaluators": {
+          "type": "object",
+          "required": ["AC_DATA_OWNERSHIP"],
+          "properties": {
+            "AC_DATA_OWNERSHIP": { "const": "NOT_APPLICABLE" }
+          },
+          "additionalProperties": false
+        },
+        "fail_closed": {
+          "type": "object",
+          "required": [
+            "incomplete_source_scope",
+            "source_identity_mismatch",
+            "evaluator_or_configuration_digest_mismatch",
+            "unresolved_imports",
+            "undeclared_dependencies",
+            "cycles",
+            "noncompliance"
+          ],
+          "properties": {
+            "incomplete_source_scope": { "const": true },
+            "source_identity_mismatch": { "const": true },
+            "evaluator_or_configuration_digest_mismatch": { "const": true },
+            "unresolved_imports": { "const": true },
+            "undeclared_dependencies": { "const": true },
+            "cycles": { "const": true },
+            "noncompliance": { "const": true }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "source_provenance": {
+      "type": "object",
+      "required": [
+        "predecessor_commit",
+        "predecessor_tree",
+        "predecessor_application_tree",
+        "evaluated_source_identity"
+      ],
+      "properties": {
+        "predecessor_commit": {
+          "const": "26a9bb667da7d0938e38aca15d2bf29fd1de4829"
+        },
+        "predecessor_tree": {
+          "const": "7b951421395f532ca403dab09d76902ff08a807d"
+        },
+        "predecessor_application_tree": {
+          "const": "b147b8961ea9e76c966663d4832e4c303581151a"
+        },
+        "evaluated_source_identity": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
