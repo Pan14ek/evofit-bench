@@ -23,12 +23,13 @@ A test described in a specification must have a stable requirement ID, fixture p
 
 The stage-aware architecture check keeps historical A0.1 acceptance pinned to
 its original Git commit, A0.2 at the exact predecessor in the preserved A0.3
-manifest, and canonical A0.3 at its pinned merge commit and trees. Development
+manifest, canonical A0.3 at its pinned merge commit and trees, and canonical
+A0.4 at the PR #34 merge commit and trees. Development
 CI explicitly requires A0.4. Stage detection recognizes A0.4 before retained
 A0.3 history, validates the A0.4 manifest and its preserved A0.3 predecessor,
 and fails closed if the A0.4 manifest is removed on a descendant commit or if
-the requested stage is downgraded. Historical A0.2 and A0.3 commits still
-resolve from their own ancestry and run their corresponding checks.
+the requested stage is downgraded. Historical A0.2, A0.3, and A0.4 evidence
+always resolves its own pinned source, evaluator, and configuration bytes.
 
 A0.4 acceptance runs source-based `AC_PUBLIC_API` and `AC_MODULE_GRAPH` against
 the exact clean candidate HEAD. Both must report complete source scope,
@@ -48,8 +49,11 @@ TEST_DATABASE_URL=postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test 
 
 The focused checks cover A1-NEG-01 through A1-NEG-03 and preserve the ΔA3
 acceptance matrix in `tests/architecture/a1/REQUIREMENT_TEST_MATRIX.md`. The
-stage command runs pinned historical A0.1, A0.2, and A0.3 checks, then the
-current A0.4 evaluators and architecture test selection. Full development
+stage command runs pinned historical A0.1, A0.2, A0.3, and A0.4 checks, then the
+current A0.4 evaluators and architecture test selection. The canonical A0.4
+readback regression also changes Reporting.service and evaluator configuration
+in a later revision and rejects tampering of source, evaluator, configuration,
+manifest, diagnostics, and observation bytes. Full development
 verification uses `make development-quality` with a disposable PostgreSQL
 database. These checks establish engineering acceptance only; they do not
 establish semantic fitness coverage, G1/G4, or measured DA01 results.
@@ -64,6 +68,13 @@ binds fresh AC_PUBLIC_API and AC_MODULE_GRAPH outputs to PR #32 merge commit
 commit that stores the evidence files. The canonical checkpoint test validates
 the manifest, exact source/config/evaluator digests, raw diagnostic bytes, and
 independent evidence readback while preserving the candidate observations.
+
+The canonical post-merge A0.4 checkpoint is recorded in
+`architecture/acceptance/a1/a0_4_canonical_checkpoint.json`. Its observations
+bind to PR #34 merge commit `d3101c0d3aa9b7b709253b6ec7518416f05f65b9`, not the
+later evidence-storage commit. `historical_a04_acceptance` uses that commit's
+own evaluator and configuration files for byte readback, so later changes do
+not rewrite the checkpoint.
 
 `architecture-test` stores Import Linter's cache under `.import_linter_cache`
 by default. Set `IMPORT_LINTER_CACHE_DIR` to a writable external path when

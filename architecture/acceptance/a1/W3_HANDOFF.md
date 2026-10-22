@@ -141,3 +141,63 @@ This is engineering acceptance evidence for A0.3. It does not establish
 representation-to-obligation semantic adequacy, `Coverage_P`, `Coverage_ref`,
 G1/G4, measured DA01 outcomes, or final A1 compliance. The static analyzers'
 documented coverage limits continue to apply.
+
+## Canonical post-merge ΔA4 checkpoint
+
+The canonical A0.4 source is the actual PR #34 merge commit
+`d3101c0d3aa9b7b709253b6ec7518416f05f65b9`, with repository tree
+`2b436e0aaf09403ea516d73d20a466a122f86592` and application tree
+`007196f68652bc13f6798805793ffdfae96f95f7`. Its predecessor is canonical A0.3
+commit `26a9bb667da7d0938e38aca15d2bf29fd1de4829`, repository tree
+`7b951421395f532ca403dab09d76902ff08a807d`, and application tree
+`b147b8961ea9e76c966663d4832e4c303581151a`. The A0.4 source manifest copy is
+`a0_4_canonical_source_manifest.yaml`, byte-identical to the manifest at the
+pinned A0.4 source; its SHA-256 is
+`9c981442a34830bdc44d77ffc17de5b9f832b0b261d0d92f28bd15dc567febd9`.
+
+Both mandatory source evaluators ran on a clean checkout of the merge commit
+and completed COMPLIANT over all five capabilities, 31 inspected Python files
+and 185 imports, with no scope uncertainties or violations. The evaluator
+source digest for both is
+`5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c`.
+AC_PUBLIC_API configuration digest is
+`8853c3a933b23f698c7ba7c5b6e511f292e8d9285dc0de4378741c53e466f7bb`; its raw
+diagnostics digest is
+`b85fbab20991dee62b67980f62a3318677784fe89fabcbb83dee7499ab0bd0b4`. The
+AC_MODULE_GRAPH configuration digest is
+`1abae6871a477ff2a07685ad645a70defa2f1ac6745598ae4cdc35aab4e95bf6`; its raw
+diagnostics digest is
+`5c20421d86cf19f0f916b8c982f17d7d9c5976afddec5b3ff593800f629f57b2`. The
+graph has the same five approved capability edges as A0.3, with no unresolved
+imports, undeclared edges, or cycles. Reporting now imports
+`get_task_summary` from `app.modules.tasks.public`; its former
+`task_summary` import from `app.modules.tasks.service` is absent.
+
+AC_DATA_OWNERSHIP was also run on the pinned source. It completed as
+NOT_APPLICABLE (CLI exit 3), as required by the A0.4 manifest and configuration;
+this is not an ownership-compliance claim. That diagnostic inspected 32 files
+and 190 imports. Its configuration digest is
+`4c8a1b4bfcdc20d49c49d47d4e9fc8192611994dd269a85d362ddc2f62320b6e`.
+
+The source-pair record in `a0_4_canonical_checkpoint.json` includes the exact
+Git patch at `a0_4_canonical_application_source.diff` and separates the two
+changed Reporting Python files from two local CONTEXT updates. Its import
+delta records removal of `reporting.service → tasks.service.task_summary` and
+addition of `reporting.service → tasks.public.TaskSummary` and
+`tasks.public.get_task_summary`; the allowed capability-edge set is unchanged.
+The W0 checkpoint PR itself has no application-source paths. It adds evidence,
+historical readback in the stage checker, regression coverage, and descriptive
+documentation. It contains no MONO scorer labels or Method P predictions.
+
+The canonical index points to the full observations and exact canonical JSON
+diagnostics, stores per-file evaluator artifact/configuration/source digests,
+and declares `readback_status=PASS`. The stage checker now validates its schema
+and re-reads all bytes against a temporary detached checkout of the exact A0.4
+merge source, including after a later source revision changes Reporting and
+the public API evaluator configuration. Tampering source, evaluator,
+configuration, manifest, raw diagnostics, or observation bytes fails closed.
+
+This is a canonical engineering checkpoint and a source-pair handoff for later
+independent MONO-E1 reference custody. It does not execute MONO-E1/MONO-E2,
+freeze scorer-only labels, or establish representation adequacy, scientific
+effectiveness, measured Method P results, or final A1 compliance.

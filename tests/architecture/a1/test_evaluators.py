@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 import jsonschema  # type: ignore[import-untyped]
+import pytest
 import yaml
 
 from architecture.acceptance.a1.analyzers import ANALYZERS
@@ -996,6 +997,155 @@ def test_checked_in_canonical_a03_checkpoint_is_byte_bound_and_reads_back(
             )
             == []
         )
+
+
+def _a04_canonical_bundle_paths() -> list[Path]:
+    checkpoint = json.loads((EVALUATOR_ROOT / "a0_4_canonical_checkpoint.json").read_bytes())
+    paths = [
+        Path("a0_4_canonical_checkpoint.json"),
+        Path("a0_4_canonical_checkpoint.schema.json"),
+        Path(checkpoint["source_manifest_path"]),
+        Path(checkpoint["source_pair"]["application_source_diff_path"]),
+    ]
+    for record in (
+        *checkpoint["evaluators"].values(),
+        *checkpoint["non_applicable_evaluators"].values(),
+    ):
+        paths.extend(
+            [Path(record["evidence_path"]), Path(record["raw_diagnostics_path"])]
+        )
+    return paths
+
+
+def test_checked_in_canonical_a04_checkpoint_is_byte_bound_and_reads_back(
+    tmp_path: Path,
+) -> None:
+    checkpoint = json.loads((EVALUATOR_ROOT / "a0_4_canonical_checkpoint.json").read_bytes())
+    bundle_root = _copy_evidence_bundle(tmp_path, *_a04_canonical_bundle_paths())
+    source_sha = "d3101c0d3aa9b7b709253b6ec7518416f05f65b9"
+    checkout = _materialize_historical_checkout(tmp_path, source_sha, name="canonical-a04")
+
+    assert checkpoint["checkpoint"] == "canonical_post_merge_A0_4_REPORT_QUERY_PORT"
+    assert checkpoint["readback_status"] == "PASS"
+    assert checkpoint["source"]["source_sha"] == source_sha
+    assert (
+        _git(ROOT, "rev-parse", f"{source_sha}^{{tree}}", capture_output=True).stdout.strip()
+        == checkpoint["source"]["repository_tree_sha"]
+    )
+    assert (
+        _git(ROOT, "rev-parse", f"{source_sha}:app", capture_output=True).stdout.strip()
+        == checkpoint["source"]["application_tree_sha"]
+    )
+    assert checkpoint["non_applicable_evaluators"]["AC_DATA_OWNERSHIP"]["compliance"] == (
+        "NOT_APPLICABLE"
+    )
+    assert checkpoint["source_pair"]["w0_application_source_paths"] == []
+    assert hashlib.sha256(
+        (bundle_root / checkpoint["source_pair"]["application_source_diff_path"]).read_bytes()
+    ).hexdigest() == checkpoint["source_pair"]["application_source_diff_sha256"]
+
+    manifest_path = bundle_root / checkpoint["source_manifest_path"]
+    manifest_bytes = manifest_path.read_bytes()
+    assert hashlib.sha256(manifest_bytes).hexdigest() == checkpoint["source_manifest_sha256"]
+    assert manifest_bytes == (checkout / stage_checks.A04_MANIFEST).read_bytes()
+    stage_checks._validate_a04_canonical_checkpoint(bundle_root, checkout)
+
+    for evaluator_id, record in (
+        checkpoint["evaluators"] | checkpoint["non_applicable_evaluators"]
+    ).items():
+        evidence_bytes = (bundle_root / record["evidence_path"]).read_bytes()
+        evidence = json.loads(evidence_bytes)
+        assert hashlib.sha256(evidence_bytes).hexdigest() == record["evidence_file_sha256"]
+        assert evidence["architecture"]["target_source_sha"] == source_sha
+        assert evidence["evaluator"]["source_digest"] == record["evaluator_sha256"]
+        assert evidence["evaluator"]["configuration_digest"] == record["configuration_sha256"]
+        assert evidence["source_scope"]["complete"] is True
+        assert evidence["source_scope"]["uncertainties"] == []
+        assert evidence["result"]["compliance"] == record["compliance"]
+        raw_path = bundle_root / record["raw_diagnostics_path"]
+        raw_bytes = raw_path.read_bytes()
+        assert hashlib.sha256(raw_bytes).hexdigest() == record["raw_diagnostics_file_sha256"]
+        assert raw_bytes == canonical_json(evidence["diagnostics"])
+
+
+def test_historical_a04_readback_uses_pinned_source_after_later_changes(
+    tmp_path: Path,
+) -> None:
+    bundle_root = _copy_evidence_bundle(tmp_path, *_a04_canonical_bundle_paths())
+    source_sha = "d3101c0d3aa9b7b709253b6ec7518416f05f65b9"
+    historical_checkout = _materialize_historical_checkout(
+        tmp_path, source_sha, name="pinned-a04"
+    )
+    later_checkout = tmp_path / "later-working-tree"
+    _git(
+        ROOT,
+        "clone",
+        "--shared",
+        "--quiet",
+        "--no-checkout",
+        str(ROOT),
+        str(later_checkout),
+    )
+    _git(later_checkout, "checkout", "--quiet", "--detach", "HEAD")
+    _git(later_checkout, "config", "user.name", "A0.4 historical readback test")
+    _git(later_checkout, "config", "user.email", "a04-readback@example.test")
+    later_reporting = later_checkout / "app/modules/reporting/service.py"
+    later_reporting.write_bytes(later_reporting.read_bytes() + b"\n# later source revision\n")
+    later_config = later_checkout / "architecture/acceptance/a1/public_api_v1.yaml"
+    later_config.write_bytes(later_config.read_bytes() + b"\n# later evaluator configuration\n")
+    _git(later_checkout, "add", "app/modules/reporting/service.py")
+    _git(later_checkout, "add", "architecture/acceptance/a1/public_api_v1.yaml")
+    _git(later_checkout, "commit", "--quiet", "-m", "later source and evaluator configuration")
+
+    assert later_reporting.read_bytes() != (
+        historical_checkout / "app/modules/reporting/service.py"
+    ).read_bytes()
+    assert later_config.read_bytes() != (
+        historical_checkout / "architecture/acceptance/a1/public_api_v1.yaml"
+    ).read_bytes()
+    stage_checks._validate_a04_canonical_checkpoint(bundle_root, historical_checkout)
+
+
+@pytest.mark.parametrize(
+    "tamper_target",
+    [
+        "source",
+        "evaluator",
+        "configuration",
+        "manifest",
+        "diagnostics",
+        "observation",
+        "checkpoint_schema",
+    ],
+)
+def test_canonical_a04_readback_rejects_tampered_bytes(
+    tmp_path: Path,
+    tamper_target: str,
+) -> None:
+    checkpoint = json.loads((EVALUATOR_ROOT / "a0_4_canonical_checkpoint.json").read_bytes())
+    bundle_root = _copy_evidence_bundle(tmp_path, *_a04_canonical_bundle_paths())
+    source_sha = checkpoint["source"]["source_sha"]
+    checkout = _materialize_historical_checkout(tmp_path, source_sha, name=f"tampered-{tamper_target}")
+
+    public = checkpoint["evaluators"]["AC_PUBLIC_API"]
+    if tamper_target == "source":
+        target = checkout / "app/modules/reporting/service.py"
+    elif tamper_target == "evaluator":
+        target = checkout / "architecture/acceptance/a1/engine.py"
+    elif tamper_target == "configuration":
+        target = checkout / "architecture/acceptance/a1/public_api_v1.yaml"
+    elif tamper_target == "manifest":
+        target = bundle_root / checkpoint["source_manifest_path"]
+    elif tamper_target == "diagnostics":
+        target = bundle_root / public["raw_diagnostics_path"]
+    elif tamper_target == "checkpoint_schema":
+        target = bundle_root / "a0_4_canonical_checkpoint.schema.json"
+    else:
+        target = bundle_root / public["evidence_path"]
+    target.write_bytes(target.read_bytes() + b"\n# tampered bytes\n")
+
+    with pytest.raises(stage_checks.StageCheckError):
+        stage_checks._validate_a04_canonical_checkpoint(bundle_root, checkout)
 
 
 def test_historical_a03_readback_uses_pinned_source_after_later_changes(
