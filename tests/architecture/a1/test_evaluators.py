@@ -1011,9 +1011,7 @@ def _a04_canonical_bundle_paths() -> list[Path]:
         *checkpoint["evaluators"].values(),
         *checkpoint["non_applicable_evaluators"].values(),
     ):
-        paths.extend(
-            [Path(record["evidence_path"]), Path(record["raw_diagnostics_path"])]
-        )
+        paths.extend([Path(record["evidence_path"]), Path(record["raw_diagnostics_path"])])
     return paths
 
 
@@ -1040,9 +1038,12 @@ def test_checked_in_canonical_a04_checkpoint_is_byte_bound_and_reads_back(
         "NOT_APPLICABLE"
     )
     assert checkpoint["source_pair"]["w0_application_source_paths"] == []
-    assert hashlib.sha256(
-        (bundle_root / checkpoint["source_pair"]["application_source_diff_path"]).read_bytes()
-    ).hexdigest() == checkpoint["source_pair"]["application_source_diff_sha256"]
+    assert (
+        hashlib.sha256(
+            (bundle_root / checkpoint["source_pair"]["application_source_diff_path"]).read_bytes()
+        ).hexdigest()
+        == checkpoint["source_pair"]["application_source_diff_sha256"]
+    )
 
     manifest_path = bundle_root / checkpoint["source_manifest_path"]
     manifest_bytes = manifest_path.read_bytes()
@@ -1050,9 +1051,7 @@ def test_checked_in_canonical_a04_checkpoint_is_byte_bound_and_reads_back(
     assert manifest_bytes == (checkout / stage_checks.A04_MANIFEST).read_bytes()
     stage_checks._validate_a04_canonical_checkpoint(bundle_root, checkout)
 
-    for record in (
-        checkpoint["evaluators"] | checkpoint["non_applicable_evaluators"]
-    ).values():
+    for record in (checkpoint["evaluators"] | checkpoint["non_applicable_evaluators"]).values():
         evidence_bytes = (bundle_root / record["evidence_path"]).read_bytes()
         evidence = json.loads(evidence_bytes)
         assert hashlib.sha256(evidence_bytes).hexdigest() == record["evidence_file_sha256"]
@@ -1073,9 +1072,7 @@ def test_historical_a04_readback_uses_pinned_source_after_later_changes(
 ) -> None:
     bundle_root = _copy_evidence_bundle(tmp_path, *_a04_canonical_bundle_paths())
     source_sha = "d3101c0d3aa9b7b709253b6ec7518416f05f65b9"
-    historical_checkout = _materialize_historical_checkout(
-        tmp_path, source_sha, name="pinned-a04"
-    )
+    historical_checkout = _materialize_historical_checkout(tmp_path, source_sha, name="pinned-a04")
     later_checkout = tmp_path / "later-working-tree"
     _git(
         ROOT,
@@ -1097,12 +1094,14 @@ def test_historical_a04_readback_uses_pinned_source_after_later_changes(
     _git(later_checkout, "add", "architecture/acceptance/a1/public_api_v1.yaml")
     _git(later_checkout, "commit", "--quiet", "-m", "later source and evaluator configuration")
 
-    assert later_reporting.read_bytes() != (
-        historical_checkout / "app/modules/reporting/service.py"
-    ).read_bytes()
-    assert later_config.read_bytes() != (
-        historical_checkout / "architecture/acceptance/a1/public_api_v1.yaml"
-    ).read_bytes()
+    assert (
+        later_reporting.read_bytes()
+        != (historical_checkout / "app/modules/reporting/service.py").read_bytes()
+    )
+    assert (
+        later_config.read_bytes()
+        != (historical_checkout / "architecture/acceptance/a1/public_api_v1.yaml").read_bytes()
+    )
     stage_checks._validate_a04_canonical_checkpoint(bundle_root, historical_checkout)
 
 

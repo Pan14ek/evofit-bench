@@ -562,9 +562,10 @@ def _validate_a04_canonical_checkpoint(bundle_root: Path, source_root: Path) -> 
         bundle_root, checkpoint["source_pair"]["application_source_diff_path"], label="SOURCE_DIFF"
     )
     source_diff_bytes = source_diff_path.read_bytes()
-    if hashlib.sha256(source_diff_bytes).hexdigest() != checkpoint["source_pair"][
-        "application_source_diff_sha256"
-    ]:
+    if (
+        hashlib.sha256(source_diff_bytes).hexdigest()
+        != checkpoint["source_pair"]["application_source_diff_sha256"]
+    ):
         raise StageCheckError("A0.4_CANONICAL_APPLICATION_DIFF_DIGEST_MISMATCH")
     git = shutil.which("git")
     if git is None:
@@ -602,9 +603,7 @@ def _validate_a04_canonical_checkpoint(bundle_root: Path, source_root: Path) -> 
         try:
             evidence = json.loads(evidence_bytes)
         except (UnicodeDecodeError, json.JSONDecodeError) as error:
-            raise StageCheckError(
-                f"A0.4_CANONICAL_OBSERVATION_INVALID:{evaluator_id}"
-            ) from error
+            raise StageCheckError(f"A0.4_CANONICAL_OBSERVATION_INVALID:{evaluator_id}") from error
 
         expected_compliance = record["compliance"]
         if evaluator_id in A04_REQUIRED_EVALUATORS:
@@ -627,16 +626,12 @@ def _validate_a04_canonical_checkpoint(bundle_root: Path, source_root: Path) -> 
                 jsonschema.SchemaError,
                 jsonschema.ValidationError,
             ) as error:
-                raise StageCheckError(
-                    f"{evaluator_id} evidence schema failure: {error}"
-                ) from error
+                raise StageCheckError(f"{evaluator_id} evidence schema failure: {error}") from error
             if (
                 evidence.get("evaluator", {}).get("id") != evaluator_id
                 or evidence.get("architecture", {}).get("state") != A04
-                or evidence.get("architecture", {}).get("target_source_sha")
-                != HISTORICAL_A04_SHA
-                or evidence.get("architecture", {}).get("expected_source_sha")
-                != HISTORICAL_A04_SHA
+                or evidence.get("architecture", {}).get("target_source_sha") != HISTORICAL_A04_SHA
+                or evidence.get("architecture", {}).get("expected_source_sha") != HISTORICAL_A04_SHA
                 or evidence.get("architecture", {}).get("source_sha_status") != "MATCHED"
                 or evidence.get("architecture", {}).get("manifest_state_status") != "MATCHED"
                 or evidence.get("architecture", {}).get("subject_source_dirty") is not False
@@ -649,28 +644,23 @@ def _validate_a04_canonical_checkpoint(bundle_root: Path, source_root: Path) -> 
                 raise StageCheckError("A0.4_CANONICAL_DATA_OWNERSHIP_NOT_NOT_APPLICABLE")
 
         if (
-            evidence["architecture"].get("manifest_path")
-            != checkpoint["source_manifest_path"]
+            evidence["architecture"].get("manifest_path") != checkpoint["source_manifest_path"]
             or evidence["architecture"].get("manifest_root") != "evidence"
             or evidence["architecture"].get("manifest_digest")
             != checkpoint["source_manifest_sha256"]
             or evidence["applicability"] != record["applicability"]
             or evidence["result"]["execution_status"] != record["execution_status"]
             or evidence["result"]["compliance"] != expected_compliance
-            or record["return_code"]
-            != (3 if expected_compliance == "NOT_APPLICABLE" else 0)
+            or record["return_code"] != (3 if expected_compliance == "NOT_APPLICABLE" else 0)
             or evidence["evaluator"]["source_digest"] != record["evaluator_sha256"]
             or evidence["evaluator"]["source_artifacts"] != record["evaluator_artifacts"]
-            or evidence["evaluator"]["configuration_digest"]
-            != record["configuration_sha256"]
+            or evidence["evaluator"]["configuration_digest"] != record["configuration_sha256"]
             or evidence["source_scope"]["complete"] is not record["source_scope_complete"]
             or len(evidence["source_scope"]["inspected_paths"]) != record["inspected_files"]
             or len(evidence["source_scope"]["source_file_digests"])
             != record["source_file_digest_count"]
-            or evidence["source_scope"]["inspected_import_count"]
-            != record["inspected_imports"]
-            or evidence["source_scope"]["uncertainties"]
-            != record["source_scope_uncertainties"]
+            or evidence["source_scope"]["inspected_import_count"] != record["inspected_imports"]
+            or evidence["source_scope"]["uncertainties"] != record["source_scope_uncertainties"]
             or evidence["result"]["violations"] != record["violations"]
             or record["readback_failures"]
         ):
@@ -689,11 +679,15 @@ def _validate_a04_canonical_checkpoint(bundle_root: Path, source_root: Path) -> 
         ):
             raise StageCheckError(f"A0.4_CANONICAL_DIAGNOSTICS_DIGEST_MISMATCH:{evaluator_id}")
 
-        config_path = source_root / "architecture/acceptance/a1" / {
-            "AC_PUBLIC_API": "public_api_v1.yaml",
-            "AC_MODULE_GRAPH": "module_graph_v1.yaml",
-            "AC_DATA_OWNERSHIP": "data_ownership_v1.yaml",
-        }[evaluator_id]
+        config_path = (
+            source_root
+            / "architecture/acceptance/a1"
+            / {
+                "AC_PUBLIC_API": "public_api_v1.yaml",
+                "AC_MODULE_GRAPH": "module_graph_v1.yaml",
+                "AC_DATA_OWNERSHIP": "data_ownership_v1.yaml",
+            }[evaluator_id]
+        )
         readback_failures = verify_evidence(
             evidence,
             source_root,
