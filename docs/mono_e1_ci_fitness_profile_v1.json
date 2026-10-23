@@ -310,6 +310,14 @@
     ],
     "required_w0_checkpoint": "G-A1-C4-REF-FROZEN",
     "required_w0_status": "NOT_READY",
-    "private_reference_content_in_public_profile": false
+    "private_reference_content_in_public_profile": false,
+    "parent_configuration_check": {
+      "a0_frozen_baseline": "fitness/configs/a0-monolith.yaml",
+      "a0_3_pre_change_fitness_configuration_sha256": null,
+      "a0_3_parent_representation_ids": null,
+      "baseline_interpretation": "UNRESOLVED_A0_FROZEN_VERSUS_A0_3_CURRENT",
+      "negative_control_retain_reference": "NOT_EVALUABLE_UNTIL_PARENT_PINNED",
+      "restriction": "DO_NOT_TREAT_ENGINEERING_STAGE_ACCEPTANCE_AS_APPROVED_PARENT_FITNESS_CONFIGURATION"
+    }
   }
 }
