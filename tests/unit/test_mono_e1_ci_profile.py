@@ -3,6 +3,7 @@
 These tests do not produce a reference, run Method P, or approve a scientific
 experiment. No private oracle data is read.
 """
+
 from __future__ import annotations
 
 import copy
