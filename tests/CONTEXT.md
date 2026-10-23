@@ -30,6 +30,7 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 - `unit/test_b0p_git_inventory.py` — pinned Git inventory and digest-tampering checks
 - `unit/test_b0p_development.py` — isolated-copy preparation, source-pin and readback checks
 - `unit/test_mono_a1.py` — synthetic MONO reference custody, E2 source-binding negative checks, sealed scoring prerequisites, denominator/exact-pair boundaries, and archive readback
+- `unit/test_mono_e1_preflight.py` — source-pair and B0/P comparability readback, allowlist/leakage, image attestation, timing, missing resource values, and authority fail-closed checks; no method execution
 - `unit/test_mono_policy_review_inventory.py` — exact catalog copy, OPEN-03/OPEN-04 completeness dimensions, and structural-only approval boundary
 - `unit/test_module_public_apis.py` — ΔA2 exports, cross-module public imports and Reporting exception
 - `integration/test_public_module_contracts.py` — public facade session ownership and task rollback

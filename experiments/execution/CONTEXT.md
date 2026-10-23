@@ -20,6 +20,9 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - `EXP04_EVIDENCE_ADMISSION.md`
 - `MONO_A1_PROTOCOL_V1.md` — historical MONO-E0/E1/E2 preparation protocol; source-identity fields for E1 are superseded by the additive W0 addendum; no observed MONO results
 - `MONO_A1_PROTOCOL_V1_W0_ADDENDUM.md` — versioned A0.3/A0.4 source-identity correction; does not authorize a run or freeze
+- `MONO_E1_COMPARABILITY_PREFLIGHT_V1.json` and `schemas/mono_e1_comparability_preflight_v1.schema.json` — strict read-only B0/P comparability preparation snapshot; current status remains INCOMPLETE/NO_GO
+- `MONO_E1_COMPARABILITY_PREPARATION_REPORT_V1.md` — requirement-to-test traceability and authorized-run integration handoff
+- `tooling/mono_e1_preflight.py` — exact source/artifact readback, proposed workload/fixture specification, arm allowlist checks, isolation and measurement-boundary checks; no arm execution or scorer access
 - `MONO_A1_REFERENCE_FREEZE_CHECKLIST.md` — preserved V1 checklist; see V2 for current W0 readiness
 - `MONO_A1_REFERENCE_FREEZE_CHECKLIST_V2.md` — current W0 checklist for `G-A1-C4-REF-FROZEN`; the source-pair identity sub-item is verified, while all scientific, method, fixture, custody, freeze, and readback blockers remain
 - `../../docs/MONO_E1_W0_READINESS_RESOLUTION.md` — W3 finding dispositions, authority boundary, complete-Q process, pair/P/input/custody blockers, and dependency-ordered plan; contains no scorer labels
@@ -89,6 +92,15 @@ method identities, shared inputs, and scorer custody. The E1 source pair is
 now Git-read-back and recorded in the additive W0 addendum; that does not close
 `G-A1-C4-REF-FROZEN`. These contracts do not change DA01, B0, Method P, or
 historical results.
+
+The MONO-E1 comparability preflight is a separate read-only preparation layer.
+It rechecks the exact W0 A0.3/A0.4 pair, canonical checkpoints and observations,
+method candidate bytes, shared-input parity, explicit arm allowlists, runtime
+limits, isolation and timing boundaries. Its current workload profile is a
+proposal, its fixture is specified but not created, and its method bundles,
+images, external attestations, policy/lifecycle authority, complete evaluator
+capability inventory, reference custody, G1 and G4 remain blocked. Never use
+this preflight as permission to run or freeze MONO-E1.
 
 The EXP-03 bridge in `scripts/exp03_method_bridge.py` reads validated EXP-02
 artifacts and optionally executes the verified V3 pipeline. EXP-02 execution

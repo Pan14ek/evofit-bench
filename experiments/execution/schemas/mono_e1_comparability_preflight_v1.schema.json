@@ -1,0 +1,920 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MONO-E1 comparability preparation preflight v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "study_id",
+    "preparation_status",
+    "experimental_go",
+    "non_authoritative",
+    "source_pair",
+    "common_inputs",
+    "arms",
+    "runner",
+    "measurement_contract",
+    "authority",
+    "missing_prerequisites"
+  ],
+  "properties": {
+    "schema_version": {"const": "mono-e1-comparability-preflight-v1"},
+    "study_id": {"const": "MONO-E1"},
+    "preparation_status": {
+      "enum": ["STRUCTURALLY_VALID", "INCOMPLETE", "INVALID", "AUTHORITY_PENDING"]
+    },
+    "experimental_go": {"const": "NO_GO"},
+    "non_authoritative": {"const": true},
+    "source_pair": {"$ref": "#/$defs/sourcePair"},
+    "common_inputs": {"$ref": "#/$defs/commonInputs"},
+    "arms": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["B0", "P"],
+      "properties": {
+        "B0": {"$ref": "#/$defs/arm"},
+        "P": {"$ref": "#/$defs/arm"}
+      }
+    },
+    "runner": {"$ref": "#/$defs/runner"},
+    "measurement_contract": {"$ref": "#/$defs/measurementContract"},
+    "authority": {"$ref": "#/$defs/authority"},
+    "missing_prerequisites": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    }
+  },
+  "$defs": {
+    "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "nullableSha256": {
+      "anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "pattern": "^[A-Za-z0-9._/-]+$"},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "sourceArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_commit_sha", "path", "sha256", "size_bytes"],
+      "properties": {
+        "source_commit_sha": {"$ref": "#/$defs/sha1"},
+        "path": {"type": "string", "pattern": "^[A-Za-z0-9._/-]+$"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "size_bytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "sourceRevision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state_id", "commit_sha", "repository_tree_sha", "application_tree_sha"],
+      "properties": {
+        "state_id": {"type": "string", "minLength": 1},
+        "commit_sha": {"$ref": "#/$defs/sha1"},
+        "repository_tree_sha": {"$ref": "#/$defs/sha1"},
+        "application_tree_sha": {"$ref": "#/$defs/sha1"}
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["architecture_source_sha", "evaluator_id", "path", "sha256", "scope"],
+      "properties": {
+        "architecture_source_sha": {"$ref": "#/$defs/sha1"},
+        "evaluator_id": {"type": "string", "minLength": 1},
+        "path": {"type": "string", "pattern": "^[A-Za-z0-9._/-]+$"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "scope": {"const": "ENGINEERING_OBSERVATION_ONLY"}
+      }
+    },
+    "sourcePair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "before",
+        "after",
+        "lineage",
+        "canonical_checkpoints",
+        "application_patch",
+        "observations"
+      ],
+      "properties": {
+        "before": {
+          "allOf": [
+            {"$ref": "#/$defs/sourceRevision"},
+            {
+              "properties": {
+                "state_id": {"const": "A0_3_GOVERNED_MODULE_GRAPH"},
+                "commit_sha": {"const": "26a9bb667da7d0938e38aca15d2bf29fd1de4829"},
+                "repository_tree_sha": {"const": "7b951421395f532ca403dab09d76902ff08a807d"},
+                "application_tree_sha": {"const": "b147b8961ea9e76c966663d4832e4c303581151a"}
+              }
+            }
+          ]
+        },
+        "after": {
+          "allOf": [
+            {"$ref": "#/$defs/sourceRevision"},
+            {
+              "properties": {
+                "state_id": {"const": "A0_4_REPORT_QUERY_PORT"},
+                "commit_sha": {"const": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9"},
+                "repository_tree_sha": {"const": "2b436e0aaf09403ea516d73d20a466a122f86592"},
+                "application_tree_sha": {"const": "007196f68652bc13f6798805793ffdfae96f95f7"}
+              }
+            }
+          ]
+        },
+        "lineage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "evidence_path", "evidence_sha256"],
+          "properties": {
+            "status": {"const": "SOURCE_IDENTITY_ONLY"},
+            "evidence_path": {"type": "string", "pattern": "^[A-Za-z0-9._/-]+$"},
+            "evidence_sha256": {"$ref": "#/$defs/sha256"}
+          }
+        },
+        "canonical_checkpoints": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {"$ref": "#/$defs/artifact"}
+        },
+        "application_patch": {"$ref": "#/$defs/artifact"},
+        "observations": {
+          "type": "array",
+          "minItems": 4,
+          "items": {"$ref": "#/$defs/observation"}
+        }
+      }
+    },
+    "policySources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidate_sources",
+        "authority_status",
+        "lifecycle_stage_registry",
+        "completeness_status"
+      ],
+      "properties": {
+        "candidate_sources": {
+          "type": "array",
+          "minItems": 4,
+          "items": {"$ref": "#/$defs/artifact"}
+        },
+        "authority_status": {"enum": ["PENDING", "APPROVED"]},
+        "lifecycle_stage_registry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "path", "sha256"],
+          "properties": {
+            "status": {"enum": ["MISSING", "PINNED", "APPROVED"]},
+            "path": {"type": ["string", "null"]},
+            "sha256": {"$ref": "#/$defs/nullableSha256"}
+          }
+        },
+        "completeness_status": {"enum": ["UNKNOWN", "PENDING", "APPROVED"]}
+      }
+    },
+    "gitSourceIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "source_commit_sha",
+        "source_tree_sha",
+        "source_inventory",
+        "configuration",
+        "evaluator_configuration",
+        "input_bundle_sha256"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "DEVELOPMENT_BASELINE_BYTES_ONLY",
+            "FROZEN_E1_IDENTITY",
+            "DEVELOPMENT_REVIEW_CANDIDATE_NOT_FROZEN"
+          ]
+        },
+        "method_version": {"type": "string", "minLength": 1},
+        "source_commit_sha": {"$ref": "#/$defs/sha1"},
+        "source_tree_sha": {"$ref": "#/$defs/sha1"},
+        "source_inventory": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/sourceArtifact"}
+        },
+        "configuration": {"$ref": "#/$defs/sourceArtifact"},
+        "evaluator_configuration": {"$ref": "#/$defs/sourceArtifact"},
+        "input_bundle_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "candidate_manifest": {"$ref": "#/$defs/pCandidateManifest"}
+      }
+    },
+    "pCandidateManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "identity_sha256",
+        "source_identity_sha256",
+        "configuration_sha256",
+        "source_revision"
+      ],
+      "properties": {
+        "path": {"type": "string", "pattern": "^[A-Za-z0-9._/-]+$"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "identity_sha256": {"$ref": "#/$defs/sha256"},
+        "source_identity_sha256": {"$ref": "#/$defs/sha256"},
+        "configuration_sha256": {"$ref": "#/$defs/sha256"},
+        "source_revision": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["commit", "tree"],
+          "properties": {
+            "commit": {"$ref": "#/$defs/sha1"},
+            "tree": {"$ref": "#/$defs/sha1"}
+          }
+        }
+      }
+    },
+    "inputEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "role", "size_bytes", "sha256"],
+      "properties": {
+        "path": {"type": "string", "pattern": "^[A-Za-z0-9._/-]+$"},
+        "role": {"type": "string", "minLength": 1},
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "inputInventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "shared_input_ids",
+        "method_specific_input_ids",
+        "shared_inputs",
+        "method_specific_inputs",
+        "allowlist_sha256"
+      ],
+      "properties": {
+        "status": {"enum": ["MISSING", "DECLARED", "VERIFIED"]},
+        "shared_input_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "method_specific_input_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "shared_inputs": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/inputEntry"}
+        },
+        "method_specific_inputs": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/inputEntry"}
+        },
+        "allowlist_sha256": {"$ref": "#/$defs/nullableSha256"}
+      }
+    },
+    "imageProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "image_digest",
+        "source_sha",
+        "attestation_sha256",
+        "external_verifier_id",
+        "verification_evidence_sha256"
+      ],
+      "properties": {
+        "status": {"enum": ["MISSING", "STRUCTURALLY_VALID", "NOT_VERIFIED", "VERIFIED"]},
+        "image_digest": {
+          "anyOf": [
+            {"type": "string", "pattern": "^(?:[A-Za-z0-9./:_-]+@)?sha256:[a-f0-9]{64}$"},
+            {"type": "null"}
+          ]
+        },
+        "source_sha": {"anyOf": [{"$ref": "#/$defs/sha1"}, {"type": "null"}]},
+        "attestation_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "external_verifier_id": {"type": ["string", "null"]},
+        "verification_evidence_sha256": {"$ref": "#/$defs/nullableSha256"}
+      }
+    },
+    "resourceLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cpus", "memory", "pids"],
+      "properties": {
+        "cpus": {"type": "string", "minLength": 1},
+        "memory": {"type": "string", "minLength": 1},
+        "pids": {"type": "integer", "minimum": 1}
+      }
+    },
+    "arm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target_source_sha",
+        "target_repository_tree_sha",
+        "workload_spec_sha256",
+        "database_fixture_id",
+        "database_fixture_sha256",
+        "migration_revision",
+        "migration_sha256",
+        "catalog_sha256",
+        "policy_registry_sha256",
+        "lifecycle_registry_sha256",
+        "evaluator_capability_ids",
+        "shared_environment",
+        "method_specific_environment",
+        "resource_limits",
+        "input_inventory",
+        "image_provenance",
+        "method_identity",
+        "shared_input_plan",
+        "method_specific_input_ids"
+      ],
+      "properties": {
+        "target_source_sha": {"$ref": "#/$defs/sha1"},
+        "target_repository_tree_sha": {"$ref": "#/$defs/sha1"},
+        "workload_spec_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "database_fixture_id": {"type": ["string", "null"]},
+        "database_fixture_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "migration_revision": {"type": ["string", "null"]},
+        "migration_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "catalog_sha256": {"$ref": "#/$defs/sha256"},
+        "policy_registry_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "lifecycle_registry_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "evaluator_capability_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "shared_environment": {
+          "type": "object",
+          "additionalProperties": {"type": "string"}
+        },
+        "method_specific_environment": {
+          "type": "object",
+          "additionalProperties": {"type": "string"}
+        },
+        "resource_limits": {"$ref": "#/$defs/resourceLimits"},
+        "input_inventory": {"$ref": "#/$defs/inputInventory"},
+        "image_provenance": {"$ref": "#/$defs/imageProvenance"},
+        "method_identity": {
+          "oneOf": [
+            {"$ref": "#/$defs/gitSourceIdentity"},
+            {"$ref": "#/$defs/pMethodIdentity"}
+          ]
+        },
+        "shared_input_plan": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "method_specific_input_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "pMethodIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "candidate_manifest", "input_bundle_sha256"],
+      "properties": {
+        "status": {
+          "enum": [
+            "DEVELOPMENT_REVIEW_CANDIDATE_NOT_FROZEN",
+            "FROZEN_E1_IDENTITY"
+          ]
+        },
+        "candidate_manifest": {"$ref": "#/$defs/pCandidateManifest"},
+        "input_bundle_sha256": {"$ref": "#/$defs/nullableSha256"}
+      }
+    },
+    "commonInputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "obligation_catalog",
+        "policy",
+        "architecture_facts",
+        "parent_fitness_configuration",
+        "evaluator_capabilities",
+        "workload",
+        "database_fixture",
+        "environment"
+      ],
+      "properties": {
+        "obligation_catalog": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["artifact", "revision", "status"],
+          "properties": {
+            "artifact": {"$ref": "#/$defs/artifact"},
+            "revision": {"type": "string", "minLength": 1},
+            "status": {"enum": ["PINNED_BYTES_ONLY", "APPROVED"]}
+          }
+        },
+        "policy": {"$ref": "#/$defs/policySources"},
+        "architecture_facts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "source_sha", "artifact_paths"],
+          "properties": {
+            "status": {"enum": ["ENGINEERING_SOURCE_EVIDENCE_ONLY", "APPROVED"]},
+            "source_sha": {"$ref": "#/$defs/sha1"},
+            "artifact_paths": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {"type": "string", "pattern": "^[A-Za-z0-9._/-]+$"}
+            }
+          }
+        },
+        "parent_fitness_configuration": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["configuration", "evaluator_configuration", "status"],
+          "properties": {
+            "configuration": {"$ref": "#/$defs/artifact"},
+            "evaluator_configuration": {"$ref": "#/$defs/artifact"},
+            "status": {"enum": ["PINNED_BYTES_ONLY", "APPROVED"]}
+          }
+        },
+        "evaluator_capabilities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "candidate_source", "required_ids"],
+          "properties": {
+            "status": {"enum": ["UNAPPROVED_INVENTORY_MISSING", "PROPOSED", "APPROVED"]},
+            "candidate_source": {"$ref": "#/$defs/artifact"},
+            "required_ids": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "workload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "definition",
+            "definition_sha256",
+            "reproducibility",
+            "source_profile",
+            "runner_source",
+            "profile_validator_source"
+          ],
+          "properties": {
+            "status": {"enum": ["PROPOSED_NOT_APPROVED", "APPROVED"]},
+            "definition": {"$ref": "#/$defs/workloadDefinition"},
+            "definition_sha256": {"$ref": "#/$defs/sha256"},
+            "reproducibility": {"$ref": "#/$defs/workloadReproducibility"},
+            "source_profile": {"$ref": "#/$defs/artifact"},
+            "runner_source": {"$ref": "#/$defs/artifact"},
+            "profile_validator_source": {"$ref": "#/$defs/artifact"}
+          }
+        },
+        "database_fixture": {"$ref": "#/$defs/databaseFixture"},
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "python_version",
+            "python_version_file",
+            "dependency_lock",
+            "runtime_image_status",
+            "environment_variables"
+          ],
+          "properties": {
+            "python_version": {"type": "string", "minLength": 1},
+            "python_version_file": {"$ref": "#/$defs/artifact"},
+            "dependency_lock": {"$ref": "#/$defs/artifact"},
+            "runtime_image_status": {"enum": ["MISSING", "PINNED"]},
+            "environment_variables": {
+              "type": "object",
+              "additionalProperties": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "workloadReproducibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "randomness_sources", "request_trace_sha256", "required_control"],
+      "properties": {
+        "status": {"enum": ["NOT_ESTABLISHED", "VERIFIED"]},
+        "randomness_sources": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "request_trace_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "required_control": {
+          "const": "APPROVED_IMMUTABLE_REQUEST_TRACE_OR_DETERMINISTIC_OPEN_LOOP_RUNNER"
+        }
+      }
+    },
+    "workloadDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "target_architecture_state",
+        "source_profile_id",
+        "source_architecture_state",
+        "users",
+        "spawn_rate_per_second",
+        "warmup",
+        "measurement",
+        "request_mix",
+        "wait_time_seconds",
+        "arrival_order",
+        "database_side_effects",
+        "selection_status"
+      ],
+      "properties": {
+        "schema_version": {"const": "MONO_E1_WORKLOAD_FIXTURE_SPEC_V1"},
+        "target_architecture_state": {"const": "A0_4_REPORT_QUERY_PORT"},
+        "source_profile_id": {"type": "string", "minLength": 1},
+        "source_architecture_state": {"const": "A0_MONOLITH"},
+        "users": {"type": "integer", "minimum": 1},
+        "spawn_rate_per_second": {"type": "number", "exclusiveMinimum": 0},
+        "warmup": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["duration_seconds", "read_only"],
+          "properties": {
+            "duration_seconds": {"type": "integer", "minimum": 0},
+            "read_only": {"type": "boolean"}
+          }
+        },
+        "measurement": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["duration_seconds", "sampling_interval_seconds"],
+          "properties": {
+            "duration_seconds": {"type": "integer", "minimum": 1},
+            "sampling_interval_seconds": {"type": "integer", "minimum": 1}
+          }
+        },
+        "request_mix": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "get_task",
+            "list_tasks",
+            "create_task",
+            "assign_task",
+            "change_status",
+            "task_summary"
+          ],
+          "properties": {
+            "get_task": {"type": "integer", "minimum": 0},
+            "list_tasks": {"type": "integer", "minimum": 0},
+            "create_task": {"type": "integer", "minimum": 0},
+            "assign_task": {"type": "integer", "minimum": 0},
+            "change_status": {"type": "integer", "minimum": 0},
+            "task_summary": {"type": "integer", "minimum": 0}
+          }
+        },
+        "wait_time_seconds": {
+          "type": "array",
+          "prefixItems": [
+            {"type": "number", "minimum": 0},
+            {"type": "number", "minimum": 0}
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "arrival_order": {"const": "STOCHASTIC"},
+        "database_side_effects": {"const": "MUTATING"},
+        "selection_status": {"enum": ["PROPOSED_REVIEW_REQUIRED", "APPROVED"]}
+      }
+    },
+    "databaseFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "specification",
+        "fixture_id",
+        "fixture_sha256",
+        "migration",
+        "seed",
+        "per_arm_policy",
+        "destructive_reset_performed"
+      ],
+      "properties": {
+        "status": {"enum": ["NOT_CREATED", "SPECIFIED", "VERIFIED"]},
+        "specification": {"$ref": "#/$defs/fixtureSpecification"},
+        "fixture_id": {"type": ["string", "null"]},
+        "fixture_sha256": {"$ref": "#/$defs/nullableSha256"},
+        "migration": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["revision", "artifact"],
+          "properties": {
+            "revision": {"type": "string", "minLength": 1},
+            "artifact": {"$ref": "#/$defs/artifact"}
+          }
+        },
+        "seed": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "seed_id",
+            "user_count",
+            "task_count",
+            "seed_script",
+            "identity_script",
+            "fingerprint_script",
+            "expected_fingerprint_sha256",
+            "source_artifacts"
+          ],
+          "properties": {
+            "seed_id": {"type": ["string", "null"]},
+            "user_count": {"type": "integer", "minimum": 0},
+            "task_count": {"type": "integer", "minimum": 0},
+            "seed_script": {"$ref": "#/$defs/artifact"},
+            "identity_script": {"$ref": "#/$defs/artifact"},
+            "fingerprint_script": {"$ref": "#/$defs/artifact"},
+            "expected_fingerprint_sha256": {"$ref": "#/$defs/nullableSha256"},
+            "source_artifacts": {
+              "type": "array",
+              "minItems": 3,
+              "items": {"$ref": "#/$defs/artifact"}
+            }
+          }
+        },
+        "per_arm_policy": {
+          "enum": ["SEPARATE_DISPOSABLE_DATABASES_FROM_IDENTICAL_FINGERPRINT"]
+        },
+        "destructive_reset_performed": {"const": false}
+      }
+    },
+    "fixtureSpecification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["definition", "definition_sha256"],
+      "properties": {
+        "definition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema_version",
+            "target_architecture_state",
+            "migration_revision",
+            "migration_sha256",
+            "seed_id",
+            "seed_artifacts",
+            "user_count",
+            "task_count",
+            "expected_fingerprint_sha256",
+            "per_arm_policy",
+            "specification_status"
+          ],
+          "properties": {
+            "schema_version": {"const": "MONO_E1_POSTGRES_FIXTURE_SPEC_V1"},
+            "target_architecture_state": {"const": "A0_4_REPORT_QUERY_PORT"},
+            "migration_revision": {"type": "string", "minLength": 1},
+            "migration_sha256": {"$ref": "#/$defs/sha256"},
+            "seed_id": {"type": ["string", "null"]},
+            "seed_artifacts": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {"$ref": "#/$defs/artifact"}
+            },
+            "user_count": {"type": "integer", "minimum": 0},
+            "task_count": {"type": "integer", "minimum": 0},
+            "expected_fingerprint_sha256": {"$ref": "#/$defs/nullableSha256"},
+            "per_arm_policy": {
+              "const": "SEPARATE_DISPOSABLE_DATABASES_FROM_IDENTICAL_FINGERPRINT"
+            },
+            "specification_status": {"const": "PROPOSED_UNVERIFIED"}
+          }
+        },
+        "definition_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "runner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "version",
+        "source_commit_sha",
+        "source_tree_sha",
+        "source_files",
+        "container_image_digests",
+        "resource_limits",
+        "common_environment",
+        "isolation"
+      ],
+      "properties": {
+        "status": {"enum": ["DEVELOPMENT_RUNNER_CANDIDATE_NOT_APPROVED_FOR_MONO_E1", "APPROVED"]},
+        "version": {"type": "string", "minLength": 1},
+        "source_commit_sha": {"$ref": "#/$defs/sha1"},
+        "source_tree_sha": {"$ref": "#/$defs/sha1"},
+        "source_files": {
+          "type": "array",
+          "minItems": 4,
+          "items": {"$ref": "#/$defs/artifact"}
+        },
+        "container_image_digests": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["B0", "P"],
+          "properties": {
+            "B0": {"$ref": "#/$defs/imageDigest"},
+            "P": {"$ref": "#/$defs/imageDigest"}
+          }
+        },
+        "resource_limits": {"$ref": "#/$defs/resourceLimits"},
+        "common_environment": {
+          "type": "object",
+          "additionalProperties": {"type": "string"}
+        },
+        "isolation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "network",
+            "input_mounts",
+            "input_read_only",
+            "root_filesystem_read_only",
+            "git_metadata",
+            "scorer_or_oracle",
+            "reference_answers",
+            "hidden_target_labels",
+            "other_arm_outputs",
+            "broad_repository_mount"
+          ],
+          "properties": {
+            "network": {"const": "DISABLED"},
+            "input_mounts": {"const": "EXPLICIT_ALLOWLIST_FILES_ONLY"},
+            "input_read_only": {"const": true},
+            "root_filesystem_read_only": {"const": true},
+            "git_metadata": {"const": "PROHIBITED"},
+            "scorer_or_oracle": {"const": "PROHIBITED"},
+            "reference_answers": {"const": "PROHIBITED"},
+            "hidden_target_labels": {"const": "PROHIBITED"},
+            "other_arm_outputs": {"const": "PROHIBITED"},
+            "broad_repository_mount": {"const": "PROHIBITED"}
+          }
+        }
+      }
+    },
+    "imageDigest": {
+      "anyOf": [
+        {"type": "string", "pattern": "^(?:[A-Za-z0-9./:_-]+@)?sha256:[a-f0-9]{64}$"},
+        {"type": "null"}
+      ]
+    },
+    "metricValue": {
+      "anyOf": [{"type": "integer", "minimum": 0}, {"type": "null"}]
+    },
+    "resourceMetric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "value"],
+      "properties": {
+        "status": {"enum": ["NOT_COLLECTED", "COLLECTED"]},
+        "value": {"$ref": "#/$defs/metricValue"}
+      }
+    },
+    "armMeasurement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timing_boundary_id", "timings_ns", "resource_metrics"],
+      "properties": {
+        "timing_boundary_id": {"type": "string", "minLength": 1},
+        "timings_ns": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "adaptation_ns",
+            "evaluator_execution_ns",
+            "verification_ns",
+            "total_execution_ns"
+          ],
+          "properties": {
+            "adaptation_ns": {"$ref": "#/$defs/metricValue"},
+            "evaluator_execution_ns": {"$ref": "#/$defs/metricValue"},
+            "verification_ns": {"$ref": "#/$defs/metricValue"},
+            "total_execution_ns": {"$ref": "#/$defs/metricValue"}
+          }
+        },
+        "resource_metrics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cpu_time_ns", "peak_rss_bytes"],
+          "properties": {
+            "cpu_time_ns": {"$ref": "#/$defs/resourceMetric"},
+            "peak_rss_bytes": {"$ref": "#/$defs/resourceMetric"}
+          }
+        }
+      }
+    },
+    "measurementContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "timing_boundary_id", "boundaries", "expected_fields", "arm_measurements"],
+      "properties": {
+        "status": {"enum": ["BOUNDARIES_SPECIFIED_VALUES_NOT_COLLECTED", "MEASUREMENTS_COLLECTED"]},
+        "timing_boundary_id": {"type": "string", "minLength": 1},
+        "boundaries": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["field", "start_event", "stop_event"],
+            "properties": {
+              "field": {
+                "enum": [
+                  "adaptation_ns",
+                  "evaluator_execution_ns",
+                  "verification_ns",
+                  "total_execution_ns"
+                ]
+              },
+              "start_event": {"type": "string", "minLength": 1},
+              "stop_event": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        "expected_fields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "adaptation_ns",
+              "evaluator_execution_ns",
+              "verification_ns",
+              "total_execution_ns"
+            ]
+          }
+        },
+        "arm_measurements": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["B0", "P"],
+          "properties": {
+            "B0": {"$ref": "#/$defs/armMeasurement"},
+            "P": {"$ref": "#/$defs/armMeasurement"}
+          }
+        }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy_authority",
+        "catalog_completeness",
+        "lifecycle_stage_authority",
+        "method_p_independent_review",
+        "scorer_custody",
+        "reference_freeze",
+        "G1",
+        "G4"
+      ],
+      "properties": {
+        "policy_authority": {"enum": ["PENDING", "APPROVED"]},
+        "catalog_completeness": {"enum": ["UNKNOWN", "PENDING", "APPROVED"]},
+        "lifecycle_stage_authority": {"enum": ["PENDING", "APPROVED"]},
+        "method_p_independent_review": {"enum": ["PENDING", "APPROVED"]},
+        "scorer_custody": {"enum": ["NOT_ESTABLISHED", "ESTABLISHED"]},
+        "reference_freeze": {"enum": ["NOT_READY", "VERIFIED"]},
+        "G1": {"enum": ["INCOMPLETE", "COMPLETE"]},
+        "G4": {"enum": ["NOT_AUTHORIZED", "AUTHORIZED"]}
+      }
+    }
+  }
+}

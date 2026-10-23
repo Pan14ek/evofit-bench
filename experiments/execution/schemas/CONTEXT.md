@@ -45,6 +45,7 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `mono_a1_study_v1.schema.json` — additive MONO-E0/E1/E2 study record with explicit manuscript/legacy RQ mapping and separate endpoint states
 - `mono_a1_reference_v1.schema.json` — scorer-only, source-pinned MONO reference and complete target/obligation denominator; E2 is bound to the approved A0 commit and final A1 state
 - `mono_a1_exact_pair_evidence_v1.schema.json` — raw-artifact-bound exact-pair record; excludes self-declared production-authority scope
+- `mono_e1_comparability_preflight_v1.schema.json` — strict additive preparation manifest for exact source pair, shared/arm identities, workload and fixture specification, isolation, runtime, authority gaps, and measurement boundaries; never authorizes execution
 
 This is a selected list, not a complete source inventory.
 

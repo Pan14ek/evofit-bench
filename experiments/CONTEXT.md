@@ -15,6 +15,8 @@ Scientific protocol, scenarios, execution, curated evidence and run results.
 - `schemas/fitness_representation_evidence_v1.schema.json`
 - `execution/EXP04_EVIDENCE_ADMISSION.md`
 - `execution/tooling/b0p_development.py` — write-once B0/P DEVELOPMENT input preparation and readback checks
+- `execution/MONO_E1_COMPARABILITY_PREFLIGHT_V1.json` and `execution/tooling/mono_e1_preflight.py` — read-only MONO-E1 comparability snapshot and verifier; preparation only, never execution or authorization
+- `execution/MONO_E1_COMPARABILITY_PREPARATION_REPORT_V1.md` — structural checks, open prerequisites, and future authorized integration handoff
 - `execution/schemas/b0p_development_study_v1.schema.json` — strict preparation manifest
 - `execution/schemas/pilot02_inherited_evaluator_results_v1.schema.json`
 - `results/` (ignored generated run outputs)
@@ -83,3 +85,10 @@ EVAL-02 extends EVAL-01 while preserving its protocol, results, raw archive and
 canonical checkpoints. It separates architectural validity from evaluator
 applicability and reports only finite case-level observations. Neither study
 establishes Method P effectiveness or population-level evaluator accuracy.
+
+The MONO-E1 comparability preflight pins the canonical A0.3→A0.4 source pair
+and known engineering artifacts. Its workload and PostgreSQL fixture are
+proposals only; absent policy authority, complete capability denominator,
+allowlists, image attestations, fixture identity, and G1/G4 authorization keep
+the experiment at NO_GO. The verifier is read-only and does not create bundles,
+reset databases, execute methods, freeze references, or score outcomes.
