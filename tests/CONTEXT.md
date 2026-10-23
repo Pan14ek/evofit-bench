@@ -21,6 +21,7 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 - `integration/test_exp03_method_bridge.py`
 - `integration/test_exp04_evidence_admission.py`
 - `unit/test_pilot01_results.py`
+- `unit/test_eval01_runner.py` — repeated evaluator observations collapse to one source-case result; source-identity mismatches, unstable repeats and `NOT_EVALUABLE` scope are excluded from binary metrics.
 - `unit/test_pilot02_method_input_profile.py`
 - `unit/test_pilot02_testonly_execution.py`
 - `unit/test_b0p_git_inventory.py` — pinned Git inventory and digest-tampering checks
