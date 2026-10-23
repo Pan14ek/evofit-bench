@@ -41,6 +41,7 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - `../../scripts/prepare_b0p_development_comparison.py`
 - `../../scripts/verify_b0p_development_comparison.py`
 - `P_GOVERNED_ADAPTATION_V1.md`
+- `P_EXECUTABLE_CANDIDATE_V1.json` — source/configuration byte identity for the DEVELOPMENT review candidate; does not freeze or authorize Method P
 - `README.md`
 
 ## Established conventions

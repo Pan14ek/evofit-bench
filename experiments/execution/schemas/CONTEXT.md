@@ -28,6 +28,7 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `p_cost_model_v1.schema.json`
 - `p_adaptation_evidence_v1.schema.json`
 - `p_adaptation_evidence_v2.schema.json`
+- `p_executable_candidate_identity_v1.schema.json` — strict schema for the source/configuration identity manifest; review-only, not method input
 - `exp03_method_integration_v1.schema.json`
 - `exp03_method_p_execution_trace_v1.schema.json`
 - `exp04_evidence_admission_v1.schema.json`

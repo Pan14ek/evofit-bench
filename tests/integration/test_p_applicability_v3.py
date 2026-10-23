@@ -12,6 +12,7 @@ import subprocess
 import sys
 from collections import Counter
 from collections.abc import Mapping
+from copy import deepcopy
 from dataclasses import replace
 from pathlib import Path
 from typing import Any, Literal
@@ -1504,6 +1505,43 @@ def test_v3_synthetic_noop_accepts_with_independent_before_after_closure_claims(
     )
     assert replay.candidate_v1 == result.candidate_v1
     assert replay.prediction_v1 == result.prediction_v1
+
+
+def test_v3_equivalent_sidecar_orderings_preserve_semantic_hashes(tmp_path: Path) -> None:
+    bundle, trust_context, evaluator_artifact = _synthetic_positive_bundle(
+        tmp_path, architecture_noop=True
+    )
+    sidecar = _positive_adaptation_sidecar(bundle, trust_context, evaluator_artifact, tmp_path)
+    baseline = run_adaptation(bundle, evidence_context=sidecar)
+
+    reordered = deepcopy(sidecar)
+    payload = reordered["payload"]
+    payload["artifact_bytes"].reverse()
+    payload["policy_inventories"].reverse()
+
+    reordered.pop("sidecar_sha256")
+    reordered.pop("signature")
+    content_digest = sha256_bytes(canonical_json_bytes(reordered))
+    reordered["sidecar_sha256"] = content_digest
+    reordered["signature"] = hmac.new(
+        trust_context.adaptation_key,
+        content_digest.encode("ascii"),
+        hashlib.sha256,
+    ).hexdigest()
+
+    replay = run_adaptation(bundle, evidence_context=reordered)
+
+    assert replay.governance.result.value == baseline.governance.result.value == "ACCEPT"
+    assert replay.impact.assessment_sha256 == baseline.impact.assessment_sha256
+    assert replay.current_coverage.assessment_sha256 == baseline.current_coverage.assessment_sha256
+    assert replay.operation_plan.plan_sha256 == baseline.operation_plan.plan_sha256
+    assert replay.candidate_sha256 == baseline.candidate_sha256
+    assert (
+        replay.governance.to_dict()["decision_sha256"]
+        == baseline.governance.to_dict()["decision_sha256"]
+    )
+    assert replay.candidate_v1 == baseline.candidate_v1
+    assert replay.prediction_v1 == baseline.prediction_v1
 
 
 def test_v3_synthetic_add_uses_authorized_descriptor_and_accepts_with_scoped_closure_claims(

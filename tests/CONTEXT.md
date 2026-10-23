@@ -14,6 +14,7 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 - `architecture/a1/REQUIREMENT_TEST_MATRIX.md`
 - `fixtures/p_method/`
 - `unit/test_p_impact_v1.py`
+- `unit/test_p_executable_candidate_identity.py` — verifies the review identity manifest against its pinned Git blobs and checkout bytes
 - `unit/test_p_semantic_pairs_v1.py`
 - `unit/test_p_operations_v1.py`
 - `unit/test_p_candidate_governance_v1.py`
