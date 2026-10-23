@@ -48,6 +48,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_mono_policy_review_inventory.py` — catalog pin/order/ID and digest checks; missing authority, unresolved mandatory status, missing stages/facts, conflicting or stale facts, exact-pair gaps, and non-certification assertions
 - `test_mono_e1_ci_profile.py` — draft CI-only fitness-profile contract checks: exact A0.3/A0.4 source pins, complete 18-ID catalog with unresolved classifications, engineering-only evaluator claims and adversarial NO_GO safeguards; no scientific execution or approval.
 - `test_mono_e1_preflight.py` — exact W0 source identity, workload repeatability/digest and fixture/migration parity, capability inventory, arm allowlists and path isolation, external image verification, timing boundaries, null CPU/RSS, and pending-authority rejection; synthetic preparation only
+- `test_mono_e1_a03_fitness_candidate.py` — verifies the A0.3 DEVELOPMENT lineage candidate stays separate from frozen A0 B0 and binds candidate engineering controls to canonical source/configuration readback without assigning representation IDs.
 
 This is a selected list of direct tracked files, not a complete source inventory.
 

@@ -1,0 +1,151 @@
+{
+  "schema_version": "MONO_E1_A03_FITNESS_CONFIGURATION_CANDIDATE_V1",
+  "candidate_id": "MONO_E1_DEV_A03_CI_CONTROL_LINEAGE_V1",
+  "prepared_on": "2026-10-23",
+  "status": "DEVELOPMENT_ONLY_CANDIDATE_NOT_HISTORICAL",
+  "purpose": "Record the evidence-based lineage available for the MONO-E1 A0.3 starting state without inventing an A0.3 fitness configuration.",
+  "provenance": {
+    "canonical_a03_source": {
+      "architecture_state": "A0_3_GOVERNED_MODULE_GRAPH",
+      "commit": "26a9bb667da7d0938e38aca15d2bf29fd1de4829",
+      "repository_tree": "7b951421395f532ca403dab09d76902ff08a807d",
+      "application_tree": "b147b8961ea9e76c966663d4832e4c303581151a",
+      "state_manifest": "architecture/states/A0_3_GOVERNED_MODULE_GRAPH.yaml",
+      "state_manifest_sha256": "cdb85e758647b0590d954e013079d51d0060fefd8425da87e35335f89b722f32"
+    },
+    "canonical_a03_evaluator_readback": {
+      "checkpoint": "architecture/acceptance/a1/a0_3_canonical_checkpoint.json",
+      "checkpoint_sha256": "5da4a7e1ed359ec8ea1e3288ab81edf32f0b71e2fec946b52a8d0d562dcf43c0",
+      "source_sha": "26a9bb667da7d0938e38aca15d2bf29fd1de4829",
+      "repository_tree_sha": "7b951421395f532ca403dab09d76902ff08a807d",
+      "application_tree_sha": "b147b8961ea9e76c966663d4832e4c303581151a",
+      "readback_status": "PASS",
+      "scope": {
+        "complete": true,
+        "inspected_python_files_per_evaluator": 31,
+        "inspected_import_nodes_per_evaluator": 185
+      },
+      "evaluator_source_artifacts": [
+        {
+          "path": "architecture/acceptance/a1/__init__.py",
+          "sha256": "cea0f2f68a149ae8c99c0c114bebf658867c8c8123399d5d1fe76c2f47cac569"
+        },
+        {
+          "path": "architecture/acceptance/a1/analyzers.py",
+          "sha256": "b67b21c1f78a39382a0ed8692d8bd350ff71b1261a448af4b78e83fe7f2eb1a2"
+        },
+        {
+          "path": "architecture/acceptance/a1/cli.py",
+          "sha256": "ad03caa866c09ae71784bbfca428f074a4b54ea097d182717e7f4ce15024997a"
+        },
+        {
+          "path": "architecture/acceptance/a1/engine.py",
+          "sha256": "06359bf5e40ed69291f6a3e3dd827a0e419ac0cd5ff3d4b53c8154d4ddc7718f"
+        }
+      ]
+    }
+  },
+  "historical_fitness_configuration": {
+    "a03_configuration_status": "NOT_IDENTIFIED",
+    "a03_parent_fitness_configuration_sha256": null,
+    "a03_parent_representation_ids": null,
+    "retain_reference_status": "NOT_EVALUABLE_UNTIL_PARENT_CONFIGURATION_AND_MAPPINGS_ARE_REVIEWED",
+    "searched_canonical_a03_paths": [
+      "fitness/configs/a0-monolith.yaml",
+      "fitness/catalog/a0-fitness-elements.yaml",
+      "fitness/traceability/a0-traceability.yaml",
+      "architecture/states/A0_3_GOVERNED_MODULE_GRAPH.yaml",
+      "fitness/evaluators/a0/importlinter.toml"
+    ],
+    "interpretation": "The canonical A0.3 tree contains the frozen A0 fitness configuration and its five original representation rows, but no A0.3-specific versioned fitness configuration or representation mapping for AC_PUBLIC_API and AC_MODULE_GRAPH."
+  },
+  "frozen_a0_b0_configuration": {
+    "architecture_state": "A0_MONOLITH",
+    "source_tag": "arch-a0-monolith-v1",
+    "source_revision": "b78b0967be937634b7762baccf5ac6892b279a73",
+    "configuration_path": "fitness/configs/a0-monolith.yaml",
+    "configuration_sha256": "5ad60e373463ea459e192bf85d82704ca9aa1c217c4abf4d8caeb66924059ecb",
+    "representation_catalog_path": "fitness/catalog/a0-fitness-elements.yaml",
+    "representation_catalog_sha256": "d1a019bb5389e64351751fe10dabd685b29a0fac383ab4ea5fd21906c807cfef",
+    "traceability_path": "fitness/traceability/a0-traceability.yaml",
+    "traceability_sha256": "b89b4279d86b20091a86862d5538539257dd669321d2df66138d51df98c28a08",
+    "architectural_representation_ids": [
+      "REP_A0_ARCH_CI_LAYERING"
+    ],
+    "architectural_obligations_declared": [
+      "AC_LAYERING"
+    ],
+    "a03_applicability_of_frozen_representation": "UNKNOWN",
+    "frozen_evaluator": {
+      "path": "fitness/evaluators/a0/importlinter.toml",
+      "sha256": "88ff64a4792c6048a6ab0686ddf9326ebbee49f76996933845a6142cc1a2ba27",
+      "representation_id": "REP_A0_ARCH_CI_LAYERING",
+      "applicability_at_a03": "UNKNOWN"
+    }
+  },
+  "a03_engineering_acceptance": {
+    "status": "REQUIRED_BY_CANONICAL_STATE_MANIFEST",
+    "manifest_path": "architecture/states/A0_3_GOVERNED_MODULE_GRAPH.yaml",
+    "required_evaluator_ids": [
+      "AC_PUBLIC_API",
+      "AC_MODULE_GRAPH"
+    ],
+    "meaning": "State-specific CI engineering acceptance checks; this requirement does not register fitness representation IDs or establish a scientific obligation-stage mapping."
+  },
+  "development_candidate_controls": [
+    {
+      "evaluator_id": "AC_PUBLIC_API",
+      "evaluator_version": "1.0.0",
+      "representation_id": null,
+      "candidate_obligation_id": "AC_PUBLIC_API",
+      "stage_binding": null,
+      "stage_status": "CI_ENGINEERING_ACCEPTANCE; CI_TEST_CROSSWALK_UNREVIEWED",
+      "semantic_pair_status": "UNREVIEWED",
+      "configuration_path": "architecture/acceptance/a1/public_api_v1.yaml",
+      "configuration_sha256": "8853c3a933b23f698c7ba7c5b6e511f292e8d9285dc0de4378741c53e466f7bb",
+      "evaluator_source_digest": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
+      "canonical_a03_observation": "architecture/acceptance/a1/a0_3_canonical_public_api_observation.json",
+      "observation_sha256": "8d1056a69b6e2c45cbe42dae207d8bbe65454572b34032dc5f969e0f877362ad",
+      "observed_execution_status": "COMPLETED",
+      "observed_compliance": "COMPLIANT",
+      "source_scope_complete": true,
+      "inspected_python_files": 31,
+      "inspected_import_nodes": 185
+    },
+    {
+      "evaluator_id": "AC_MODULE_GRAPH",
+      "evaluator_version": "1.0.0",
+      "representation_id": null,
+      "candidate_obligation_id": "AC_MODULE_GRAPH",
+      "stage_binding": null,
+      "stage_status": "CI_ENGINEERING_ACCEPTANCE; CI_TEST_CROSSWALK_UNREVIEWED",
+      "semantic_pair_status": "UNREVIEWED",
+      "configuration_path": "architecture/acceptance/a1/module_graph_v1.yaml",
+      "configuration_sha256": "1abae6871a477ff2a07685ad645a70defa2f1ac6745598ae4cdc35aab4e95bf6",
+      "evaluator_source_digest": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
+      "canonical_a03_observation": "architecture/acceptance/a1/a0_3_canonical_module_graph_observation.json",
+      "observation_sha256": "21f2347325d59325501f220476459aef9677c3b7bddd99928b7a62234c1ff0c5",
+      "observed_execution_status": "COMPLETED",
+      "observed_compliance": "COMPLIANT",
+      "source_scope_complete": true,
+      "inspected_python_files": 31,
+      "inspected_import_nodes": 185
+    }
+  ],
+  "limitations": [
+    "This candidate was prepared in the current DEVELOPMENT task and did not exist at canonical A0.3.",
+    "It is not an approved fitness configuration, an E1 method input, a scorer reference, or an independent semantic review.",
+    "Evaluator IDs and same-named catalog obligation IDs do not establish representation identity or pair validity.",
+    "The CI engineering stage is not yet approved as the required scientific lifecycle stage.",
+    "The frozen A0 B0 configuration remains a separate baseline; its AC_LAYERING representation applicability at A0.3 is unresolved.",
+    "The source-bound A0.3 checkpoint establishes evaluator execution and engineering compliance only."
+  ],
+  "required_review_before_use": [
+    "Assign genuine representation IDs and version a parent configuration only through a reviewed procedure.",
+    "Review each representation-obligation-stage pair against source scope, evaluator behavior, positive and negative controls, and applicable policy.",
+    "Resolve whether a future B0 control carries the frozen A0 configuration or a separately versioned A0.3 baseline.",
+    "Keep RETAIN NOT_EVALUABLE until the selected parent configuration and its mappings are established."
+  ],
+  "method_input_authorized": false,
+  "scientific_approval": false
+}
