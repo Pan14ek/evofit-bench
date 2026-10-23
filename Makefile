@@ -24,6 +24,8 @@ DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_exp01_evidence.py \
 	tests/unit/test_exp02_fitness_evidence.py \
 	tests/unit/test_pilot01_results.py \
+	tests/unit/test_eval02_runner.py \
+	tests/unit/test_eval02_postrun_validation.py \
 	tests/unit/test_pilot02_method_input_profile.py \
 	tests/unit/test_pilot02_candidate_evaluators.py \
 	tests/unit/test_pilot02_testonly_execution.py \

@@ -1,0 +1,209 @@
+{
+  "schema_version": 1,
+  "experiment_id": "EVAL-02",
+  "catalog_version": "1.0.0",
+  "architecture_state": "A0_4_REPORT_QUERY_PORT",
+  "experiment_base_main_sha": "cd134063e8c1eae37eb3bafe01ce228f02f49493",
+  "source_baseline": {
+    "commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+    "application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+    "state_manifest": "architecture/states/A0_4_REPORT_QUERY_PORT.yaml"
+  },
+  "canonical_identity_only_references": {
+    "architecture/acceptance/a1/a0_3_canonical_checkpoint.json": "5da4a7e1ed359ec8ea1e3288ab81edf32f0b71e2fec946b52a8d0d562dcf43c0",
+    "architecture/acceptance/a1/a0_3_canonical_source_manifest.yaml": "cdb85e758647b0590d954e013079d51d0060fefd8425da87e35335f89b722f32",
+    "architecture/acceptance/a1/a0_4_canonical_checkpoint.json": "7b0b0c7a0c6ac782540466d283c42d7589b8aaeb4af7df62104faa01fd154e8e",
+    "architecture/acceptance/a1/a0_4_canonical_source_manifest.yaml": "9c981442a34830bdc44d77ffc17de5b9f832b0b261d0d92f28bd15dc567febd9"
+  },
+  "eval01_immutable_readback_references": {
+    "experiments/pilots/EVAL01_PROTOCOL_V1.md": "adc66ea6e0e081809606e518620915c80d3fbb2f2eb84c3ffaebee3971f49e16",
+    "experiments/pilots/EVAL01_MUTATION_CATALOG_V1.json": "0d4aeb1b49aa800a4618dbce79966de40dcd070f78dfd515eb100086acab04a8",
+    "experiments/pilots/EVAL01_REPORT_V1.md": "a044386a24736811c2a5a3b605bf57c13d91a0f1f6b93536debb6badfc173f43",
+    "experiments/pilots/EVAL01_CASE_RESULTS_V1.csv": "9fa8966f8dfe7713c15406bdaf8d773d43600796e674cb8e7c5f9177b92dc366",
+    "experiments/pilots/EVAL01_ANALYSIS_V1.json": "297b711786bdecf4318f25d7709ab9c7303f007085b24b4557338a9a3362c35b",
+    "experiments/pilots/EVAL01_RAW_EVIDENCE_V1.zip": "f6cd3c7180a0719c0f410f51acc9596b0843950d7650da7f7d2924716188c9bf",
+    "experiments/pilots/EVAL01_RAW_EVIDENCE_V1.zip.sha256": "70a7f39e0119b1e48338ff5e263cb853484359879d759e2951d75e97b994b631"
+  },
+  "evaluators": {
+    "AC_PUBLIC_API": {
+      "version": "1.0.0",
+      "configuration": "architecture/acceptance/a1/public_api_v1.yaml",
+      "configuration_sha256": "8853c3a933b23f698c7ba7c5b6e511f292e8d9285dc0de4378741c53e466f7bb",
+      "expected_source_artifact_digest": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c"
+    },
+    "AC_MODULE_GRAPH": {
+      "version": "1.0.0",
+      "configuration": "architecture/acceptance/a1/module_graph_v1.yaml",
+      "configuration_sha256": "1abae6871a477ff2a07685ad645a70defa2f1ac6745598ae4cdc35aab4e95bf6",
+      "expected_source_artifact_digest": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c"
+    }
+  },
+  "execution_protocol": {
+    "measured_repeats_per_case_evaluator": 3,
+    "schedule_seed": 20261024,
+    "timing_unit": "end_to_end_evaluator_subprocess_wall_milliseconds",
+    "case_is_unit_for_confusion_metrics": true,
+    "repeat_is_independent_case": false
+  },
+  "expected_declared_edge_pairs": [
+    ["reporting", "tasks"],
+    ["tasks", "audit"],
+    ["tasks", "notifications"],
+    ["tasks", "users"],
+    ["users", "audit"]
+  ],
+  "cases": [
+    {
+      "case_id": "clean_scope_control",
+      "condition_type": "control",
+      "control_role": "positive_unchanged_source",
+      "mutation": "none",
+      "description": "Untouched canonical A0.4 source; all five declared edges exist, with complete scope, no cycles and no unresolved imports.",
+      "expected_scope_complete": true,
+      "expected_cycle_count": 0,
+      "expected_unresolved_import_count": 0,
+      "expected_edge_pairs": [["reporting", "tasks"], ["tasks", "audit"], ["tasks", "notifications"], ["tasks", "users"], ["users", "audit"]],
+      "expected_by_evaluator": {
+        "AC_PUBLIC_API": {"applicability": "APPLICABLE", "architectural_status": "COMPLIANT", "metric_eligible": true, "compliance": "COMPLIANT", "finding_codes": []},
+        "AC_MODULE_GRAPH": {"applicability": "APPLICABLE", "architectural_status": "COMPLIANT", "metric_eligible": true, "compliance": "COMPLIANT", "finding_codes": []}
+      }
+    },
+    {
+      "case_id": "relative_public_import_control",
+      "condition_type": "mutation",
+      "control_role": "positive_relative_import_resolution",
+      "mutation": "rewrite_reporting_tasks_imports_as_relative_public_imports",
+      "description": "Use relative imports for the same declared Tasks public contract in Reporting; module dependency and API symbols remain unchanged.",
+      "expected_scope_complete": true,
+      "expected_cycle_count": 0,
+      "expected_unresolved_import_count": 0,
+      "expected_edge_pairs": [["reporting", "tasks"], ["tasks", "audit"], ["tasks", "notifications"], ["tasks", "users"], ["users", "audit"]],
+      "expected_by_evaluator": {
+        "AC_PUBLIC_API": {"applicability": "APPLICABLE", "architectural_status": "COMPLIANT", "metric_eligible": true, "compliance": "COMPLIANT", "finding_codes": []},
+        "AC_MODULE_GRAPH": {"applicability": "APPLICABLE", "architectural_status": "COMPLIANT", "metric_eligible": true, "compliance": "COMPLIANT", "finding_codes": []}
+      }
+    },
+    {
+      "case_id": "function_local_public_import_control",
+      "condition_type": "mutation",
+      "control_role": "positive_runtime_function_local_import",
+      "mutation": "move_reporting_tasks_public_query_import_into_function",
+      "description": "Move the allowed absolute Tasks public query import into the Reporting function body; it is a runtime import and preserves the declared edge.",
+      "expected_scope_complete": true,
+      "expected_cycle_count": 0,
+      "expected_unresolved_import_count": 0,
+      "expected_edge_pairs": [["reporting", "tasks"], ["tasks", "audit"], ["tasks", "notifications"], ["tasks", "users"], ["users", "audit"]],
+      "expected_by_evaluator": {
+        "AC_PUBLIC_API": {"applicability": "APPLICABLE", "architectural_status": "COMPLIANT", "metric_eligible": true, "compliance": "COMPLIANT", "finding_codes": []},
+        "AC_MODULE_GRAPH": {"applicability": "APPLICABLE", "architectural_status": "COMPLIANT", "metric_eligible": true, "compliance": "COMPLIANT", "finding_codes": []}
+      }
+    },
+    {
+      "case_id": "missing_required_public_function",
+      "condition_type": "mutation",
+      "control_role": "negative_frozen_interface_symbol",
+      "mutation": "remove_tasks_public_get_task_summary",
+      "description": "Remove the required Tasks public function while retaining the configured module and all graph edges.",
+      "expected_scope_complete": true,
+      "expected_cycle_count": 0,
+      "expected_unresolved_import_count": 0,
+      "expected_edge_pairs": [["reporting", "tasks"], ["tasks", "audit"], ["tasks", "notifications"], ["tasks", "users"], ["users", "audit"]],
+      "expected_by_evaluator": {
+        "AC_PUBLIC_API": {"applicability": "APPLICABLE", "architectural_status": "NON_COMPLIANT", "metric_eligible": true, "compliance": "NON_COMPLIANT", "finding_codes": ["PUBLIC_INTERFACE_MISSING"]},
+        "AC_MODULE_GRAPH": {"applicability": "NOT_APPLICABLE_PUBLIC_CONTRACT_CONSTRUCT", "architectural_status": "COMPLIANT", "metric_eligible": false, "compliance": "COMPLIANT", "finding_codes": []}
+      }
+    },
+    {
+      "case_id": "missing_typed_dict_field",
+      "condition_type": "mutation",
+      "control_role": "negative_frozen_typed_shape",
+      "mutation": "remove_task_summary_count_by_status_field",
+      "description": "Remove the configured count_by_status field from TaskSummary while retaining the public type and all imports.",
+      "expected_scope_complete": true,
+      "expected_cycle_count": 0,
+      "expected_unresolved_import_count": 0,
+      "expected_edge_pairs": [["reporting", "tasks"], ["tasks", "audit"], ["tasks", "notifications"], ["tasks", "users"], ["users", "audit"]],
+      "expected_by_evaluator": {
+        "AC_PUBLIC_API": {"applicability": "APPLICABLE", "architectural_status": "NON_COMPLIANT", "metric_eligible": true, "compliance": "NON_COMPLIANT", "finding_codes": ["PUBLIC_TYPED_DICT_FIELDS_MISMATCH"]},
+        "AC_MODULE_GRAPH": {"applicability": "NOT_APPLICABLE_PUBLIC_CONTRACT_CONSTRUCT", "architectural_status": "COMPLIANT", "metric_eligible": false, "compliance": "COMPLIANT", "finding_codes": []}
+      }
+    },
+    {
+      "case_id": "undeclared_public_export",
+      "condition_type": "mutation",
+      "control_role": "negative_frozen_public_surface",
+      "mutation": "add_tasks_public_debug_summary_export",
+      "description": "Add a public, non-underscore function not present in the frozen Tasks interface list.",
+      "expected_scope_complete": true,
+      "expected_cycle_count": 0,
+      "expected_unresolved_import_count": 0,
+      "expected_edge_pairs": [["reporting", "tasks"], ["tasks", "audit"], ["tasks", "notifications"], ["tasks", "users"], ["users", "audit"]],
+      "expected_by_evaluator": {
+        "AC_PUBLIC_API": {"applicability": "APPLICABLE", "architectural_status": "NON_COMPLIANT", "metric_eligible": true, "compliance": "NON_COMPLIANT", "finding_codes": ["UNDECLARED_PUBLIC_EXPORT"]},
+        "AC_MODULE_GRAPH": {"applicability": "NOT_APPLICABLE_PUBLIC_CONTRACT_CONSTRUCT", "architectural_status": "COMPLIANT", "metric_eligible": false, "compliance": "COMPLIANT", "finding_codes": []}
+      }
+    },
+    {
+      "case_id": "aliased_private_service_module_import",
+      "condition_type": "mutation",
+      "control_role": "negative_plain_module_import_form",
+      "mutation": "add_aliased_notifications_service_module_import",
+      "description": "Add an aliased ast.Import of Notifications.service to Reporting. It is a private cross-capability import and an undeclared reporting-to-notifications edge.",
+      "expected_scope_complete": true,
+      "expected_cycle_count": 0,
+      "expected_unresolved_import_count": 0,
+      "expected_edge_pairs": [["reporting", "notifications"], ["reporting", "tasks"], ["tasks", "audit"], ["tasks", "notifications"], ["tasks", "users"], ["users", "audit"]],
+      "expected_by_evaluator": {
+        "AC_PUBLIC_API": {"applicability": "APPLICABLE", "architectural_status": "NON_COMPLIANT", "metric_eligible": true, "compliance": "NON_COMPLIANT", "finding_codes": ["CROSS_MODULE_IMPORT_NOT_PUBLIC"]},
+        "AC_MODULE_GRAPH": {"applicability": "APPLICABLE", "architectural_status": "NON_COMPLIANT", "metric_eligible": true, "compliance": "NON_COMPLIANT", "finding_codes": ["UNDECLARED_DEPENDENCY"]}
+      }
+    },
+    {
+      "case_id": "function_local_relative_undeclared_edge",
+      "condition_type": "mutation",
+      "control_role": "negative_runtime_relative_import_edge",
+      "mutation": "add_function_local_relative_notifications_public_import",
+      "description": "Add a function-local relative import of the declared Notifications public function inside Reporting. The API boundary is respected, but reporting-to-notifications is not an allowed A0.4 edge.",
+      "expected_scope_complete": true,
+      "expected_cycle_count": 0,
+      "expected_unresolved_import_count": 0,
+      "expected_edge_pairs": [["reporting", "notifications"], ["reporting", "tasks"], ["tasks", "audit"], ["tasks", "notifications"], ["tasks", "users"], ["users", "audit"]],
+      "expected_by_evaluator": {
+        "AC_PUBLIC_API": {"applicability": "APPLICABLE", "architectural_status": "COMPLIANT", "metric_eligible": true, "compliance": "COMPLIANT", "finding_codes": []},
+        "AC_MODULE_GRAPH": {"applicability": "APPLICABLE", "architectural_status": "NON_COMPLIANT", "metric_eligible": true, "compliance": "NON_COMPLIANT", "finding_codes": ["UNDECLARED_DEPENDENCY"]}
+      }
+    },
+    {
+      "case_id": "dynamic_private_module_import_boundary",
+      "condition_type": "boundary",
+      "control_role": "out_of_scope_runtime_dynamic_import",
+      "mutation": "add_dynamic_notifications_service_import",
+      "description": "Dynamically import Notifications.service at runtime. This violates the private API and allowed-edge contracts, but neither direct-import AST rule inventories the call string.",
+      "expected_scope_complete": true,
+      "expected_cycle_count": 0,
+      "expected_unresolved_import_count": 0,
+      "expected_edge_pairs": [["reporting", "tasks"], ["tasks", "audit"], ["tasks", "notifications"], ["tasks", "users"], ["users", "audit"]],
+      "exclusion_reason": "The architecture is NON_COMPLIANT on both obligations, but dynamic imports are outside the pinned evaluators' source-import inventory; outputs are retained as boundary observations and excluded from binary metrics.",
+      "expected_by_evaluator": {
+        "AC_PUBLIC_API": {"applicability": "OUT_OF_SCOPE_DYNAMIC_IMPORT", "architectural_status": "NON_COMPLIANT", "metric_eligible": false, "compliance": "COMPLIANT", "finding_codes": []},
+        "AC_MODULE_GRAPH": {"applicability": "OUT_OF_SCOPE_DYNAMIC_IMPORT", "architectural_status": "NON_COMPLIANT", "metric_eligible": false, "compliance": "COMPLIANT", "finding_codes": []}
+      }
+    },
+    {
+      "case_id": "keyword_only_signature_break_boundary",
+      "condition_type": "boundary",
+      "control_role": "public_call_signature_coverage_boundary",
+      "mutation": "make_task_summary_session_keyword_only",
+      "description": "Make the required public function keyword-only for session even though Reporting supplies session positionally. This creates a caller incompatibility, but the frozen public contract does not pin call signatures.",
+      "expected_scope_complete": true,
+      "expected_cycle_count": 0,
+      "expected_unresolved_import_count": 0,
+      "expected_edge_pairs": [["reporting", "tasks"], ["tasks", "audit"], ["tasks", "notifications"], ["tasks", "users"], ["users", "audit"]],
+      "exclusion_reason": "The public API configuration specifies names, interface kinds and TypedDict field names but not callable signatures; API architectural status is therefore INDETERMINATE for this sub-question.",
+      "expected_by_evaluator": {
+        "AC_PUBLIC_API": {"applicability": "OUT_OF_SCOPE_CALL_SIGNATURE", "architectural_status": "INDETERMINATE", "metric_eligible": false, "compliance": "COMPLIANT", "finding_codes": []},
+        "AC_MODULE_GRAPH": {"applicability": "APPLICABLE", "architectural_status": "COMPLIANT", "metric_eligible": true, "compliance": "COMPLIANT", "finding_codes": []}
+      }
+    }
+  ]
+}

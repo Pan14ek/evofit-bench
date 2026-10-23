@@ -18,7 +18,7 @@ Scientific protocol, scenarios, execution, curated evidence and run results.
 - `execution/schemas/b0p_development_study_v1.schema.json` — strict preparation manifest
 - `execution/schemas/pilot02_inherited_evaluator_results_v1.schema.json`
 - `results/` (ignored generated run outputs)
-- `pilots/` contains PILOT-01, PILOT-02, and the separate EVAL-01 controlled evaluator-validation protocol, reports, generated tables, evidence archives, and narrow tools
+- `pilots/` contains PILOT-01/02 and the separate EVAL-01/02 evaluator-validation protocols, reports, Ukrainian manuscript subsections, generated tables, checksummed evidence archives, and narrow tools
 
 ## Established conventions
 
@@ -78,3 +78,8 @@ Consult the original source files and nearest relevant tests, then `docs/README.
 
 
 EVAL-01 is a source-bound W2 engineering evaluator-validation experiment on canonical A0.4. Its mutation catalog is preregistered, each mutation starts from the exact canonical source revision, and repeated evaluator timings are not independent architecture cases. The retained results do not establish MONO-E1/E2, B0, Method P effectiveness, scientific representation coverage, G1/G4, or production authorization.
+
+EVAL-02 extends EVAL-01 while preserving its protocol, results, raw archive and
+canonical checkpoints. It separates architectural validity from evaluator
+applicability and reports only finite case-level observations. Neither study
+establishes Method P effectiveness or population-level evaluator accuracy.
