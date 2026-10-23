@@ -18,6 +18,8 @@ DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_p_operations_v1.py \
 	tests/unit/test_p_candidate_governance_v1.py \
 	tests/unit/test_p_adaptation_evidence_v1.py \
+	tests/unit/test_p_executable_candidate_identity.py \
+	tests/unit/test_p_interface_readiness.py \
 	tests/unit/test_g1_method_decision_register.py \
 	tests/unit/test_context_documents.py \
 	tests/unit/test_architecture_stage_checks.py \
