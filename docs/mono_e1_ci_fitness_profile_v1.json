@@ -261,5 +261,55 @@
     "oracle_labels_included": false,
     "method_input_authorized": false
   },
-  "proposal_only": true
+  "proposal_only": true,
+  "author_working_decisions": {
+    "decision_date": "2026-10-23",
+    "scope": {
+      "choice": "A",
+      "ci_evaluator_ids": [
+        "AC_PUBLIC_API",
+        "AC_MODULE_GRAPH"
+      ],
+      "scientific_q_full_scope": false
+    },
+    "fitness_validation": {
+      "choice": "B",
+      "source_bound_clean_and_mutated_controls": true,
+      "existing_evidence": [
+        "EVAL-01",
+        "EVAL-02"
+      ],
+      "independent_semantic_pair_proof": false
+    },
+    "reference": {
+      "choice": "A",
+      "custody_route": "AUTHOR_DECLARED",
+      "reference_state": "PRIVATE_PREPARATION_NOT_SEALED",
+      "independent_review": false,
+      "scorer_input_access": false
+    }
+  },
+  "development_pilot": {
+    "pilot_id": "MONO_E1_DEV_CI_PREPARATION_V1",
+    "status": "PLANNED_NOT_EXECUTED",
+    "measurement_class": "DEVELOPMENT_DIAGNOSTICS_ONLY",
+    "allowed_before_w0_gate": [
+      "CANONICAL_SOURCE_AND_EVALUATOR_READBACK",
+      "EXISTING_EVAL01_EVAL02_POSITIVE_NEGATIVE_CONTROL_REVIEW",
+      "GENERIC_SYNTHETIC_P_REHEARSAL_NO_DELTA4_INPUT",
+      "PRIVATE_AUTHOR_DECLARED_REFERENCE_WORKSHEET_PREPARATION",
+      "READINESS_GAP_REPORT"
+    ],
+    "prohibited_before_w0_gate": [
+      "METHOD_P_ON_CANONICAL_DELTA4",
+      "B0_P_ARM_EXECUTION_ON_DELTA4",
+      "OFFICIAL_FREEZE_REFERENCE",
+      "RQ1_RQ2_MONO_SCORING",
+      "SCIENTIFIC_COVERAGE_PERCENTAGE",
+      "G1_G4_APPROVAL_CLAIMS"
+    ],
+    "required_w0_checkpoint": "G-A1-C4-REF-FROZEN",
+    "required_w0_status": "NOT_READY",
+    "private_reference_content_in_public_profile": false
+  }
 }
