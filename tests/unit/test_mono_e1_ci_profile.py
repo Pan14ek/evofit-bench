@@ -175,7 +175,7 @@ def test_illicit_approval_or_fabricated_readiness_is_rejected(
     expected: str,
 ) -> None:
     profile = copy.deepcopy(load_profile())
-    cursor = profile
+    cursor: Any = profile
     for key in location[:-1]:
         cursor = cursor[key]
     cursor[location[-1]] = value
