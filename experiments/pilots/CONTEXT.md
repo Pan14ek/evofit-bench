@@ -10,7 +10,7 @@ Store pilot-specific protocols, reports, derived result tables, and narrow tools
 ## Local landmarks
 
 - `EVAL01_PROTOCOL_V1.md`, `EVAL01_MUTATION_CATALOG_V1.json`, and `run_eval01.py` — preregistered A0.4 W2 evaluator-validation protocol, mutation cases, clean Git provenance, repeated source-bound evaluator calls, analysis, and raw evidence packaging; independent of MONO-E1/E2 and Method P.
-- `EVAL01_REPORT_V1.md`, `EVAL01_CASE_RESULTS_V1.csv`, and `EVAL01_RAW_EVIDENCE_V1.zip` — evidence-derived EVAL-01 report, finite case-level confusion metrics, and checksummed raw runs.
+- `EVAL01_REPORT_V1.md`, `EVAL01_CASE_RESULTS_V1.csv`, `EVAL01_ANALYSIS_V1.json`, and `EVAL01_RAW_EVIDENCE_V1.zip` — evidence-derived EVAL-01 report, finite case-level confusion metrics, machine-readable analysis, and checksummed raw runs; the ZIP sidecar holds its external SHA-256.
 - `PILOT_01_EXPECTATION.md` — expected S0/S1 evaluator outcomes recorded before formal repeated measurements.
 - `PILOT_01_REPORT.md` — evidence-backed experimental report and reproducibility limits.
 - `PILOT_01_MANUSCRIPT_UA.md` — Ukrainian manuscript subsection based only on collected results.

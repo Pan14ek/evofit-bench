@@ -1,0 +1,587 @@
+{
+  "descriptive_wall_time": {
+    "AC_MODULE_GRAPH": {
+      "maximum_ms": 246.596,
+      "median_ms": 209.188,
+      "minimum_ms": 198.191,
+      "n_completed": 21,
+      "timing_unit": "end_to_end_evaluator_subprocess_wall_milliseconds"
+    },
+    "AC_PUBLIC_API": {
+      "maximum_ms": 232.06,
+      "median_ms": 205.865,
+      "minimum_ms": 196.621,
+      "n_completed": 21,
+      "timing_unit": "end_to_end_evaluator_subprocess_wall_milliseconds"
+    }
+  },
+  "evaluator_case_results": {
+    "AC_MODULE_GRAPH": [
+      {
+        "application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+        "case_id": "clean_unchanged_dependencies",
+        "case_median_wall_time_ms": 212.343208,
+        "case_wall_time_ms": [
+          200.201208,
+          212.343208,
+          218.746875
+        ],
+        "completed_repeat_count": 3,
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "exclusion_reasons": [],
+        "expected_architectural_label": 0,
+        "expected_compliance": "COMPLIANT",
+        "expected_finding_codes": [],
+        "metric_eligible_by_catalog": true,
+        "observed_compliance_by_repeat": [
+          "COMPLIANT",
+          "COMPLIANT",
+          "COMPLIANT"
+        ],
+        "observed_compliance_case_level": "COMPLIANT",
+        "observed_finding_classes_stable": true,
+        "observed_finding_codes_by_repeat": [
+          [],
+          [],
+          []
+        ],
+        "planned_repeat_count": 3,
+        "preregistered_expected_outcome_matched": true,
+        "source_commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+        "valid_for_confusion_matrix": true
+      },
+      {
+        "application_tree_sha": "367d2289c328089d87520d1f6a2b01424d879bfc",
+        "case_id": "allowed_public_api_import",
+        "case_median_wall_time_ms": 213.498541,
+        "case_wall_time_ms": [
+          213.498541,
+          209.187875,
+          214.751
+        ],
+        "completed_repeat_count": 3,
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "exclusion_reasons": [],
+        "expected_architectural_label": 0,
+        "expected_compliance": "COMPLIANT",
+        "expected_finding_codes": [],
+        "metric_eligible_by_catalog": true,
+        "observed_compliance_by_repeat": [
+          "COMPLIANT",
+          "COMPLIANT",
+          "COMPLIANT"
+        ],
+        "observed_compliance_case_level": "COMPLIANT",
+        "observed_finding_classes_stable": true,
+        "observed_finding_codes_by_repeat": [
+          [],
+          [],
+          []
+        ],
+        "planned_repeat_count": 3,
+        "preregistered_expected_outcome_matched": true,
+        "source_commit_sha": "6eb48ebee9a446b675a2c322643d3ba6051a719f",
+        "valid_for_confusion_matrix": true
+      },
+      {
+        "application_tree_sha": "effc8bb1a60f99edafa433eb073ec76f8b75c342",
+        "case_id": "forbidden_private_cross_module_import",
+        "case_median_wall_time_ms": 205.654834,
+        "case_wall_time_ms": [
+          210.267083,
+          205.654834,
+          203.091083
+        ],
+        "completed_repeat_count": 3,
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "exclusion_reasons": [],
+        "expected_architectural_label": 0,
+        "expected_compliance": "COMPLIANT",
+        "expected_finding_codes": [],
+        "metric_eligible_by_catalog": true,
+        "observed_compliance_by_repeat": [
+          "COMPLIANT",
+          "COMPLIANT",
+          "COMPLIANT"
+        ],
+        "observed_compliance_case_level": "COMPLIANT",
+        "observed_finding_classes_stable": true,
+        "observed_finding_codes_by_repeat": [
+          [],
+          [],
+          []
+        ],
+        "planned_repeat_count": 3,
+        "preregistered_expected_outcome_matched": true,
+        "source_commit_sha": "97ae3947991f58e346620583b53f4ee3646f22e7",
+        "valid_for_confusion_matrix": true
+      },
+      {
+        "application_tree_sha": "459fe2ccbee82fee8d86536fa57331f77870108e",
+        "case_id": "undeclared_capability_dependency",
+        "case_median_wall_time_ms": 212.007416,
+        "case_wall_time_ms": [
+          246.596458,
+          212.007416,
+          207.01375
+        ],
+        "completed_repeat_count": 3,
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "exclusion_reasons": [],
+        "expected_architectural_label": 1,
+        "expected_compliance": "NON_COMPLIANT",
+        "expected_finding_codes": [
+          "UNDECLARED_DEPENDENCY"
+        ],
+        "metric_eligible_by_catalog": true,
+        "observed_compliance_by_repeat": [
+          "NON_COMPLIANT",
+          "NON_COMPLIANT",
+          "NON_COMPLIANT"
+        ],
+        "observed_compliance_case_level": "NON_COMPLIANT",
+        "observed_finding_classes_stable": true,
+        "observed_finding_codes_by_repeat": [
+          [
+            "UNDECLARED_DEPENDENCY"
+          ],
+          [
+            "UNDECLARED_DEPENDENCY"
+          ],
+          [
+            "UNDECLARED_DEPENDENCY"
+          ]
+        ],
+        "planned_repeat_count": 3,
+        "preregistered_expected_outcome_matched": true,
+        "source_commit_sha": "c97570fa789515808a5de5f187f0a7416e391f39",
+        "valid_for_confusion_matrix": true
+      },
+      {
+        "application_tree_sha": "d986b5db8cdd41377bb8efcde0876d50175eda2a",
+        "case_id": "dependency_cycle",
+        "case_median_wall_time_ms": 205.06275,
+        "case_wall_time_ms": [
+          203.772041,
+          229.145292,
+          205.06275
+        ],
+        "completed_repeat_count": 3,
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "exclusion_reasons": [],
+        "expected_architectural_label": 1,
+        "expected_compliance": "NON_COMPLIANT",
+        "expected_finding_codes": [
+          "DEPENDENCY_CYCLE",
+          "UNDECLARED_DEPENDENCY"
+        ],
+        "metric_eligible_by_catalog": true,
+        "observed_compliance_by_repeat": [
+          "NON_COMPLIANT",
+          "NON_COMPLIANT",
+          "NON_COMPLIANT"
+        ],
+        "observed_compliance_case_level": "NON_COMPLIANT",
+        "observed_finding_classes_stable": true,
+        "observed_finding_codes_by_repeat": [
+          [
+            "DEPENDENCY_CYCLE",
+            "UNDECLARED_DEPENDENCY"
+          ],
+          [
+            "DEPENDENCY_CYCLE",
+            "UNDECLARED_DEPENDENCY"
+          ],
+          [
+            "DEPENDENCY_CYCLE",
+            "UNDECLARED_DEPENDENCY"
+          ]
+        ],
+        "planned_repeat_count": 3,
+        "preregistered_expected_outcome_matched": true,
+        "source_commit_sha": "1466885fc6b4da62288dab7e8927e9df17e40473",
+        "valid_for_confusion_matrix": true
+      },
+      {
+        "application_tree_sha": "4192ccf94575159d4847d0bc1ce4a9b9e28aaec1",
+        "case_id": "unresolved_local_import",
+        "case_median_wall_time_ms": 211.891208,
+        "case_wall_time_ms": [
+          222.8825,
+          211.891208,
+          207.591625
+        ],
+        "completed_repeat_count": 3,
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "exclusion_reasons": [],
+        "expected_architectural_label": 1,
+        "expected_compliance": "NON_COMPLIANT",
+        "expected_finding_codes": [
+          "UNRESOLVED_LOCAL_IMPORT"
+        ],
+        "metric_eligible_by_catalog": true,
+        "observed_compliance_by_repeat": [
+          "NON_COMPLIANT",
+          "NON_COMPLIANT",
+          "NON_COMPLIANT"
+        ],
+        "observed_compliance_case_level": "NON_COMPLIANT",
+        "observed_finding_classes_stable": true,
+        "observed_finding_codes_by_repeat": [
+          [
+            "UNRESOLVED_LOCAL_IMPORT"
+          ],
+          [
+            "UNRESOLVED_LOCAL_IMPORT"
+          ],
+          [
+            "UNRESOLVED_LOCAL_IMPORT"
+          ]
+        ],
+        "planned_repeat_count": 3,
+        "preregistered_expected_outcome_matched": true,
+        "source_commit_sha": "c384ef3495e0be1951ea7c5a2f49a1383dedd914",
+        "valid_for_confusion_matrix": true
+      },
+      {
+        "application_tree_sha": "56fcba37a678697f4367bd42381e6d743696d48f",
+        "case_id": "missing_expected_capability",
+        "case_median_wall_time_ms": 201.987792,
+        "case_wall_time_ms": [
+          198.190667,
+          201.987792,
+          208.200666
+        ],
+        "completed_repeat_count": 3,
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "exclusion_reasons": [
+          "Incomplete expected-module scope has no binary compliance label and is reported as NOT_EVALUABLE, not as a detection true positive."
+        ],
+        "expected_architectural_label": null,
+        "expected_compliance": "NOT_EVALUABLE",
+        "expected_finding_codes": [
+          "UNRESOLVED_LOCAL_IMPORT"
+        ],
+        "metric_eligible_by_catalog": false,
+        "observed_compliance_by_repeat": [
+          "NOT_EVALUABLE",
+          "NOT_EVALUABLE",
+          "NOT_EVALUABLE"
+        ],
+        "observed_compliance_case_level": "NOT_EVALUABLE",
+        "observed_finding_classes_stable": true,
+        "observed_finding_codes_by_repeat": [
+          [
+            "UNRESOLVED_LOCAL_IMPORT"
+          ],
+          [
+            "UNRESOLVED_LOCAL_IMPORT"
+          ],
+          [
+            "UNRESOLVED_LOCAL_IMPORT"
+          ]
+        ],
+        "planned_repeat_count": 3,
+        "preregistered_expected_outcome_matched": true,
+        "source_commit_sha": "0f93897b2d66fd9bc77ffdfad50b21b6a7b07a3d",
+        "valid_for_confusion_matrix": false
+      }
+    ],
+    "AC_PUBLIC_API": [
+      {
+        "application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+        "case_id": "clean_unchanged_dependencies",
+        "case_median_wall_time_ms": 203.913416,
+        "case_wall_time_ms": [
+          203.913416,
+          202.504042,
+          207.944125
+        ],
+        "completed_repeat_count": 3,
+        "evaluator_id": "AC_PUBLIC_API",
+        "exclusion_reasons": [],
+        "expected_architectural_label": 0,
+        "expected_compliance": "COMPLIANT",
+        "expected_finding_codes": [],
+        "metric_eligible_by_catalog": true,
+        "observed_compliance_by_repeat": [
+          "COMPLIANT",
+          "COMPLIANT",
+          "COMPLIANT"
+        ],
+        "observed_compliance_case_level": "COMPLIANT",
+        "observed_finding_classes_stable": true,
+        "observed_finding_codes_by_repeat": [
+          [],
+          [],
+          []
+        ],
+        "planned_repeat_count": 3,
+        "preregistered_expected_outcome_matched": true,
+        "source_commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+        "valid_for_confusion_matrix": true
+      },
+      {
+        "application_tree_sha": "367d2289c328089d87520d1f6a2b01424d879bfc",
+        "case_id": "allowed_public_api_import",
+        "case_median_wall_time_ms": 216.741333,
+        "case_wall_time_ms": [
+          216.741333,
+          211.984417,
+          222.193541
+        ],
+        "completed_repeat_count": 3,
+        "evaluator_id": "AC_PUBLIC_API",
+        "exclusion_reasons": [],
+        "expected_architectural_label": 0,
+        "expected_compliance": "COMPLIANT",
+        "expected_finding_codes": [],
+        "metric_eligible_by_catalog": true,
+        "observed_compliance_by_repeat": [
+          "COMPLIANT",
+          "COMPLIANT",
+          "COMPLIANT"
+        ],
+        "observed_compliance_case_level": "COMPLIANT",
+        "observed_finding_classes_stable": true,
+        "observed_finding_codes_by_repeat": [
+          [],
+          [],
+          []
+        ],
+        "planned_repeat_count": 3,
+        "preregistered_expected_outcome_matched": true,
+        "source_commit_sha": "6eb48ebee9a446b675a2c322643d3ba6051a719f",
+        "valid_for_confusion_matrix": true
+      },
+      {
+        "application_tree_sha": "effc8bb1a60f99edafa433eb073ec76f8b75c342",
+        "case_id": "forbidden_private_cross_module_import",
+        "case_median_wall_time_ms": 205.865041,
+        "case_wall_time_ms": [
+          205.865041,
+          214.64725,
+          202.355167
+        ],
+        "completed_repeat_count": 3,
+        "evaluator_id": "AC_PUBLIC_API",
+        "exclusion_reasons": [],
+        "expected_architectural_label": 1,
+        "expected_compliance": "NON_COMPLIANT",
+        "expected_finding_codes": [
+          "CROSS_MODULE_IMPORT_NOT_PUBLIC"
+        ],
+        "metric_eligible_by_catalog": true,
+        "observed_compliance_by_repeat": [
+          "NON_COMPLIANT",
+          "NON_COMPLIANT",
+          "NON_COMPLIANT"
+        ],
+        "observed_compliance_case_level": "NON_COMPLIANT",
+        "observed_finding_classes_stable": true,
+        "observed_finding_codes_by_repeat": [
+          [
+            "CROSS_MODULE_IMPORT_NOT_PUBLIC"
+          ],
+          [
+            "CROSS_MODULE_IMPORT_NOT_PUBLIC"
+          ],
+          [
+            "CROSS_MODULE_IMPORT_NOT_PUBLIC"
+          ]
+        ],
+        "planned_repeat_count": 3,
+        "preregistered_expected_outcome_matched": true,
+        "source_commit_sha": "97ae3947991f58e346620583b53f4ee3646f22e7",
+        "valid_for_confusion_matrix": true
+      },
+      {
+        "application_tree_sha": "459fe2ccbee82fee8d86536fa57331f77870108e",
+        "case_id": "undeclared_capability_dependency",
+        "case_median_wall_time_ms": 206.654333,
+        "case_wall_time_ms": [
+          210.182667,
+          203.724583,
+          206.654333
+        ],
+        "completed_repeat_count": 3,
+        "evaluator_id": "AC_PUBLIC_API",
+        "exclusion_reasons": [],
+        "expected_architectural_label": 0,
+        "expected_compliance": "COMPLIANT",
+        "expected_finding_codes": [],
+        "metric_eligible_by_catalog": true,
+        "observed_compliance_by_repeat": [
+          "COMPLIANT",
+          "COMPLIANT",
+          "COMPLIANT"
+        ],
+        "observed_compliance_case_level": "COMPLIANT",
+        "observed_finding_classes_stable": true,
+        "observed_finding_codes_by_repeat": [
+          [],
+          [],
+          []
+        ],
+        "planned_repeat_count": 3,
+        "preregistered_expected_outcome_matched": true,
+        "source_commit_sha": "c97570fa789515808a5de5f187f0a7416e391f39",
+        "valid_for_confusion_matrix": true
+      },
+      {
+        "application_tree_sha": "d986b5db8cdd41377bb8efcde0876d50175eda2a",
+        "case_id": "dependency_cycle",
+        "case_median_wall_time_ms": 205.864792,
+        "case_wall_time_ms": [
+          211.400584,
+          205.864792,
+          201.970459
+        ],
+        "completed_repeat_count": 3,
+        "evaluator_id": "AC_PUBLIC_API",
+        "exclusion_reasons": [],
+        "expected_architectural_label": 0,
+        "expected_compliance": "COMPLIANT",
+        "expected_finding_codes": [],
+        "metric_eligible_by_catalog": true,
+        "observed_compliance_by_repeat": [
+          "COMPLIANT",
+          "COMPLIANT",
+          "COMPLIANT"
+        ],
+        "observed_compliance_case_level": "COMPLIANT",
+        "observed_finding_classes_stable": true,
+        "observed_finding_codes_by_repeat": [
+          [],
+          [],
+          []
+        ],
+        "planned_repeat_count": 3,
+        "preregistered_expected_outcome_matched": true,
+        "source_commit_sha": "1466885fc6b4da62288dab7e8927e9df17e40473",
+        "valid_for_confusion_matrix": true
+      },
+      {
+        "application_tree_sha": "4192ccf94575159d4847d0bc1ce4a9b9e28aaec1",
+        "case_id": "unresolved_local_import",
+        "case_median_wall_time_ms": 205.827875,
+        "case_wall_time_ms": [
+          205.827875,
+          232.06025,
+          198.150875
+        ],
+        "completed_repeat_count": 3,
+        "evaluator_id": "AC_PUBLIC_API",
+        "exclusion_reasons": [],
+        "expected_architectural_label": 0,
+        "expected_compliance": "COMPLIANT",
+        "expected_finding_codes": [],
+        "metric_eligible_by_catalog": true,
+        "observed_compliance_by_repeat": [
+          "COMPLIANT",
+          "COMPLIANT",
+          "COMPLIANT"
+        ],
+        "observed_compliance_case_level": "COMPLIANT",
+        "observed_finding_classes_stable": true,
+        "observed_finding_codes_by_repeat": [
+          [],
+          [],
+          []
+        ],
+        "planned_repeat_count": 3,
+        "preregistered_expected_outcome_matched": true,
+        "source_commit_sha": "c384ef3495e0be1951ea7c5a2f49a1383dedd914",
+        "valid_for_confusion_matrix": true
+      },
+      {
+        "application_tree_sha": "56fcba37a678697f4367bd42381e6d743696d48f",
+        "case_id": "missing_expected_capability",
+        "case_median_wall_time_ms": 202.369125,
+        "case_wall_time_ms": [
+          203.43475,
+          202.369125,
+          196.621084
+        ],
+        "completed_repeat_count": 3,
+        "evaluator_id": "AC_PUBLIC_API",
+        "exclusion_reasons": [
+          "Incomplete expected-module scope has no binary compliance label and is reported as NOT_EVALUABLE, not as a detection true positive."
+        ],
+        "expected_architectural_label": null,
+        "expected_compliance": "NOT_EVALUABLE",
+        "expected_finding_codes": [
+          "UNDECLARED_PUBLIC_INTERFACE"
+        ],
+        "metric_eligible_by_catalog": false,
+        "observed_compliance_by_repeat": [
+          "NOT_EVALUABLE",
+          "NOT_EVALUABLE",
+          "NOT_EVALUABLE"
+        ],
+        "observed_compliance_case_level": "NOT_EVALUABLE",
+        "observed_finding_classes_stable": true,
+        "observed_finding_codes_by_repeat": [
+          [
+            "UNDECLARED_PUBLIC_INTERFACE"
+          ],
+          [
+            "UNDECLARED_PUBLIC_INTERFACE"
+          ],
+          [
+            "UNDECLARED_PUBLIC_INTERFACE"
+          ]
+        ],
+        "planned_repeat_count": 3,
+        "preregistered_expected_outcome_matched": true,
+        "source_commit_sha": "0f93897b2d66fd9bc77ffdfad50b21b6a7b07a3d",
+        "valid_for_confusion_matrix": false
+      }
+    ]
+  },
+  "evaluator_metrics": {
+    "AC_MODULE_GRAPH": {
+      "accuracy": 1.0,
+      "confusion_matrix": {
+        "fn": 0,
+        "fp": 0,
+        "tn": 3,
+        "tp": 3
+      },
+      "eligible_labeled_cases": 6,
+      "evaluable_labeled_cases": 6,
+      "f1": 1.0,
+      "not_evaluable_catalog_cases": 1,
+      "precision": 1.0,
+      "recall_sensitivity": 1.0,
+      "specificity": 1.0,
+      "unit": "one independently specified evaluator-by-source-case condition",
+      "unknown_or_invalid_labeled_cases": 0
+    },
+    "AC_PUBLIC_API": {
+      "accuracy": 1.0,
+      "confusion_matrix": {
+        "fn": 0,
+        "fp": 0,
+        "tn": 5,
+        "tp": 1
+      },
+      "eligible_labeled_cases": 6,
+      "evaluable_labeled_cases": 6,
+      "f1": 1.0,
+      "not_evaluable_catalog_cases": 1,
+      "precision": 1.0,
+      "recall_sensitivity": 1.0,
+      "specificity": 1.0,
+      "unit": "one independently specified evaluator-by-source-case condition",
+      "unknown_or_invalid_labeled_cases": 0
+    }
+  },
+  "experiment_id": "EVAL-01",
+  "missing_expected_capability_metric_treatment": "NOT_EVALUABLE; excluded from confusion matrices",
+  "raw_inventory_errors": [],
+  "raw_inventory_verification": "PASS",
+  "repeated_runs_are_independent_cases": false,
+  "run_manifest_sha256_before_analysis": "7ea0e36a400a947e392c2779a906529345d3b3ee984f09e7c4f74dd551370a73",
+  "schema_version": 1
+}
