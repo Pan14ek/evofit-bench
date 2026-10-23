@@ -1,6 +1,6 @@
 # Context — `architecture/acceptance/a1`
 
-> **Audience:** human developers and AI coding agents. **Type:** maintained descriptive context; evaluator policy reflects W0's 2026-10-21 integration approval.
+> **Audience:** human developers and AI coding agents. **Type:** maintained descriptive context; it records the state-specific engineering policy approval described in `W3_HANDOFF.md`, not scientific applicability or production authority.
 
 ## Responsibility
 
@@ -33,7 +33,7 @@ Run an evaluator with the exact architecture manifest and expected Git source SH
 
 ## Constraints and known gaps
 
-The W0-approved ΔA2 `public.py` exports and `tasks.public.TaskSummary` field names are recorded in `public_api_v1.yaml`; callable signatures, `__all__`, runtime re-exports and runtime behavior are not inspected. The approved state-specific graph, `app.events` shared-infrastructure treatment, table-owner matrix and exact `app.db.model_registry.py` exception are recorded in their versioned configs and summarized in `W3_HANDOFF.md`. The Reporting → Tasks service query exception applies only to A0.2/A0.3 and cannot make final A1 compliant. The registry exception accepts only declared model symbols from each inspected capability `model.py`; it does not authorize capability code to import the registry.
+The W0-approved ΔA2 `public.py` exports and `tasks.public.TaskSummary` field names are recorded in `public_api_v1.yaml`; callable signatures, `__all__`, runtime re-exports and runtime behavior are not inspected. The approved state-specific engineering graph, `app.events` shared-infrastructure treatment, table-owner matrix and exact `app.db.model_registry.py` exception are recorded in their versioned configs and summarized in `W3_HANDOFF.md`. This approval defines named engineering acceptance gates only. It is not a complete scientific applicability/mandatory policy, representation-to-obligation semantic approval, production authority, G1 completion, or G4 authorization. The Reporting → Tasks service query exception applies only to A0.2/A0.3 and cannot make final A1 compliant. The registry exception accepts only declared model symbols from each inspected capability `model.py`; it does not authorize capability code to import the registry.
 
 The A0.4 stage gate requires both AC_PUBLIC_API and AC_MODULE_GRAPH, checks the exact candidate HEAD and complete scope, then validates evidence schema and re-reads the manifest, evaluator/configuration bytes, source files, and raw diagnostics digest. The separate post-merge A0.4 checkpoint is always read back against its pinned merge checkout, including after later changes to Reporting or evaluator configuration. The five capability edges remain unchanged; A0.4's public API evaluator rejects the former Reporting → Tasks.service query import while allowing the Tasks.public query import. A0.3 acceptance and its canonical checkpoint are independently checked at the pinned A0.3 source revision. These static checks exclude dynamic imports, reflection, raw SQL contents, runtime behavior, and database permissions; they are engineering acceptance evidence, not semantic coverage or research authority.
 

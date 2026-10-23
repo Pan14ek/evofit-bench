@@ -18,8 +18,11 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - `tooling/p_impact.py`
 - `EXP03_METHOD_INTEGRATION.md`
 - `EXP04_EVIDENCE_ADMISSION.md`
-- `MONO_A1_PROTOCOL_V1.md` — separate MONO-E0/E1/E2 preparation protocol; W0-approved A0→A1 E2 source binding; E1 freeze-before-run custody, RQ mapping, denominator rules, and W0/W2 stop conditions; no observed MONO results
-- `MONO_A1_REFERENCE_FREEZE_CHECKLIST.md` — W0 evidence checklist for `G-A1-C4-REF-FROZEN`; exact ΔA4 SHAs remain unassigned until Git readback
+- `MONO_A1_PROTOCOL_V1.md` — historical MONO-E0/E1/E2 preparation protocol; source-identity fields for E1 are superseded by the additive W0 addendum; no observed MONO results
+- `MONO_A1_PROTOCOL_V1_W0_ADDENDUM.md` — versioned A0.3/A0.4 source-identity correction; does not authorize a run or freeze
+- `MONO_A1_REFERENCE_FREEZE_CHECKLIST.md` — preserved V1 checklist; see V2 for current W0 readiness
+- `MONO_A1_REFERENCE_FREEZE_CHECKLIST_V2.md` — current W0 checklist for `G-A1-C4-REF-FROZEN`; the source-pair identity sub-item is verified, while all scientific, method, fixture, custody, freeze, and readback blockers remain
+- `../../docs/MONO_E1_W0_READINESS_RESOLUTION.md` — W3 finding dispositions, authority boundary, complete-Q process, pair/P/input/custody blockers, and dependency-ordered plan; contains no scorer labels
 - `MONO_A1_RESULTS_TEMPLATE_UK.md` — Ukrainian report template with explicit UNKNOWN/NOT_RUN states and evidence placeholders
 - `schemas/mono_a1_study_v1.schema.json`
 - `schemas/mono_a1_reference_v1.schema.json`
@@ -80,8 +83,11 @@ denominators; pair sidecars; timing and RQ4 evidence; and checksum archives.
 invokes the exact pinned W2 checkout's `verify_evidence()` for byte readback.
 Its synthetic test fixture proves only the adapter contract, not evaluator or
 experiment outcomes. No MONO run is authorized until W0 freezes the required
-source revisions and resolves the A0/A0.1 versus A0.1/A1 transition conflict.
-These contracts do not change DA01, B0, Method P, or PR #25 results.
+reference inputs, policy and lifecycle authority, exact-pair semantic evidence,
+method identities, shared inputs, and scorer custody. The E1 source pair is
+now Git-read-back and recorded in the additive W0 addendum; that does not close
+`G-A1-C4-REF-FROZEN`. These contracts do not change DA01, B0, Method P, or
+historical results.
 
 The EXP-03 bridge in `scripts/exp03_method_bridge.py` reads validated EXP-02
 artifacts and optionally executes the verified V3 pipeline. EXP-02 execution
