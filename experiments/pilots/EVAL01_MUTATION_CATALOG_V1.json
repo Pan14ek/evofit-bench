@@ -1,0 +1,290 @@
+{
+  "schema_version": 1,
+  "experiment_id": "EVAL-01",
+  "catalog_version": "1.0.0",
+  "architecture_state": "A0_4_REPORT_QUERY_PORT",
+  "source_baseline": {
+    "commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+    "application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+    "state_manifest": "architecture/states/A0_4_REPORT_QUERY_PORT.yaml"
+  },
+  "evaluators": {
+    "AC_PUBLIC_API": {
+      "version": "1.0.0",
+      "configuration": "architecture/acceptance/a1/public_api_v1.yaml",
+      "configuration_sha256": "8853c3a933b23f698c7ba7c5b6e511f292e8d9285dc0de4378741c53e466f7bb",
+      "expected_source_artifact_digest": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c"
+    },
+    "AC_MODULE_GRAPH": {
+      "version": "1.0.0",
+      "configuration": "architecture/acceptance/a1/module_graph_v1.yaml",
+      "configuration_sha256": "1abae6871a477ff2a07685ad645a70defa2f1ac6745598ae4cdc35aab4e95bf6",
+      "expected_source_artifact_digest": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c"
+    }
+  },
+  "execution_protocol": {
+    "measured_repeats_per_case_evaluator": 3,
+    "schedule_seed": 20261023,
+    "timing_unit": "end_to_end_evaluator_subprocess_wall_milliseconds",
+    "case_is_unit_for_confusion_metrics": true,
+    "repeat_is_independent_case": false
+  },
+  "expected_declared_edges": [
+    [
+      "reporting",
+      "tasks"
+    ],
+    [
+      "tasks",
+      "audit"
+    ],
+    [
+      "tasks",
+      "notifications"
+    ],
+    [
+      "tasks",
+      "users"
+    ],
+    [
+      "users",
+      "audit"
+    ]
+  ],
+  "cases": [
+    {
+      "case_id": "clean_unchanged_dependencies",
+      "condition_type": "control",
+      "control_role": "positive_clean_scope_and_declared_graph",
+      "mutation": "none",
+      "description": "Untouched canonical A0.4 source; all five declared edges remain present with no cycles or unresolved imports.",
+      "expected_scope_complete": true,
+      "expected_cycle_count": 0,
+      "expected_unresolved_import_count": 0,
+      "expected_declared_edges": [
+        [
+          "reporting",
+          "tasks"
+        ],
+        [
+          "tasks",
+          "audit"
+        ],
+        [
+          "tasks",
+          "notifications"
+        ],
+        [
+          "tasks",
+          "users"
+        ],
+        [
+          "users",
+          "audit"
+        ]
+      ],
+      "metric_eligible": true,
+      "expected_by_evaluator": {
+        "AC_PUBLIC_API": {
+          "compliance": "COMPLIANT",
+          "architectural_label": 0,
+          "finding_codes": []
+        },
+        "AC_MODULE_GRAPH": {
+          "compliance": "COMPLIANT",
+          "architectural_label": 0,
+          "finding_codes": []
+        }
+      }
+    },
+    {
+      "case_id": "allowed_public_api_import",
+      "condition_type": "mutation",
+      "control_role": "positive_public_contract_import",
+      "mutation": "replace_reporting_imports_with_public_module_alias",
+      "description": "Use the approved Tasks public module import and its get_task_summary and TaskSummary attributes in Reporting; preserve the existing reporting-to-tasks edge.",
+      "expected_scope_complete": true,
+      "expected_cycle_count": 0,
+      "expected_unresolved_import_count": 0,
+      "expected_declared_edges": [
+        [
+          "reporting",
+          "tasks"
+        ],
+        [
+          "tasks",
+          "audit"
+        ],
+        [
+          "tasks",
+          "notifications"
+        ],
+        [
+          "tasks",
+          "users"
+        ],
+        [
+          "users",
+          "audit"
+        ]
+      ],
+      "metric_eligible": true,
+      "expected_by_evaluator": {
+        "AC_PUBLIC_API": {
+          "compliance": "COMPLIANT",
+          "architectural_label": 0,
+          "finding_codes": []
+        },
+        "AC_MODULE_GRAPH": {
+          "compliance": "COMPLIANT",
+          "architectural_label": 0,
+          "finding_codes": []
+        }
+      }
+    },
+    {
+      "case_id": "forbidden_private_cross_module_import",
+      "condition_type": "mutation",
+      "control_role": "negative_private_api_control",
+      "mutation": "replace_reporting_public_query_with_private_service_query",
+      "description": "Replace Reporting's Tasks.public query import with the former private Tasks.service task_summary import.",
+      "expected_scope_complete": true,
+      "expected_cycle_count": 0,
+      "expected_unresolved_import_count": 0,
+      "metric_eligible": true,
+      "expected_by_evaluator": {
+        "AC_PUBLIC_API": {
+          "compliance": "NON_COMPLIANT",
+          "architectural_label": 1,
+          "finding_codes": [
+            "CROSS_MODULE_IMPORT_NOT_PUBLIC"
+          ]
+        },
+        "AC_MODULE_GRAPH": {
+          "compliance": "COMPLIANT",
+          "architectural_label": 0,
+          "finding_codes": []
+        }
+      }
+    },
+    {
+      "case_id": "undeclared_capability_dependency",
+      "condition_type": "mutation",
+      "control_role": "negative_undeclared_edge_control",
+      "mutation": "add_type_only_undeclared_public_dependency",
+      "description": "Add a TYPE_CHECKING-only import of the declared users.public.user_exists contract from Reporting; reporting-to-users is not an allowed A0.4 edge.",
+      "expected_scope_complete": true,
+      "expected_cycle_count": 0,
+      "expected_unresolved_import_count": 0,
+      "metric_eligible": true,
+      "expected_by_evaluator": {
+        "AC_PUBLIC_API": {
+          "compliance": "COMPLIANT",
+          "architectural_label": 0,
+          "finding_codes": []
+        },
+        "AC_MODULE_GRAPH": {
+          "compliance": "NON_COMPLIANT",
+          "architectural_label": 1,
+          "finding_codes": [
+            "UNDECLARED_DEPENDENCY"
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "dependency_cycle",
+      "condition_type": "mutation",
+      "control_role": "negative_cycle_control",
+      "mutation": "add_type_only_cycle_to_reporting",
+      "description": "Add a TYPE_CHECKING-only import of reporting.public.get_task_summary from Tasks; with the existing reporting-to-tasks edge this creates a source dependency cycle.",
+      "expected_scope_complete": true,
+      "expected_cycle_count": 1,
+      "expected_unresolved_import_count": 0,
+      "metric_eligible": true,
+      "expected_by_evaluator": {
+        "AC_PUBLIC_API": {
+          "compliance": "COMPLIANT",
+          "architectural_label": 0,
+          "finding_codes": []
+        },
+        "AC_MODULE_GRAPH": {
+          "compliance": "NON_COMPLIANT",
+          "architectural_label": 1,
+          "finding_codes": [
+            "UNDECLARED_DEPENDENCY",
+            "DEPENDENCY_CYCLE"
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "unresolved_local_import",
+      "condition_type": "mutation",
+      "control_role": "negative_unresolved_import_control",
+      "mutation": "add_type_only_unresolved_local_import",
+      "description": "Add a TYPE_CHECKING-only import from a nonexistent local Tasks module.",
+      "expected_scope_complete": true,
+      "expected_cycle_count": 0,
+      "expected_unresolved_import_count": 1,
+      "metric_eligible": true,
+      "expected_by_evaluator": {
+        "AC_PUBLIC_API": {
+          "compliance": "COMPLIANT",
+          "architectural_label": 0,
+          "finding_codes": []
+        },
+        "AC_MODULE_GRAPH": {
+          "compliance": "NON_COMPLIANT",
+          "architectural_label": 1,
+          "finding_codes": [
+            "UNRESOLVED_LOCAL_IMPORT"
+          ]
+        }
+      }
+    },
+    {
+      "case_id": "missing_expected_capability",
+      "condition_type": "mutation",
+      "control_role": "negative_incomplete_scope_control",
+      "mutation": "remove_expected_capability_audit",
+      "description": "Remove the entire expected Audit capability package. Both evaluators must fail closed on incomplete configured scope.",
+      "expected_scope_complete": false,
+      "expected_scope_uncertainties": [
+        "MISSING_EXPECTED_MODULE:audit",
+        "INSUFFICIENT_MODULE_SOURCE:audit"
+      ],
+      "metric_eligible": false,
+      "exclusion_reason": "Incomplete expected-module scope has no binary compliance label and is reported as NOT_EVALUABLE, not as a detection true positive.",
+      "expected_by_evaluator": {
+        "AC_PUBLIC_API": {
+          "compliance": "NOT_EVALUABLE",
+          "architectural_label": null,
+          "finding_codes": [
+            "UNDECLARED_PUBLIC_INTERFACE"
+          ]
+        },
+        "AC_MODULE_GRAPH": {
+          "compliance": "NOT_EVALUABLE",
+          "architectural_label": null,
+          "finding_codes": [
+            "UNRESOLVED_LOCAL_IMPORT"
+          ]
+        }
+      }
+    }
+  ],
+  "experiment_base_main_sha": "6a7d44595ac5155c443ee3aad84d6792d587f666",
+  "canonical_a04_checkpoint_reference": {
+    "path": "architecture/acceptance/a1/a0_4_canonical_checkpoint.json",
+    "sha256": "7b0b0c7a0c6ac782540466d283c42d7589b8aaeb4af7df62104faa01fd154e8e",
+    "recorded_on_experiment_base_main_sha": "6a7d44595ac5155c443ee3aad84d6792d587f666",
+    "use": "identity-only evidence snapshot; not evaluator input"
+  },
+  "canonical_a04_source_manifest_reference": {
+    "path": "architecture/acceptance/a1/a0_4_canonical_source_manifest.yaml",
+    "sha256": "9c981442a34830bdc44d77ffc17de5b9f832b0b261d0d92f28bd15dc567febd9",
+    "recorded_on_experiment_base_main_sha": "6a7d44595ac5155c443ee3aad84d6792d587f666",
+    "use": "identity-only evidence snapshot; not evaluator input"
+  }
+}

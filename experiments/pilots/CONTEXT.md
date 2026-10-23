@@ -9,6 +9,8 @@ Store pilot-specific protocols, reports, derived result tables, and narrow tools
 
 ## Local landmarks
 
+- `EVAL01_PROTOCOL_V1.md`, `EVAL01_MUTATION_CATALOG_V1.json`, and `run_eval01.py` — preregistered A0.4 W2 evaluator-validation protocol, mutation cases, clean Git provenance, repeated source-bound evaluator calls, analysis, and raw evidence packaging; independent of MONO-E1/E2 and Method P.
+- `EVAL01_REPORT_V1.md`, `EVAL01_CASE_RESULTS_V1.csv`, and `EVAL01_RAW_EVIDENCE_V1.zip` — evidence-derived EVAL-01 report, finite case-level confusion metrics, and checksummed raw runs.
 - `PILOT_01_EXPECTATION.md` — expected S0/S1 evaluator outcomes recorded before formal repeated measurements.
 - `PILOT_01_REPORT.md` — evidence-backed experimental report and reproducibility limits.
 - `PILOT_01_MANUSCRIPT_UA.md` — Ukrainian manuscript subsection based only on collected results.
@@ -111,3 +113,6 @@ Use the focused pilot tests and result generator, then the repository's document
 
 - PILOT-02 final V6 audit: PILOT_02_GOVERNANCE_AUDIT_V1.json records INV-05/INV-10 and four inherited-row reassessments; correct_pilot02_v6_archive.py creates a path-normalized copy while preserving V6 payload bytes; the corrected ZIP and sidecar are separate from the immutable original.
 - tests/unit/test_pilot02_v6_archive.py checks inventory normalization, byte preservation, and traversal rejection. Clean extraction verification uses shasum -a 256 -c SHA256SUMS from the extracted V6 archive root.
+
+
+EVAL-01 is a separate controlled validation of the named static A0.4 evaluators. Its known mutation labels come from the preregistered source interventions; they are not scorer-only reference labels. Keep its single A0.4 base and mutation revisions separate from PILOT-01/02 and MONO-E1/E2. The missing-package case is NOT_EVALUABLE and is excluded from binary metrics. Timing repeats are descriptive only.
