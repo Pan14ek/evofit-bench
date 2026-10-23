@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MONO-E1 non-authoritative obligation review inventory v1",
+  "description": "A public catalog copy for review preparation. It cannot contain target-level policy decisions or certify a scientific denominator.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "artifact_status",
+    "scope",
+    "catalog_pin",
+    "closure_status",
+    "review_roles",
+    "existing_policy_sources",
+    "obligations"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "artifact_id": { "const": "MONO_E1_Q_REVIEW_INVENTORY_V1" },
+    "artifact_status": { "const": "NON_AUTHORITATIVE_PROPOSAL" },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["study_id", "architecture_state", "architecture_source_commit_sha", "architecture_source_tree_sha"],
+      "properties": {
+        "study_id": { "const": "MONO-E1" },
+        "architecture_state": { "const": "A0_4_REPORT_QUERY_PORT" },
+        "architecture_source_commit_sha": { "$ref": "#/$defs/gitSha" },
+        "architecture_source_tree_sha": { "$ref": "#/$defs/gitSha" }
+      }
+    },
+    "catalog_pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "schema_version", "sha256", "ordering"],
+      "properties": {
+        "path": { "const": "fitness/catalog/architectural-obligations.yaml" },
+        "schema_version": { "type": "integer", "minimum": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "ordering": { "const": "SOURCE_ORDER" }
+      }
+    },
+    "closure_status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["catalog_inventory", "policy_universe_closure", "approved_scientific_denominator"],
+      "properties": {
+        "catalog_inventory": { "const": "COMPLETE_AGAINST_PINNED_CATALOG" },
+        "policy_universe_closure": { "const": "PENDING_EXTERNAL_AUTHORITY" },
+        "approved_scientific_denominator": { "const": "NOT_ESTABLISHED" }
+      }
+    },
+    "review_roles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["accountable_policy_authority", "independent_methods_reviewer", "lifecycle_protocol_reviewer"],
+      "properties": {
+        "accountable_policy_authority": { "const": "UNASSIGNED" },
+        "independent_methods_reviewer": { "const": "UNASSIGNED" },
+        "lifecycle_protocol_reviewer": { "const": "UNASSIGNED" }
+      }
+    },
+    "existing_policy_sources": {
+      "type": "array",
+      "minItems": 4,
+      "items": { "$ref": "#/$defs/policySource" }
+    },
+    "obligations": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/obligation" }
+    }
+  },
+  "$defs": {
+    "gitSha": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "policySource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "path", "sha256", "status", "role", "governs_a0_4"],
+      "properties": {
+        "source_id": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "status": {
+          "enum": [
+            "DEVELOPMENT_CANDIDATES_ONLY",
+            "DRAFT_NOT_PRODUCTION_AUTHORITY",
+            "OPEN_NOT_PRODUCTION_AUTHORITY",
+            "EMPTY_NO_COMPLETENESS_CLAIM",
+            "DEVELOPMENT_CANDIDATE_RULESET"
+          ]
+        },
+        "role": { "type": "string", "minLength": 1 },
+        "governs_a0_4": { "const": false }
+      }
+    },
+    "catalogEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "criterion", "intent", "default_weight"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+        "criterion": { "enum": ["performance", "reliability", "architecture_compliance"] },
+        "intent": { "type": "string", "minLength": 1 },
+        "default_weight": { "type": "number", "minimum": 0 }
+      }
+    },
+    "decisionState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["applicability", "mandatory_status", "lifecycle_stage_requirements", "source_fact_bindings", "representation_evidence_requirements"],
+      "properties": {
+        "applicability": { "const": "PENDING_EXTERNAL_AUTHORITY" },
+        "mandatory_status": { "const": "PENDING_EXTERNAL_AUTHORITY" },
+        "lifecycle_stage_requirements": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "required_stages"],
+          "properties": {
+            "status": { "const": "PENDING_INDEPENDENT_REVIEW" },
+            "required_stages": { "type": "array", "maxItems": 0 }
+          }
+        },
+        "source_fact_bindings": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "facts"],
+          "properties": {
+            "status": { "const": "PENDING_AUTHORIZED_SOURCE_FACTS" },
+            "facts": { "type": "array", "maxItems": 0 }
+          }
+        },
+        "representation_evidence_requirements": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "pairs"],
+          "properties": {
+            "status": { "const": "PENDING_W2_W3_AFTER_POLICY_APPROVAL" },
+            "pairs": { "type": "array", "maxItems": 0 }
+          }
+        }
+      }
+    },
+    "obligation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["catalog_order", "obligation_id", "catalog_entry", "policy_source_refs", "decision_state"],
+      "properties": {
+        "catalog_order": { "type": "integer", "minimum": 1 },
+        "obligation_id": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]+$" },
+        "catalog_entry": { "$ref": "#/$defs/catalogEntry" },
+        "policy_source_refs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
+        "decision_state": { "$ref": "#/$defs/decisionState" }
+      }
+    }
+  }
+}

@@ -45,6 +45,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_b0p_e1_execution.py` — exact-run sidecar/signature/source bindings, independent Git fact readback, run-contained semantic-directory readback, complete six-row UNKNOWN RQ2, candidate diagnostics under HOLD, oracle contamination, write-once behavior, and RQ1 abstention gating
 - `test_mono_a1.py` — synthetic MONO reference seals, denominator/scoring gates, exact-pair mapping, W2 JSON readback adapter, input isolation, timing, and archive integrity; no MONO runs or authentic evaluator outputs
 - `test_mono_a1.py` — synthetic MONO reference seals/source pins, E2 predecessor/A0 SHA/final-state negative schema cases and Git-object seal rejection, RQ1 prediction seals/abstention, RQ2 denominator/exact-pair/verifier boundary and TEST_ONLY separation, timer/source-image gaps, isolation, and clean archive readback
+- `test_mono_policy_review_inventory.py` — catalog pin/order/ID and digest checks; missing authority, unresolved mandatory status, missing stages/facts, conflicting or stale facts, exact-pair gaps, and non-certification assertions
 
 This is a selected list of direct tracked files, not a complete source inventory.
 
