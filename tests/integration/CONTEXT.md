@@ -14,7 +14,7 @@ evidence bridges.
 - `conftest.py`
 - `test_api_flows.py`
 - `test_public_module_contracts.py` — ΔA2 public facade transaction ownership, summary shape and assignment rollback
-- `test_p_applicability_v3.py`
+- `test_p_applicability_v3.py` — includes sidecar-order permutation and semantic-hash equivalence coverage
 - `test_p_governed_adaptation_v1.py`
 - `test_exp03_method_bridge.py`
 - `test_exp04_evidence_admission.py`

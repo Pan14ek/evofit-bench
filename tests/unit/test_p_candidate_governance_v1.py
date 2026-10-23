@@ -506,6 +506,34 @@ def test_input_rejection_has_precedence_over_candidate_fitness_decisions() -> No
     assert decision.result is GovernanceResult.INPUT_REJECTED
 
 
+def test_proven_hard_invariant_failure_rejects_valid_candidate() -> None:
+    obligation = make_obligation()
+    pair, *_ = make_valid_pair()
+    invariant_verdicts = {f"INV-{index:02d}": "PASS" for index in range(1, 13)}
+    invariant_verdicts["INV-01"] = "FAIL"
+
+    decision = decide_governance(
+        method_version="P_DEV",
+        architecture_before_sha=ARCH_BEFORE,
+        architecture_after_sha=ARCH_AFTER,
+        policy_source_revision="SYN_POLICY_REV_1",
+        policy_ruleset_sha256="5" * 64,
+        input_bundle_sha256="6" * 64,
+        parent_configuration_sha256="8" * 64,
+        candidate_configuration_sha256="9" * 64,
+        impact_assessment_sha256="a" * 64,
+        coverage=make_coverage([obligation], pairs=[pair]),
+        operation_plan=ready_plan(),
+        invariant_verdicts=invariant_verdicts,
+        cost_verdict="PASS",
+        input_status="VALID",
+        candidate_validation_status="valid",
+    )
+
+    assert decision.result is GovernanceResult.REJECT
+    assert "INVARIANT_VIOLATION_PROVEN" in decision.to_dict()["reason_codes"]
+
+
 def test_unresolved_coverage_is_hold_and_proven_incomplete_candidate_is_reject() -> None:
     obligation = make_obligation()
     from experiments.execution.tooling.p_applicability import ApplicabilityStatus

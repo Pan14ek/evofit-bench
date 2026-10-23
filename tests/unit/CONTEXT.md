@@ -35,6 +35,8 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_p_semantic_pairs_v1.py`
 - `test_p_operations_v1.py`
 - `test_p_candidate_governance_v1.py`
+- `test_p_executable_candidate_identity.py` — verifies the candidate source/configuration manifest, Git tree, and tamper detection
+- `test_p_interface_readiness.py` — preserves the NOT_READY measured-method guard
 - `test_p_adaptation_evidence_v1.py`
 - `test_g1_method_decision_register.py`
 - `test_b0p_git_inventory.py`

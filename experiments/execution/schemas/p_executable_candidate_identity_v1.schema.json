@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:p-executable-candidate-identity:v1",
+  "title": "Method P executable candidate identity v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifact_type",
+    "schema_version",
+    "status",
+    "method_version",
+    "algorithm_version",
+    "source_revision",
+    "implementation_files",
+    "configuration_files",
+    "review_basis_files",
+    "source_identity_sha256",
+    "configuration_sha256",
+    "identity_sha256"
+  ],
+  "properties": {
+    "artifact_type": {"const": "P_EXECUTABLE_CANDIDATE_IDENTITY"},
+    "schema_version": {"const": 1},
+    "status": {"const": "DEVELOPMENT_REVIEW_ONLY"},
+    "method_version": {"const": "P_GOVERNED_ADAPTATION_DEVELOPMENT_V1"},
+    "algorithm_version": {"const": "P_GOVERNED_ADAPTATION_V1"},
+    "source_revision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["commit", "tree"],
+      "properties": {
+        "commit": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+        "tree": {"type": "string", "pattern": "^[a-f0-9]{40}$"}
+      }
+    },
+    "implementation_files": {"$ref": "#/$defs/file_identity_list"},
+    "configuration_files": {"$ref": "#/$defs/file_identity_list"},
+    "review_basis_files": {"$ref": "#/$defs/file_identity_list"},
+    "source_identity_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "configuration_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "identity_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "$defs": {
+    "file_identity_list": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1, "pattern": "^[A-Za-z0-9._/-]+$"},
+          "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    }
+  }
+}
