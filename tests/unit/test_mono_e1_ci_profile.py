@@ -47,12 +47,17 @@ def validate_preparation_only(profile: dict) -> list[str]:
         or profile.get("confidentiality", {}).get("method_input_authorized") is not False
     ):
         problems.append("incorrect_scope")
-    if (profile.get("source_pair", {}).get("before", {}).get("commit") != BEFORE_SHA
-        or profile.get("source_pair", {}).get("after", {}).get("commit") != AFTER_SHA):
+    if (
+        profile.get("source_pair", {}).get("before", {}).get("commit") != BEFORE_SHA
+        or profile.get("source_pair", {}).get("after", {}).get("commit") != AFTER_SHA
+    ):
         problems.append("wrong_source_revision")
     lc = profile.get("lifecycle", {})
-    if (lc.get("candidate_stage") != "CI_TEST" or lc.get("stage_scope_approved") is not False
-        or lc.get("approved_registry_id") is not None):
+    if (
+        lc.get("candidate_stage") != "CI_TEST"
+        or lc.get("stage_scope_approved") is not False
+        or lc.get("approved_registry_id") is not None
+    ):
         problems.append("unreviewed_stage_approval")
     fs = profile.get("fitness_scope", {})
     actual = fs.get("obligations", [])
@@ -75,8 +80,12 @@ def validate_preparation_only(profile: dict) -> list[str]:
     evs = fs.get("engineering_evaluators", [])
     if [v.get("id") for v in evs] != ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]:
         problems.append("unexpected_evaluator_inventory")
-    if any(v.get("representation_id") is not None or v.get("semantic_pair_review") != "PENDING"
-           or v.get("evidence_status") != "BOUNDED_ENGINEERING_ONLY" for v in evs):
+    if any(
+        v.get("representation_id") is not None
+        or v.get("semantic_pair_review") != "PENDING"
+        or v.get("evidence_status") != "BOUNDED_ENGINEERING_ONLY"
+        for v in evs
+    ):
         problems.append("invented_exact_pair_proof")
     if (
         profile.get("endpoints", {}).get("architectural_coverage", {}).get("status")
@@ -89,22 +98,25 @@ def validate_preparation_only(profile: dict) -> list[str]:
     parent = pilot.get("parent_configuration_check", {})
     if (
         parent.get("a0_3_pre_change_fitness_configuration_sha256") is not None
-        or parent.get("baseline_interpretation")
-        != "UNRESOLVED_A0_FROZEN_VERSUS_A0_3_CURRENT"
-        or parent.get("negative_control_retain_reference")
-        != "NOT_EVALUABLE_UNTIL_PARENT_PINNED"
+        or parent.get("baseline_interpretation") != "UNRESOLVED_A0_FROZEN_VERSUS_A0_3_CURRENT"
+        or parent.get("negative_control_retain_reference") != "NOT_EVALUABLE_UNTIL_PARENT_PINNED"
     ):
         problems.append("unresolved_parent_misclassified")
     if profile.get("arms", {}).get("common_after_sha") != AFTER_SHA:
         problems.append("inconsistent_target")
-    if any(profile.get("arms", {}).get(arm, {}).get("input_bundle_digest") is not None
-           or profile.get("arms", {}).get(arm, {}).get("allowlist_digest") is not None
-           for arm in ("B0", "P")):
+    if any(
+        profile.get("arms", {}).get(arm, {}).get("input_bundle_digest") is not None
+        or profile.get("arms", {}).get(arm, {}).get("allowlist_digest") is not None
+        for arm in ("B0", "P")
+    ):
         problems.append("fabricated_inputs")
     ready = profile.get("readiness", {})
-    if (ready.get("G1") != "INCOMPLETE" or ready.get("G4") != "NOT_AUTHORIZED"
+    if (
+        ready.get("G1") != "INCOMPLETE"
+        or ready.get("G4") != "NOT_AUTHORIZED"
         or ready.get("reference") != "NOT_FROZEN"
-        or ready.get("method_p_status") != "NOT_READY"):
+        or ready.get("method_p_status") != "NOT_READY"
+    ):
         problems.append("unauthorized_gate")
     conf = profile.get("confidentiality", {})
     if (
@@ -156,7 +168,9 @@ def test_canonical_source_pair_matches_readback() -> None:
     ],
 )
 def test_illicit_approval_or_fabricated_readiness_is_rejected(
-    location: tuple, value: object, expected: str,
+    location: tuple,
+    value: object,
+    expected: str,
 ) -> None:
     profile = copy.deepcopy(load_profile())
     cursor = profile
@@ -170,7 +184,9 @@ def test_author_working_decisions_are_a_b_a_without_scientific_approval() -> Non
     profile = load_profile()
     decisions = profile["author_working_decisions"]
     assert [decisions[k]["choice"] for k in ("scope", "fitness_validation", "reference")] == [
-        "A", "B", "A"
+        "A",
+        "B",
+        "A",
     ]
     assert decisions["scope"]["ci_evaluator_ids"] == ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]
     assert decisions["scope"]["scientific_q_full_scope"] is False
@@ -187,9 +203,7 @@ def test_development_pilot_cannot_use_delta4_method_p_before_w0_gate() -> None:
     assert pilot["required_w0_checkpoint"] == "G-A1-C4-REF-FROZEN"
     assert pilot["required_w0_status"] == "NOT_READY"
     assert "METHOD_P_ON_CANONICAL_DELTA4" in pilot["prohibited_before_w0_gate"]
-    assert "GENERIC_SYNTHETIC_P_REHEARSAL_NO_DELTA4_INPUT" in pilot[
-        "allowed_before_w0_gate"
-    ]
+    assert "GENERIC_SYNTHETIC_P_REHEARSAL_NO_DELTA4_INPUT" in pilot["allowed_before_w0_gate"]
     assert pilot["private_reference_content_in_public_profile"] is False
 
 
