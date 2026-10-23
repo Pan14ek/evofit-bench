@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -19,7 +19,7 @@ CATALOG_PATH = ROOT / "experiments/pilots/EVAL01_MUTATION_CATALOG_V1.json"
 
 
 def _catalog() -> dict[str, Any]:
-    return json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
+    return cast(dict[str, Any], json.loads(CATALOG_PATH.read_text(encoding="utf-8")))
 
 
 def _records(case: dict[str, Any], evaluator_id: str, *, repeats: int = 3) -> list[dict[str, Any]]:

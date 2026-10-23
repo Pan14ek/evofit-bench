@@ -23,9 +23,15 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-GIT_EXECUTABLE = shutil.which("git")
-if GIT_EXECUTABLE is None:
-    raise RuntimeError("Git executable is required for EVAL-01")
+
+def _resolve_git_executable() -> str:
+    executable = shutil.which("git")
+    if executable is None:
+        raise RuntimeError("Git executable is required for EVAL-01")
+    return executable
+
+
+GIT_EXECUTABLE = _resolve_git_executable()
 
 SCRIPT_PATH = Path(__file__).resolve()
 REPOSITORY_ROOT = SCRIPT_PATH.parents[2]
