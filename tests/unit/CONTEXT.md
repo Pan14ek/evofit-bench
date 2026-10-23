@@ -46,6 +46,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_mono_a1.py` — synthetic MONO reference seals, denominator/scoring gates, exact-pair mapping, W2 JSON readback adapter, input isolation, timing, and archive integrity; no MONO runs or authentic evaluator outputs
 - `test_mono_a1.py` — synthetic MONO reference seals/source pins, E2 predecessor/A0 SHA/final-state negative schema cases and Git-object seal rejection, RQ1 prediction seals/abstention, RQ2 denominator/exact-pair/verifier boundary and TEST_ONLY separation, timer/source-image gaps, isolation, and clean archive readback
 - `test_mono_policy_review_inventory.py` — catalog pin/order/ID and digest checks; missing authority, unresolved mandatory status, missing stages/facts, conflicting or stale facts, exact-pair gaps, and non-certification assertions
+- `test_mono_e1_preflight.py` — exact W0 source identity, workload repeatability/digest and fixture/migration parity, capability inventory, arm allowlists and path isolation, external image verification, timing boundaries, null CPU/RSS, and pending-authority rejection; synthetic preparation only
 
 This is a selected list of direct tracked files, not a complete source inventory.
 
@@ -76,6 +77,11 @@ status; it cannot approve a decision.
 SHAs, raw records, and verifier adapter are not MONO-E1/E2 observations or W2
 evaluator evidence. Requirement traceability is in
 `experiments/execution/MONO_A1_PROTOCOL_V1.md`.
+
+`test_mono_e1_preflight.py` validates only the comparability preparation
+contract. Its clean positive case is structurally consistent but intentionally
+INCOMPLETE/NO_GO; adversarial cases do not construct a frozen bundle, execute
+an arm, or provide scientific authority.
 
 ## Constraints and known gaps
 

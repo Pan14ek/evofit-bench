@@ -23,6 +23,7 @@ DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_g1_method_decision_register.py \
 	tests/unit/test_context_documents.py \
 	tests/unit/test_mono_policy_review_inventory.py \
+	tests/unit/test_mono_e1_preflight.py \
 	tests/unit/test_architecture_stage_checks.py \
 	tests/unit/test_exp01_evidence.py \
 	tests/unit/test_exp02_fitness_evidence.py \

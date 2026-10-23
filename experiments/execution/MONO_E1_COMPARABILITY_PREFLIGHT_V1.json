@@ -1,0 +1,629 @@
+{
+  "arms": {
+    "B0": {
+      "catalog_sha256": "8c5bd8fffe3bdb2af8fb85f8d0012bc34673f72866e52daed99fab96f9763011",
+      "database_fixture_id": null,
+      "database_fixture_sha256": null,
+      "evaluator_capability_ids": [],
+      "image_provenance": {
+        "attestation_sha256": null,
+        "external_verifier_id": null,
+        "image_digest": null,
+        "source_sha": null,
+        "status": "MISSING",
+        "verification_evidence_sha256": null
+      },
+      "input_inventory": {
+        "allowlist_sha256": null,
+        "method_specific_input_ids": [],
+        "method_specific_inputs": [],
+        "shared_input_ids": [],
+        "shared_inputs": [],
+        "status": "MISSING"
+      },
+      "lifecycle_registry_sha256": null,
+      "method_identity": {
+        "configuration": {
+          "path": "fitness/configs/a0-monolith.yaml",
+          "sha256": "5ad60e373463ea459e192bf85d82704ca9aa1c217c4abf4d8caeb66924059ecb",
+          "size_bytes": 1142,
+          "source_commit_sha": "165a7d6ef31adbe8ce3abe9f72e59d74692c987e"
+        },
+        "evaluator_configuration": {
+          "path": "fitness/evaluators/a0/importlinter.toml",
+          "sha256": "88ff64a4792c6048a6ab0686ddf9326ebbee49f76996933845a6142cc1a2ba27",
+          "size_bytes": 797,
+          "source_commit_sha": "165a7d6ef31adbe8ce3abe9f72e59d74692c987e"
+        },
+        "input_bundle_sha256": null,
+        "method_version": "B0_A0_BASELINE",
+        "source_commit_sha": "165a7d6ef31adbe8ce3abe9f72e59d74692c987e",
+        "source_inventory": [
+          {
+            "path": "experiments/execution/tooling/b0.py",
+            "sha256": "5a7fa1dde23ec1478491e6979e5f6044461a246a92ac97b03810740612dcd479",
+            "size_bytes": 5266,
+            "source_commit_sha": "165a7d6ef31adbe8ce3abe9f72e59d74692c987e"
+          },
+          {
+            "path": "experiments/execution/tooling/contracts.py",
+            "sha256": "11c5e9f8bf8b07c4650e4164af79fa23056967f7074e84923e85aab363051d35",
+            "size_bytes": 4551,
+            "source_commit_sha": "165a7d6ef31adbe8ce3abe9f72e59d74692c987e"
+          },
+          {
+            "path": "experiments/execution/tooling/errors.py",
+            "sha256": "25cd9f71060aa49d79ddb9f0f511bedba4b7779a8b33fd500a098bb442f2180d",
+            "size_bytes": 683,
+            "source_commit_sha": "165a7d6ef31adbe8ce3abe9f72e59d74692c987e"
+          },
+          {
+            "path": "experiments/execution/tooling/hashing.py",
+            "sha256": "e838b47dfa9958c442deac541a6c1c90907bf1d882bd72cca1dae077474aff18",
+            "size_bytes": 1452,
+            "source_commit_sha": "165a7d6ef31adbe8ce3abe9f72e59d74692c987e"
+          }
+        ],
+        "source_tree_sha": "2d6833489cde61a0cda3630250b71096195bbdd1",
+        "status": "DEVELOPMENT_BASELINE_BYTES_ONLY"
+      },
+      "method_specific_environment": {},
+      "method_specific_input_ids": [
+        "method.b0.source",
+        "method.b0.fitness_configuration",
+        "method.b0.legacy_evaluator"
+      ],
+      "migration_revision": "0001_a0_schema",
+      "migration_sha256": "b537aa8c86237f798d18fa74ecc5579eb7906812638c7685037838759da8773a",
+      "policy_registry_sha256": "99ad0b106571b0712cf34eec44bdf7a3c6efac563fe2eacebf453a2f6396fda1",
+      "resource_limits": {
+        "cpus": "2.0",
+        "memory": "2g",
+        "pids": 128
+      },
+      "shared_environment": {
+        "HOME": "/tmp",
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "shared_input_plan": [
+        "architecture.after",
+        "architecture.observations",
+        "obligation.catalog",
+        "policy.authority",
+        "policy.lifecycle_stages",
+        "fitness.parent_configuration",
+        "evaluator.capabilities",
+        "workload.specification",
+        "postgres.fixture",
+        "runtime.environment"
+      ],
+      "target_repository_tree_sha": "2b436e0aaf09403ea516d73d20a466a122f86592",
+      "target_source_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+      "workload_spec_sha256": "9dc27791cb40a5684a287ddb0b229a47498a83d36f81466fe7d360437edda6b5"
+    },
+    "P": {
+      "catalog_sha256": "8c5bd8fffe3bdb2af8fb85f8d0012bc34673f72866e52daed99fab96f9763011",
+      "database_fixture_id": null,
+      "database_fixture_sha256": null,
+      "evaluator_capability_ids": [],
+      "image_provenance": {
+        "attestation_sha256": null,
+        "external_verifier_id": null,
+        "image_digest": null,
+        "source_sha": null,
+        "status": "MISSING",
+        "verification_evidence_sha256": null
+      },
+      "input_inventory": {
+        "allowlist_sha256": null,
+        "method_specific_input_ids": [],
+        "method_specific_inputs": [],
+        "shared_input_ids": [],
+        "shared_inputs": [],
+        "status": "MISSING"
+      },
+      "lifecycle_registry_sha256": null,
+      "method_identity": {
+        "candidate_manifest": {
+          "configuration_sha256": "cdd4df7342e821927c3a565f6bcec02d51a6c65bbca2fd131cfaae099ecb9fca",
+          "identity_sha256": "45c75b7d211705ab001f080a193aa64641e01d5222e25603cd0ef241fecefde4",
+          "path": "experiments/execution/P_EXECUTABLE_CANDIDATE_V1.json",
+          "sha256": "e97b41664aa38b69918d811ecadb462e9e3b93f0d6837e96065c3688f954a0a5",
+          "source_identity_sha256": "c477bd4258734a615fcdaf8491988a36bba90004eb4af083c76e0e814ff0ccbf",
+          "source_revision": {
+            "commit": "6ca20ea1b86c3570510c4c3f206ae3c418d13781",
+            "tree": "a195778a5137674bfc1c3d46069f752336438549"
+          }
+        },
+        "input_bundle_sha256": null,
+        "status": "DEVELOPMENT_REVIEW_CANDIDATE_NOT_FROZEN"
+      },
+      "method_specific_environment": {},
+      "method_specific_input_ids": [
+        "method.p.review_candidate",
+        "method.p.traceability",
+        "method.p.algorithm_configuration"
+      ],
+      "migration_revision": "0001_a0_schema",
+      "migration_sha256": "b537aa8c86237f798d18fa74ecc5579eb7906812638c7685037838759da8773a",
+      "policy_registry_sha256": "99ad0b106571b0712cf34eec44bdf7a3c6efac563fe2eacebf453a2f6396fda1",
+      "resource_limits": {
+        "cpus": "2.0",
+        "memory": "2g",
+        "pids": 128
+      },
+      "shared_environment": {
+        "HOME": "/tmp",
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "shared_input_plan": [
+        "architecture.after",
+        "architecture.observations",
+        "obligation.catalog",
+        "policy.authority",
+        "policy.lifecycle_stages",
+        "fitness.parent_configuration",
+        "evaluator.capabilities",
+        "workload.specification",
+        "postgres.fixture",
+        "runtime.environment"
+      ],
+      "target_repository_tree_sha": "2b436e0aaf09403ea516d73d20a466a122f86592",
+      "target_source_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+      "workload_spec_sha256": "9dc27791cb40a5684a287ddb0b229a47498a83d36f81466fe7d360437edda6b5"
+    }
+  },
+  "authority": {
+    "G1": "INCOMPLETE",
+    "G4": "NOT_AUTHORIZED",
+    "catalog_completeness": "UNKNOWN",
+    "lifecycle_stage_authority": "PENDING",
+    "method_p_independent_review": "PENDING",
+    "policy_authority": "PENDING",
+    "reference_freeze": "NOT_READY",
+    "scorer_custody": "NOT_ESTABLISHED"
+  },
+  "common_inputs": {
+    "architecture_facts": {
+      "artifact_paths": [
+        "architecture/acceptance/a1/a0_4_canonical_module_graph_observation.json",
+        "architecture/acceptance/a1/a0_4_canonical_public_api_observation.json",
+        "architecture/acceptance/a1/a0_4_canonical_data_ownership_observation.json"
+      ],
+      "source_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+      "status": "ENGINEERING_SOURCE_EVIDENCE_ONLY"
+    },
+    "database_fixture": {
+      "destructive_reset_performed": false,
+      "fixture_id": null,
+      "fixture_sha256": null,
+      "migration": {
+        "artifact": {
+          "path": "alembic/versions/0001_a0_schema.py",
+          "sha256": "b537aa8c86237f798d18fa74ecc5579eb7906812638c7685037838759da8773a"
+        },
+        "revision": "0001_a0_schema"
+      },
+      "per_arm_policy": "SEPARATE_DISPOSABLE_DATABASES_FROM_IDENTICAL_FINGERPRINT",
+      "seed": {
+        "expected_fingerprint_sha256": null,
+        "fingerprint_script": {
+          "path": "scripts/seed_fingerprint.py",
+          "sha256": "de54cae6976d5553a69c35ed0e0bb017e3904c444c89f9df14161994c542d7ce"
+        },
+        "identity_script": {
+          "path": "scripts/seed_identity.py",
+          "sha256": "91cb024e62f1d3b92ebcaa061dbf34ab6f0af3006046ef221bf92560bf161689"
+        },
+        "seed_id": null,
+        "seed_script": {
+          "path": "scripts/seed_db.py",
+          "sha256": "ad8a8a79e02e131847fb028c62f3c96885235fc7e624953af87f693208ef1d1f"
+        },
+        "source_artifacts": [
+          {
+            "path": "scripts/seed_db.py",
+            "sha256": "ad8a8a79e02e131847fb028c62f3c96885235fc7e624953af87f693208ef1d1f"
+          },
+          {
+            "path": "scripts/seed_identity.py",
+            "sha256": "91cb024e62f1d3b92ebcaa061dbf34ab6f0af3006046ef221bf92560bf161689"
+          },
+          {
+            "path": "scripts/seed_fingerprint.py",
+            "sha256": "de54cae6976d5553a69c35ed0e0bb017e3904c444c89f9df14161994c542d7ce"
+          }
+        ],
+        "task_count": 500,
+        "user_count": 100
+      },
+      "specification": {
+        "definition": {
+          "expected_fingerprint_sha256": null,
+          "migration_revision": "0001_a0_schema",
+          "migration_sha256": "b537aa8c86237f798d18fa74ecc5579eb7906812638c7685037838759da8773a",
+          "per_arm_policy": "SEPARATE_DISPOSABLE_DATABASES_FROM_IDENTICAL_FINGERPRINT",
+          "schema_version": "MONO_E1_POSTGRES_FIXTURE_SPEC_V1",
+          "seed_artifacts": [
+            {
+              "path": "scripts/seed_db.py",
+              "sha256": "ad8a8a79e02e131847fb028c62f3c96885235fc7e624953af87f693208ef1d1f"
+            },
+            {
+              "path": "scripts/seed_identity.py",
+              "sha256": "91cb024e62f1d3b92ebcaa061dbf34ab6f0af3006046ef221bf92560bf161689"
+            },
+            {
+              "path": "scripts/seed_fingerprint.py",
+              "sha256": "de54cae6976d5553a69c35ed0e0bb017e3904c444c89f9df14161994c542d7ce"
+            }
+          ],
+          "seed_id": null,
+          "specification_status": "PROPOSED_UNVERIFIED",
+          "target_architecture_state": "A0_4_REPORT_QUERY_PORT",
+          "task_count": 500,
+          "user_count": 100
+        },
+        "definition_sha256": "ad5d2f392ef5a239c71d19dfc7b4d30c2c7841981fcbdbda3807589a853cbb4f"
+      },
+      "status": "NOT_CREATED"
+    },
+    "environment": {
+      "dependency_lock": {
+        "path": "uv.lock",
+        "sha256": "c68f485aecbe90f6ce3d2737baf6f297b5498804c7aae6987cdbdf347852363b"
+      },
+      "environment_variables": {
+        "HOME": "/tmp",
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "python_version": "3.12",
+      "python_version_file": {
+        "path": ".python-version",
+        "sha256": "7b55f8e67b5623c4bef3fa691288da9437d79d3aba156de48d481db32ac7d16d"
+      },
+      "runtime_image_status": "MISSING"
+    },
+    "evaluator_capabilities": {
+      "candidate_source": {
+        "path": "fitness/catalog/a0-fitness-elements.yaml",
+        "sha256": "d1a019bb5389e64351751fe10dabd685b29a0fac383ab4ea5fd21906c807cfef"
+      },
+      "required_ids": [],
+      "status": "UNAPPROVED_INVENTORY_MISSING"
+    },
+    "obligation_catalog": {
+      "artifact": {
+        "path": "fitness/catalog/architectural-obligations.yaml",
+        "sha256": "8c5bd8fffe3bdb2af8fb85f8d0012bc34673f72866e52daed99fab96f9763011"
+      },
+      "revision": "architectural-obligations-v1",
+      "status": "PINNED_BYTES_ONLY"
+    },
+    "parent_fitness_configuration": {
+      "configuration": {
+        "path": "fitness/configs/a0-monolith.yaml",
+        "sha256": "5ad60e373463ea459e192bf85d82704ca9aa1c217c4abf4d8caeb66924059ecb"
+      },
+      "evaluator_configuration": {
+        "path": "fitness/evaluators/a0/importlinter.toml",
+        "sha256": "88ff64a4792c6048a6ab0686ddf9326ebbee49f76996933845a6142cc1a2ba27"
+      },
+      "status": "PINNED_BYTES_ONLY"
+    },
+    "policy": {
+      "authority_status": "PENDING",
+      "candidate_sources": [
+        {
+          "path": "experiments/execution/policy-pilot/v1/source/fitness/policy/authority-charter.json",
+          "sha256": "889c9e0bbe3a4e7867babbe5deefdda1ebeae6dd74ffefa90edd9831e4038307"
+        },
+        {
+          "path": "experiments/execution/policy-pilot/v1/source/fitness/policy/registry.json",
+          "sha256": "99ad0b106571b0712cf34eec44bdf7a3c6efac563fe2eacebf453a2f6396fda1"
+        },
+        {
+          "path": "experiments/execution/policy-pilot/v1/source/fitness/policy/completeness-claims.json",
+          "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+        },
+        {
+          "path": "experiments/execution/policy-pilot/v1/source/policy/applicability_ruleset_v1.json",
+          "sha256": "b1b679a9275d226c0bc85b8dc7d1f19c91addf8fa9acbc577f1c944adec09df7"
+        }
+      ],
+      "completeness_status": "UNKNOWN",
+      "lifecycle_stage_registry": {
+        "path": null,
+        "sha256": null,
+        "status": "MISSING"
+      }
+    },
+    "workload": {
+      "definition": {
+        "arrival_order": "STOCHASTIC",
+        "database_side_effects": "MUTATING",
+        "measurement": {
+          "duration_seconds": 120,
+          "sampling_interval_seconds": 1
+        },
+        "request_mix": {
+          "assign_task": 15,
+          "change_status": 15,
+          "create_task": 15,
+          "get_task": 25,
+          "list_tasks": 20,
+          "task_summary": 10
+        },
+        "schema_version": "MONO_E1_WORKLOAD_FIXTURE_SPEC_V1",
+        "selection_status": "PROPOSED_REVIEW_REQUIRED",
+        "source_architecture_state": "A0_MONOLITH",
+        "source_profile_id": "a0-baseline-v1",
+        "spawn_rate_per_second": 5,
+        "target_architecture_state": "A0_4_REPORT_QUERY_PORT",
+        "users": 20,
+        "wait_time_seconds": [
+          0.5,
+          1.5
+        ],
+        "warmup": {
+          "duration_seconds": 30,
+          "read_only": true
+        }
+      },
+      "definition_sha256": "9dc27791cb40a5684a287ddb0b229a47498a83d36f81466fe7d360437edda6b5",
+      "profile_validator_source": {
+        "path": "load/workload_profile.py",
+        "sha256": "c73aeaa46118efc4bbb0bb8cdb22d271f379a6d55318096c0b9deaa8d9fed8c4"
+      },
+      "reproducibility": {
+        "randomness_sources": [
+          "Locust weighted task selection uses random choice",
+          "Locust between wait time samples a random interval",
+          "Closed-loop completion rate can vary with arm response time"
+        ],
+        "request_trace_sha256": null,
+        "required_control": "APPROVED_IMMUTABLE_REQUEST_TRACE_OR_DETERMINISTIC_OPEN_LOOP_RUNNER",
+        "status": "NOT_ESTABLISHED"
+      },
+      "runner_source": {
+        "path": "load/locustfile.py",
+        "sha256": "c8c7922998c8ca2e9479c5c720f547a805418248afc2f078c79493080ac41574"
+      },
+      "source_profile": {
+        "path": "load/profiles/a0-baseline-v1.yaml",
+        "sha256": "98517928987a9cdede42b9c10ef6546ad97cb09f9142984fa5ce29efe8ed013c"
+      },
+      "status": "PROPOSED_NOT_APPROVED"
+    }
+  },
+  "experimental_go": "NO_GO",
+  "measurement_contract": {
+    "arm_measurements": {
+      "B0": {
+        "resource_metrics": {
+          "cpu_time_ns": {
+            "status": "NOT_COLLECTED",
+            "value": null
+          },
+          "peak_rss_bytes": {
+            "status": "NOT_COLLECTED",
+            "value": null
+          }
+        },
+        "timing_boundary_id": "MONO_E1_TIMING_BOUNDARIES_V1",
+        "timings_ns": {
+          "adaptation_ns": null,
+          "evaluator_execution_ns": null,
+          "total_execution_ns": null,
+          "verification_ns": null
+        }
+      },
+      "P": {
+        "resource_metrics": {
+          "cpu_time_ns": {
+            "status": "NOT_COLLECTED",
+            "value": null
+          },
+          "peak_rss_bytes": {
+            "status": "NOT_COLLECTED",
+            "value": null
+          }
+        },
+        "timing_boundary_id": "MONO_E1_TIMING_BOUNDARIES_V1",
+        "timings_ns": {
+          "adaptation_ns": null,
+          "evaluator_execution_ns": null,
+          "total_execution_ns": null,
+          "verification_ns": null
+        }
+      }
+    },
+    "boundaries": [
+      {
+        "field": "adaptation_ns",
+        "start_event": "arm_method_entry",
+        "stop_event": "adaptation_decision_complete"
+      },
+      {
+        "field": "evaluator_execution_ns",
+        "start_event": "evaluator_invocation_start",
+        "stop_event": "evaluator_invocation_complete"
+      },
+      {
+        "field": "verification_ns",
+        "start_event": "verification_start",
+        "stop_event": "verification_complete"
+      },
+      {
+        "field": "total_execution_ns",
+        "start_event": "arm_start",
+        "stop_event": "arm_complete"
+      }
+    ],
+    "expected_fields": [
+      "adaptation_ns",
+      "evaluator_execution_ns",
+      "verification_ns",
+      "total_execution_ns"
+    ],
+    "status": "BOUNDARIES_SPECIFIED_VALUES_NOT_COLLECTED",
+    "timing_boundary_id": "MONO_E1_TIMING_BOUNDARIES_V1"
+  },
+  "missing_prerequisites": [
+    "B0_ALLOWLIST_MISSING",
+    "B0_CONTAINER_IMAGE_DIGEST_MISSING",
+    "B0_E1_INPUT_BUNDLE_AND_ALLOWLIST_MISSING",
+    "B0_IDENTITY_NOT_BOUND_TO_MONO_E1",
+    "B0_INPUT_INVENTORY_NOT_VERIFIED",
+    "B0_METHOD_SPECIFIC_INPUT_INVENTORY_INCOMPLETE",
+    "B0_SHARED_INPUT_INVENTORY_INCOMPLETE",
+    "CATALOG_COMPLETENESS_UNKNOWN",
+    "COMMON_DATABASE_FIXTURE_IDENTITY_MISSING",
+    "COMMON_EVALUATOR_CAPABILITY_INVENTORY_NOT_APPROVED",
+    "COMMON_LIFECYCLE_STAGE_REGISTRY_MISSING",
+    "COMMON_WORKLOAD_NOT_APPROVED",
+    "COMMON_WORKLOAD_REPEATABILITY_NOT_ESTABLISHED",
+    "G1_INCOMPLETE",
+    "G4_NOT_AUTHORIZED",
+    "LIFECYCLE_STAGE_AUTHORITY_PENDING",
+    "METHOD_P_INDEPENDENT_REVIEW_PENDING",
+    "POLICY_AUTHORITY_PENDING",
+    "POSTGRES_FIXTURE_IDENTITY_MISSING",
+    "POSTGRES_FIXTURE_NOT_CREATED_AND_VERIFIED",
+    "POSTGRES_SEED_IDENTITY_OR_FINGERPRINT_MISSING",
+    "P_ALGORITHM_NOT_FROZEN_FOR_MONO_E1",
+    "P_ALLOWLIST_MISSING",
+    "P_CONTAINER_IMAGE_DIGEST_MISSING",
+    "P_E1_INPUT_BUNDLE_AND_ALLOWLIST_MISSING",
+    "P_INPUT_INVENTORY_NOT_VERIFIED",
+    "P_METHOD_SPECIFIC_INPUT_INVENTORY_INCOMPLETE",
+    "P_SHARED_INPUT_INVENTORY_INCOMPLETE",
+    "REFERENCE_FREEZE_NOT_READY",
+    "REQUIRED_EVALUATOR_CAPABILITY_DENOMINATOR_MISSING",
+    "RUNTIME_DEPENDENCY_IMAGE_NOT_PINNED",
+    "SCORER_CUSTODY_NOT_ESTABLISHED"
+  ],
+  "non_authoritative": true,
+  "preparation_status": "INCOMPLETE",
+  "runner": {
+    "common_environment": {
+      "HOME": "/tmp",
+      "PYTHONDONTWRITEBYTECODE": "1"
+    },
+    "container_image_digests": {
+      "B0": null,
+      "P": null
+    },
+    "isolation": {
+      "broad_repository_mount": "PROHIBITED",
+      "git_metadata": "PROHIBITED",
+      "hidden_target_labels": "PROHIBITED",
+      "input_mounts": "EXPLICIT_ALLOWLIST_FILES_ONLY",
+      "input_read_only": true,
+      "network": "DISABLED",
+      "other_arm_outputs": "PROHIBITED",
+      "reference_answers": "PROHIBITED",
+      "root_filesystem_read_only": true,
+      "scorer_or_oracle": "PROHIBITED"
+    },
+    "resource_limits": {
+      "cpus": "2.0",
+      "memory": "2g",
+      "pids": 128
+    },
+    "source_commit_sha": "a1e2f79d4bc3c10431cac3e2d8be54105061a98b",
+    "source_files": [
+      {
+        "path": "experiments/execution/tooling/b0p_isolated_b0_runner.py",
+        "sha256": "cb871eff069c31376b4620cf19ebc2cc1e9977e054e97eee0b801a85a051c8b3"
+      },
+      {
+        "path": "experiments/execution/tooling/b0p_isolated_p_runner.py",
+        "sha256": "3a523a0a892ccf96be537d608a7b1591a218da4c0b8783074cd8bc73875eb42d"
+      },
+      {
+        "path": "experiments/execution/tooling/isolation.py",
+        "sha256": "55ebe9e6a8d57462acf0cba8b80f10ceb9cd40b795255351cd347fee25cae76e"
+      },
+      {
+        "path": "experiments/execution/tooling/inputs.py",
+        "sha256": "e724476707e4927aaa5c03b85c0347bcf7f33f2cc87cc515b596394d70ce6031"
+      }
+    ],
+    "source_tree_sha": "8288d8dc666a28f557c652d47c81f2d0f6b301d4",
+    "status": "DEVELOPMENT_RUNNER_CANDIDATE_NOT_APPROVED_FOR_MONO_E1",
+    "version": "B0P_ISOLATED_RUNNER_V1"
+  },
+  "schema_version": "mono-e1-comparability-preflight-v1",
+  "source_pair": {
+    "after": {
+      "application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+      "commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+      "repository_tree_sha": "2b436e0aaf09403ea516d73d20a466a122f86592",
+      "state_id": "A0_4_REPORT_QUERY_PORT"
+    },
+    "application_patch": {
+      "path": "architecture/acceptance/a1/a0_4_canonical_application_source.diff",
+      "sha256": "6538147b9aa4fa5075314aaa54a0e24ea51f33cf0d314342e926d41dabec17ac"
+    },
+    "before": {
+      "application_tree_sha": "b147b8961ea9e76c966663d4832e4c303581151a",
+      "commit_sha": "26a9bb667da7d0938e38aca15d2bf29fd1de4829",
+      "repository_tree_sha": "7b951421395f532ca403dab09d76902ff08a807d",
+      "state_id": "A0_3_GOVERNED_MODULE_GRAPH"
+    },
+    "canonical_checkpoints": [
+      {
+        "path": "architecture/acceptance/a1/a0_3_canonical_checkpoint.json",
+        "sha256": "5da4a7e1ed359ec8ea1e3288ab81edf32f0b71e2fec946b52a8d0d562dcf43c0"
+      },
+      {
+        "path": "architecture/acceptance/a1/a0_4_canonical_checkpoint.json",
+        "sha256": "7b0b0c7a0c6ac782540466d283c42d7589b8aaeb4af7df62104faa01fd154e8e"
+      }
+    ],
+    "lineage": {
+      "evidence_path": "experiments/execution/MONO_A1_PROTOCOL_V1_W0_ADDENDUM.md",
+      "evidence_sha256": "5adda1c5169acf089d48304ca584483b30cdfe886ee9e2853d0c8a9154745cc4",
+      "status": "SOURCE_IDENTITY_ONLY"
+    },
+    "observations": [
+      {
+        "architecture_source_sha": "26a9bb667da7d0938e38aca15d2bf29fd1de4829",
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "path": "architecture/acceptance/a1/a0_3_canonical_module_graph_observation.json",
+        "scope": "ENGINEERING_OBSERVATION_ONLY",
+        "sha256": "21f2347325d59325501f220476459aef9677c3b7bddd99928b7a62234c1ff0c5"
+      },
+      {
+        "architecture_source_sha": "26a9bb667da7d0938e38aca15d2bf29fd1de4829",
+        "evaluator_id": "AC_PUBLIC_API",
+        "path": "architecture/acceptance/a1/a0_3_canonical_public_api_observation.json",
+        "scope": "ENGINEERING_OBSERVATION_ONLY",
+        "sha256": "8d1056a69b6e2c45cbe42dae207d8bbe65454572b34032dc5f969e0f877362ad"
+      },
+      {
+        "architecture_source_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "path": "architecture/acceptance/a1/a0_4_canonical_module_graph_observation.json",
+        "scope": "ENGINEERING_OBSERVATION_ONLY",
+        "sha256": "31c3cf5ca864f3f47ff37ae50db068ab792bb863d5be0c7e73b54266fbd766da"
+      },
+      {
+        "architecture_source_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+        "evaluator_id": "AC_PUBLIC_API",
+        "path": "architecture/acceptance/a1/a0_4_canonical_public_api_observation.json",
+        "scope": "ENGINEERING_OBSERVATION_ONLY",
+        "sha256": "3b894993e088b5ac73a74f1e6c6c410ebcfe9fcbdf2a73cbe551689e2433e351"
+      },
+      {
+        "architecture_source_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+        "evaluator_id": "AC_DATA_OWNERSHIP",
+        "path": "architecture/acceptance/a1/a0_4_canonical_data_ownership_observation.json",
+        "scope": "ENGINEERING_OBSERVATION_ONLY",
+        "sha256": "8114d87aa1186719525e2c5ae3c08aea068cb712e24fc7aa2992ad78c50b6d4a"
+      }
+    ]
+  },
+  "study_id": "MONO-E1"
+}

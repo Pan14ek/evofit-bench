@@ -82,6 +82,7 @@ tracked in `docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`.
 - `b0p_development.py`
 - `b0p_e1_execution.py` — additive E1 isolated B0/P run envelope with run-bound TEST_ONLY sidecar, reference exclusion, exact-pair readback, canonical RQ1 gating and six-row UNKNOWN RQ2
 - `mono_a1.py` — separate MONO-E1/E2 reference custody, prediction-scoring gates, exact-pair RQ2, W2 A1 readback, runtime prerequisites, and checksum archives
+- `mono_e1_preflight.py` — read-only MONO-E1 comparability verifier; reuses source revision, method-bundle, image-provenance, and timing validators without executing either method
 - `mono_policy_review_inventory.py` — read-only structural validator for the public MONO-E1 proposal inventory; compares copied rows to the pinned catalog and reports unresolved decision dimensions without certifying approval
 - `b0p_execution.py` — common immutable container preparation and evaluator helpers; P accepts a read-only evidence sidecar mount only when the caller supplies one
 
@@ -132,6 +133,15 @@ and evaluator ID/version/digests. `W2A1ExactPairReadbackVerifier` requires the
 reference-pinned W2 checkout and report schema, then calls its `verify_evidence()`
 to re-read evaluator, configuration, and inspected subject bytes. Synthetic
 adapter tests do not establish real evaluator or MONO results.
+
+`mono_e1_preflight.py` binds the W0 A0.3/A0.4 identity, checkpointed
+engineering observations, B0/P candidate identities, proposed common workload
+and fixture specification, arm-specific allowlists, image attestations,
+isolation, and timing boundaries. It returns INCOMPLETE/NO_GO while inputs or
+authority are absent. Only external callbacks can authenticate image and
+authority evidence; a manifest claim alone is insufficient. The module does
+not create fixtures or bundles, invoke P, access the scorer, freeze a reference,
+or run an arm.
 
 The narrowly scoped post-execution finalizer is for the historical a02
 `candidate_validation` aggregation failure only; a new direct run must not use
