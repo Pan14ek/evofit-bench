@@ -83,6 +83,18 @@ def validate_preparation_only(profile: dict) -> list[str]:
         != "NOT_EVALUABLE"
     ):
         problems.append("unsupported_coverage_claim")
+    pilot = profile.get("development_pilot", {})
+    if pilot.get("status") != "PLANNED_NOT_EXECUTED":
+        problems.append("fabricated_pilot_execution")
+    parent = pilot.get("parent_configuration_check", {})
+    if (
+        parent.get("a0_3_pre_change_fitness_configuration_sha256") is not None
+        or parent.get("baseline_interpretation")
+        != "UNRESOLVED_A0_FROZEN_VERSUS_A0_3_CURRENT"
+        or parent.get("negative_control_retain_reference")
+        != "NOT_EVALUABLE_UNTIL_PARENT_PINNED"
+    ):
+        problems.append("unresolved_parent_misclassified")
     if profile.get("arms", {}).get("common_after_sha") != AFTER_SHA:
         problems.append("inconsistent_target")
     if any(profile.get("arms", {}).get(arm, {}).get("input_bundle_digest") is not None
@@ -179,3 +191,18 @@ def test_development_pilot_cannot_use_delta4_method_p_before_w0_gate() -> None:
         "allowed_before_w0_gate"
     ]
     assert pilot["private_reference_content_in_public_profile"] is False
+
+
+def test_unresolved_a03_parent_cannot_be_marked_as_known() -> None:
+    profile = load_profile()
+    parent = profile["development_pilot"]["parent_configuration_check"]
+    assert parent["a0_3_pre_change_fitness_configuration_sha256"] is None
+    assert parent["negative_control_retain_reference"] == "NOT_EVALUABLE_UNTIL_PARENT_PINNED"
+    parent["baseline_interpretation"] = "A0_3_PARENT_APPROVED"
+    assert "unresolved_parent_misclassified" in validate_preparation_only(profile)
+
+
+def test_dev_pilot_cannot_falsely_claim_execution() -> None:
+    profile = load_profile()
+    profile["development_pilot"]["status"] = "COMPLETED"
+    assert "fabricated_pilot_execution" in validate_preparation_only(profile)
