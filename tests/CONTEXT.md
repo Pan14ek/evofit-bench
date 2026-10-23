@@ -23,6 +23,7 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 - `unit/test_pilot01_results.py`
 - `unit/test_eval01_runner.py` — repeated evaluator observations collapse to one source-case result; source-identity mismatches, unstable repeats and `NOT_EVALUABLE` scope are excluded from binary metrics.
 - `unit/test_eval02_runner.py` — EVAL-02 confusion metrics use independent architecture labels and exclude non-applicable or out-of-scope evaluator observations.
+- `unit/test_eval02_postrun_validation.py` — verifies the preserved EVAL-02 archive and keeps diagnostic mismatches separate from invocation and provenance failures.
 - `unit/test_pilot02_method_input_profile.py`
 - `unit/test_pilot02_testonly_execution.py`
 - `unit/test_b0p_git_inventory.py` — pinned Git inventory and digest-tampering checks

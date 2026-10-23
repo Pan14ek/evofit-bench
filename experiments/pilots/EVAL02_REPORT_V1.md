@@ -73,9 +73,17 @@ Case-level `NOT_EVALUABLE` outcomes:
 - `AC_PUBLIC_API`: none
 - `AC_MODULE_GRAPH`: none
 
-Raw archive/inventory integrity: - PASS; no inventory or raw stream digest errors.
+Raw archive/inventory integrity: PASS; no inventory or raw stream digest errors.
 
 Expected CLI exit codes for `NON_COMPLIANT` and `NOT_EVALUABLE` are outcomes, not launch failures. `NOT_EVALUABLE`, unknown, unstable, missing or provenance-invalid rows are reported separately and never converted into detections.
+
+## Post-experiment execution-status clarification
+
+This editorial clarification was added after the experiment; the original generated report and manuscript remain unchanged inside the raw evidence ZIP. The execution command returned exit code 1 because its preregistered observation validation recorded three `FINDING_CLASS_MISMATCH` failures for `missing_required_public_function` / `AC_PUBLIC_API`, repeats 1–3. This exit status indicates an exact diagnostic-set mismatch, not an evaluator launch or execution failure: all 60 calls completed, with zero launch errors and zero parse errors. The observed `NON_COMPLIANT` classification matched the preregistered binary outcome in all three repeats.
+
+The post-run check found zero source, evaluator, configuration, or checkout provenance failures. Analysis and evidence packaging completed; the archived analysis reports a passing raw-inventory check. A separate read-only post-experiment validation verified the archive sidecar, ZIP CRC, and all 161 internal checksums. The three mismatches remain failures against the preregistered diagnostic expectations and are not relabeled as successes.
+
+The perfect binary classification and `F1 = 1.0` describe only the preregistered applicable finite cases. They do not imply perfect diagnostic correspondence or full architectural correctness. The dynamic-import blind spot and signature-contract boundary remain as described below.
 
 ## Threats to validity
 

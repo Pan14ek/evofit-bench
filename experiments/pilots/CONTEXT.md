@@ -12,8 +12,9 @@ Store pilot-specific protocols, reports, derived result tables, and narrow tools
 - `EVAL01_PROTOCOL_V1.md`, `EVAL01_MUTATION_CATALOG_V1.json`, and `run_eval01.py` — preregistered A0.4 W2 evaluator-validation protocol, mutation cases, clean Git provenance, repeated source-bound evaluator calls, analysis, and raw evidence packaging; independent of MONO-E1/E2 and Method P.
 - `EVAL01_REPORT_V1.md`, `EVAL01_CASE_RESULTS_V1.csv`, `EVAL01_ANALYSIS_V1.json`, and `EVAL01_RAW_EVIDENCE_V1.zip` — evidence-derived EVAL-01 report, finite case-level confusion metrics, machine-readable analysis, and checksummed raw runs; the ZIP sidecar holds its external SHA-256.
 - `EVAL02_PROTOCOL_V1.md`, `EVAL02_MUTATION_CATALOG_V1.json`, and `run_eval02.py` — preregistered W2 continuation on canonical A0.4, with case-specific architecture labels, evaluator applicability, clean source revisions, repeated calls, and evidence analysis.
-- `EVAL02_REPORT_V1.md`, `EVAL02_MANUSCRIPT_UA.md`, `EVAL02_CASE_RESULTS_V1.csv`, and `EVAL02_ANALYSIS_V1.json` — evidence-derived case table, metrics, descriptive timing, limitations, and Ukrainian manuscript subsection.
+- `EVAL02_REPORT_V1.md`, `EVAL02_MANUSCRIPT_UA.md`, `EVAL02_POST_EXPERIMENT_ERRATUM_V1.md`, `EVAL02_CASE_RESULTS_V1.csv`, and `EVAL02_ANALYSIS_V1.json` — evidence-derived case table, metrics, descriptive timing, limitations, Ukrainian manuscript subsection, and traceable editorial clarifications.
 - `EVAL02_RAW_EVIDENCE_V1.zip` and its `.sha256` sidecar — raw evaluator streams, source provenance, mutation patches and Git bundles, preregistration snapshot, frozen evaluator inputs, and internal checksum inventory.
+- `validate_eval02_postrun.py` — read-only post-experiment status and archive-integrity check; it validates preserved records and never invokes evaluators or edits the archive.
 - `PILOT_01_EXPECTATION.md` — expected S0/S1 evaluator outcomes recorded before formal repeated measurements.
 - `PILOT_01_REPORT.md` — evidence-backed experimental report and reproducibility limits.
 - `PILOT_01_MANUSCRIPT_UA.md` — Ukrainian manuscript subsection based only on collected results.
@@ -124,3 +125,6 @@ EVAL-02 extends the source-pattern catalog on the same canonical A0.4 base.
 Its dynamic-import and call-signature cases are explicit applicability
 boundaries; static evaluator output is not complete architecture truth, and
 repeated calls are not independent cases.
+The post-run validator distinguishes evaluator invocation, source/evaluator
+binding, preregistered diagnostic mismatch, analysis, and archive-integrity
+status without changing the frozen run or its derived metrics.
