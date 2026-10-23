@@ -19,6 +19,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_exp02_fitness_evidence.py`
 - `test_pilot01_results.py`
 - `test_eval01_runner.py` — EVAL-01 case-level metric aggregation and fail-closed provenance/unknown handling.
+- `test_eval02_runner.py` — EVAL-02 separates architecture labels from expected evaluator output and excludes inapplicable boundary cases from binary metrics.
 - `test_pilot02_method_input_profile.py` (also checks evaluator-run records bind source,
   configuration, command, metrics and raw streams to exact digests)
 - `test_p_candidate_governance_v1.py` (including verified inherited-row bindings)
