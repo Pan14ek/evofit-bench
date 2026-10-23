@@ -10,6 +10,7 @@ import copy
 import json
 import re
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -22,8 +23,8 @@ BEFORE_SHA = "26a9bb667da7d0938e38aca15d2bf29fd1de4829"
 AFTER_SHA = "d3101c0d3aa9b7b709253b6ec7518416f05f65b9"
 
 
-def load_profile() -> dict:
-    return json.loads(PROFILE.read_text(encoding="utf-8"))
+def load_profile() -> dict[str, Any]:
+    return cast(dict[str, Any], json.loads(PROFILE.read_text(encoding="utf-8")))
 
 
 def catalog_ids() -> list[str]:
@@ -33,7 +34,7 @@ def catalog_ids() -> list[str]:
     return re.findall(r"(?m)^  - id: ([A-Z][A-Z0-9_]+) *$", content)
 
 
-def validate_preparation_only(profile: dict) -> list[str]:
+def validate_preparation_only(profile: dict[str, Any]) -> list[str]:
     """Report fail-closed violations in the candidate public protocol."""
     problems: list[str] = []
     if profile.get("profile_status") != "DRAFT_NON_AUTHORITATIVE":
@@ -169,7 +170,7 @@ def test_canonical_source_pair_matches_readback() -> None:
     ],
 )
 def test_illicit_approval_or_fabricated_readiness_is_rejected(
-    location: tuple,
+    location: tuple[str | int, ...],
     value: object,
     expected: str,
 ) -> None:
