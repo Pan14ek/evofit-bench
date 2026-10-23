@@ -152,3 +152,30 @@ def test_illicit_approval_or_fabricated_readiness_is_rejected(
         cursor = cursor[key]
     cursor[location[-1]] = value
     assert expected in validate_preparation_only(profile)
+
+
+def test_author_working_decisions_are_a_b_a_without_scientific_approval() -> None:
+    profile = load_profile()
+    decisions = profile["author_working_decisions"]
+    assert [decisions[k]["choice"] for k in ("scope", "fitness_validation", "reference")] == [
+        "A", "B", "A"
+    ]
+    assert decisions["scope"]["ci_evaluator_ids"] == ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]
+    assert decisions["scope"]["scientific_q_full_scope"] is False
+    assert decisions["reference"]["custody_route"] == "AUTHOR_DECLARED"
+    assert decisions["reference"]["independent_review"] is False
+    assert decisions["reference"]["reference_state"] == "PRIVATE_PREPARATION_NOT_SEALED"
+    assert validate_preparation_only(profile) == []
+
+
+def test_development_pilot_cannot_use_delta4_method_p_before_w0_gate() -> None:
+    profile = load_profile()
+    pilot = profile["development_pilot"]
+    assert pilot["status"] == "PLANNED_NOT_EXECUTED"
+    assert pilot["required_w0_checkpoint"] == "G-A1-C4-REF-FROZEN"
+    assert pilot["required_w0_status"] == "NOT_READY"
+    assert "METHOD_P_ON_CANONICAL_DELTA4" in pilot["prohibited_before_w0_gate"]
+    assert "GENERIC_SYNTHETIC_P_REHEARSAL_NO_DELTA4_INPUT" in pilot[
+        "allowed_before_w0_gate"
+    ]
+    assert pilot["private_reference_content_in_public_profile"] is False
