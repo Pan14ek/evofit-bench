@@ -29,7 +29,7 @@ def catalog_ids() -> list[str]:
     # This deliberately mirrors the existing ordered catalog's simple `- id:`
     # rows; it does not infer any obligation's normative applicability.
     content = CATALOG.read_text(encoding="utf-8")
-    return re.findall(r"(?m)^  - id: ([A-Z][A-Z0-9_]+)\\s*$", content)
+    return re.findall(r"(?m)^  - id: ([A-Z][A-Z0-9_]+) *$", content)
 
 
 def validate_preparation_only(profile: dict) -> list[str]:
