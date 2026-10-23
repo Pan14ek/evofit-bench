@@ -1,5 +1,7 @@
 """Run and analyze the preregistered EVAL-01 evaluator mutation experiment."""
 
+# ruff: noqa: E501 -- embedded Markdown report prose stays unwrapped in this runner.
+
 from __future__ import annotations
 
 import argparse
@@ -20,6 +22,10 @@ from collections import Counter
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+GIT_EXECUTABLE = shutil.which("git")
+if GIT_EXECUTABLE is None:
+    raise RuntimeError("Git executable is required for EVAL-01")
 
 SCRIPT_PATH = Path(__file__).resolve()
 REPOSITORY_ROOT = SCRIPT_PATH.parents[2]
@@ -81,8 +87,13 @@ def write_json(path: Path, value: Any) -> None:
 
 def run_git(repo_root: Path, *arguments: str, check: bool = True) -> subprocess.CompletedProcess[str]:
     """Run a Git command and return its text output."""
-    result = subprocess.run(
-        ["git", "-C", str(repo_root), *arguments],
+    result = subprocess.run(  # noqa: S603 - fixed Git argv; no shell
+        [
+            GIT_EXECUTABLE,
+            "-C",
+            str(repo_root),
+            *arguments,
+        ],
         check=False,
         capture_output=True,
         text=True,
@@ -227,8 +238,15 @@ def materialize_case(
     """Create a case-specific disposable Git revision and preserve its provenance."""
     case_root.parent.mkdir(parents=True, exist_ok=True)
     evidence_case_root.mkdir(parents=True, exist_ok=True)
-    clone = subprocess.run(
-        ["git", "clone", "--shared", "--no-checkout", str(repo_root), str(case_root)],
+    clone = subprocess.run(  # noqa: S603 - fixed Git argv; no shell
+        [
+            GIT_EXECUTABLE,
+            "clone",
+            "--shared",
+            "--no-checkout",
+            str(repo_root),
+            str(case_root),
+        ],
         check=False,
         capture_output=True,
         text=True,
@@ -248,9 +266,9 @@ def materialize_case(
             raise RuntimeError("Mutation did not change the source checkout")
         git_env = os.environ.copy()
         git_env.update(AUTHOR_ENV)
-        commit = subprocess.run(
+        commit = subprocess.run(  # noqa: S603 - fixed Git argv; no shell
             [
-                "git",
+                GIT_EXECUTABLE,
                 "-C",
                 str(case_root),
                 "-c",
@@ -268,9 +286,9 @@ def materialize_case(
         )
         if commit.returncode != 0:
             raise RuntimeError(f"git add failed: {commit.stderr.strip()}")
-        commit = subprocess.run(
+        commit = subprocess.run(  # noqa: S603 - fixed Git argv; no shell
             [
-                "git",
+                GIT_EXECUTABLE,
                 "-C",
                 str(case_root),
                 "-c",
@@ -303,9 +321,9 @@ def materialize_case(
 
     app_tree = run_git(case_root, "rev-parse", "HEAD:app").stdout.strip()
     repository_tree = run_git(case_root, "rev-parse", "HEAD^{tree}").stdout.strip()
-    patch_result = subprocess.run(
+    patch_result = subprocess.run(  # noqa: S603 - fixed Git argv; no shell
         [
-            "git",
+            GIT_EXECUTABLE,
             "-C",
             str(case_root),
             "diff",
@@ -327,9 +345,9 @@ def materialize_case(
     bundle_path: Path | None = None
     if is_mutation:
         bundle_path = evidence_case_root / "mutation.bundle"
-        bundle = subprocess.run(
+        bundle = subprocess.run(  # noqa: S603 - fixed Git argv; no shell
             [
-                "git",
+                GIT_EXECUTABLE,
                 "-C",
                 str(case_root),
                 "bundle",
@@ -344,8 +362,13 @@ def materialize_case(
         )
         if bundle.returncode != 0:
             raise RuntimeError(f"git bundle failed: {bundle.stderr.strip()}")
-        verify_bundle = subprocess.run(
-            ["git", "bundle", "verify", str(bundle_path)],
+        verify_bundle = subprocess.run(  # noqa: S603 - fixed Git argv; no shell
+            [
+                GIT_EXECUTABLE,
+                "bundle",
+                "verify",
+                str(bundle_path),
+            ],
             check=False,
             capture_output=True,
             text=True,
@@ -567,7 +590,9 @@ def execute_experiment(args: argparse.Namespace) -> int:
         for evaluator in EVALUATOR_IDS
         for repeat in range(1, repeat_count + 1)
     ]
-    random.Random(int(catalog["execution_protocol"]["schedule_seed"])).shuffle(schedule)
+    random.Random(  # noqa: S311 - preregistered deterministic execution order, no security use
+        int(catalog["execution_protocol"]["schedule_seed"])
+    ).shuffle(schedule)
     write_json(output_dir / "schedule.json", schedule)
 
     failures: list[dict[str, Any]] = []
@@ -643,7 +668,7 @@ def execute_experiment(args: argparse.Namespace) -> int:
                     dirty_before = complete_git_status(case_path)
                     if dirty_before.strip():
                         raise RuntimeError("case checkout is dirty before evaluator invocation")
-                    process = subprocess.run(
+                    process = subprocess.run(  # noqa: S603 - fixed interpreter/evaluator argv
                         command,
                         cwd=case_path,
                         capture_output=True,
