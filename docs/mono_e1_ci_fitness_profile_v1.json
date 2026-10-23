@@ -1,0 +1,323 @@
+{
+  "schema_version": "MONO_E1_CI_FITNESS_PROFILE_CANDIDATE_V1",
+  "study_id": "MONO-E1",
+  "profile_id": "MONO_E1_CI_TEST_SCOPE_PROPOSAL_V1",
+  "profile_status": "DRAFT_NON_AUTHORITATIVE",
+  "experimental_go": "NO_GO",
+  "measured_run_status": "NOT_EXECUTED",
+  "purpose": "Candidate CI-only experimental profile for evaluating governed adaptation of architectural fitness-function configuration on the A0.3-to-A0.4 negative-control transition; not an approved replacement for the full MONO-A1 v1 protocol.",
+  "source_pair": {
+    "before": {
+      "state": "A0_3_GOVERNED_MODULE_GRAPH",
+      "commit": "26a9bb667da7d0938e38aca15d2bf29fd1de4829",
+      "tree": "7b951421395f532ca403dab09d76902ff08a807d"
+    },
+    "after": {
+      "state": "A0_4_REPORT_QUERY_PORT",
+      "commit": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+      "tree": "2b436e0aaf09403ea516d73d20a466a122f86592"
+    }
+  },
+  "lifecycle": {
+    "candidate_stage": "CI_TEST",
+    "stage_scope_approved": false,
+    "other_stages": "NOT_EVALUATED_NOT_DECLARED_INAPPLICABLE",
+    "stage_crosswalk": "ci source-label to CI_TEST policy-stage requires review",
+    "approved_registry_id": null
+  },
+  "fitness_scope": {
+    "engineering_evaluators": [
+      {
+        "id": "AC_PUBLIC_API",
+        "candidate_obligation_id": "AC_PUBLIC_API",
+        "representation_id": null,
+        "semantic_pair_review": "PENDING",
+        "source_evidence": "architecture/acceptance/a1/a0_4_canonical_public_api_observation.json",
+        "evidence_status": "BOUNDED_ENGINEERING_ONLY"
+      },
+      {
+        "id": "AC_MODULE_GRAPH",
+        "candidate_obligation_id": "AC_MODULE_GRAPH",
+        "representation_id": null,
+        "semantic_pair_review": "PENDING",
+        "source_evidence": "architecture/acceptance/a1/a0_4_canonical_module_graph_observation.json",
+        "evidence_status": "BOUNDED_ENGINEERING_ONLY"
+      }
+    ],
+    "obligations": [
+      {
+        "id": "P_EXT_LATENCY",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      },
+      {
+        "id": "P_REMOTE_LATENCY",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      },
+      {
+        "id": "P_ASYNC_LAG",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      },
+      {
+        "id": "R_BUSINESS_FAILURE",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      },
+      {
+        "id": "R_HTTP_5XX",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      },
+      {
+        "id": "R_LOCAL_ATOMICITY",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      },
+      {
+        "id": "R_REMOTE_DEPENDENCY",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      },
+      {
+        "id": "R_EVENT_DELIVERY",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      },
+      {
+        "id": "R_IDEMPOTENCY",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      },
+      {
+        "id": "R_READMODEL_CONVERGENCE",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      },
+      {
+        "id": "AC_LAYERING",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      },
+      {
+        "id": "AC_MODULE_STRUCTURE",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      },
+      {
+        "id": "AC_PUBLIC_API",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      },
+      {
+        "id": "AC_MODULE_GRAPH",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      },
+      {
+        "id": "AC_DATA_OWNERSHIP",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      },
+      {
+        "id": "AC_SERVICE_BOUNDARY",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      },
+      {
+        "id": "AC_COMMUNICATION_POLICY",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      },
+      {
+        "id": "AC_DEPLOYMENT_TOPOLOGY",
+        "applicability": "UNKNOWN",
+        "mandatory": "UNRESOLVED",
+        "required_stages": "UNDECIDED",
+        "policy_authority": "NOT_APPROVED",
+        "exact_pair_proof": "NOT_ESTABLISHED"
+      }
+    ],
+    "scientific_q_a04_denominator": "NOT_ESTABLISHED",
+    "catalog_closure": "UNVERIFIED",
+    "fitness_configuration_pinned_for_mono_e1": false
+  },
+  "arms": {
+    "common_after_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+    "B0": {
+      "mode": "UNCHANGED_FITNESS_CONFIGURATION",
+      "input_bundle_digest": null,
+      "allowlist_digest": null,
+      "method_identity_status": "NOT_BOUND_FOR_MONO_E1"
+    },
+    "P": {
+      "mode": "GOVERNED_FITNESS_CONFIGURATION_ADAPTATION",
+      "input_bundle_digest": null,
+      "allowlist_digest": null,
+      "method_identity_status": "DEVELOPMENT_CANDIDATE_NOT_FROZEN"
+    }
+  },
+  "endpoints": {
+    "adaptation_correctness": {
+      "status": "NOT_EVALUABLE",
+      "reference_location": "SCORER_ONLY_NOT_IN_THIS_REPOSITORY_PROFILE",
+      "unit": "predeclared target-level operation vs independently authored reference",
+      "expected_operations_public": false
+    },
+    "architectural_coverage": {
+      "status": "NOT_EVALUABLE",
+      "denominator": "NOT_ESTABLISHED",
+      "numerator_rule": "only independently verified applicable mandatory obligation with source-bound representation-to-obligation evidence at authorized required stage",
+      "unknowns": "REPORT_SEPARATELY"
+    },
+    "governance": {
+      "status": "NOT_EVALUATED",
+      "states": [
+        "ACCEPT",
+        "REJECT",
+        "HOLD",
+        "INPUT_REJECTED"
+      ],
+      "no_false_accept": true
+    },
+    "cost": {
+      "status": "NOT_MEASURED",
+      "fields": [
+        "adaptation_ns",
+        "evaluator_execution_ns",
+        "verification_ns",
+        "total_execution_ns"
+      ],
+      "cpu_and_rss": "NULL_UNTIL_SAMPLED"
+    }
+  },
+  "readiness": {
+    "method_p_status": "NOT_READY",
+    "G1": "INCOMPLETE",
+    "G4": "NOT_AUTHORIZED",
+    "reference": "NOT_FROZEN",
+    "policy_authority": "PENDING",
+    "required_lifecycle_stages": "PENDING",
+    "comparable_input_bundles": "MISSING",
+    "independent_pair_assessments": "MISSING",
+    "existing_wide_preflight": "INCOMPLETE_NO_GO",
+    "workload_and_postgres_fixture": "SCOPE_DECISION_PENDING; CURRENT_WIDE_PREFLIGHT_NOT_WAIVED",
+    "run_authorization": "NONE"
+  },
+  "confidentiality": {
+    "scorer_reference_included": false,
+    "oracle_labels_included": false,
+    "method_input_authorized": false
+  },
+  "proposal_only": true,
+  "author_working_decisions": {
+    "decision_date": "2026-10-23",
+    "scope": {
+      "choice": "A",
+      "ci_evaluator_ids": [
+        "AC_PUBLIC_API",
+        "AC_MODULE_GRAPH"
+      ],
+      "scientific_q_full_scope": false
+    },
+    "fitness_validation": {
+      "choice": "B",
+      "source_bound_clean_and_mutated_controls": true,
+      "existing_evidence": [
+        "EVAL-01",
+        "EVAL-02"
+      ],
+      "independent_semantic_pair_proof": false
+    },
+    "reference": {
+      "choice": "A",
+      "custody_route": "AUTHOR_DECLARED",
+      "reference_state": "PRIVATE_PREPARATION_NOT_SEALED",
+      "independent_review": false,
+      "scorer_input_access": false
+    }
+  },
+  "development_pilot": {
+    "pilot_id": "MONO_E1_DEV_CI_PREPARATION_V1",
+    "status": "PLANNED_NOT_EXECUTED",
+    "measurement_class": "DEVELOPMENT_DIAGNOSTICS_ONLY",
+    "allowed_before_w0_gate": [
+      "CANONICAL_SOURCE_AND_EVALUATOR_READBACK",
+      "EXISTING_EVAL01_EVAL02_POSITIVE_NEGATIVE_CONTROL_REVIEW",
+      "GENERIC_SYNTHETIC_P_REHEARSAL_NO_DELTA4_INPUT",
+      "PRIVATE_AUTHOR_DECLARED_REFERENCE_WORKSHEET_PREPARATION",
+      "READINESS_GAP_REPORT"
+    ],
+    "prohibited_before_w0_gate": [
+      "METHOD_P_ON_CANONICAL_DELTA4",
+      "B0_P_ARM_EXECUTION_ON_DELTA4",
+      "OFFICIAL_FREEZE_REFERENCE",
+      "RQ1_RQ2_MONO_SCORING",
+      "SCIENTIFIC_COVERAGE_PERCENTAGE",
+      "G1_G4_APPROVAL_CLAIMS"
+    ],
+    "required_w0_checkpoint": "G-A1-C4-REF-FROZEN",
+    "required_w0_status": "NOT_READY",
+    "private_reference_content_in_public_profile": false,
+    "parent_configuration_check": {
+      "a0_frozen_baseline": "fitness/configs/a0-monolith.yaml",
+      "a0_3_pre_change_fitness_configuration_sha256": null,
+      "a0_3_parent_representation_ids": null,
+      "baseline_interpretation": "UNRESOLVED_A0_FROZEN_VERSUS_A0_3_CURRENT",
+      "negative_control_retain_reference": "NOT_EVALUABLE_UNTIL_PARENT_PINNED",
+      "restriction": "DO_NOT_TREAT_ENGINEERING_STAGE_ACCEPTANCE_AS_APPROVED_PARENT_FITNESS_CONFIGURATION"
+    }
+  }
+}
