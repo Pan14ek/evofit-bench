@@ -82,7 +82,29 @@ A draft of this document plus a complete catalog inventory can be reviewed now. 
 - **WP5:** after G1/G4, execute both arms against exactly the same A0.4, capture raw evidence, seal outputs, calculate only supported endpoints and populate the monograph result tables.
 - **WP6:** run a separately approved positive adaptation scenario. Do not treat this negative control as evidence for successful ADD/REPLACE or all-stage cloud-native runtime.
 
-## 8. Traceability and preflight invariants
+## 8. Author-selected DEVELOPMENT-pilot route (2026-10-23)
+
+The author selected this **preliminary, non-independent** route to establish feasibility for the monograph before attempting an authorized experiment. These choices are **author working decisions**, not G1 scientific approvals, G4 measured-run authorization, or an external architecture-policy mandate.
+
+| Decision | Author-selected option | Boundary |
+|---|---|---|
+| A — evaluator scope | Work with exactly `AC_PUBLIC_API` and `AC_MODULE_GRAPH` in CI for the first pilot | A bounded two-control case study, **not** the 18-obligation `Q(A0.4)` denominator |
+| B — fitness-control validation | Reuse positive and seeded-negative controls in EVAL-01/EVAL-02; bind inspected source, evaluator/configuration bytes, scope and obligation | Existing engineering runs do not prove independent representation–obligation–stage validity; check EVAL-02 diagnostic-expectation discrepancies rather than hiding them |
+| A — expected-answer custody | The author prepares a reasoned `AUTHOR_DECLARED` reference *before* any method execution that may use the target transition | No independent, blinded or held-out claim; keep target-level answers and scorer-side rows **out** of GitHub and all P/B0 inputs |
+
+### Practical DEVELOPMENT work permitted before measured-run approval
+
+1. **Readback and scope rehearsal:** validate the exact A0.3/A0.4 source and report digests and the two CI evaluator identities; record predeclared positive/negative controls and inspection scope. Existing EVAL-01/EVAL-02 artifacts can be verified or rerun in a clearly separate *evaluator-only engineering pilot* with their own run identity.
+2. **Generic Method P synthetic rehearsal:** exercise the existing **TEST_ONLY synthetic** P retain/no-change paths, contradictory/stale evidence and HOLD behavior on generic fixture IDs/states, not by hardcoding the known A0.3/A0.4 answer. Report generated outputs as DEVELOPMENT diagnostics, not as MONO-E1 B0/P predictions.
+3. **Pre-execution author reference worksheet:** privately prepare an evidence-based operation rationale, scope classifications and expected monitoring behavior. Record file digest, author/date, and immutable initial draft **outside method inputs and the public repository**. A private preparatory worksheet is **not** the protocol's sealed `freeze_reference` artifact.
+4. **Gap audit:** report exactly which architecture facts, representation IDs, stage mappings, semantic-pair proofs, common input bundles and independent approvals are missing; keep `P_ALGORITHM_STATUS=NOT_READY`, `G1=INCOMPLETE`, `G4=NOT_AUTHORIZED`, `NO_GO`, `Q(A0.4)=NOT_ESTABLISHED`.
+5. **Stop before actual P/B0-on-ΔA4 execution.** The existing `MONO_A1_PROTOCOL_V1.md` expressly requires `G-A1-C4-REF-FROZEN` **before any Method P execution on ΔA4**. Calling the same execution `DEVELOPMENT` does not bypass that rule. An actual P-on-A0.4 developmental calibration requires satisfaction of the existing gate or a genuinely reviewed, separately versioned study amendment with explicit access, privacy, authority and non-comparability boundaries. Neither is accomplished by selecting option A/B/A.
+
+**Allowed pilot deliverables now:** a source-bound evaluator readback/negative-control matrix, an independent *technical* inspection of existing tests if feasible, generic synthetic P diagnostics, an author-declared private reference *draft*, and a clear `NOT_EXECUTED` ledger for MONO-E1 arms. No MONO-E1 RQ1/RQ2 score, complete-coverage percentage, reviewer sign-off or measured superiority is produced.
+
+A later **positive adaptation** experiment remains required to evaluate the governed ADD/REPLACE behavior that the monograph's central scientific claim needs.
+
+## 9. Traceability and preflight invariants
 
 The sibling machine-readable [candidate profile](mono_e1_ci_fitness_profile_v1.json) is public **preparation metadata only**, never a Method P input or scorer oracle. The new test `tests/unit/test_mono_e1_ci_profile.py` checks that the exact architecture pins and ordered 18-catalog inventory are preserved and refuses accidental approved/GO/frozen status or assertion that two engineering gates close the scientific denominator.
 
