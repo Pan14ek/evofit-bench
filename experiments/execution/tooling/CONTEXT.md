@@ -82,9 +82,10 @@ tracked in `docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`.
 - `b0p_development.py`
 - `b0p_e1_execution.py` — additive E1 isolated B0/P run envelope with run-bound TEST_ONLY sidecar, reference exclusion, exact-pair readback, canonical RQ1 gating and six-row UNKNOWN RQ2
 - `mono_a1.py` — separate MONO-E1/E2 reference custody, prediction-scoring gates, exact-pair RQ2, W2 A1 readback, runtime prerequisites, and checksum archives
+- `mono_policy_review_inventory.py` — read-only structural validator for the public MONO-E1 proposal inventory; compares copied rows to the pinned catalog and reports unresolved decision dimensions without certifying approval
 - `b0p_execution.py` — common immutable container preparation and evaluator helpers; P accepts a read-only evidence sidecar mount only when the caller supplies one
 
-This is a selected list (19 direct tracked files), not a complete source inventory.
+This is a selected list (20 direct tracked files), not a complete source inventory.
 
 ## Established conventions
 
@@ -193,6 +194,12 @@ production authority value or trust anchor is implemented. The RQ3 source-image
 helper validates shape/source binding for an externally verified attestation;
 it does not authenticate signatures. Synthetic unit fixtures prove contract
 behavior only and are not MONO-E1/E2 or authentic W2 evaluator evidence.
+
+`mono_policy_review_inventory.py` reads the public proposal inventory, its
+versioned JSON Schema, and the pinned catalog. Its PASS is limited to exact
+catalog inventory readback. Authority, applicability, mandatory status,
+lifecycle requirements, source-fact truth, semantic adequacy, and scientific
+approval remain unresolved or unverified; the tool never emits an approval.
 
 ## Verification and further reading
 

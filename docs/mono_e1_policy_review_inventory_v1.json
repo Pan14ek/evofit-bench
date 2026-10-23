@@ -1,0 +1,395 @@
+{
+  "schema_version": 1,
+  "artifact_id": "MONO_E1_Q_REVIEW_INVENTORY_V1",
+  "artifact_status": "NON_AUTHORITATIVE_PROPOSAL",
+  "scope": {
+    "study_id": "MONO-E1",
+    "architecture_state": "A0_4_REPORT_QUERY_PORT",
+    "architecture_source_commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+    "architecture_source_tree_sha": "2b436e0aaf09403ea516d73d20a466a122f86592"
+  },
+  "catalog_pin": {
+    "path": "fitness/catalog/architectural-obligations.yaml",
+    "schema_version": 1,
+    "sha256": "8c5bd8fffe3bdb2af8fb85f8d0012bc34673f72866e52daed99fab96f9763011",
+    "ordering": "SOURCE_ORDER"
+  },
+  "closure_status": {
+    "catalog_inventory": "COMPLETE_AGAINST_PINNED_CATALOG",
+    "policy_universe_closure": "PENDING_EXTERNAL_AUTHORITY",
+    "approved_scientific_denominator": "NOT_ESTABLISHED"
+  },
+  "review_roles": {
+    "accountable_policy_authority": "UNASSIGNED",
+    "independent_methods_reviewer": "UNASSIGNED",
+    "lifecycle_protocol_reviewer": "UNASSIGNED"
+  },
+  "existing_policy_sources": [
+    {
+      "source_id": "pilot-policy-design-v1",
+      "path": "experiments/execution/policy-pilot/v1/policy-design.yaml",
+      "sha256": "4d9cd50a849cd510c1f63cd2dd3c28f0751fc5962253fb16bf914e9957860ced",
+      "status": "DEVELOPMENT_CANDIDATES_ONLY",
+      "role": "Per-obligation candidate design; referenced for every catalog ID without copying candidate decisions.",
+      "governs_a0_4": false
+    },
+    {
+      "source_id": "pilot-applicability-rules-v1",
+      "path": "experiments/execution/policy-pilot/v1/source/policy/applicability_ruleset_v1.json",
+      "sha256": "b1b679a9275d226c0bc85b8dc7d1f19c91addf8fa9acbc577f1c944adec09df7",
+      "status": "DEVELOPMENT_CANDIDATE_RULESET",
+      "role": "Synthetic applicability rule candidate; not production authority.",
+      "governs_a0_4": false
+    },
+    {
+      "source_id": "pilot-authority-charter-v1_1",
+      "path": "experiments/execution/policy-pilot/v1/source/fitness/policy/authority-charter.json",
+      "sha256": "889c9e0bbe3a4e7867babbe5deefdda1ebeae6dd74ffefa90edd9831e4038307",
+      "status": "DRAFT_NOT_PRODUCTION_AUTHORITY",
+      "role": "Draft authority design; no appointed production authority or trust anchor.",
+      "governs_a0_4": false
+    },
+    {
+      "source_id": "pilot-policy-registry-v1_1",
+      "path": "experiments/execution/policy-pilot/v1/source/fitness/policy/registry.json",
+      "sha256": "99ad0b106571b0712cf34eec44bdf7a3c6efac563fe2eacebf453a2f6396fda1",
+      "status": "OPEN_NOT_PRODUCTION_AUTHORITY",
+      "role": "Open candidate registry; not a closed obligation universe.",
+      "governs_a0_4": false
+    },
+    {
+      "source_id": "pilot-completeness-claims-v1_1",
+      "path": "experiments/execution/policy-pilot/v1/source/fitness/policy/completeness-claims.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "status": "EMPTY_NO_COMPLETENESS_CLAIM",
+      "role": "No completeness claim is recorded in the pilot source.",
+      "governs_a0_4": false
+    }
+  ],
+  "obligations": [
+    {
+      "catalog_order": 1,
+      "obligation_id": "P_EXT_LATENCY",
+      "catalog_entry": {
+        "id": "P_EXT_LATENCY",
+        "criterion": "performance",
+        "intent": "User-facing API operations must satisfy the declared end-to-end latency policy.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    },
+    {
+      "catalog_order": 2,
+      "obligation_id": "P_REMOTE_LATENCY",
+      "catalog_entry": {
+        "id": "P_REMOTE_LATENCY",
+        "criterion": "performance",
+        "intent": "Synchronous inter-service calls must satisfy the declared dependency latency budget.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    },
+    {
+      "catalog_order": 3,
+      "obligation_id": "P_ASYNC_LAG",
+      "catalog_entry": {
+        "id": "P_ASYNC_LAG",
+        "criterion": "performance",
+        "intent": "Asynchronous delivery/processing must satisfy the declared lag budget.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    },
+    {
+      "catalog_order": 4,
+      "obligation_id": "R_BUSINESS_FAILURE",
+      "catalog_entry": {
+        "id": "R_BUSINESS_FAILURE",
+        "criterion": "reliability",
+        "intent": "Unexpected business-operation failures must be observable separately from expected rejections.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    },
+    {
+      "catalog_order": 5,
+      "obligation_id": "R_HTTP_5XX",
+      "catalog_entry": {
+        "id": "R_HTTP_5XX",
+        "criterion": "reliability",
+        "intent": "External/business HTTP 5xx responses must be monitored.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    },
+    {
+      "catalog_order": 6,
+      "obligation_id": "R_LOCAL_ATOMICITY",
+      "catalog_entry": {
+        "id": "R_LOCAL_ATOMICITY",
+        "criterion": "reliability",
+        "intent": "The local transactional Task/Notification/Audit model must preserve atomic consistency.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    },
+    {
+      "catalog_order": 7,
+      "obligation_id": "R_REMOTE_DEPENDENCY",
+      "catalog_entry": {
+        "id": "R_REMOTE_DEPENDENCY",
+        "criterion": "reliability",
+        "intent": "Remote timeout/retry/circuit failures must be observable.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    },
+    {
+      "catalog_order": 8,
+      "obligation_id": "R_EVENT_DELIVERY",
+      "catalog_entry": {
+        "id": "R_EVENT_DELIVERY",
+        "criterion": "reliability",
+        "intent": "Event publication/consumption failures, backlog, and DLQ state must be controlled.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    },
+    {
+      "catalog_order": 9,
+      "obligation_id": "R_IDEMPOTENCY",
+      "catalog_entry": {
+        "id": "R_IDEMPOTENCY",
+        "criterion": "reliability",
+        "intent": "Repeated event delivery must not create duplicate side effects.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    },
+    {
+      "catalog_order": 10,
+      "obligation_id": "R_READMODEL_CONVERGENCE",
+      "catalog_entry": {
+        "id": "R_READMODEL_CONVERGENCE",
+        "criterion": "reliability",
+        "intent": "Event-driven reporting read model must converge to source state within the declared bound.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    },
+    {
+      "catalog_order": 11,
+      "obligation_id": "AC_LAYERING",
+      "catalog_entry": {
+        "id": "AC_LAYERING",
+        "criterion": "architecture_compliance",
+        "intent": "Internal dependencies must conform to the allowed layering model.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    },
+    {
+      "catalog_order": 12,
+      "obligation_id": "AC_MODULE_STRUCTURE",
+      "catalog_entry": {
+        "id": "AC_MODULE_STRUCTURE",
+        "criterion": "architecture_compliance",
+        "intent": "Capability modules must have declared structure and identity.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    },
+    {
+      "catalog_order": 13,
+      "obligation_id": "AC_PUBLIC_API",
+      "catalog_entry": {
+        "id": "AC_PUBLIC_API",
+        "criterion": "architecture_compliance",
+        "intent": "Cross-module access is allowed only through public module APIs.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    },
+    {
+      "catalog_order": 14,
+      "obligation_id": "AC_MODULE_GRAPH",
+      "catalog_entry": {
+        "id": "AC_MODULE_GRAPH",
+        "criterion": "architecture_compliance",
+        "intent": "The module-dependency graph must be acyclic and conform to allowed dependency directions.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    },
+    {
+      "catalog_order": 15,
+      "obligation_id": "AC_DATA_OWNERSHIP",
+      "catalog_entry": {
+        "id": "AC_DATA_OWNERSHIP",
+        "criterion": "architecture_compliance",
+        "intent": "A module/service must not bypass ownership through foreign repositories/tables.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    },
+    {
+      "catalog_order": 16,
+      "obligation_id": "AC_SERVICE_BOUNDARY",
+      "catalog_entry": {
+        "id": "AC_SERVICE_BOUNDARY",
+        "criterion": "architecture_compliance",
+        "intent": "In-process/code-level dependencies between deployment units are forbidden.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    },
+    {
+      "catalog_order": 17,
+      "obligation_id": "AC_COMMUNICATION_POLICY",
+      "catalog_entry": {
+        "id": "AC_COMMUNICATION_POLICY",
+        "criterion": "architecture_compliance",
+        "intent": "Communication channels must conform to the corresponding architecture decision.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    },
+    {
+      "catalog_order": 18,
+      "obligation_id": "AC_DEPLOYMENT_TOPOLOGY",
+      "catalog_entry": {
+        "id": "AC_DEPLOYMENT_TOPOLOGY",
+        "criterion": "architecture_compliance",
+        "intent": "Actual deployment units/replicas must conform to the expected architecture state.",
+        "default_weight": 1.0
+      },
+      "policy_source_refs": ["pilot-policy-design-v1"],
+      "decision_state": {
+        "applicability": "PENDING_EXTERNAL_AUTHORITY",
+        "mandatory_status": "PENDING_EXTERNAL_AUTHORITY",
+        "lifecycle_stage_requirements": {"status": "PENDING_INDEPENDENT_REVIEW", "required_stages": []},
+        "source_fact_bindings": {"status": "PENDING_AUTHORIZED_SOURCE_FACTS", "facts": []},
+        "representation_evidence_requirements": {"status": "PENDING_W2_W3_AFTER_POLICY_APPROVAL", "pairs": []}
+      }
+    }
+  ]
+}
