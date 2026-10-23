@@ -46,6 +46,14 @@ Before any measured comparison, materialize read-only **separate and digest-boun
 
 **Workload and database fixture decision:** The wide MONO v1 preflight requires a common deterministic workload and disposable PostgreSQL fixture. A proposed *static-CI-only* study might justify a different common-input profile, but those prerequisites are **not waived** by this document. A reviewed, versioned protocol and corresponding verifier are needed before the readiness outcome may change. Do not modify the old preflight to force GO.
 
+### Unresolved parent-configuration identity for a valid negative control
+
+**Do not assume `RETAIN` merely because both engineering CI gates exist at A0.3 and A0.4.** The currently pinned B0 configuration is the original `fitness/configs/a0-monolith.yaml`; its five-row frozen representation catalog lists `AC_LAYERING` but not these two A0.3-specific CI controls as fitness representations. An A0.3 *engineering acceptance rule* requiring `AC_PUBLIC_API` and `AC_MODULE_GRAPH` is not itself a complete, versioned and semantically reviewed parent fitness configuration `Φ_before`.
+
+For a logically identifiable A0.3→A0.4 no-change treatment, first reconstruct or explicitly create and pin the **actual pre-change A0.3 fitness configuration**, with real representation IDs and evaluator/evidence lineage for the two selected CI controls. Then specify whether B0 means *leave that A0.3 configuration unchanged* (a new, separately versioned E1-local treatment definition) or *leave the historically frozen A0 configuration unchanged* (the existing wider B0 definition, which may have different starting coverage). Do not silently substitute one for the other. Reconcile this with the frozen MONO/DA01 scoring contract through a reviewed additive protocol.
+
+If no verified A0.3 parent `Φ_before` can be constructed, classify the negative-control `RETAIN` target as **NOT_EVALUABLE**, not as automatically correct. This is a blocker for an actual E1 P/B0 comparison, but **not** for the evaluator-only and generic synthetic DEVELOPMENT preparation described below.
+
 ## 5. Endpoints, interpretation and failure handling
 
 | Endpoint | Definition for prospective measured study | Guard |
