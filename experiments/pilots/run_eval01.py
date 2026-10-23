@@ -85,7 +85,9 @@ def write_json(path: Path, value: Any) -> None:
     path.write_text(json.dumps(value, indent=2, sort_keys=True, ensure_ascii=False) + "\n")
 
 
-def run_git(repo_root: Path, *arguments: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+def run_git(
+    repo_root: Path, *arguments: str, check: bool = True
+) -> subprocess.CompletedProcess[str]:
     """Run a Git command and return its text output."""
     result = subprocess.run(  # noqa: S603 - fixed Git argv; no shell
         [
@@ -129,9 +131,7 @@ def _append_type_checking_import(path: Path, import_statement: str) -> None:
     if "from typing import TYPE_CHECKING" in source:
         raise ValueError(f"Unexpected TYPE_CHECKING import already present in {path}")
     addition = (
-        "\n\nfrom typing import TYPE_CHECKING\n\n"
-        "if TYPE_CHECKING:\n"
-        f"    {import_statement}\n"
+        f"\n\nfrom typing import TYPE_CHECKING\n\nif TYPE_CHECKING:\n    {import_statement}\n"
     )
     path.write_text(source.rstrip() + addition, encoding="utf-8")
 
@@ -216,13 +216,31 @@ def validate_preregistration(repo_root: Path, catalog: dict[str, Any]) -> tuple[
     parent = run_git(repo_root, "rev-parse", f"{preregistration}^").stdout.strip()
     if parent != catalog["experiment_base_main_sha"]:
         raise RuntimeError("Preregistration must be a direct child of the verified main commit")
-    if run_git(repo_root, "merge-base", "--is-ancestor", preregistration, head, check=False).returncode != 0:
+    if (
+        run_git(
+            repo_root, "merge-base", "--is-ancestor", preregistration, head, check=False
+        ).returncode
+        != 0
+    ):
         raise RuntimeError("Current experiment revision must descend from preregistration")
-    if run_git(repo_root, "merge-base", "--is-ancestor", BASELINE_COMMIT, head, check=False).returncode != 0:
+    if (
+        run_git(
+            repo_root, "merge-base", "--is-ancestor", BASELINE_COMMIT, head, check=False
+        ).returncode
+        != 0
+    ):
         raise RuntimeError("Canonical A0.4 baseline is not an ancestor of the experiment branch")
-    if run_git(repo_root, "rev-parse", f"{BASELINE_COMMIT}:app").stdout.strip() != BASELINE_APP_TREE:
+    if (
+        run_git(repo_root, "rev-parse", f"{BASELINE_COMMIT}:app").stdout.strip()
+        != BASELINE_APP_TREE
+    ):
         raise RuntimeError("Canonical A0.4 application tree SHA mismatch")
-    if run_git(repo_root, "cat-file", "-e", f"{BASELINE_COMMIT}^{{commit}}", check=False).returncode != 0:
+    if (
+        run_git(
+            repo_root, "cat-file", "-e", f"{BASELINE_COMMIT}^{{commit}}", check=False
+        ).returncode
+        != 0
+    ):
         raise RuntimeError("Canonical A0.4 commit object is unavailable")
     return head, preregistration, sha256_file(CATALOG_PATH)
 
@@ -375,12 +393,18 @@ def materialize_case(
             cwd=case_root,
         )
         if verify_bundle.returncode != 0:
-            raise RuntimeError(f"mutation bundle verification failed: {verify_bundle.stderr.strip()}")
+            raise RuntimeError(
+                f"mutation bundle verification failed: {verify_bundle.stderr.strip()}"
+            )
 
     frozen_input_digests: dict[str, str] | None = None
     if case["case_id"] == "clean_unchanged_dependencies":
         frozen_input_digests = copy_frozen_inputs(
-            case_root, evidence_case_root.parent.parent, repo_root, catalog["experiment_base_main_sha"], catalog
+            case_root,
+            evidence_case_root.parent.parent,
+            repo_root,
+            catalog["experiment_base_main_sha"],
+            catalog,
         )
         artifacts, observed_digest = evaluator_artifacts(case_root)
         if observed_digest != expected_evaluator_digest:
@@ -423,7 +447,11 @@ def catalog_config_digest(evaluator_id: str) -> str:
 
 
 def copy_frozen_inputs(
-    base_checkout: Path, evidence_root: Path, experiment_root: Path, main_sha: str, catalog: dict[str, Any]
+    base_checkout: Path,
+    evidence_root: Path,
+    experiment_root: Path,
+    main_sha: str,
+    catalog: dict[str, Any],
 ) -> dict[str, Any]:
     """Copy evaluator inputs from A0.4 and identity-only checkpoint evidence from main."""
     relative_paths = [
@@ -441,8 +469,12 @@ def copy_frozen_inputs(
     digests: dict[str, str] = {}
     source_revisions: dict[str, str] = {}
     identity_only = {
-        catalog["canonical_a04_checkpoint_reference"]["path"]: catalog["canonical_a04_checkpoint_reference"]["sha256"],
-        catalog["canonical_a04_source_manifest_reference"]["path"]: catalog["canonical_a04_source_manifest_reference"]["sha256"],
+        catalog["canonical_a04_checkpoint_reference"]["path"]: catalog[
+            "canonical_a04_checkpoint_reference"
+        ]["sha256"],
+        catalog["canonical_a04_source_manifest_reference"]["path"]: catalog[
+            "canonical_a04_source_manifest_reference"
+        ]["sha256"],
     }
     for relative in relative_paths:
         is_identity_only = relative in identity_only
@@ -453,10 +485,14 @@ def copy_frozen_inputs(
         if is_identity_only:
             if sha256_file(source) != identity_only[relative]:
                 raise RuntimeError(f"Canonical checkpoint evidence digest mismatch: {relative}")
-            main_blob = run_git(experiment_root, "rev-parse", f"{main_sha}:{relative}").stdout.strip()
+            main_blob = run_git(
+                experiment_root, "rev-parse", f"{main_sha}:{relative}"
+            ).stdout.strip()
             head_blob = run_git(experiment_root, "rev-parse", f"HEAD:{relative}").stdout.strip()
             if not main_blob or main_blob != head_blob:
-                raise RuntimeError(f"Canonical identity evidence differs from verified main: {relative}")
+                raise RuntimeError(
+                    f"Canonical identity evidence differs from verified main: {relative}"
+                )
             source_revisions[relative] = main_sha
         else:
             source_revisions[relative] = BASELINE_COMMIT
@@ -481,13 +517,15 @@ def check_observation(
     expected = case["expected_by_evaluator"][evaluator_id]
     if evidence.get("evaluator", {}).get("version") != evaluator_expected["version"]:
         failures.append("EVALUATOR_VERSION_MISMATCH")
-    if evidence.get("evaluator", {}).get("configuration_digest") != evaluator_expected[
-        "configuration_sha256"
-    ]:
+    if (
+        evidence.get("evaluator", {}).get("configuration_digest")
+        != evaluator_expected["configuration_sha256"]
+    ):
         failures.append("CONFIGURATION_DIGEST_MISMATCH")
-    if evidence.get("evaluator", {}).get("source_digest") != evaluator_expected[
-        "expected_source_artifact_digest"
-    ]:
+    if (
+        evidence.get("evaluator", {}).get("source_digest")
+        != evaluator_expected["expected_source_artifact_digest"]
+    ):
         failures.append("EVALUATOR_SOURCE_DIGEST_MISMATCH")
     architecture = evidence.get("architecture", {})
     if architecture.get("target_source_sha") != expected_source_sha:
@@ -564,7 +602,10 @@ def execute_experiment(args: argparse.Namespace) -> int:
         config_path = repo_root / catalog["evaluators"][evaluator_id]["configuration"]
         if sha256_file(config_path) != catalog["evaluators"][evaluator_id]["configuration_sha256"]:
             raise RuntimeError(f"{evaluator_id} configuration changed after preregistration")
-        if evaluator_digest != catalog["evaluators"][evaluator_id]["expected_source_artifact_digest"]:
+        if (
+            evaluator_digest
+            != catalog["evaluators"][evaluator_id]["expected_source_artifact_digest"]
+        ):
             raise RuntimeError(f"{evaluator_id} evaluator source changed after preregistration")
 
     output_dir.mkdir(parents=True)
@@ -631,7 +672,13 @@ def execute_experiment(args: argparse.Namespace) -> int:
             case_path = case_paths.get(case["case_id"])
             source_sha = case_provenance[case["case_id"]].get("source_commit_sha")
             expected = case["expected_by_evaluator"][evaluator_id]
-            run_dir = output_dir / "runs" / case["case_id"] / evaluator_id / f"repeat-{scheduled['repeat']}"
+            run_dir = (
+                output_dir
+                / "runs"
+                / case["case_id"]
+                / evaluator_id
+                / f"repeat-{scheduled['repeat']}"
+            )
             run_dir.mkdir(parents=True, exist_ok=True)
             stdout_path = run_dir / "stdout.json"
             stderr_path = run_dir / "stderr.log"
@@ -753,9 +800,7 @@ def execute_experiment(args: argparse.Namespace) -> int:
                         "configuration_digest": observation.get("evaluator", {}).get(
                             "configuration_digest"
                         ),
-                        "raw_diagnostics_digest": observation.get("raw_output", {}).get(
-                            "sha256"
-                        ),
+                        "raw_diagnostics_digest": observation.get("raw_output", {}).get("sha256"),
                     }
                 )
                 validation_failures = check_observation(
@@ -801,7 +846,9 @@ def execute_experiment(args: argparse.Namespace) -> int:
         "experiment_id": catalog["experiment_id"],
         "protocol_version": "1.0.0",
         "catalog_version": catalog["catalog_version"],
-        "registered_at_utc": run_git(repo_root, "show", "-s", "--format=%cI", preregistration_commit).stdout.strip(),
+        "registered_at_utc": run_git(
+            repo_root, "show", "-s", "--format=%cI", preregistration_commit
+        ).stdout.strip(),
         "preregistration_commit_sha": preregistration_commit,
         "preregistration_catalog_sha256": catalog_sha,
         "execution_branch_head_sha": head,
@@ -831,15 +878,20 @@ def execute_experiment(args: argparse.Namespace) -> int:
         "runs": run_records,
         "failures": failures,
         "raw_artifacts_sha256": raw_artifacts,
-        "started_at_utc": min(
-            (item["started_at_utc"] for item in run_records), default=None
-        ),
-        "completed_at_utc": max(
-            (item["ended_at_utc"] for item in run_records), default=None
-        ),
+        "started_at_utc": min((item["started_at_utc"] for item in run_records), default=None),
+        "completed_at_utc": max((item["ended_at_utc"] for item in run_records), default=None),
     }
     write_json(output_dir / "run-manifest.json", manifest)
-    print(json.dumps({"run_dir": str(output_dir), "run_count": len(run_records), "failure_count": len(failures)}, indent=2))
+    print(
+        json.dumps(
+            {
+                "run_dir": str(output_dir),
+                "run_count": len(run_records),
+                "failure_count": len(failures),
+            },
+            indent=2,
+        )
+    )
     return 0 if not failures and len(run_records) == len(schedule) else 1
 
 
@@ -887,27 +939,39 @@ def _rederive_run_records_from_stdout(
         "observed_compliance": lambda value: value.get("result", {}).get("compliance"),
         "execution_status": lambda value: value.get("result", {}).get("execution_status"),
         "target_source_sha": lambda value: value.get("architecture", {}).get("target_source_sha"),
-        "expected_source_sha": lambda value: value.get("architecture", {}).get("expected_source_sha"),
+        "expected_source_sha": lambda value: value.get("architecture", {}).get(
+            "expected_source_sha"
+        ),
         "source_sha_status": lambda value: value.get("architecture", {}).get("source_sha_status"),
-        "subject_source_dirty": lambda value: value.get("architecture", {}).get("subject_source_dirty"),
+        "subject_source_dirty": lambda value: value.get("architecture", {}).get(
+            "subject_source_dirty"
+        ),
         "source_scope_complete": lambda value: value.get("source_scope", {}).get("complete"),
         "evaluator_version": lambda value: value.get("evaluator", {}).get("version"),
         "evaluator_source_digest": lambda value: value.get("evaluator", {}).get("source_digest"),
-        "configuration_digest": lambda value: value.get("evaluator", {}).get("configuration_digest"),
+        "configuration_digest": lambda value: value.get("evaluator", {}).get(
+            "configuration_digest"
+        ),
         "raw_diagnostics_digest": lambda value: value.get("raw_output", {}).get("sha256"),
     }
     for record in run_records:
         copied = dict(record)
         stdout_path = run_dir / str(record.get("stdout_path", ""))
         if not stdout_path.is_file():
-            errors.append(f"RAW_STDOUT_MISSING:{record.get('case_id')}:{record.get('evaluator_id')}:{record.get('repeat')}")
+            errors.append(
+                f"RAW_STDOUT_MISSING:{record.get('case_id')}:{record.get('evaluator_id')}:{record.get('repeat')}"
+            )
             derived_records.append(copied)
             continue
         if sha256_file(stdout_path) != record.get("stdout_sha256"):
-            errors.append(f"STDOUT_DIGEST_INDEX_MISMATCH:{record.get('case_id')}:{record.get('evaluator_id')}:{record.get('repeat')}")
+            errors.append(
+                f"STDOUT_DIGEST_INDEX_MISMATCH:{record.get('case_id')}:{record.get('evaluator_id')}:{record.get('repeat')}"
+            )
         stderr_path = run_dir / str(record.get("stderr_path", ""))
         if not stderr_path.is_file() or sha256_file(stderr_path) != record.get("stderr_sha256"):
-            errors.append(f"STDERR_DIGEST_INDEX_MISMATCH:{record.get('case_id')}:{record.get('evaluator_id')}:{record.get('repeat')}")
+            errors.append(
+                f"STDERR_DIGEST_INDEX_MISMATCH:{record.get('case_id')}:{record.get('evaluator_id')}:{record.get('repeat')}"
+            )
         try:
             observed = json.loads(stdout_path.read_text(encoding="utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError):
@@ -932,7 +996,9 @@ def _rederive_run_records_from_stdout(
                 f"RUN_INDEX_DERIVATION_MISMATCH:{record.get('case_id')}:{record.get('evaluator_id')}:{record.get('repeat')}:finding_codes"
             )
         copied["finding_codes"] = derived_codes
-        copied["inspected_file_count"] = len(observed.get("source_scope", {}).get("inspected_paths", []))
+        copied["inspected_file_count"] = len(
+            observed.get("source_scope", {}).get("inspected_paths", [])
+        )
         derived_records.append(copied)
     return derived_records, errors
 
@@ -950,8 +1016,7 @@ def analyze_case(
         [
             item
             for item in run_records
-            if item.get("case_id") == case["case_id"]
-            and item.get("evaluator_id") == evaluator_id
+            if item.get("case_id") == case["case_id"] and item.get("evaluator_id") == evaluator_id
         ],
         key=lambda item: int(item.get("repeat", 0)),
     )
@@ -1020,7 +1085,11 @@ def analyze_case(
         "application_tree_sha": None,
         "case_wall_time_ms": [item.get("wall_time_ms") for item in selected],
         "case_median_wall_time_ms": statistics.median(
-            [float(item["wall_time_ms"]) for item in selected if isinstance(item.get("wall_time_ms"), (int, float))]
+            [
+                float(item["wall_time_ms"])
+                for item in selected
+                if isinstance(item.get("wall_time_ms"), (int, float))
+            ]
         )
         if any(isinstance(item.get("wall_time_ms"), (int, float)) for item in selected)
         else None,
@@ -1054,7 +1123,9 @@ def confusion_metrics(case_rows: list[dict[str, Any]]) -> dict[str, Any]:
         "eligible_labeled_cases": eligible_count,
         "evaluable_labeled_cases": len(included),
         "unknown_or_invalid_labeled_cases": eligible_count - len(included),
-        "not_evaluable_catalog_cases": sum(1 for item in case_rows if not item["metric_eligible_by_catalog"]),
+        "not_evaluable_catalog_cases": sum(
+            1 for item in case_rows if not item["metric_eligible_by_catalog"]
+        ),
         "confusion_matrix": {"tp": tp, "fp": fp, "tn": tn, "fn": fn},
         "precision": precision,
         "recall_sensitivity": recall,
@@ -1109,13 +1180,25 @@ def _generate_report(
     ]
     for case in catalog["cases"]:
         for evaluator_id in EVALUATOR_IDS:
-            row = next(item for item in case_results[evaluator_id] if item["case_id"] == case["case_id"])
-            repeats = ", ".join(str(item) for item in row["observed_compliance_by_repeat"]) or "NO_OBSERVATIONS"
-            findings = "; ".join(
-                ", ".join(codes) if codes else "none"
-                for codes in row["observed_finding_codes_by_repeat"]
-            ) or "none"
-            metric = "included" if row["valid_for_confusion_matrix"] else "excluded: " + "; ".join(row["exclusion_reasons"])
+            row = next(
+                item for item in case_results[evaluator_id] if item["case_id"] == case["case_id"]
+            )
+            repeats = (
+                ", ".join(str(item) for item in row["observed_compliance_by_repeat"])
+                or "NO_OBSERVATIONS"
+            )
+            findings = (
+                "; ".join(
+                    ", ".join(codes) if codes else "none"
+                    for codes in row["observed_finding_codes_by_repeat"]
+                )
+                or "none"
+            )
+            metric = (
+                "included"
+                if row["valid_for_confusion_matrix"]
+                else "excluded: " + "; ".join(row["exclusion_reasons"])
+            )
             cases_table.append(
                 f"| `{case['case_id']}` | `{evaluator_id}` | `{row['expected_compliance']}` | {repeats} | {findings} | {metric} |"
             )
@@ -1145,11 +1228,11 @@ def _generate_report(
     )
     return f"""# EVAL-01 results — controlled evaluator validation
 
-- **Protocol/catalog:** version 1.0.0; preregistration commit `{manifest['preregistration_commit_sha']}`; catalog SHA-256 `{manifest['preregistration_catalog_sha256']}`.
-- **Main base:** `{manifest['experiment_base_main_sha']}`.
-- **Canonical A0.4:** `{manifest['source_baseline']['commit_sha']}`; app tree `{manifest['source_baseline']['application_tree_sha']}`.
-- **Run window:** {manifest.get('started_at_utc')} — {manifest.get('completed_at_utc')}.
-- **Execution environment:** Python {manifest['execution_environment']['python_version'].split()[0]}, PyYAML {manifest['execution_environment']['yaml_version']}, {manifest['execution_environment']['platform']}.
+- **Protocol/catalog:** version 1.0.0; preregistration commit `{manifest["preregistration_commit_sha"]}`; catalog SHA-256 `{manifest["preregistration_catalog_sha256"]}`.
+- **Main base:** `{manifest["experiment_base_main_sha"]}`.
+- **Canonical A0.4:** `{manifest["source_baseline"]["commit_sha"]}`; app tree `{manifest["source_baseline"]["application_tree_sha"]}`.
+- **Run window:** {manifest.get("started_at_utc")} — {manifest.get("completed_at_utc")}.
+- **Execution environment:** Python {manifest["execution_environment"]["python_version"].split()[0]}, PyYAML {manifest["execution_environment"]["yaml_version"]}, {manifest["execution_environment"]["platform"]}.
 
 ## Research question and preregistered hypotheses
 
@@ -1161,7 +1244,7 @@ def _generate_report(
 
 ## Intervention and execution
 
-The experiment materialized {len(catalog['cases'])} source conditions from canonical commit `{manifest['source_baseline']['commit_sha']}`. Every mutation has a distinct Git commit with canonical A0.4 as its sole parent; the archive retains the exact mutation patch and Git bundle. Before each of {len(manifest['runs'])} evaluator calls the runner required clean checkout state and passed the case HEAD as `--expected-source-sha`. Both evaluators ran {manifest['execution_environment']['repeat_count']} times on every condition in seed-randomized order. The untouched baseline checks all five expected edges, zero cycles, and zero unresolved imports. The public-import pair contrasts the same Reporting/Tasks boundary. Type-checking-only cases test static source rules without claiming runtime execution.
+The experiment materialized {len(catalog["cases"])} source conditions from canonical commit `{manifest["source_baseline"]["commit_sha"]}`. Every mutation has a distinct Git commit with canonical A0.4 as its sole parent; the archive retains the exact mutation patch and Git bundle. Before each of {len(manifest["runs"])} evaluator calls the runner required clean checkout state and passed the case HEAD as `--expected-source-sha`. Both evaluators ran {manifest["execution_environment"]["repeat_count"]} times on every condition in seed-randomized order. The untouched baseline checks all five expected edges, zero cycles, and zero unresolved imports. The public-import pair contrasts the same Reporting/Tasks boundary. Type-checking-only cases test static source rules without claiming runtime execution.
 
 These are controlled W2 engineering evaluator observations, not MONO-E1/E2, B0, Method P, scorer, production, or fitness-representation coverage evidence.
 
@@ -1269,8 +1352,8 @@ def analyze_experiment(args: argparse.Namespace) -> int:
     rows = [item for evaluator_id in EVALUATOR_IDS for item in case_results[evaluator_id]]
     by_case = {item["case_id"]: item for item in catalog["cases"]}
     for row in rows:
-        row["application_tree_sha"] = manifest.get("cases", {}).get(row["case_id"], {}).get(
-            "application_tree_sha"
+        row["application_tree_sha"] = (
+            manifest.get("cases", {}).get(row["case_id"], {}).get("application_tree_sha")
         )
         row["expected_compliance"] = by_case[row["case_id"]]["expected_by_evaluator"][
             row["evaluator_id"]
@@ -1320,7 +1403,9 @@ def analyze_experiment(args: argparse.Namespace) -> int:
             writer.writerow(
                 {
                     **row,
-                    "observed_compliance_by_repeat": json.dumps(row["observed_compliance_by_repeat"]),
+                    "observed_compliance_by_repeat": json.dumps(
+                        row["observed_compliance_by_repeat"]
+                    ),
                     "expected_finding_codes": json.dumps(row["expected_finding_codes"]),
                     "observed_finding_codes_by_repeat": json.dumps(
                         row["observed_finding_codes_by_repeat"]
@@ -1395,12 +1480,16 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    execute_parser = subparsers.add_parser("execute", help="materialize and run preregistered cases")
+    execute_parser = subparsers.add_parser(
+        "execute", help="materialize and run preregistered cases"
+    )
     execute_parser.add_argument("--repo-root", type=Path, default=REPOSITORY_ROOT)
     execute_parser.add_argument("--output-dir", type=Path, required=True)
     execute_parser.set_defaults(handler=execute_experiment)
 
-    analyze_parser = subparsers.add_parser("analyze", help="derive metrics and package raw evidence")
+    analyze_parser = subparsers.add_parser(
+        "analyze", help="derive metrics and package raw evidence"
+    )
     analyze_parser.add_argument("--run-dir", type=Path, required=True)
     analyze_parser.add_argument("--summary-dir", type=Path)
     analyze_parser.add_argument("--package", type=Path)
