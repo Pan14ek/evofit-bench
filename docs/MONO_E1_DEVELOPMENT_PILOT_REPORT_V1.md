@@ -91,12 +91,9 @@ mutation.
 No Method P execution was performed on canonical ΔA4. The generic synthetic
 unit and integration suites exercised RETAIN/no-change, missing or insufficient
 evidence, stale and contradictory evaluator evidence, HOLD, invalid mappings,
-and unauthorized adaptation behavior using synthetic fixtures. The focused
-suite passed **154 tests with 1 warning**. The broader `make
-development-quality` regression target passed **493 tests**, including those
-generic tests and input-isolation checks; its dedicated EXP-01 and EXP-02 suites
-then passed **49** and **30** tests. No test failures or skipped tests were
-reported; one Starlette deprecation warning was reported.
+and unauthorized adaptation behavior using synthetic fixtures. The separate
+focused generic suite passed **154 tests, 0 failed, 0 skipped, and 1 warning**.
+It is distinct from the DEVELOPMENT regression target below.
 
 The development target intentionally excludes the protected
 `tests/unit/test_da01_execution.py` and
@@ -105,18 +102,63 @@ MONO-E1 result follows from these synthetic checks.
 
 ## Verification record
 
-Commands executed in the task checkout:
+The local and hosted runs use the same checked-in `development-regression-test`
+selection. Their outcomes differ because the container isolation probe has a
+runtime-dependent skip condition; the CI log does not show a test-selection
+difference.
 
-| Command / check | Result |
-| --- | --- |
-| `tests/architecture/a1/test_evaluators.py`, `tests/unit/test_eval01_runner.py`, `tests/unit/test_eval02_runner.py`, `tests/unit/test_eval02_postrun_validation.py`, `tests/unit/test_mono_e1_ci_profile.py`, `tests/unit/test_mono_e1_a03_fitness_candidate.py` | 68 passed, 16.34 s |
-| `tests/unit/test_p_applicability_ruleset_v1.py`, `test_p_applicability_policies_v1.py`, `test_p_impact_v1.py`, `test_p_semantic_pairs_v1.py`, `test_p_operations_v1.py`, `test_p_candidate_governance_v1.py`, `test_p_adaptation_evidence_v1.py`, `test_p_interface_readiness.py`, `tests/integration/test_p_applicability_v3.py`, `test_p_governed_adaptation_v1.py` | 154 passed, 1 warning, 121.55 s |
-| `make development-quality UV=/private/tmp/evofit-uv-runtime/bin/uv` with `ARCHITECTURE_STAGE=A0_4_REPORT_QUERY_PORT`, disposable PostgreSQL 16, and isolated uv/import-linter caches | PASS: Ruff check and format; Mypy (141 files); Bandit; Import Linter (5 kept, 0 broken); current and historical architecture checks; migration validation; regression suites 493 + 49 + 30 passed, 1 deprecation warning total |
+| Execution | Main regression suite | EXP-01 suite | EXP-02 suite | Overall |
+| --- | --- | --- | --- | --- |
+| Local rerun at PR head `b5b51e8f043ac9c60c8136af0154f64de5c68969` | 493 passed, 0 failed, 0 skipped, 1 warning (350.95 s) | 49 passed, 0 failed, 0 skipped, 0 warnings | 30 passed, 0 failed, 0 skipped, 0 warnings | `make development-quality` exit 0 |
+| Hosted PR run [40013764324](https://github.com/Pan14ek/evofit-bench/actions/runs/40013764324) | 492 passed, 0 failed, 1 skipped, 1 warning (106.97 s) | 49 passed, 0 failed, 0 skipped, 0 warnings | 30 passed, 0 failed, 0 skipped, 0 warnings | workflow `SUCCESS` |
+| Hosted push run [40013716469](https://github.com/Pan14ek/evofit-bench/actions/runs/40013716469) | 492 passed, 0 failed, 1 skipped, 1 warning (148.86 s) | 49 passed, 0 failed, 0 skipped, 0 warnings | 30 passed, 0 failed, 0 skipped, 0 warnings | workflow `SUCCESS` |
 
-`make development-quality` completed with exit code 0. Its database was a
-disposable local container. The full regression command excludes the two
-protected suites listed above by the checked-in Makefile target. Hosted CI
-results are reported on the accompanying pull request.
+The local full run was repeated during this correction and its terminal output
+was captured in the task execution record. The skipped CI case was also run
+directly locally and passed: `tests/unit/test_da01_inputs_and_isolation.py::test_container_negative_probes_cannot_reach_oracle_history_network_or_other_output`
+(1 passed).
+
+The skipped case is the container-level negative isolation probe. It calls
+`_local_image_digest()` and skips with `No local Docker runtime image digest is
+available for the isolation probe` when neither `DA01_SANDBOX_IMAGE_DIGEST` nor
+the local `evofit-bench-app:latest` image can supply a digest. The CI workflow
+checks out the repository and starts PostgreSQL, but does not set that digest
+or build the sandbox image. The job log uses quiet pytest output and does not
+print the skip reason. The selected tests have a second skip guard in
+`test_context_documents.py`, which only skips when Git metadata is unavailable;
+the workflow checks out the full Git history, so that guard does not apply. The
+single skip therefore identifies the container isolation probe. CI logs do
+not establish whether the runner lacked a usable Docker daemon or only lacked
+the named image. Locally, Docker was available and the named image was present,
+so that probe ran and passed.
+
+Impact: the hosted run did not execute the container-level negative probes for
+oracle/history/network/other-output isolation. Its other synthetic input
+contract and isolation tests passed. The local pass supplies DEVELOPMENT
+evidence for this probe, while hosted CI does not independently confirm it.
+This is not measured Method P execution or MONO-E1 evidence.
+
+The focused evaluator/profile/candidate suite passed **68 tests, 0 failed,
+0 skipped, and 0 warnings** in 16.34 s. Ruff check and format, Mypy (141
+files), Bandit, Import Linter (5 kept, 0 broken), current and historical
+architecture checks, and disposable-database migration validation passed in
+the local `make development-quality` run. The main suite's single warning was
+the Starlette `TestClient` deprecation warning.
+
+The exact local command was:
+
+```bash
+UV_CACHE_DIR=/private/tmp/evofit-uv-cache \
+ARCHITECTURE_STAGE=A0_4_REPORT_QUERY_PORT \
+IMPORT_LINTER_CACHE_DIR=/private/tmp/evofit-mono-e1-import-cache \
+DATABASE_URL=postgresql+psycopg://evofit:evofit@127.0.0.1:60454/evofit_test \
+TEST_DATABASE_URL=postgresql+psycopg://evofit:evofit@127.0.0.1:60454/evofit_test \
+make development-quality UV=/private/tmp/evofit-uv-runtime/bin/uv
+```
+
+The database was a disposable local PostgreSQL 16 container. The full
+regression target excludes `tests/unit/test_da01_execution.py` and
+`tests/unit/test_research_schema_foundation.py` by design.
 
 ## Readiness and next actions
 
@@ -157,5 +199,5 @@ comparability, and authorization checks pass.
 | `MONO-DEV-LIN-01`: distinguish frozen A0 B0 from A0.3 engineering controls; bind candidate claims to canonical A0.3 bytes | `tests/unit/test_mono_e1_a03_fitness_candidate.py`; canonical A0.3 checkpoint | 2 candidate tests passed; historical configuration remains not identified |
 | `A1-NEG-01`–`A1-NEG-03`: evaluator accepts controls and reports seeded static violations with source-bound evidence | `tests/architecture/a1/test_evaluators.py`; EVAL-01/02 archives and validators | focused regression passed; archive outcomes and EVAL-02 discrepancy retained |
 | `P03-02`–`P03-06`: generic operation selection, exact-pair evidence, candidate governance, rollback/replay, and adaptation boundaries | `tests/unit/test_p_operations_v1.py`, `test_p_semantic_pairs_v1.py`, `test_p_candidate_governance_v1.py`, `test_p_adaptation_evidence_v1.py`; `tests/integration/test_p_governed_adaptation_v1.py` | included in 154 focused synthetic passes and 493 development regressions |
-| `S01`: method input excludes oracle/history/network/other-arm output | `tests/unit/test_da01_inputs_and_isolation.py::test_container_negative_probes_cannot_reach_oracle_history_network_or_other_output` | included in the 493-test development regression run |
+| `S01`: method input excludes oracle/history/network/other-arm output | `tests/unit/test_da01_inputs_and_isolation.py::test_container_negative_probes_cannot_reach_oracle_history_network_or_other_output` | local: PASS; hosted CI: SKIP because the sandbox image digest was unavailable; hosted input-contract tests otherwise passed |
 | `E01`: authorized, independently reviewed measured B0/P comparison | MONO-A1 protocol and G1/G4 gates | not run; remains unauthorized / `NO_GO` |
