@@ -37,9 +37,15 @@ def validate_preparation_only(profile: dict) -> list[str]:
     problems: list[str] = []
     if profile.get("profile_status") != "DRAFT_NON_AUTHORITATIVE":
         problems.append("unsupported_profile_approval")
-    if profile.get("experimental_go") != "NO_GO" or profile.get("measured_run_status") != "NOT_EXECUTED":
+    if (
+        profile.get("experimental_go") != "NO_GO"
+        or profile.get("measured_run_status") != "NOT_EXECUTED"
+    ):
         problems.append("unapproved_experiment")
-    if not profile.get("proposal_only") or profile.get("confidentiality", {}).get("method_input_authorized") is not False:
+    if (
+        not profile.get("proposal_only")
+        or profile.get("confidentiality", {}).get("method_input_authorized") is not False
+    ):
         problems.append("incorrect_scope")
     if (profile.get("source_pair", {}).get("before", {}).get("commit") != BEFORE_SHA
         or profile.get("source_pair", {}).get("after", {}).get("commit") != AFTER_SHA):
@@ -61,7 +67,10 @@ def validate_preparation_only(profile: dict) -> list[str]:
         for row in actual
     ):
         problems.append("invented_obligation_decision")
-    if fs.get("scientific_q_a04_denominator") != "NOT_ESTABLISHED" or fs.get("catalog_closure") != "UNVERIFIED":
+    if (
+        fs.get("scientific_q_a04_denominator") != "NOT_ESTABLISHED"
+        or fs.get("catalog_closure") != "UNVERIFIED"
+    ):
         problems.append("unsupported_complete_denominator")
     evs = fs.get("engineering_evaluators", [])
     if [v.get("id") for v in evs] != ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]:
@@ -69,7 +78,10 @@ def validate_preparation_only(profile: dict) -> list[str]:
     if any(v.get("representation_id") is not None or v.get("semantic_pair_review") != "PENDING"
            or v.get("evidence_status") != "BOUNDED_ENGINEERING_ONLY" for v in evs):
         problems.append("invented_exact_pair_proof")
-    if profile.get("endpoints", {}).get("architectural_coverage", {}).get("status") != "NOT_EVALUABLE":
+    if (
+        profile.get("endpoints", {}).get("architectural_coverage", {}).get("status")
+        != "NOT_EVALUABLE"
+    ):
         problems.append("unsupported_coverage_claim")
     if profile.get("arms", {}).get("common_after_sha") != AFTER_SHA:
         problems.append("inconsistent_target")
@@ -83,7 +95,10 @@ def validate_preparation_only(profile: dict) -> list[str]:
         or ready.get("method_p_status") != "NOT_READY"):
         problems.append("unauthorized_gate")
     conf = profile.get("confidentiality", {})
-    if conf.get("oracle_labels_included") is not False or conf.get("scorer_reference_included") is not False:
+    if (
+        conf.get("oracle_labels_included") is not False
+        or conf.get("scorer_reference_included") is not False
+    ):
         problems.append("oracle_exposure")
     return problems
 
@@ -112,8 +127,16 @@ def test_canonical_source_pair_matches_readback() -> None:
         (("experimental_go",), "GO", "unapproved_experiment"),
         (("lifecycle", "stage_scope_approved"), True, "unreviewed_stage_approval"),
         (("fitness_scope", "scientific_q_a04_denominator"), 2, "unsupported_complete_denominator"),
-        (("fitness_scope", "obligations", 0, "mandatory"), "MANDATORY", "invented_obligation_decision"),
-        (("fitness_scope", "engineering_evaluators", 0, "semantic_pair_review"), "APPROVED", "invented_exact_pair_proof"),
+        (
+            ("fitness_scope", "obligations", 0, "mandatory"),
+            "MANDATORY",
+            "invented_obligation_decision",
+        ),
+        (
+            ("fitness_scope", "engineering_evaluators", 0, "semantic_pair_review"),
+            "APPROVED",
+            "invented_exact_pair_proof",
+        ),
         (("readiness", "G1"), "COMPLETE", "unauthorized_gate"),
         (("readiness", "reference"), "FROZEN", "unauthorized_gate"),
         (("arms", "B0", "input_bundle_digest"), "0" * 64, "fabricated_inputs"),
