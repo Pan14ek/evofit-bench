@@ -1,0 +1,342 @@
+schema_version: "1.0.0"
+configuration_id: MONO_E1_A03_CI_FITNESS_DEVELOPMENT
+configuration_version: "1.0.0"
+status: DEVELOPMENT_PROPOSAL_NOT_HISTORICAL
+architecture_state: A0_3_GOVERNED_MODULE_GRAPH
+fitness_configuration_digest:
+  algorithm: SHA-256
+  sidecar_path: fitness/configs/mono-e1-b0-dev-a03-v1.yaml.sha256
+
+baseline:
+  id: B0_DEV_A03
+  version: "1.0.0"
+  status: PROPOSED_E1_LOCAL
+  semantics: UNCHANGED_PROPOSED_A0_3_CONFIGURATION
+  configuration_identity: MONO_E1_A03_CI_FITNESS_DEVELOPMENT
+  target_state: A0_4_REPORT_QUERY_PORT
+  retain_interpretation: NOT_EVALUABLE_WHILE_EXACT_PAIR_SEMANTIC_VALIDITY_IS_UNKNOWN
+  historical_a0_b0: SEPARATE_FROZEN_A0_BASELINE
+  official_mono_e1_baseline_authorized: false
+
+provenance:
+  proposal_origin: NEW_E1_LOCAL_DEVELOPMENT_PROPOSAL
+  historical_a03_parent_configuration_status: NOT_IDENTIFIED
+  historical_a0_b0:
+    source_tag: arch-a0-monolith-v1
+    source_revision: b78b0967be937634b7762baccf5ac6892b279a73
+    supporting_artifacts_source_revision: 26a9bb667da7d0938e38aca15d2bf29fd1de4829
+    configuration:
+      path: fitness/configs/a0-monolith.yaml
+      sha256: 5ad60e373463ea459e192bf85d82704ca9aa1c217c4abf4d8caeb66924059ecb
+    representation_catalog:
+      path: fitness/catalog/a0-fitness-elements.yaml
+      sha256: d1a019bb5389e64351751fe10dabd685b29a0fac383ab4ea5fd21906c807cfef
+    traceability:
+      path: fitness/traceability/a0-traceability.yaml
+      sha256: b89b4279d86b20091a86862d5538539257dd669321d2df66138d51df98c28a08
+    frozen_evaluator:
+      path: fitness/evaluators/a0/importlinter.toml
+      sha256: 88ff64a4792c6048a6ab0686ddf9326ebbee49f76996933845a6142cc1a2ba27
+    representation_ids: [REP_A0_ARCH_CI_LAYERING]
+    obligation_ids: [AC_LAYERING]
+    applicability_at_a03: UNKNOWN
+  obligation_catalog:
+    path: fitness/catalog/architectural-obligations.yaml
+    sha256: 8c5bd8fffe3bdb2af8fb85f8d0012bc34673f72866e52daed99fab96f9763011
+  evaluator_implementation:
+    aggregate_sha256: 5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c
+    source_artifacts:
+      - path: architecture/acceptance/a1/__init__.py
+        sha256: cea0f2f68a149ae8c99c0c114bebf658867c8c8123399d5d1fe76c2f47cac569
+      - path: architecture/acceptance/a1/analyzers.py
+        sha256: b67b21c1f78a39382a0ed8692d8bd350ff71b1261a448af4b78e83fe7f2eb1a2
+      - path: architecture/acceptance/a1/cli.py
+        sha256: ad03caa866c09ae71784bbfca428f074a4b54ea097d182717e7f4ce15024997a
+      - path: architecture/acceptance/a1/engine.py
+        sha256: 06359bf5e40ed69291f6a3e3dd827a0e419ac0cd5ff3d4b53c8154d4ddc7718f
+  canonical_states:
+    - architecture_state: A0_3_GOVERNED_MODULE_GRAPH
+      source_sha: 26a9bb667da7d0938e38aca15d2bf29fd1de4829
+      repository_tree_sha: 7b951421395f532ca403dab09d76902ff08a807d
+      application_tree_sha: b147b8961ea9e76c966663d4832e4c303581151a
+      state_manifest:
+        path: architecture/states/A0_3_GOVERNED_MODULE_GRAPH.yaml
+        sha256: cdb85e758647b0590d954e013079d51d0060fefd8425da87e35335f89b722f32
+      source_manifest:
+        path: architecture/acceptance/a1/a0_3_canonical_source_manifest.yaml
+        sha256: cdb85e758647b0590d954e013079d51d0060fefd8425da87e35335f89b722f32
+      checkpoint:
+        path: architecture/acceptance/a1/a0_3_canonical_checkpoint.json
+        sha256: 5da4a7e1ed359ec8ea1e3288ab81edf32f0b71e2fec946b52a8d0d562dcf43c0
+    - architecture_state: A0_4_REPORT_QUERY_PORT
+      source_sha: d3101c0d3aa9b7b709253b6ec7518416f05f65b9
+      repository_tree_sha: 2b436e0aaf09403ea516d73d20a466a122f86592
+      application_tree_sha: 007196f68652bc13f6798805793ffdfae96f95f7
+      state_manifest:
+        path: architecture/states/A0_4_REPORT_QUERY_PORT.yaml
+        sha256: 9c981442a34830bdc44d77ffc17de5b9f832b0b261d0d92f28bd15dc567febd9
+      source_manifest:
+        path: architecture/acceptance/a1/a0_4_canonical_source_manifest.yaml
+        sha256: 9c981442a34830bdc44d77ffc17de5b9f832b0b261d0d92f28bd15dc567febd9
+      checkpoint:
+        path: architecture/acceptance/a1/a0_4_canonical_checkpoint.json
+        sha256: 7b0b0c7a0c6ac782540466d283c42d7589b8aaeb4af7df62104faa01fd154e8e
+
+criteria:
+  - id: architecture_compliance
+    intent: >-
+      Preserve candidate control over public module access and the bounded
+      directed, acyclic capability-module dependency graph in CI.
+
+obligations:
+  - id: AC_PUBLIC_API
+    criterion_id: architecture_compliance
+    catalog_intent: Cross-module access is allowed only through public module APIs.
+    applicability:
+      A0_3: UNKNOWN
+      A0_4: UNKNOWN
+      engineering_evaluator_status: REQUIRED_BY_STATE_MANIFEST
+      policy_approval_status: NOT_APPROVED
+      assumption: >-
+        The state manifests and evaluator configurations require this engineering
+        check; normative applicability for the bounded scientific scope is unresolved.
+    validity:
+      semantic_pair_status: UNKNOWN
+      independent_review_status: NOT_RECEIVED
+  - id: AC_MODULE_GRAPH
+    criterion_id: architecture_compliance
+    catalog_intent: The module-dependency graph must be acyclic and conform to allowed dependency directions.
+    applicability:
+      A0_3: UNKNOWN
+      A0_4: UNKNOWN
+      engineering_evaluator_status: REQUIRED_BY_STATE_MANIFEST
+      policy_approval_status: NOT_APPROVED
+      assumption: >-
+        The state manifests and evaluator configurations require this engineering
+        check; normative applicability for the bounded scientific scope is unresolved.
+    validity:
+      semantic_pair_status: UNKNOWN
+      independent_review_status: NOT_RECEIVED
+
+representations:
+  - id: REP_MONO_E1_DEV_A03_PUBLIC_API_CI_V1
+    criterion_id: architecture_compliance
+    intent: >-
+      Observe configured source-level cross-module public API constraints in the
+      capability modules during the CI/test stage.
+    obligation_id: AC_PUBLIC_API
+    mapping_status: PROPOSED_UNREVIEWED
+    lifecycle_stage: ci_test
+    stage_binding_status: ENGINEERING_ACCEPTANCE_ONLY_UNREVIEWED_SCIENTIFIC_BINDING
+    execution_contract:
+      evaluator_entrypoint: architecture.acceptance.a1.cli
+      command_template:
+        - python
+        - -m
+        - architecture.acceptance.a1.cli
+        - "{evaluator_id}"
+        - --repo-root
+        - "{subject_checkout}"
+        - --state-manifest
+        - "{state_manifest}"
+        - --architecture-state
+        - "{architecture_state}"
+        - --expected-source-sha
+        - "{source_sha}"
+      stage_gate: "make architecture-test ARCHITECTURE_STAGE={architecture_state}"
+      exit_semantics: ENGINEERING_COMPLIANCE_ONLY_NOT_SEMANTIC_VALIDITY
+    evaluator:
+      id: AC_PUBLIC_API
+      version: "1.0.0"
+      source_digest_sha256: 5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c
+      configuration_artifact:
+        path: architecture/acceptance/a1/public_api_v1.yaml
+        sha256: 8853c3a933b23f698c7ba7c5b6e511f292e8d9285dc0de4378741c53e466f7bb
+      metric:
+        name: compliance_status
+        unit: categorical
+        values: [COMPLIANT, NON_COMPLIANT, NOT_EVALUABLE]
+        threshold_status: NOT_CONFIGURED
+    evidence_by_state:
+      - architecture_state: A0_3_GOVERNED_MODULE_GRAPH
+        execution_status: COMPLETED
+        compliance: COMPLIANT
+        checkpoint_path: architecture/acceptance/a1/a0_3_canonical_checkpoint.json
+        checkpoint_sha256: 5da4a7e1ed359ec8ea1e3288ab81edf32f0b71e2fec946b52a8d0d562dcf43c0
+        observation:
+          path: architecture/acceptance/a1/a0_3_canonical_public_api_observation.json
+          sha256: 8d1056a69b6e2c45cbe42dae207d8bbe65454572b34032dc5f969e0f877362ad
+        raw_diagnostics:
+          path: architecture/acceptance/a1/a0_3_canonical_public_api_diagnostics.json
+          sha256: 9d3db50cc6c95303e41b2f3a2ba3b1ef6e6a42b7953e395a81599571db08a4ea
+        source_scope:
+          complete: true
+          inspected_python_files: 31
+          inspected_import_nodes: 185
+      - architecture_state: A0_4_REPORT_QUERY_PORT
+        execution_status: COMPLETED
+        compliance: COMPLIANT
+        checkpoint_path: architecture/acceptance/a1/a0_4_canonical_checkpoint.json
+        checkpoint_sha256: 7b0b0c7a0c6ac782540466d283c42d7589b8aaeb4af7df62104faa01fd154e8e
+        observation:
+          path: architecture/acceptance/a1/a0_4_canonical_public_api_observation.json
+          sha256: 3b894993e088b5ac73a74f1e6c6c410ebcfe9fcbdf2a73cbe551689e2433e351
+        raw_diagnostics:
+          path: architecture/acceptance/a1/a0_4_canonical_public_api_diagnostics.json
+          sha256: b85fbab20991dee62b67980f62a3318677784fe89fabcbb83dee7499ab0bd0b4
+        source_scope:
+          complete: true
+          inspected_python_files: 31
+          inspected_import_nodes: 185
+    semantic_validity_status: UNKNOWN
+    independent_approval_status: NOT_RECEIVED
+    threshold:
+      status: NOT_CONFIGURED
+      rationale: The evaluator emits a categorical source-check result; no approved numeric threshold exists.
+    limitations:
+      - Dynamic imports, runtime behavior, re-export behavior, and callable signatures are outside this static source inspection.
+      - The finite EVAL controls do not establish population accuracy or independent semantic suitability.
+
+  - id: REP_MONO_E1_DEV_A03_MODULE_GRAPH_CI_V1
+    criterion_id: architecture_compliance
+    intent: >-
+      Observe configured dependency directions and cycles in the capability-module
+      graph during the CI/test stage.
+    obligation_id: AC_MODULE_GRAPH
+    mapping_status: PROPOSED_UNREVIEWED
+    lifecycle_stage: ci_test
+    stage_binding_status: ENGINEERING_ACCEPTANCE_ONLY_UNREVIEWED_SCIENTIFIC_BINDING
+    execution_contract:
+      evaluator_entrypoint: architecture.acceptance.a1.cli
+      command_template:
+        - python
+        - -m
+        - architecture.acceptance.a1.cli
+        - "{evaluator_id}"
+        - --repo-root
+        - "{subject_checkout}"
+        - --state-manifest
+        - "{state_manifest}"
+        - --architecture-state
+        - "{architecture_state}"
+        - --expected-source-sha
+        - "{source_sha}"
+      stage_gate: "make architecture-test ARCHITECTURE_STAGE={architecture_state}"
+      exit_semantics: ENGINEERING_COMPLIANCE_ONLY_NOT_SEMANTIC_VALIDITY
+    evaluator:
+      id: AC_MODULE_GRAPH
+      version: "1.0.0"
+      source_digest_sha256: 5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c
+      configuration_artifact:
+        path: architecture/acceptance/a1/module_graph_v1.yaml
+        sha256: 1abae6871a477ff2a07685ad645a70defa2f1ac6745598ae4cdc35aab4e95bf6
+      metric:
+        name: compliance_status
+        unit: categorical
+        values: [COMPLIANT, NON_COMPLIANT, NOT_EVALUABLE]
+        threshold_status: NOT_CONFIGURED
+    evidence_by_state:
+      - architecture_state: A0_3_GOVERNED_MODULE_GRAPH
+        execution_status: COMPLETED
+        compliance: COMPLIANT
+        checkpoint_path: architecture/acceptance/a1/a0_3_canonical_checkpoint.json
+        checkpoint_sha256: 5da4a7e1ed359ec8ea1e3288ab81edf32f0b71e2fec946b52a8d0d562dcf43c0
+        observation:
+          path: architecture/acceptance/a1/a0_3_canonical_module_graph_observation.json
+          sha256: 21f2347325d59325501f220476459aef9677c3b7bddd99928b7a62234c1ff0c5
+        raw_diagnostics:
+          path: architecture/acceptance/a1/a0_3_canonical_module_graph_diagnostics.json
+          sha256: 890e620d4aba05990580bb31e2cb94c95e064623f22ce39e3cfecd01c192f1f5
+        source_scope:
+          complete: true
+          inspected_python_files: 31
+          inspected_import_nodes: 185
+      - architecture_state: A0_4_REPORT_QUERY_PORT
+        execution_status: COMPLETED
+        compliance: COMPLIANT
+        checkpoint_path: architecture/acceptance/a1/a0_4_canonical_checkpoint.json
+        checkpoint_sha256: 7b0b0c7a0c6ac782540466d283c42d7589b8aaeb4af7df62104faa01fd154e8e
+        observation:
+          path: architecture/acceptance/a1/a0_4_canonical_module_graph_observation.json
+          sha256: 31c3cf5ca864f3f47ff37ae50db068ab792bb863d5be0c7e73b54266fbd766da
+        raw_diagnostics:
+          path: architecture/acceptance/a1/a0_4_canonical_module_graph_diagnostics.json
+          sha256: 5c20421d86cf19f0f916b8c982f17d7d9c5976afddec5b3ff593800f629f57b2
+        source_scope:
+          complete: true
+          inspected_python_files: 31
+          inspected_import_nodes: 185
+    semantic_validity_status: UNKNOWN
+    independent_approval_status: NOT_RECEIVED
+    threshold:
+      status: NOT_CONFIGURED
+      rationale: The evaluator emits a categorical graph-check result; no approved numeric threshold exists.
+    limitations:
+      - Dynamic imports and runtime dependency mechanisms are outside the bounded static graph.
+      - A compliant directed graph does not by itself establish the semantic fitness of this representation.
+
+development_validation_evidence:
+  - experiment_id: EVAL-01
+    archive:
+      path: experiments/pilots/EVAL01_RAW_EVIDENCE_V1.zip
+      sha256: f6cd3c7180a0719c0f410f51acc9596b0843950d7650da7f7d2924716188c9bf
+    method_input_visibility: PROVENANCE_ONLY_NOT_EXPORTED
+    source_sha: d3101c0d3aa9b7b709253b6ec7518416f05f65b9
+    evaluator_source_digest_sha256: 5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c
+    calls_completed: 42
+    runner_failures: 0
+    diagnostic_mismatches: 0
+    confusion_matrices:
+      AC_PUBLIC_API: {tp: 1, tn: 5, fp: 0, fn: 0}
+      AC_MODULE_GRAPH: {tp: 3, tn: 3, fp: 0, fn: 0}
+    interpretation_limit: >-
+      These are finite author-selected source-pattern controls on A0.4, not
+      independent semantic approval, population accuracy, or A0.3 evidence.
+  - experiment_id: EVAL-02
+    archive:
+      path: experiments/pilots/EVAL02_RAW_EVIDENCE_V1.zip
+      sha256: 9039e17b5b640db5641b808719c6b972a389b8f5e833ac1dc7783e658f4bf18c
+    method_input_visibility: PROVENANCE_ONLY_NOT_EXPORTED
+    source_sha: d3101c0d3aa9b7b709253b6ec7518416f05f65b9
+    evaluator_source_digest_sha256: 5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c
+    calls_completed: 60
+    runner_failures: 0
+    diagnostic_mismatches: 3
+    confusion_matrices:
+      AC_PUBLIC_API: {tp: 4, tn: 4, fp: 0, fn: 0}
+      AC_MODULE_GRAPH: {tp: 2, tn: 4, fp: 0, fn: 0}
+    interpretation_limit: >-
+      Binary case classifications matched on applicable finite controls, while
+      three preregistered exact-diagnostic mismatches remain preserved. Dynamic
+      imports remain outside this static scope; results do not approve the pair.
+
+assumptions:
+  - The two evaluator rows are selected as a bounded CI development proposal because the A0.3 state manifest requires these engineering checks.
+  - The engineering-required evaluator status is not treated as normative obligation applicability or scientific authority.
+  - EVAL-01 and EVAL-02 archives support limited evaluator behavior claims and are not exported to a Method P input bundle.
+  - Existing checkpoint compliance is an observation about architecture source, not proof of semantic representation validity.
+
+limitations:
+  - This newly authored configuration did not exist in the historical A0.3 source tree and is not a reconstruction of historical fitness intent.
+  - The two catalog obligations are a bounded proposed subset, not the approved complete Q(A0.4) denominator.
+  - Applicability at A0.3 and A0.4, mandatory status, lifecycle-stage policy, and each representation-obligation-stage mapping remain unresolved.
+  - EVAL-02's three exact-diagnostic mismatches and the known dynamic-import blind spot remain open.
+  - The configuration is a possible component of a future input bundle, not a complete verified or authorized Method P input bundle.
+  - No canonical A0.3 to A0.4 Method P execution, B0/P comparison, measured improvement, G1 closure, G4 authorization, or MONO-E1 GO is claimed.
+
+authorization:
+  method_input_authorized: false
+  scientific_approval: false
+  P_ALGORITHM_STATUS: NOT_READY
+  G1: INCOMPLETE
+  G4: NOT_AUTHORIZED
+  MONO_E1: NO_GO
+  reference_freeze_gate: G-A1-C4-REF-FROZEN_REQUIRED_BEFORE_ANY_METHOD_P_EXECUTION_ON_DELTA_A4
+
+readiness:
+  structural_configuration: DEVELOPMENT_CONFIGURATION_ONLY
+  source_and_evidence_provenance: DIGEST_BOUND_ENGINEERING_EVIDENCE
+  semantic_fitness_validity: UNKNOWN
+  method_input_component: PROPOSED_COMPONENT_ONLY
+  complete_method_input_bundle: false
+  method_p_execution: NOT_AUTHORIZED

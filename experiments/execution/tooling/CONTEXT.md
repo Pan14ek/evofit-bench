@@ -83,6 +83,7 @@ tracked in `docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`.
 - `b0p_e1_execution.py` — additive E1 isolated B0/P run envelope with run-bound TEST_ONLY sidecar, reference exclusion, exact-pair readback, canonical RQ1 gating and six-row UNKNOWN RQ2
 - `mono_a1.py` — separate MONO-E1/E2 reference custody, prediction-scoring gates, exact-pair RQ2, W2 A1 readback, runtime prerequisites, and checksum archives
 - `mono_e1_preflight.py` — read-only MONO-E1 comparability verifier; reuses source revision, method-bundle, image-provenance, and timing validators without executing either method
+- `mono_e1_a03_fitness_config.py` — read-only schema, digest, canonical-source, frozen-A0, and evaluator-archive verifier for proposed B0_DEV_A03; it neither runs Method P nor changes readiness
 - `mono_policy_review_inventory.py` — read-only structural validator for the public MONO-E1 proposal inventory; compares copied rows to the pinned catalog and reports unresolved decision dimensions without certifying approval
 - `b0p_execution.py` — common immutable container preparation and evaluator helpers; P accepts a read-only evidence sidecar mount only when the caller supplies one
 
@@ -210,6 +211,12 @@ versioned JSON Schema, and the pinned catalog. Its PASS is limited to exact
 catalog inventory readback. Authority, applicability, mandatory status,
 lifecycle requirements, source-fact truth, semantic adequacy, and scientific
 approval remain unresolved or unverified; the tool never emits an approval.
+
+`mono_e1_a03_fitness_config.py` validates the new two-control A0.3 DEVELOPMENT
+proposal against its schema, pinned source/evaluator artifacts, preserved A0
+baseline bytes, and archived EVAL-01/EVAL-02 evidence. It fails closed on
+missing or contradictory evidence, reports semantic validity as UNKNOWN, and
+does not produce a Method P input bundle or invoke Method P.
 
 ## Verification and further reading
 

@@ -1,0 +1,473 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:mono-e1:b0-dev-a03-fitness-configuration:v1",
+  "title": "MONO-E1 A0.3 bounded CI DEVELOPMENT fitness configuration v1",
+  "description": "A proposed, non-historical E1-local configuration. Structural validity and source-bound evaluator evidence do not establish semantic validity or scientific approval.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "configuration_id",
+    "configuration_version",
+    "status",
+    "architecture_state",
+    "fitness_configuration_digest",
+    "baseline",
+    "provenance",
+    "criteria",
+    "obligations",
+    "representations",
+    "development_validation_evidence",
+    "assumptions",
+    "limitations",
+    "authorization",
+    "readiness"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "configuration_id": {"const": "MONO_E1_A03_CI_FITNESS_DEVELOPMENT"},
+    "configuration_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "status": {"const": "DEVELOPMENT_PROPOSAL_NOT_HISTORICAL"},
+    "architecture_state": {"const": "A0_3_GOVERNED_MODULE_GRAPH"},
+    "fitness_configuration_digest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "sidecar_path"],
+      "properties": {
+        "algorithm": {"const": "SHA-256"},
+        "sidecar_path": {"const": "fitness/configs/mono-e1-b0-dev-a03-v1.yaml.sha256"}
+      }
+    },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version",
+        "status",
+        "semantics",
+        "configuration_identity",
+        "target_state",
+        "retain_interpretation",
+        "historical_a0_b0",
+        "official_mono_e1_baseline_authorized"
+      ],
+      "properties": {
+        "id": {"const": "B0_DEV_A03"},
+        "version": {"const": "1.0.0"},
+        "status": {"const": "PROPOSED_E1_LOCAL"},
+        "semantics": {"const": "UNCHANGED_PROPOSED_A0_3_CONFIGURATION"},
+        "configuration_identity": {"const": "MONO_E1_A03_CI_FITNESS_DEVELOPMENT"},
+        "target_state": {"const": "A0_4_REPORT_QUERY_PORT"},
+        "retain_interpretation": {"const": "NOT_EVALUABLE_WHILE_EXACT_PAIR_SEMANTIC_VALIDITY_IS_UNKNOWN"},
+        "historical_a0_b0": {"const": "SEPARATE_FROZEN_A0_BASELINE"},
+        "official_mono_e1_baseline_authorized": {"const": false}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "proposal_origin",
+        "historical_a03_parent_configuration_status",
+        "historical_a0_b0",
+        "obligation_catalog",
+        "evaluator_implementation",
+        "canonical_states"
+      ],
+      "properties": {
+        "proposal_origin": {"const": "NEW_E1_LOCAL_DEVELOPMENT_PROPOSAL"},
+        "historical_a03_parent_configuration_status": {"const": "NOT_IDENTIFIED"},
+        "historical_a0_b0": {"$ref": "#/$defs/frozenA0Baseline"},
+        "obligation_catalog": {"$ref": "#/$defs/artifactRecord"},
+        "evaluator_implementation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["aggregate_sha256", "source_artifacts"],
+          "properties": {
+            "aggregate_sha256": {"$ref": "#/$defs/sha256"},
+            "source_artifacts": {
+              "type": "array",
+              "minItems": 4,
+              "items": {"$ref": "#/$defs/artifactRecord"}
+            }
+          }
+        },
+        "canonical_states": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {"$ref": "#/$defs/canonicalState"}
+        }
+      }
+    },
+    "criteria": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "intent"],
+        "properties": {
+          "id": {"const": "architecture_compliance"},
+          "intent": {"type": "string", "minLength": 20}
+        }
+      }
+    },
+    "obligations": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "criterion_id", "catalog_intent", "applicability", "validity"],
+        "properties": {
+          "id": {"enum": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]},
+          "criterion_id": {"const": "architecture_compliance"},
+          "catalog_intent": {"type": "string", "minLength": 20},
+          "applicability": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "A0_3",
+              "A0_4",
+              "engineering_evaluator_status",
+              "policy_approval_status",
+              "assumption"
+            ],
+            "properties": {
+              "A0_3": {"const": "UNKNOWN"},
+              "A0_4": {"const": "UNKNOWN"},
+              "engineering_evaluator_status": {"const": "REQUIRED_BY_STATE_MANIFEST"},
+              "policy_approval_status": {"const": "NOT_APPROVED"},
+              "assumption": {"type": "string", "minLength": 30}
+            }
+          },
+          "validity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["semantic_pair_status", "independent_review_status"],
+            "properties": {
+              "semantic_pair_status": {"const": "UNKNOWN"},
+              "independent_review_status": {"const": "NOT_RECEIVED"}
+            }
+          }
+        }
+      }
+    },
+    "representations": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {"$ref": "#/$defs/representation"}
+    },
+    "development_validation_evidence": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {"$ref": "#/$defs/validationRun"}
+    },
+    "assumptions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 20}
+    },
+    "limitations": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 20}
+    },
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method_input_authorized",
+        "scientific_approval",
+        "P_ALGORITHM_STATUS",
+        "G1",
+        "G4",
+        "MONO_E1",
+        "reference_freeze_gate"
+      ],
+      "properties": {
+        "method_input_authorized": {"const": false},
+        "scientific_approval": {"const": false},
+        "P_ALGORITHM_STATUS": {"const": "NOT_READY"},
+        "G1": {"const": "INCOMPLETE"},
+        "G4": {"const": "NOT_AUTHORIZED"},
+        "MONO_E1": {"const": "NO_GO"},
+        "reference_freeze_gate": {"const": "G-A1-C4-REF-FROZEN_REQUIRED_BEFORE_ANY_METHOD_P_EXECUTION_ON_DELTA_A4"}
+      }
+    },
+    "readiness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "structural_configuration",
+        "source_and_evidence_provenance",
+        "semantic_fitness_validity",
+        "method_input_component",
+        "complete_method_input_bundle",
+        "method_p_execution"
+      ],
+      "properties": {
+        "structural_configuration": {"const": "DEVELOPMENT_CONFIGURATION_ONLY"},
+        "source_and_evidence_provenance": {"const": "DIGEST_BOUND_ENGINEERING_EVIDENCE"},
+        "semantic_fitness_validity": {"const": "UNKNOWN"},
+        "method_input_component": {"const": "PROPOSED_COMPONENT_ONLY"},
+        "complete_method_input_bundle": {"const": false},
+        "method_p_execution": {"const": "NOT_AUTHORIZED"}
+      }
+    }
+  },
+  "$defs": {
+    "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "artifactRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "frozenA0Baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_tag",
+        "source_revision",
+        "supporting_artifacts_source_revision",
+        "configuration",
+        "representation_catalog",
+        "traceability",
+        "frozen_evaluator",
+        "representation_ids",
+        "obligation_ids",
+        "applicability_at_a03"
+      ],
+      "properties": {
+        "source_tag": {"const": "arch-a0-monolith-v1"},
+        "source_revision": {"$ref": "#/$defs/sha1"},
+        "supporting_artifacts_source_revision": {"const": "26a9bb667da7d0938e38aca15d2bf29fd1de4829"},
+        "configuration": {"$ref": "#/$defs/artifactRecord"},
+        "representation_catalog": {"$ref": "#/$defs/artifactRecord"},
+        "traceability": {"$ref": "#/$defs/artifactRecord"},
+        "frozen_evaluator": {"$ref": "#/$defs/artifactRecord"},
+        "representation_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "obligation_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "applicability_at_a03": {"const": "UNKNOWN"}
+      }
+    },
+    "canonicalState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "architecture_state",
+        "source_sha",
+        "repository_tree_sha",
+        "application_tree_sha",
+        "state_manifest",
+        "source_manifest",
+        "checkpoint"
+      ],
+      "properties": {
+        "architecture_state": {"enum": ["A0_3_GOVERNED_MODULE_GRAPH", "A0_4_REPORT_QUERY_PORT"]},
+        "source_sha": {"$ref": "#/$defs/sha1"},
+        "repository_tree_sha": {"$ref": "#/$defs/sha1"},
+        "application_tree_sha": {"$ref": "#/$defs/sha1"},
+        "state_manifest": {"$ref": "#/$defs/artifactRecord"},
+        "source_manifest": {"$ref": "#/$defs/artifactRecord"},
+        "checkpoint": {"$ref": "#/$defs/artifactRecord"}
+      }
+    },
+    "representation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "criterion_id",
+        "intent",
+        "obligation_id",
+        "mapping_status",
+        "lifecycle_stage",
+        "stage_binding_status",
+        "execution_contract",
+        "evaluator",
+        "evidence_by_state",
+        "semantic_validity_status",
+        "independent_approval_status",
+        "threshold",
+        "limitations"
+      ],
+      "properties": {
+        "id": {"type": "string", "pattern": "^REP_MONO_E1_DEV_A03_(PUBLIC_API|MODULE_GRAPH)_CI_V1$"},
+        "criterion_id": {"const": "architecture_compliance"},
+        "intent": {"type": "string", "minLength": 20},
+        "obligation_id": {"enum": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]},
+        "mapping_status": {"const": "PROPOSED_UNREVIEWED"},
+        "lifecycle_stage": {"const": "ci_test"},
+        "stage_binding_status": {"const": "ENGINEERING_ACCEPTANCE_ONLY_UNREVIEWED_SCIENTIFIC_BINDING"},
+        "execution_contract": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["evaluator_entrypoint", "command_template", "stage_gate", "exit_semantics"],
+          "properties": {
+            "evaluator_entrypoint": {"const": "architecture.acceptance.a1.cli"},
+            "command_template": {
+              "type": "array",
+              "minItems": 8,
+              "items": {"type": "string", "minLength": 1}
+            },
+            "stage_gate": {"const": "make architecture-test ARCHITECTURE_STAGE={architecture_state}"},
+            "exit_semantics": {"const": "ENGINEERING_COMPLIANCE_ONLY_NOT_SEMANTIC_VALIDITY"}
+          }
+        },
+        "evaluator": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "version", "source_digest_sha256", "configuration_artifact", "metric"],
+          "properties": {
+            "id": {"enum": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]},
+            "version": {"const": "1.0.0"},
+            "source_digest_sha256": {"$ref": "#/$defs/sha256"},
+            "configuration_artifact": {"$ref": "#/$defs/artifactRecord"},
+            "metric": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "unit", "values", "threshold_status"],
+              "properties": {
+                "name": {"const": "compliance_status"},
+                "unit": {"const": "categorical"},
+                "values": {
+                  "type": "array",
+                  "minItems": 3,
+                  "uniqueItems": true,
+                  "items": {"enum": ["COMPLIANT", "NON_COMPLIANT", "NOT_EVALUABLE"]}
+                },
+                "threshold_status": {"const": "NOT_CONFIGURED"}
+              }
+            }
+          }
+        },
+        "evidence_by_state": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "architecture_state",
+              "execution_status",
+              "compliance",
+              "checkpoint_path",
+              "checkpoint_sha256",
+              "observation",
+              "raw_diagnostics",
+              "source_scope"
+            ],
+            "properties": {
+              "architecture_state": {"enum": ["A0_3_GOVERNED_MODULE_GRAPH", "A0_4_REPORT_QUERY_PORT"]},
+              "execution_status": {"const": "COMPLETED"},
+              "compliance": {"enum": ["COMPLIANT", "NON_COMPLIANT"]},
+              "checkpoint_path": {"type": "string", "minLength": 1},
+              "checkpoint_sha256": {"$ref": "#/$defs/sha256"},
+              "observation": {"$ref": "#/$defs/artifactRecord"},
+              "raw_diagnostics": {"$ref": "#/$defs/artifactRecord"},
+              "source_scope": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["complete", "inspected_python_files", "inspected_import_nodes"],
+                "properties": {
+                  "complete": {"const": true},
+                  "inspected_python_files": {"const": 31},
+                  "inspected_import_nodes": {"const": 185}
+                }
+              }
+            }
+          }
+        },
+        "semantic_validity_status": {"const": "UNKNOWN"},
+        "independent_approval_status": {"const": "NOT_RECEIVED"},
+        "threshold": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["status", "rationale"],
+          "properties": {
+            "status": {"const": "NOT_CONFIGURED"},
+            "rationale": {"type": "string", "minLength": 20}
+          }
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 20}
+        }
+      }
+    },
+    "validationRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "experiment_id",
+        "archive",
+        "method_input_visibility",
+        "source_sha",
+        "evaluator_source_digest_sha256",
+        "calls_completed",
+        "runner_failures",
+        "diagnostic_mismatches",
+        "confusion_matrices",
+        "interpretation_limit"
+      ],
+      "properties": {
+        "experiment_id": {"enum": ["EVAL-01", "EVAL-02"]},
+        "archive": {"$ref": "#/$defs/artifactRecord"},
+        "method_input_visibility": {"const": "PROVENANCE_ONLY_NOT_EXPORTED"},
+        "source_sha": {"$ref": "#/$defs/sha1"},
+        "evaluator_source_digest_sha256": {"$ref": "#/$defs/sha256"},
+        "calls_completed": {"type": "integer", "minimum": 1},
+        "runner_failures": {"const": 0},
+        "diagnostic_mismatches": {"type": "integer", "minimum": 0},
+        "confusion_matrices": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"],
+          "properties": {
+            "AC_PUBLIC_API": {"$ref": "#/$defs/confusionMatrix"},
+            "AC_MODULE_GRAPH": {"$ref": "#/$defs/confusionMatrix"}
+          }
+        },
+        "interpretation_limit": {"type": "string", "minLength": 30}
+      }
+    },
+    "confusionMatrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tp", "tn", "fp", "fn"],
+      "properties": {
+        "tp": {"type": "integer", "minimum": 0},
+        "tn": {"type": "integer", "minimum": 0},
+        "fp": {"type": "integer", "minimum": 0},
+        "fn": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}
