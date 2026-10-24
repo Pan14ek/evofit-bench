@@ -31,6 +31,7 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 - `unit/test_b0p_development.py` — isolated-copy preparation, source-pin and readback checks
 - `unit/test_mono_a1.py` — synthetic MONO reference custody, E2 source-binding negative checks, sealed scoring prerequisites, denominator/exact-pair boundaries, and archive readback
 - `unit/test_mono_e1_preflight.py` — source-pair and B0/P comparability readback, allowlist/leakage, image attestation, timing, missing resource values, and authority fail-closed checks; no method execution
+- `unit/test_mono_e1_dev_p_decisions.py` — author-reference freeze, eight-scenario catalog, TEST_ONLY V3 P replay, evidence fail-closed cases, and raw-output checksum integrity; separate from official MONO-E1
 - `unit/test_mono_policy_review_inventory.py` — exact catalog copy, OPEN-03/OPEN-04 completeness dimensions, and structural-only approval boundary
 - `unit/test_module_public_apis.py` — ΔA2 exports, cross-module public imports and Reporting exception
 - `integration/test_public_module_contracts.py` — public facade session ownership and task rollback
@@ -64,6 +65,11 @@ The MONO-A1 tests validate only additive preparation contracts. Their
 synthetic reference and verifier fixtures are not MONO-E1/E2 measurements or
 independent W2 evaluator evidence. See
 `experiments/execution/MONO_A1_PROTOCOL_V1.md` for readiness gates.
+
+The `MONO_E1_DEV_P_DECISIONS_V1` runner reuses the synthetic SPEC 03 integration
+fixture builder, then performs fresh `verify_v3_p_bundle()` calls and invokes
+`run_adaptation()` for every repetition. Its scorer reference is never copied
+to method inputs; all labels remain non-independent DEVELOPMENT assumptions.
 
 ## PILOT-02 tests
 

@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.local/experiments/mono-e1-dev-p-decisions/scenario.schema.json",
+  "title": "MONO_E1_DEV_P_DECISIONS_V1 synthetic scenario catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "experiment_id", "repetitions", "scenarios"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "experiment_id": {"const": "MONO_E1_DEV_P_DECISIONS_V1"},
+    "repetitions": {"const": 3},
+    "scenarios": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {"$ref": "#/$defs/scenario"}
+    }
+  },
+  "$defs": {
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scenario_id", "group", "architecture_before", "architecture_after",
+        "initial_fitness_configuration", "obligations", "evaluator_capabilities",
+        "evidence", "fixture"
+      ],
+      "properties": {
+        "scenario_id": {"type": "string", "pattern": "^[A-D][1-2]$"},
+        "group": {"enum": ["RETAIN", "ADD", "REPLACE", "HOLD"]},
+        "architecture_before": {"type": "string", "minLength": 12},
+        "architecture_after": {"type": "string", "minLength": 12},
+        "initial_fitness_configuration": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["representations", "active_mandatory_obligations"],
+          "properties": {
+            "representations": {"type": "array", "items": {"type": "string"}},
+            "active_mandatory_obligations": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "obligations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["obligation_id", "mandatory", "applicability_before", "applicability_after"],
+            "properties": {
+              "obligation_id": {"type": "string"},
+              "mandatory": {"type": "boolean"},
+              "applicability_before": {"enum": ["ACTIVE", "INACTIVE", "UNKNOWN"]},
+              "applicability_after": {"enum": ["ACTIVE", "INACTIVE", "UNKNOWN"]}
+            }
+          }
+        },
+        "evaluator_capabilities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["evaluator_id", "stage", "successor_template_available"],
+          "properties": {
+            "evaluator_id": {"type": "string"},
+            "stage": {"const": "ci"},
+            "successor_template_available": {"type": "boolean"}
+          }
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode", "required_targets_after"],
+          "properties": {
+            "mode": {"enum": ["complete", "missing", "stale", "pair_scope"]},
+            "required_targets_after": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "fixture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "include_parent_representation", "include_successor_template", "active_policy_states",
+            "before_files", "after_files", "removed_after_paths", "parent_targets", "template_targets",
+            "complete_module_inventory"
+          ],
+          "properties": {
+            "include_parent_representation": {"type": "boolean"},
+            "include_successor_template": {"type": "boolean"},
+            "active_policy_states": {"type": "array", "items": {"enum": ["before", "after"]}},
+            "before_files": {"type": "object", "additionalProperties": {"type": "string"}},
+            "after_files": {"type": "object", "additionalProperties": {"type": "string"}},
+            "removed_after_paths": {"type": "array", "items": {"type": "string"}},
+            "parent_targets": {"type": "array", "items": {"type": "string"}},
+            "template_targets": {"type": "array", "items": {"type": "string"}},
+            "complete_module_inventory": {"type": "boolean"}
+          }
+        }
+      }
+    }
+  }
+}

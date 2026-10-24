@@ -21,6 +21,7 @@ Scientific protocol, scenarios, execution, curated evidence and run results.
 - `execution/schemas/pilot02_inherited_evaluator_results_v1.schema.json`
 - `results/` (ignored generated run outputs)
 - `pilots/` contains PILOT-01/02 and the separate EVAL-01/02 evaluator-validation protocols, reports, Ukrainian manuscript subsections, generated tables, checksummed evidence archives, and narrow tools
+- `pilots/mono_e1_dev_p_decisions_v1/` contains a separate eight-case TEST_ONLY Method P DEVELOPMENT decision experiment, frozen scorer-side reference, verified-path runner, raw technical repetitions, B0_SYNTH output, and descriptive results; not an official MONO-E1/DA01 result
 
 ## Established conventions
 
@@ -92,3 +93,10 @@ proposals only; absent policy authority, complete capability denominator,
 allowlists, image attestations, fixture identity, and G1/G4 authorization keep
 the experiment at NO_GO. The verifier is read-only and does not create bundles,
 reset databases, execute methods, freeze references, or score outcomes.
+
+The synthetic Method P decision experiment at
+`pilots/mono_e1_dev_p_decisions_v1/` uses the full verified V3 path and
+`run_adaptation()` under TEST_ONLY trust. Its repeated runs are technical
+repetitions and its reference is AUTHOR_DECLARED/NON_INDEPENDENT. It is separate
+from the canonical MONO-E1 transition and does not change scientific status or
+readiness gates.
