@@ -1,0 +1,246 @@
+{
+  "architecture_after_sha": "432524d75390d36ec04d5c29d21fef6488186cec",
+  "architecture_before_sha": "82f9ee98fbc49aefc3787d9b42007e0a149a5973",
+  "coverage": {
+    "applicability_assessment_sha256": "4b4f9fde12bc384969b38365ba6e117c0c63ab7e3f05d69b177da720fd1079c4",
+    "architecture_source_sha": "432524d75390d36ec04d5c29d21fef6488186cec",
+    "assessment_sha256": "a3ccc10d358879ee5a9f3d0745d29f723797e4362234eb15873ef90359811886",
+    "mandatory_covered": 0,
+    "mandatory_total": 0,
+    "obligations": [
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "AC_COMMUNICATION_POLICY",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "AC_DATA_OWNERSHIP",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "AC_DEPLOYMENT_TOPOLOGY",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "ACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "AC_LAYERING",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "AC_MODULE_GRAPH",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "AC_MODULE_STRUCTURE",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "AC_PUBLIC_API",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "AC_SERVICE_BOUNDARY",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "P_ASYNC_LAG",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "P_EXT_LATENCY",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "P_REMOTE_LATENCY",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "R_BUSINESS_FAILURE",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "R_EVENT_DELIVERY",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "R_HTTP_5XX",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "R_IDEMPOTENCY",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "R_LOCAL_ATOMICITY",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "R_READMODEL_CONVERGENCE",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": null,
+        "obligation_id": "R_REMOTE_DEPENDENCY",
+        "reason_codes": [
+          "MANDATORY_CLASSIFICATION_UNRESOLVED"
+        ],
+        "required_stages": [],
+        "status": "UNKNOWN",
+        "valid_pair_ids": []
+      }
+    ],
+    "policy_bundle_sha256": "4948e70c7a79b1533e2226476bd9d5f227267732d41370c3559d8549c6b6df37",
+    "policy_source_revision": "synthetic-positive-policy-v1",
+    "reason_codes": [
+      "MANDATORY_CLASSIFICATION_UNRESOLVED"
+    ],
+    "ruleset_sha256": "b8166f5cf19966d6705d92a9b8adc457f17f0f0eb26ce0ebc92fb25baba7e7a8",
+    "schema_version": 1,
+    "status": "UNKNOWN"
+  },
+  "experiment_id": "MONO_E1_DEV_P_DECISIONS_V1",
+  "governance": "NOT_RUN",
+  "initial_configuration_sha256": "d16d2eee48a8b2595a07cb748220ddf0a909d3ed1bfcebdfac6f1f7404c3f9c6",
+  "input_bundle_sha256": "6d827bf150349cd1c5e3f7b0e0b48f30d4cc9067d2dab14405bfea1182435e55",
+  "interpretation": "Synthetic no-op configuration assessed on the same after-state and obligation universe; no semantic adaptation is applied.",
+  "method": "B0_SYNTH",
+  "operation": "UNCHANGED_CONFIGURATION",
+  "scenario_id": "D1",
+  "schema_version": 1
+}
