@@ -464,3 +464,25 @@ PATH=/private/tmp/b0p-venv/bin:$PATH PYTHONPATH="$PWD" \
 and invokes `verify_evidence()` from the exact pinned W2 checkout. This suite
 uses a synthetic W2-shaped source tree and report only; it does not validate
 authentic W2 output or establish MONO-E1/E2 results.
+
+### TEST_ONLY MONO_E1_DEV_P_DECISIONS_V1 reporting
+
+This separate synthetic pilot reports descriptive outcomes only. Its focused
+regression checks protect the results schema and the retained-run boundary:
+
+| Requirement | Expected behavior | Test owner | Status |
+| --- | --- | --- | --- |
+| DEV-P-REPORT-01 | Keep pre-adaptation coverage, candidate-configuration coverage, evidence-record inventories, and actual post-adaptation coverage distinct; do not infer evidence completeness from coverage. | `tests/unit/test_mono_e1_dev_p_decisions.py::test_score_separates_scenario_outcomes_coverage_and_evidence_records` | Focused scorer regression |
+| DEV-P-REPORT-02 | Identify B0_SYNTH as a derived unchanged-configuration assessment from Method P current coverage on the same verified input, not an independently executed arm. | `test_score_separates_scenario_outcomes_coverage_and_evidence_records` | Scorer provenance and report regression |
+| DEV-P-REPORT-03 | Report eight scenario outcomes separately from 24 technical repetitions and preserve the prior operation/governance distributions and classifications, including D2 expected HOLD versus observed REJECT. | `test_score_separates_scenario_outcomes_coverage_and_evidence_records` | Classification-preservation regression |
+| DEV-P-REPORT-04 | Scoring leaves the raw records, raw manifest, and frozen reference unchanged. | `test_score_separates_scenario_outcomes_coverage_and_evidence_records` | Temporary-copy immutability regression |
+
+Run the focused suite with:
+
+```bash
+uv run python -m pytest -q --no-cov -p no:cacheprovider \
+  tests/unit/test_mono_e1_dev_p_decisions.py
+```
+
+These checks validate reporting and scorer integrity. They do not execute
+Method P or establish scientific validity, readiness, or authorization.

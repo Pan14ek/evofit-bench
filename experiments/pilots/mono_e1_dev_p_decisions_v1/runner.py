@@ -85,18 +85,26 @@ Generated outputs for MONO_E1_DEV_P_DECISIONS_V1. `execution_manifest.json` bind
 the pre-registration commit, Method P source identity, environment, and scenario
 bundle digests. `raw_records_manifest.json` binds every retained raw file. The
 scorer writes `results_v1.json`, `report_v1.md`, and `score_manifest.json` only
-after all raw execution records exist.
+after all raw execution records exist. Results separate eight scenario summaries
+from 24 technical-repetition records. They report pre-adaptation and candidate-
+configuration coverage separately from record-level evidence inventories; no
+aggregate evidence-completeness verdict is inferred from coverage. Actual
+post-adaptation coverage is not measured.
 
 The `raw/` directory stores scenario-prefixed records and deterministic ZIP
 archives of the exact V3 method input bundles. Extract a bundle archive to a new
 directory and run `verify_method_bundle_v3()` before reuse. Do not overwrite this
-run; use a new versioned output directory for a reproduction.
+run; use a new versioned output directory for a reproduction. B0_SYNTH is a
+derived unchanged-configuration assessment using the same verified input and
+Method P's `current_coverage`; it is not an independently executed arm.
 """
 RAW_CONTEXT = """# Context — `run_v1/raw`
 
 This directory contains the exact TEST_ONLY method input bundle archives,
-adaptation sidecars, evaluator outputs, B0_SYNTH baselines, and three raw Method
-P records per scenario. Files use the scenario ID as a prefix. The parent
+adaptation sidecars, evaluator outputs, B0_SYNTH derived unchanged-configuration
+assessments, and three raw Method P records per scenario. B0_SYNTH coverage is
+copied from Method P `current_coverage` on the same verified input; it is not an
+independently executed arm. Files use the scenario ID as a prefix. The parent
 `raw_records_manifest.json` records each file's byte size and SHA-256 digest.
 """
 
@@ -849,6 +857,160 @@ def _classify(reference: Mapping[str, Any], record: Mapping[str, Any]) -> str:
     return "CORRECT"
 
 
+def _coverage_summary(value: object) -> dict[str, Any] | None:
+    if not isinstance(value, Mapping):
+        return None
+    return {
+        "status": value.get("status"),
+        "mandatory_covered": value.get("mandatory_covered"),
+        "mandatory_total": value.get("mandatory_total"),
+        "assessment_sha256": value.get("assessment_sha256"),
+        "architecture_source_sha": value.get("architecture_source_sha"),
+    }
+
+
+def _coverage_status_counts(
+    records: Sequence[Mapping[str, Any]], coverage_key: str
+) -> dict[str, int]:
+    counts: Counter[str] = Counter()
+    for record in records:
+        result = record.get("result")
+        coverage = result.get(coverage_key) if isinstance(result, Mapping) else None
+        if isinstance(coverage, Mapping):
+            status = str(coverage.get("status", "UNKNOWN"))
+        elif isinstance(result, Mapping) and result.get("execution_status") == "COMPLETED":
+            status = "NOT_REPORTED"
+        else:
+            status = "NOT_EVALUABLE"
+        counts[status] += 1
+    return dict(sorted(counts.items()))
+
+
+def _pair_assessment_records(value: object) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    return [
+        {
+            "representation_id": row.get("representation_id"),
+            "obligation_id": row.get("obligation_id"),
+            "status": row.get("status"),
+            "semantic_proof_status": row.get("semantic_proof_status"),
+            "reason_codes": sorted(str(code) for code in (row.get("reason_codes") or [])),
+        }
+        for row in value
+        if isinstance(row, Mapping)
+    ]
+
+
+def _evidence_record_inventory(
+    result: Mapping[str, Any],
+    sidecar: Mapping[str, Any] | None,
+    sidecar_file_sha256: str | None,
+    evaluator_execution_records: object,
+    evaluator_execution_file_sha256: str | None,
+) -> dict[str, Any]:
+    payload = sidecar.get("payload") if isinstance(sidecar, Mapping) else None
+    payload = payload if isinstance(payload, Mapping) else {}
+    evaluator_evidence = payload.get("evaluator_evidence", [])
+    pair_proofs = payload.get("pair_proofs", [])
+    evaluator_evidence = evaluator_evidence if isinstance(evaluator_evidence, list) else []
+    pair_proofs = pair_proofs if isinstance(pair_proofs, list) else []
+    execution_records = (
+        evaluator_execution_records if isinstance(evaluator_execution_records, list) else []
+    )
+
+    def evidence_record(row: Mapping[str, Any]) -> dict[str, Any]:
+        evidence = row.get("evidence")
+        evidence = evidence if isinstance(evidence, Mapping) else {}
+        artifacts = evidence.get("evidence_artifacts")
+        artifacts = artifacts if isinstance(artifacts, list) else []
+        return {
+            "representation_id": row.get("representation_id"),
+            "obligation_id": row.get("obligation_id"),
+            "evaluator_id": evidence.get("evaluator_id"),
+            "architecture_source_sha": evidence.get("architecture_source_sha"),
+            "infrastructure_status": evidence.get("infrastructure_status"),
+            "evidence_contract_satisfied": evidence.get("evidence_contract_satisfied"),
+            "adequacy_proven": evidence.get("adequacy_proven"),
+            "evidence_artifacts": [
+                {"path": artifact.get("path"), "sha256": artifact.get("sha256")}
+                for artifact in artifacts
+                if isinstance(artifact, Mapping)
+            ],
+        }
+
+    return {
+        "adaptation_evidence_sidecar": {
+            "present": sidecar is not None,
+            "file_sha256": sidecar_file_sha256,
+            "declared_sha256": sidecar.get("sidecar_sha256") if sidecar else None,
+            "contract_id": sidecar.get("contract_id") if sidecar else None,
+            "verifier_id": sidecar.get("verifier_id") if sidecar else None,
+            "scope": sidecar.get("scope") if sidecar else None,
+        },
+        "evaluator_evidence_records": [
+            evidence_record(row) for row in evaluator_evidence if isinstance(row, Mapping)
+        ],
+        "sidecar_pair_proofs": [
+            {
+                "representation_id": row.get("representation_id"),
+                "obligation_id": row.get("obligation_id"),
+                "status": row.get("status"),
+                "reason_codes": sorted(str(code) for code in (row.get("reason_codes") or [])),
+            }
+            for row in pair_proofs
+            if isinstance(row, Mapping)
+        ],
+        "evaluator_execution_records": {
+            "present": bool(execution_records),
+            "file_sha256": evaluator_execution_file_sha256,
+            "records": [
+                {
+                    "representation_id": row.get("representation_id"),
+                    "architecture_source_sha": row.get("architecture_source_sha"),
+                    "tag": row.get("tag"),
+                    "process_exit_code": row.get("process_exit_code"),
+                    "evaluator_report": row.get("evaluator_report"),
+                    "stdout_sha256": row.get("stdout_sha256"),
+                    "stderr_sha256": row.get("stderr_sha256"),
+                }
+                for row in execution_records
+                if isinstance(row, Mapping)
+            ],
+        },
+        "pre_adaptation_pair_assessments": _pair_assessment_records(result.get("current_pairs")),
+        "candidate_pair_assessments": _pair_assessment_records(result.get("candidate_pairs")),
+    }
+
+
+def _verify_b0_synth_provenance(
+    baseline: Mapping[str, Any], scenario_records: Sequence[Mapping[str, Any]]
+) -> None:
+    if baseline.get("operation") != "UNCHANGED_CONFIGURATION":
+        raise ProtocolError("B0_SYNTH_OPERATION_INVALID")
+    if baseline.get("governance") != "NOT_RUN":
+        raise ProtocolError("B0_SYNTH_MUST_NOT_CLAIM_GOVERNANCE_RUN")
+    if not scenario_records:
+        raise ProtocolError("B0_SYNTH_WITHOUT_METHOD_P_RECORDS")
+    first_result = scenario_records[0].get("result")
+    first_result = first_result if isinstance(first_result, Mapping) else {}
+    first_coverage = first_result.get("current_coverage")
+    if not isinstance(first_coverage, Mapping):
+        raise ProtocolError("B0_SYNTH_METHOD_P_CURRENT_COVERAGE_MISSING")
+    for record in scenario_records:
+        result = record.get("result")
+        result = result if isinstance(result, Mapping) else {}
+        if (
+            record.get("input_bundle_sha256") != baseline.get("input_bundle_sha256")
+            or record.get("architecture_before_sha") != baseline.get("architecture_before_sha")
+            or record.get("architecture_after_sha") != baseline.get("architecture_after_sha")
+            or result.get("current_coverage") != first_coverage
+        ):
+            raise ProtocolError("B0_SYNTH_METHOD_P_PROVENANCE_MISMATCH")
+    if baseline.get("coverage") != first_coverage:
+        raise ProtocolError("B0_SYNTH_COVERAGE_NOT_METHOD_P_CURRENT_COVERAGE")
+
+
 def _score(output_dir: Path) -> None:
     raw_manifest = _verify_raw_manifest(output_dir)
     execution_manifest = _read_json(output_dir / "execution_manifest.json")
@@ -898,7 +1060,8 @@ def _score(output_dir: Path) -> None:
         op: defaultdict(int) for op in ("retain", "add", "replace", "hold")
     }
     governance_counts: Counter[str] = Counter()
-    score_rows: list[dict[str, Any]] = []
+    scenario_rows: list[dict[str, Any]] = []
+    technical_rows: list[dict[str, Any]] = []
     all_counts: Counter[str] = Counter()
     operation_matches = operation_evaluable = 0
     unnecessary = nonadaptation_evaluable = 0
@@ -924,8 +1087,11 @@ def _score(output_dir: Path) -> None:
         scenario_inappropriate_holds = 0
         scenario_missed_holds = 0
         scenario_hold_governance_mismatches = 0
-        governance_by_repetition: list[str] = []
-        reason_codes_by_repetition: list[list[str]] = []
+        scenario_governance_counts: Counter[str] = Counter()
+        scenario_reason_codes: set[str] = set()
+        scenario_operations: Counter[str] = Counter(observed_ops)
+        scenario_records_for_technical: list[dict[str, Any]] = []
+        operation_correct = operation_incorrect = operation_not_evaluable = 0
         for record, observed in zip(scenario_records, observed_ops, strict=True):
             expected = str(reference["expected_operation"])
             p_result = record["result"]
@@ -935,18 +1101,22 @@ def _score(output_dir: Path) -> None:
                 if isinstance(governance, Mapping)
                 else "EXECUTION_FAILURE"
             )
-            governance_by_repetition.append(governance_result)
-            reason_codes_by_repetition.append(
-                sorted(str(code) for code in (governance or {}).get("reason_codes", []))
+            repetition_reason_codes = (
+                sorted(str(code) for code in (governance.get("reason_codes") or []))
                 if isinstance(governance, Mapping)
-                else [str(record["result"].get("failure_reason_code", "EXECUTION_FAILURE"))]
+                else [str(p_result.get("failure_reason_code", "EXECUTION_FAILURE"))]
             )
+            scenario_reason_codes.update(repetition_reason_codes)
             if expected in confusion and observed in {"retain", "add", "replace", "hold"}:
                 confusion[expected][observed] += 1
             governance_counts[governance_result] += 1
+            scenario_governance_counts[governance_result] += 1
             if record["result"].get("execution_status") == "COMPLETED":
                 operation_evaluable += 1
-                operation_matches += observed == expected
+                is_operation_match = observed == expected
+                operation_matches += is_operation_match
+                operation_correct += is_operation_match
+                operation_incorrect += not is_operation_match
                 if expected in {"hold", "retain"}:
                     nonadaptation_evaluable += 1
                 if expected in {"hold", "retain"} and observed in {
@@ -978,15 +1148,69 @@ def _score(output_dir: Path) -> None:
                 elif observed == "hold":
                     inappropriate_holds += 1
                     scenario_inappropriate_holds += 1
+            else:
+                operation_not_evaluable += 1
             duration_by_operation[observed].append(int(record["duration_ns"]))
 
+            candidate_validation = p_result.get("candidate_validation")
+            candidate_validation = (
+                candidate_validation if isinstance(candidate_validation, Mapping) else {}
+            )
+            sidecar_path = f"raw/{scenario_id}_adaptation_evidence_test_only.json"
+            evaluator_records_path = f"raw/{scenario_id}_sidecar_evaluator_records.json"
+            sidecar = (
+                _read_json(output_dir / sidecar_path) if sidecar_path in digest_by_path else None
+            )
+            evaluator_records = (
+                _read_json(output_dir / evaluator_records_path)
+                if evaluator_records_path in digest_by_path
+                else []
+            )
+            technical_record = {
+                "scenario_id": scenario_id,
+                "repetition": int(record["repetition"]),
+                "expected_operation": expected,
+                "expected_governance": reference["expected_governance"],
+                "proposed_operation": observed,
+                "proposed_operations": p_result.get("proposed_operations", []),
+                "governance_result": governance_result,
+                "governance_accepted": governance_result == "ACCEPT",
+                "governance_reason_codes": repetition_reason_codes,
+                "classification": record["classification"],
+                "candidate_configuration_sha256": p_result.get("candidate_sha256"),
+                "candidate_validation_status": candidate_validation.get("status"),
+                "operation_plan_sha256": (p_result.get("operation_plan") or {}).get("plan_sha256"),
+                "pre_adaptation_coverage": _coverage_summary(p_result.get("current_coverage")),
+                "candidate_configuration_coverage": _coverage_summary(
+                    p_result.get("candidate_coverage")
+                ),
+                "actual_post_adaptation_coverage": {
+                    "status": "NOT_MEASURED",
+                    "reason": (
+                        "The candidate configuration was not applied and re-evaluated in this "
+                        "experiment."
+                    ),
+                },
+                "evidence_record_inventory": _evidence_record_inventory(
+                    p_result,
+                    sidecar,
+                    digest_by_path.get(sidecar_path),
+                    evaluator_records,
+                    digest_by_path.get(evaluator_records_path),
+                ),
+                "duration_ns": int(record["duration_ns"]),
+                "raw_record_sha256": record["raw_record_sha256"],
+                "input_bundle_sha256": record["input_bundle_sha256"],
+            }
+            technical_rows.append(technical_record)
+            scenario_records_for_technical.append(technical_record)
+
         baseline_path = output_dir / "raw" / f"{scenario_id}_b0_synth.json"
-        b0 = _read_json(baseline_path) if baseline_path.is_file() else None
-        observed_candidates = [row["result"].get("candidate_sha256") for row in scenario_records]
-        observed_plans = [
-            (row["result"].get("operation_plan") or {}).get("plan_sha256")
-            for row in scenario_records
-        ]
+        baseline_raw_path = f"raw/{scenario_id}_b0_synth.json"
+        if baseline_raw_path not in digest_by_path or not baseline_path.is_file():
+            raise ProtocolError(f"B0_SYNTH_RECORD_MISSING:{scenario_id}")
+        b0 = _read_json(baseline_path)
+        _verify_b0_synth_provenance(b0, scenario_records)
         decision_signatures = {
             (
                 _operation(row["result"]),
@@ -1001,42 +1225,18 @@ def _score(output_dir: Path) -> None:
             for operation in observed_ops
         )
         b0_difference_count += p_differs_from_b0
-        combined_reason_codes = sorted(
-            {code for repetition_codes in reason_codes_by_repetition for code in repetition_codes}
-        )
-        score_rows.append(
+        scenario_rows.append(
             {
                 "scenario_id": scenario_id,
                 "expected_operation": reference["expected_operation"],
                 "expected_governance": reference["expected_governance"],
-                "b0_synth_operation": b0["operation"] if b0 else "NOT_EVALUABLE",
-                "b0_synth_coverage_status": (b0["coverage"]["status"] if b0 else "NOT_EVALUABLE"),
-                "b0_synth_configuration_sha256": (
-                    b0["initial_configuration_sha256"] if b0 else None
-                ),
-                "method_p_proposed_operation": (
-                    Counter(observed_ops).most_common(1)[0][0] if observed_ops else "none"
-                ),
-                "method_p_observed_operations_by_repetition": observed_ops,
-                "method_p_governance_by_repetition": governance_by_repetition,
-                "actual_reason_codes": combined_reason_codes,
-                "actual_reason_codes_by_repetition": reason_codes_by_repetition,
+                "method_p_operation_counts": dict(sorted(scenario_operations.items())),
+                "method_p_governance_counts": dict(sorted(scenario_governance_counts.items())),
+                "actual_reason_codes": sorted(scenario_reason_codes),
                 "decision_repetition_consistent": len(decision_signatures) == 1,
-                "candidate_configuration_sha256_by_repetition": observed_candidates,
-                "operation_plan_sha256_by_repetition": observed_plans,
-                "operation_match_count": sum(
-                    _operation(row["result"]) == reference["expected_operation"]
-                    for row in scenario_records
-                    if row["result"].get("execution_status") == "COMPLETED"
-                ),
-                "operation_mismatch_count": sum(
-                    _operation(row["result"]) != reference["expected_operation"]
-                    for row in scenario_records
-                    if row["result"].get("execution_status") == "COMPLETED"
-                ),
-                "operation_not_evaluable_count": sum(
-                    row["result"].get("execution_status") != "COMPLETED" for row in scenario_records
-                ),
+                "operation_decision_correct_count": operation_correct,
+                "operation_decision_incorrect_count": operation_incorrect,
+                "operation_decision_not_evaluable_count": operation_not_evaluable,
                 "correct_incorrect_not_evaluable": {
                     "correct": correct,
                     "incorrect": incorrect,
@@ -1051,14 +1251,24 @@ def _score(output_dir: Path) -> None:
                     "operation_hold_with_governance_mismatch": scenario_hold_governance_mismatches,
                 },
                 "b0_synth_differs_from_method_p": p_differs_from_b0,
-                "duration_ns": [int(row["duration_ns"]) for row in scenario_records],
+                "pre_adaptation_coverage_status_counts": _coverage_status_counts(
+                    scenario_records, "current_coverage"
+                ),
+                "candidate_configuration_coverage_status_counts": _coverage_status_counts(
+                    scenario_records, "candidate_coverage"
+                ),
+                "b0_synth_assessment": {
+                    "operation": b0["operation"],
+                    "governance": b0["governance"],
+                    "coverage": _coverage_summary(b0.get("coverage")),
+                    "initial_configuration_sha256": b0.get("initial_configuration_sha256"),
+                    "input_bundle_sha256": b0.get("input_bundle_sha256"),
+                    "raw_record_sha256": digest_by_path[baseline_raw_path],
+                    "coverage_source": "METHOD_P_CURRENT_COVERAGE_ON_SAME_VERIFIED_INPUT",
+                    "independently_executed_baseline_arm": False,
+                },
                 "duration_ns_min": min(int(row["duration_ns"]) for row in scenario_records),
                 "duration_ns_max": max(int(row["duration_ns"]) for row in scenario_records),
-                "evidence_completeness": [
-                    (row["result"].get("current_coverage") or {}).get("status", "NOT_EVALUABLE")
-                    for row in scenario_records
-                ],
-                "raw_result_sha256": [row["raw_record_sha256"] for row in scenario_records],
                 "bundle_sha256": scenario_records[0]["input_bundle_sha256"],
             }
         )
@@ -1070,7 +1280,7 @@ def _score(output_dir: Path) -> None:
     holds = governance_counts.get("HOLD", 0)
     decision_evaluable = all_counts["CORRECT"] + all_counts["INCORRECT"]
     results = {
-        "schema_version": 1,
+        "schema_version": 2,
         "experiment_id": "MONO_E1_DEV_P_DECISIONS_V1",
         "reference_status": "AUTHOR_DECLARED / DEVELOPMENT / NON_INDEPENDENT",
         "scientific_status_effect": SCIENTIFIC_STATUS_EFFECT,
@@ -1092,8 +1302,21 @@ def _score(output_dir: Path) -> None:
             "source_commit_sha"
         ],
         "method_identity": _read_json(output_dir / "execution_manifest.json")["method_identity"],
-        "scenario_count": len(score_rows),
+        "scenario_count": len(scenario_rows),
         "technical_repetition_count": total,
+        "outcome_unit_note": (
+            "Scenario-level outcomes are reported separately from technical repetitions; "
+            "three repetitions per scenario are not independent cases."
+        ),
+        "evidence_reporting_note": (
+            "No evidence-set completeness verdict is present in the raw records. Evidence "
+            "sidecars, evaluator records, pair-proof statuses, and Method P pair assessments "
+            "are inventoried separately; coverage is not used as an evidence-completeness proxy."
+        ),
+        "post_adaptation_coverage_note": (
+            "Candidate configurations were not applied and re-evaluated; actual post-adaptation "
+            "coverage is NOT_MEASURED."
+        ),
         "summary_counts": {
             "correct": all_counts["CORRECT"],
             "incorrect": all_counts["INCORRECT"],
@@ -1143,14 +1366,18 @@ def _score(output_dir: Path) -> None:
             for key, values in sorted(duration_by_operation.items())
         },
         "b0_synth_vs_method_p": {
-            "baseline_operation": "UNCHANGED_CONFIGURATION",
-            "scenario_count": len(score_rows),
+            "assessment_type": "DERIVED_UNCHANGED_CONFIGURATION_ASSESSMENT",
+            "operation": "UNCHANGED_CONFIGURATION",
+            "coverage_source": "METHOD_P_CURRENT_COVERAGE_ON_SAME_VERIFIED_INPUT",
+            "independently_executed_baseline_arm": False,
+            "scenario_count": len(scenario_rows),
             "scenarios_with_configuration_change_proposal": b0_difference_count,
             "scenario_ids_with_configuration_change_proposal": [
-                row["scenario_id"] for row in score_rows if row["b0_synth_differs_from_method_p"]
+                row["scenario_id"] for row in scenario_rows if row["b0_synth_differs_from_method_p"]
             ],
         },
-        "scenario_results": score_rows,
+        "scenario_results": scenario_rows,
+        "technical_repetition_results": technical_rows,
         "interpretation_limits": [
             "Three repetitions are technical repetitions, not independent cases.",
             "AUTHOR_DECLARED labels are not independent ground truth.",
@@ -1165,19 +1392,21 @@ def _score(output_dir: Path) -> None:
         ],
     }
     _write_json(output_dir / "results_v1.json", results)
-    report = _render_report(results, score_rows, holds, execution_failures)
+    report = _render_report(results, scenario_rows, technical_rows, holds, execution_failures)
     report_path = output_dir / "report_v1.md"
     report_path.write_text(report, encoding="utf-8")
     _write_json(
         output_dir / "score_manifest.json",
         {
-            "schema_version": 1,
+            "schema_version": 2,
             "reference_sha256": reference_digest,
             "scorer_source_commit_sha": scorer_source_commit_sha,
             "scorer_code_sha256": scorer_code_sha256,
             "execution_manifest_sha256": _sha256(output_dir / "execution_manifest.json"),
             "raw_manifest_sha256": _sha256(output_dir / "raw_records_manifest.json"),
+            "scenario_count": len(scenario_rows),
             "scored_record_count": total,
+            "technical_repetition_count": len(technical_rows),
             "result_sha256": _sha256(output_dir / "results_v1.json"),
             "report_sha256": _sha256(report_path),
         },
@@ -1186,12 +1415,25 @@ def _score(output_dir: Path) -> None:
 
 
 def _render_report(
-    results: Mapping[str, Any], rows: Sequence[Mapping[str, Any]], holds: int, failures: int
+    results: Mapping[str, Any],
+    scenario_rows: Sequence[Mapping[str, Any]],
+    technical_rows: Sequence[Mapping[str, Any]],
+    holds: int,
+    failures: int,
 ) -> str:
     operation_accuracy = results["operation_decision_accuracy"]
     combined_accuracy = results["combined_decision_accuracy"]
     unnecessary_rate = results["unnecessary_adaptation_rate"]
     missed_rate = results["missed_required_adaptation_rate"]
+
+    def counts_text(value: Mapping[str, int]) -> str:
+        return "<br>".join(f"{key}: {count}" for key, count in sorted(value.items())) or "none"
+
+    def pair_statuses(inventory: Mapping[str, Any], key: str) -> str:
+        pairs = inventory.get(key, [])
+        statuses = [str(pair.get("status", "UNKNOWN")) for pair in pairs]
+        return ", ".join(statuses) if statuses else "no records"
+
     lines = [
         "# MONO_E1_DEV_P_DECISIONS_V1 — DEVELOPMENT report",
         "",
@@ -1203,15 +1445,16 @@ def _render_report(
         ),
         "",
         (
-            f"- Scenarios: {results['scenario_count']}; technical Method P repetitions: "
-            f"{results['technical_repetition_count']}; "
-            f"B0_SYNTH baselines: {results['scenario_count']}"
+            f"- Scenario-level outcomes: {results['scenario_count']}; technical Method P "
+            f"repetitions: {results['technical_repetition_count']} (three per scenario); "
+            f"B0_SYNTH derived assessments: {results['b0_synth_vs_method_p']['scenario_count']}"
         ),
         f"- Author-declared reference SHA-256: `{results['reference_sha256']}`",
         f"- Pre-registration source commit: `{results['source_commit_sha']}`",
         f"- Scorer source commit: `{results['scorer_source_commit_sha']}`",
         f"- Method version: `{results['method_identity']['method_version']}`",
         "- Reference scope: AUTHOR_DECLARED / DEVELOPMENT / NON_INDEPENDENT",
+        "- Three technical repetitions per scenario are not independent cases.",
         "",
         "## Scoring pipeline correction",
         "",
@@ -1224,39 +1467,112 @@ def _render_report(
             f"`{results['scorer_source_commit_sha']}`."
         ),
         "",
-        "## Observations",
+        "## Scenario-level outcomes",
         "",
         (
-            "| Scenario | Expected op/gov | B0_SYNTH | Differs? | P operation / governance | "
-            "Reason codes | Correct / incorrect / not evaluable | "
-            "Unnecessary / missed | Duration min–max (ms) | Evidence completeness | "
-            "Raw Method P SHA-256 digests |"
+            "The following table has one row per distinct scenario. Its counts summarize the "
+            "three technical repetitions and do not increase the scenario count."
         ),
-        "|---|---|---|---|---|---|---:|---:|---:|---|---|",
+        "",
+        (
+            "| Scenario | Expected operation / governance | P proposed-operation counts | "
+            "P governance-result counts | Correct / incorrect / not evaluable | "
+            "Pre-adaptation coverage statuses | Candidate-configuration coverage statuses | "
+            "B0_SYNTH derived coverage status | Decision stable across repetitions |"
+        ),
+        "|---|---|---|---|---:|---|---|---|---|",
     ]
-    for row in rows:
-        governance = ", ".join(row["method_p_governance_by_repetition"])
+    for row in scenario_rows:
         counts = row["correct_incorrect_not_evaluable"]
-        duration_min = row["duration_ns_min"] / 1_000_000
-        duration_max = row["duration_ns_max"] / 1_000_000
-        reasons = ", ".join(row["actual_reason_codes"]) or "none"
-        unnecessary = row["unnecessary_adaptation_count"]
-        missed = row["missed_required_adaptation_count"]
-        evidence = ", ".join(row["evidence_completeness"])
-        digests = "<br>".join(row["raw_result_sha256"])
+        b0_coverage = (row["b0_synth_assessment"].get("coverage") or {}).get(
+            "status", "NOT_REPORTED"
+        )
         lines.append(
             f"| {row['scenario_id']} | {row['expected_operation']} / "
-            f"{row['expected_governance']} | {row['b0_synth_operation']} | "
-            f"{row['b0_synth_differs_from_method_p']} | "
-            f"{row['method_p_proposed_operation']} / {governance} | {reasons} | "
+            f"{row['expected_governance']} | {counts_text(row['method_p_operation_counts'])} | "
+            f"{counts_text(row['method_p_governance_counts'])} | "
             f"{counts['correct']} / {counts['incorrect']} / {counts['not_evaluable']} | "
-            f"{unnecessary} / {missed} | {duration_min:.2f}–{duration_max:.2f} | "
-            f"{evidence} | {digests} |"
+            f"{counts_text(row['pre_adaptation_coverage_status_counts'])} | "
+            f"{counts_text(row['candidate_configuration_coverage_status_counts'])} | "
+            f"{b0_coverage} | {row['decision_repetition_consistent']} |"
         )
     lines.extend(
         [
             "",
-            "## Aggregate descriptive metrics",
+            "## Technical repetition records",
+            "",
+            (
+                "Each row below is one recorded Method P technical repetition. Proposed "
+                "operation, candidate validation, governance acceptance, candidate coverage, "
+                "and actual post-adaptation coverage are reported as separate observations."
+            ),
+            "",
+            (
+                "| Scenario / repetition | Expected op / gov | Proposed operation | "
+                "Candidate configuration SHA-256 | Governance result / accepted | "
+                "Candidate validation | Pre-adaptation coverage | Candidate-configuration "
+                "coverage | Actual post-adaptation coverage | Sidecar proofs | "
+                "Method P current / candidate pair assessments | Raw record SHA-256 |"
+            ),
+            "|---|---|---|---|---|---|---|---|---|---|---|---|",
+        ]
+    )
+    for row in technical_rows:
+        inventory = row["evidence_record_inventory"]
+        sidecar = inventory["adaptation_evidence_sidecar"]
+        sidecar_proofs = pair_statuses(inventory, "sidecar_pair_proofs")
+        current_pairs = pair_statuses(inventory, "pre_adaptation_pair_assessments")
+        candidate_pairs = pair_statuses(inventory, "candidate_pair_assessments")
+        evaluator_count = len(inventory["evaluator_evidence_records"])
+        candidate_sha = row["candidate_configuration_sha256"] or "none"
+        pre_coverage = (row["pre_adaptation_coverage"] or {}).get("status", "NOT_REPORTED")
+        candidate_coverage = (row["candidate_configuration_coverage"] or {}).get(
+            "status", "NOT_REPORTED"
+        )
+        lines.append(
+            f"| {row['scenario_id']} / {row['repetition']} | "
+            f"{row['expected_operation']} / {row['expected_governance']} | "
+            f"{row['proposed_operation']} | `{candidate_sha}` | "
+            f"{row['governance_result']} / {row['governance_accepted']} | "
+            f"{row['candidate_validation_status'] or 'NOT_REPORTED'} | {pre_coverage} | "
+            f"{candidate_coverage} | {row['actual_post_adaptation_coverage']['status']} | "
+            f"sidecar={'present' if sidecar['present'] else 'absent'}; "
+            f"evaluator records={evaluator_count}; proofs={sidecar_proofs} | "
+            f"current={current_pairs}; candidate={candidate_pairs} | "
+            f"`{row['raw_record_sha256']}` |"
+        )
+    lines.extend(
+        [
+            "",
+            "D2 preserves the preregistered expected HOLD versus observed REJECT mismatch: "
+            "the expected operation/governance is `hold` / `HOLD`, while all three technical "
+            "repetitions report operation `hold` with governance `REJECT`. The scorer retains "
+            "the original classifications and does not recategorize this observation.",
+            "",
+            "## Coverage and evidence reporting",
+            "",
+            (
+                "Pre-adaptation coverage is Method P's `current_coverage`; candidate-configuration "
+                "coverage is Method P's assessment of the proposed candidate. Candidate coverage "
+                "does not show that a change was applied. No candidate was applied and "
+                "re-evaluated, "
+                "so actual post-adaptation coverage is `NOT_MEASURED`."
+            ),
+            "",
+            (
+                "An evidence-set completeness verdict is not present in the raw records. The "
+                "machine-readable inventory preserves the actual sidecar digest and metadata, "
+                "evaluator evidence records and artifact digests, sidecar pair-proof statuses, "
+                "evaluator execution records, and Method P current/candidate pair assessments. "
+                "Coverage status is not used as a proxy for evidence validity or completeness."
+            ),
+            "",
+            "## Descriptive metrics across technical repetitions",
+            "",
+            (
+                "These pooled counts describe the 24 recorded technical repetitions; the three "
+                "repetitions within each scenario are not independent samples."
+            ),
             "",
             (
                 f"- Correct / incorrect / not evaluable: "
@@ -1299,8 +1615,8 @@ def _render_report(
             f"- Execution failures: {failures}.",
             (
                 "- Repetition decision stability: "
-                f"{sum(row['decision_repetition_consistent'] for row in rows)} / "
-                f"{len(rows)} scenarios had identical operation, governance, plan digest, "
+                f"{sum(row['decision_repetition_consistent'] for row in scenario_rows)} / "
+                f"{len(scenario_rows)} scenarios had identical operation, governance, plan digest, "
                 "and candidate digest across technical repetitions."
             ),
             "- Operation confusion matrix (rows are author-declared expected operations):",
@@ -1321,14 +1637,16 @@ def _render_report(
             "## B0_SYNTH comparison",
             "",
             (
-                "B0_SYNTH preserved each initial representation catalog and recorded the "
-                "current after-state coverage assessment without semantic adaptation. Its "
-                "operation is `UNCHANGED_CONFIGURATION`; it is not an official or historical "
-                "B0. Method P proposals, governance outcomes, candidate validation, and "
-                "coverage remain separate in `results_v1.json` and the raw traces."
+                "B0_SYNTH is a derived unchanged-configuration assessment based on the same "
+                "verified V3 input and Method P's `current_coverage`. It is not an independently "
+                "executed baseline arm, and it is not an official or historical B0. The scorer "
+                "verifies the matching input-bundle digest and equality between the B0_SYNTH "
+                "coverage object and Method P current-coverage assessment across the three "
+                "technical repetitions."
             ),
             (
-                "Scenarios with a Method P configuration-change proposal relative to B0_SYNTH: "
+                "Scenarios with a Method P configuration-change proposal relative to this "
+                "derived unchanged-configuration assessment: "
                 + ", ".join(
                     results["b0_synth_vs_method_p"][
                         "scenario_ids_with_configuration_change_proposal"
@@ -1340,15 +1658,16 @@ def _render_report(
             "",
             (
                 "Run `execute` from the clean pre-registration commit, then run `score` on "
-                "the resulting directory. `execute` never reads the reference. Scoring checks "
-                "the frozen reference digest and every raw record, then writes the descriptive "
-                "results."
+                "the resulting directory. `execute` never reads the reference. This report update "
+                "scores the existing retained records only; it did not rerun Method P. Scoring "
+                "checks the frozen reference digest, raw-record manifest, and input bundle "
+                "archives."
             ),
             "",
             (
                 "See `execution_manifest.json`, `raw_records_manifest.json`, `results_v1.json`, "
-                "`raw/`, and `SHA256SUMS` for input, implementation, output and checksum "
-                "evidence."
+                "`score_manifest.json`, `raw/`, and `SHA256SUMS` for input, scorer, output, "
+                "and checksum provenance."
             ),
             "",
             "## Limitations and next step",

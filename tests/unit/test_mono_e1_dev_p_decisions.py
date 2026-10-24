@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
+from collections import Counter
 from pathlib import Path
 from typing import Any
 from zipfile import ZipFile
@@ -213,3 +215,108 @@ def test_scorer_reads_recorded_execution_result_shape() -> None:
         }
     }
     assert runner._classify(reference, record) == "CORRECT"
+
+
+def test_score_separates_scenario_outcomes_coverage_and_evidence_records(tmp_path: Path) -> None:
+    source_run = runner.EXPERIMENT_DIR / "run_v1"
+    previous_results = json.loads((source_run / "results_v1.json").read_text(encoding="utf-8"))
+    output_dir = tmp_path / "run_v1"
+    shutil.copytree(source_run, output_dir)
+    raw_before = {
+        path.relative_to(output_dir / "raw").as_posix(): hashlib.sha256(
+            path.read_bytes()
+        ).hexdigest()
+        for path in (output_dir / "raw").rglob("*")
+        if path.is_file()
+    }
+    raw_manifest_before = hashlib.sha256(
+        (output_dir / "raw_records_manifest.json").read_bytes()
+    ).hexdigest()
+    reference_before = hashlib.sha256(runner.REFERENCE_PATH.read_bytes()).hexdigest()
+
+    runner._score(output_dir)
+
+    results = json.loads((output_dir / "results_v1.json").read_text(encoding="utf-8"))
+    report = (output_dir / "report_v1.md").read_text(encoding="utf-8")
+    scenarios = {row["scenario_id"]: row for row in results["scenario_results"]}
+    repetitions = results["technical_repetition_results"]
+    assert results["schema_version"] == 2
+    assert len(scenarios) == 8
+    assert len(repetitions) == 24
+    assert all(
+        sum(row["scenario_id"] == scenario_id for row in repetitions) == 3
+        for scenario_id in scenarios
+    )
+    assert "evidence_completeness" not in results
+    assert all("evidence_completeness" not in row for row in scenarios.values())
+    assert results["summary_counts"] == previous_results["summary_counts"]
+    previous_scenarios = {row["scenario_id"]: row for row in previous_results["scenario_results"]}
+    for scenario_id, scenario in scenarios.items():
+        old_scenario = previous_scenarios[scenario_id]
+        assert (
+            scenario["correct_incorrect_not_evaluable"]
+            == old_scenario["correct_incorrect_not_evaluable"]
+        )
+        assert scenario["method_p_operation_counts"] == dict(
+            sorted(Counter(old_scenario["method_p_observed_operations_by_repetition"]).items())
+        )
+        assert scenario["method_p_governance_counts"] == dict(
+            sorted(Counter(old_scenario["method_p_governance_by_repetition"]).items())
+        )
+    assert all(
+        "pre_adaptation_coverage_status_counts" in row
+        and "candidate_configuration_coverage_status_counts" in row
+        for row in scenarios.values()
+    )
+    assert all(
+        "pre_adaptation_coverage" in row
+        and "candidate_configuration_coverage" in row
+        and row["actual_post_adaptation_coverage"]["status"] == "NOT_MEASURED"
+        and "evidence_record_inventory" in row
+        and isinstance(row["governance_accepted"], bool)
+        for row in repetitions
+    )
+
+    b0 = scenarios["A1"]["b0_synth_assessment"]
+    assert b0["independently_executed_baseline_arm"] is False
+    assert b0["coverage_source"] == "METHOD_P_CURRENT_COVERAGE_ON_SAME_VERIFIED_INPUT"
+    assert len(b0["raw_record_sha256"]) == 64
+    assert results["b0_synth_vs_method_p"]["independently_executed_baseline_arm"] is False
+    d2 = scenarios["D2"]
+    assert d2["expected_operation"] == "hold"
+    assert d2["expected_governance"] == "HOLD"
+    assert d2["method_p_operation_counts"] == {"hold": 3}
+    assert d2["method_p_governance_counts"] == {"REJECT": 3}
+    assert d2["correct_incorrect_not_evaluable"] == {
+        "correct": 0,
+        "incorrect": 3,
+        "not_evaluable": 0,
+    }
+    d2_repetition = next(row for row in repetitions if row["scenario_id"] == "D2")
+    sidecar_pair_proofs = d2_repetition["evidence_record_inventory"]["sidecar_pair_proofs"]
+    assert len(sidecar_pair_proofs) == 1
+    assert sidecar_pair_proofs[0]["status"] == "VALID"
+    assert sidecar_pair_proofs[0]["reason_codes"] == []
+    assert (
+        d2_repetition["evidence_record_inventory"]["pre_adaptation_pair_assessments"][0]["status"]
+        == "INVALID"
+    )
+    assert "scenario-level outcomes" in report.lower()
+    assert "technical repetitions" in report.lower()
+    assert "not an independently executed baseline arm" in report.lower()
+    assert "evidence-set completeness verdict is not present" in report.lower()
+    assert "expected hold versus observed reject mismatch" in report.lower()
+
+    raw_after = {
+        path.relative_to(output_dir / "raw").as_posix(): hashlib.sha256(
+            path.read_bytes()
+        ).hexdigest()
+        for path in (output_dir / "raw").rglob("*")
+        if path.is_file()
+    }
+    assert raw_after == raw_before
+    assert (
+        hashlib.sha256((output_dir / "raw_records_manifest.json").read_bytes()).hexdigest()
+        == raw_manifest_before
+    )
+    assert hashlib.sha256(runner.REFERENCE_PATH.read_bytes()).hexdigest() == reference_before

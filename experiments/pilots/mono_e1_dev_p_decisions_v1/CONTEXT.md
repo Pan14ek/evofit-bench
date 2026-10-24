@@ -12,7 +12,9 @@ Contains the TEST_ONLY synthetic architecture-evolution decision experiment, its
 - `reference_v1.json` and its SHA-256 sidecar declare expected operations before execution; scorer-side only.
 - `runner.py` builds and verifies V3 bundles, archives each exact input bundle, and calls the existing `run_adaptation()` pipeline.
 - The synthetic evaluator is authored by the existing TEST_ONLY integration fixture builder and runs as a subprocess; its artifact and output digests are retained with scenario-prefixed raw files.
-- `report_v1.md` and `results_v1.json` contain descriptive outcomes; `raw/` preserves runs and exact input archives.
+- `report_v1.md` and `results_v1.json` separate eight scenario-level outcomes from 24 technical repetitions. Coverage assessments, actual evidence-record inventories, proposed configurations, governance decisions, and actual post-adaptation coverage are distinct fields.
+- B0_SYNTH is a derived unchanged-configuration assessment using the same verified input and Method P `current_coverage`; it is not an independently executed baseline arm.
+- `raw/` preserves runs and exact input archives; raw execution evidence and preregistered reference bytes are immutable during reporting corrections.
 
 ## Boundaries
 
