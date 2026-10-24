@@ -34,8 +34,8 @@ engineering tests, not a method evaluation or scientific gate.
 
 Focused command: make test-research-dashboard. Dashboard and static figure
 dependencies are pinned in research_dashboard/requirements.lock and installed
-by this focused target. The repository's experiment dependency lock remains
-unchanged. Passing these tests does not establish independent reference validity,
+by the focused test and typecheck targets. The repository's experiment dependency
+lock remains unchanged. Passing these tests does not establish independent reference validity,
 P_ALGORITHM_STATUS readiness, G1/G4 authorization, or official MONO-E1 results.
 
 A test described in a specification must have a stable requirement ID, fixture provenance, preconditions, input, expected behavior, test level, location, and PASS/FAIL/SKIP/BLOCKED outcome. Never mark unimplemented requirements as passed.

@@ -110,7 +110,8 @@ development-lint:
 		--extend-exclude=tests/unit/test_research_schema_foundation.py
 
 development-typecheck:
-	$(UV) run mypy app scripts tests research_dashboard \
+	$(UV) run --frozen --extra dev --with-requirements research_dashboard/requirements.lock \
+		mypy app scripts tests research_dashboard \
 		--exclude '(^|/)test_da01_execution\.py$$' \
 		--exclude '(^|/)test_research_schema_foundation\.py$$'
 
