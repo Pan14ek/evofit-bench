@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.local/research_dashboard/results_v2.schema.json",
+  "title": "MONO_E1_DEV_P_DECISIONS_V1 dashboard reader schema",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "experiment_id",
+    "reference_status",
+    "source_commit_sha",
+    "execution_manifest_sha256",
+    "raw_records_manifest_sha256",
+    "reference_sha256",
+    "scorer_code_sha256",
+    "scorer_source_commit_sha",
+    "method_identity",
+    "scenario_count",
+    "technical_repetition_count",
+    "summary_counts",
+    "operation_decision_accuracy",
+    "combined_decision_accuracy",
+    "governance_distribution",
+    "scenario_results",
+    "technical_repetition_results"
+  ],
+  "properties": {
+    "schema_version": {"const": 2},
+    "experiment_id": {"const": "MONO_E1_DEV_P_DECISIONS_V1"},
+    "reference_status": {"type": "string", "minLength": 1},
+    "source_commit_sha": {"type": "string", "minLength": 1},
+    "method_identity": {
+      "type": "object",
+      "required": ["method_version"],
+      "properties": {"method_version": {"type": "string", "minLength": 1}}
+    },
+    "scenario_count": {"type": "integer", "minimum": 0},
+    "technical_repetition_count": {"type": "integer", "minimum": 0},
+    "summary_counts": {
+      "type": "object",
+      "required": ["correct", "incorrect", "not_evaluable", "execution_failures"],
+      "properties": {
+        "correct": {"type": "integer", "minimum": 0},
+        "incorrect": {"type": "integer", "minimum": 0},
+        "not_evaluable": {"type": "integer", "minimum": 0},
+        "execution_failures": {"type": "integer", "minimum": 0}
+      }
+    },
+    "operation_decision_accuracy": {
+      "type": "object",
+      "required": ["correct_operation_count", "evaluable_execution_count"],
+      "properties": {
+        "correct_operation_count": {"type": "integer", "minimum": 0},
+        "evaluable_execution_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "combined_decision_accuracy": {
+      "type": "object",
+      "required": ["correct_count", "evaluable_execution_count"],
+      "properties": {
+        "correct_count": {"type": "integer", "minimum": 0},
+        "evaluable_execution_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "governance_distribution": {
+      "type": "object",
+      "additionalProperties": {"type": "integer", "minimum": 0}
+    },
+    "scenario_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "scenario_id",
+          "expected_operation",
+          "expected_governance",
+          "pre_adaptation_coverage_status_counts",
+          "candidate_configuration_coverage_status_counts"
+        ],
+        "properties": {
+          "scenario_id": {"type": "string", "minLength": 1},
+          "expected_operation": {"enum": ["retain", "add", "replace", "hold"]},
+          "expected_governance": {"enum": ["ACCEPT", "HOLD", "REJECT"]},
+          "pre_adaptation_coverage_status_counts": {
+            "$ref": "#/$defs/coverageStatusCounts"
+          },
+          "candidate_configuration_coverage_status_counts": {
+            "$ref": "#/$defs/coverageStatusCounts"
+          }
+        }
+      }
+    },
+    "technical_repetition_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "scenario_id",
+          "repetition",
+          "expected_operation",
+          "expected_governance",
+          "proposed_operation",
+          "governance_result",
+          "classification",
+          "pre_adaptation_coverage",
+          "candidate_configuration_coverage",
+          "actual_post_adaptation_coverage",
+          "evidence_record_inventory"
+        ],
+        "properties": {
+          "scenario_id": {"type": "string", "minLength": 1},
+          "repetition": {"type": "integer", "minimum": 1},
+          "expected_operation": {"enum": ["retain", "add", "replace", "hold"]},
+          "expected_governance": {"enum": ["ACCEPT", "HOLD", "REJECT"]},
+          "proposed_operation": {"enum": ["retain", "add", "replace", "hold"]},
+          "governance_result": {"enum": ["ACCEPT", "HOLD", "REJECT"]},
+          "classification": {"enum": ["CORRECT", "INCORRECT", "NOT_EVALUABLE"]},
+          "pre_adaptation_coverage": {"$ref": "#/$defs/coverageAssessment"},
+          "candidate_configuration_coverage": {"$ref": "#/$defs/coverageAssessment"},
+          "actual_post_adaptation_coverage": {
+            "type": "object",
+            "required": ["status"],
+            "properties": {
+              "status": {"enum": ["NOT_MEASURED", "COMPLETE", "INCOMPLETE", "UNKNOWN"]}
+            }
+          },
+          "duration_ns": {"type": ["integer", "number", "null"], "minimum": 0},
+          "evidence_record_inventory": {"type": "object"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "coverageStatusCounts": {
+      "type": "object",
+      "propertyNames": {"enum": ["COMPLETE", "INCOMPLETE", "UNKNOWN"]},
+      "additionalProperties": {"type": "integer", "minimum": 0}
+    },
+    "coverageAssessment": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {"enum": ["COMPLETE", "INCOMPLETE", "UNKNOWN"]}
+      }
+    }
+  },
+  "additionalProperties": true
+}

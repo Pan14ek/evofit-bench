@@ -9,6 +9,8 @@ Project-level scope: a controlled evolutionary-architecture fitness-function res
 
 ## Local landmarks
 
+- research_dashboard/ — read-only Streamlit / Plotly research views and Matplotlib publication figures for the retained synthetic Method P development pilot; not a method input or official result.
+
 - `.dockerignore`
 - `.env.example`
 - `.gitattributes`

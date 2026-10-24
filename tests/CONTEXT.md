@@ -9,6 +9,8 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 
 ## Local landmarks
 
+- unit/test_research_dashboard.py — dashboard reader schema, checksum/report cross-check, categorical aggregation, D2 reference mismatch, B0_SYNTH boundary, duration handling, and deterministic figure export; no experiment execution
+
 - `__init__.py`
 - `architecture/a1/test_evaluators.py` — W2 evaluator fixtures plus exact-byte A0.3/A0.4 canonical checkpoint readback, later-revision reproduction, and fail-closed tamper controls.
 - `architecture/a1/REQUIREMENT_TEST_MATRIX.md`
