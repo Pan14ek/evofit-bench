@@ -1,0 +1,1037 @@
+{
+  "claim_to_evidence": [
+    {
+      "claim_id": "CLAIM-A1",
+      "evidence_strength": "OBSERVED — source-bound engineering evidence",
+      "experimental_track": "A — canonical source-bound CI observations",
+      "limitation": "One observation per evaluator/state and the declared static scope only; no semantic obligation denominator or runtime/deployment evidence.",
+      "permitted_interpretation": "Both named CI controls executed successfully on the pinned states within their declared inspection scope.",
+      "prohibited_interpretation": "The complete set of architectural obligations is covered throughout CI, deployment, and runtime.",
+      "scientific_statement": "On the pinned canonical A0.3 and A0.4 revisions, AC_PUBLIC_API and AC_MODULE_GRAPH each produced one source-bound COMPLIANT observation over the declared static app/modules scope.",
+      "supporting_metric_or_observation": "COMPLIANT; complete declared scope; 31 files and 185 imports for each recorded evaluator observation.",
+      "supporting_source_file": "architecture/acceptance/a1/a0_3_canonical_checkpoint.json; architecture/acceptance/a1/a0_4_canonical_checkpoint.json; corresponding observations",
+      "verification_method": "mono_e1_a03_fitness_config.validate_project() source/checkpoint readback; observation-to-checkpoint comparison."
+    },
+    {
+      "claim_id": "CLAIM-A2",
+      "evidence_strength": "OBSERVED — finite author-selected engineering conditions",
+      "experimental_track": "A — controlled evaluator studies",
+      "limitation": "Three technical calls per source condition are collapsed; finite author-selected cases; no population estimate or independent semantic review.",
+      "permitted_interpretation": "The binary outputs matched the preregistered expectations on these applicable cases.",
+      "prohibited_interpretation": "The evaluators are complete architecture oracles or have perfect diagnostic correspondence.",
+      "scientific_statement": "EVAL-01 and EVAL-02 produced the recorded binary evaluator outcomes on their finite applicable source-condition sets.",
+      "supporting_metric_or_observation": "EVAL-01 F1=1.0 on 6 eligible conditions per evaluator; EVAL-02 F1=1.0 on 8 AC_PUBLIC_API and 6 AC_MODULE_GRAPH eligible conditions.",
+      "supporting_source_file": "experiments/pilots/EVAL01_ANALYSIS_V1.json; experiments/pilots/EVAL02_ANALYSIS_V1.json; reports and raw archives",
+      "verification_method": "Archive integrity validators; case-row binary-metric recalculation; report/CSV/analysis aggregate cross-check."
+    },
+    {
+      "claim_id": "CLAIM-A3",
+      "evidence_strength": "OBSERVED — preserved failure/deviation",
+      "experimental_track": "A — EVAL-02 diagnostic behavior",
+      "limitation": "The mismatch concerns finding-set correspondence on one mutation condition, not the binary metric.",
+      "permitted_interpretation": "Binary classification matched while all three detailed diagnostic sets differed from the preregistered expected set.",
+      "prohibited_interpretation": "EVAL-02 had no failures or diagnostic mismatches because F1 was 1.0.",
+      "scientific_statement": "EVAL-02 retained three diagnostic-expectation mismatches for missing_required_public_function / AC_PUBLIC_API while all 60 evaluator calls completed.",
+      "supporting_metric_or_observation": "Three repeats observed PUBLIC_INTERFACE_MISSING plus UNDECLARED_PUBLIC_INTERFACE; binary NON_COMPLIANT matched; runner exit status remained nonzero.",
+      "supporting_source_file": "experiments/pilots/EVAL02_REPORT_V1.md; experiments/pilots/EVAL02_POST_EXPERIMENT_ERRATUM_V1.md; EVAL02 raw archive",
+      "verification_method": "validate_eval02_archive(); diagnostic repeat inventory and report/erratum readback."
+    },
+    {
+      "claim_id": "CLAIM-B1",
+      "evidence_strength": "DERIVED — replayed synthetic records against a non-independent reference",
+      "experimental_track": "B — synthetic Method P DEVELOPMENT decisions",
+      "limitation": "The eight scenarios are authored synthetic fixtures; the reference is AUTHOR_DECLARED and NON_INDEPENDENT.",
+      "permitted_interpretation": "Method P correctly selected the declared operation in these recorded DEVELOPMENT technical repetitions.",
+      "prohibited_interpretation": "Method P has been proven superior to B0 in production or on canonical A0.4.",
+      "scientific_statement": "In MONO_E1_DEV_P_DECISIONS_V1, Method P selected the author-declared expected operation in all 24 recorded technical repetitions across eight distinct synthetic scenarios.",
+      "supporting_metric_or_observation": "24/24 operation matches; 8 scenarios × 3 technical repetitions.",
+      "supporting_source_file": "experiments/pilots/mono_e1_dev_p_decisions_v1/run_v1/raw/; reference_v1.json; results_v1.json",
+      "verification_method": "Pinned scorer replay from raw records on a temporary copy; raw manifest and input bundle digest verification."
+    },
+    {
+      "claim_id": "CLAIM-B2",
+      "evidence_strength": "DERIVED — synthetic assessment output",
+      "experimental_track": "B — synthetic candidate assessment",
+      "limitation": "The candidate was not applied and re-evaluated; this status is not measured post-adaptation coverage.",
+      "permitted_interpretation": "The proposed candidate received a complete coverage assessment in the specified synthetic scenarios.",
+      "prohibited_interpretation": "Applying Method P experimentally improved actual architectural coverage.",
+      "scientific_statement": "The proposed candidate received a COMPLETE coverage assessment in six synthetic scenarios, UNKNOWN in one, and INCOMPLETE in one.",
+      "supporting_metric_or_observation": "Candidate coverage assessment status by scenario: COMPLETE 6, UNKNOWN 1, INCOMPLETE 1.",
+      "supporting_source_file": "experiments/pilots/mono_e1_dev_p_decisions_v1/run_v1/raw/; results_v1.json",
+      "verification_method": "Raw scorer replay; dashboard scenario summaries compared with replayed result records."
+    },
+    {
+      "claim_id": "CLAIM-B3",
+      "evidence_strength": "OBSERVED — mismatch retained in synthetic records",
+      "experimental_track": "B — synthetic governance behavior",
+      "limitation": "D2 is synthetic and compared with a non-independent author-declared label.",
+      "permitted_interpretation": "The recorded fail-closed REJECT differed from the declared HOLD reference despite the same HOLD operation.",
+      "prohibited_interpretation": "A protective REJECT is agreement with the declared HOLD reference.",
+      "scientific_statement": "D2 preserves an expected HOLD / observed REJECT governance mismatch in all three repetitions although the proposed operation was HOLD each time.",
+      "supporting_metric_or_observation": "Operation agreement 3/3; governance agreement 0/3; combined classification INCORRECT 3/3.",
+      "supporting_source_file": "experiments/pilots/mono_e1_dev_p_decisions_v1/run_v1/raw/D2_method_p_rep_01.json; D2 repetitions 02–03; results_v1.json",
+      "verification_method": "Pinned scorer replay; expected/observed operation and governance cross-tabulation."
+    },
+    {
+      "claim_id": "CLAIM-B4",
+      "evidence_strength": "NOT_MEASURED — explicitly unavailable outcome",
+      "experimental_track": "B — post-adaptation outcome boundary",
+      "limitation": "Candidate assessment output does not substitute for post-application observation.",
+      "permitted_interpretation": "The experiment did not measure actual post-adaptation coverage.",
+      "prohibited_interpretation": "Candidate assessment values are measured post-adaptation coverage.",
+      "scientific_statement": "Actual post-adaptation coverage was not measured in any of the 24 Method P technical repetitions.",
+      "supporting_metric_or_observation": "NOT_MEASURED 24/24; no candidate configuration was applied and re-evaluated.",
+      "supporting_source_file": "experiments/pilots/mono_e1_dev_p_decisions_v1/run_v1/results_v1.json; raw Method P records",
+      "verification_method": "Raw scorer replay and exact comparison with dashboard actual_post_adaptation_coverage distribution."
+    },
+    {
+      "claim_id": "CLAIM-C1",
+      "evidence_strength": "DERIVED — descriptive technical-repeat timing",
+      "experimental_track": "B — execution cost",
+      "limitation": "Timer covers bundle verification through run_adaptation result construction; no B0 arm, application, post-adaptation evaluation, CPU or memory comparison.",
+      "permitted_interpretation": "The saved technical-repeat duration distribution can be described within its measurement boundary.",
+      "prohibited_interpretation": "Method P is statistically faster or has lower overhead than an independently executed baseline.",
+      "scientific_statement": "The retained DEVELOPMENT run recorded descriptive Method P durations over 24 technical repetitions; these do not estimate a B0 comparison.",
+      "supporting_metric_or_observation": "Mean 451.401 ms; median 460.321 ms; range 369.337–500.405 ms; n=24.",
+      "supporting_source_file": "experiments/pilots/mono_e1_dev_p_decisions_v1/run_v1/raw/*_method_p_rep_*.json; results_v1.json",
+      "verification_method": "Statistics recalculated from replayed raw duration_ns values via existing dashboard duration_summary()."
+    },
+    {
+      "claim_id": "CLAIM-C2",
+      "evidence_strength": "NOT_MEASURED / NOT_AUTHORIZED",
+      "experimental_track": "A and B — scope boundary",
+      "limitation": "This bounded package cannot resolve the external authority and independent-review prerequisites.",
+      "permitted_interpretation": "The empirical scope is limited to source-bound CI observations and separate synthetic decision records.",
+      "prohibited_interpretation": "The package validates the general lifecycle-wide model or establishes official MONO-E1 readiness.",
+      "scientific_statement": "No canonical A0.3/A0.4 B0/P experiment, simulated human B1 comparison, deployment/runtime validation, or actual post-adaptation remeasurement is included.",
+      "supporting_metric_or_observation": "P_ALGORITHM_STATUS=NOT_READY; G1=INCOMPLETE; G4=NOT_AUTHORIZED; MONO_E1=NO_GO; actual post-adaptation coverage NOT_MEASURED.",
+      "supporting_source_file": "docs/RESEARCH_CONTEXT.md; current P/G1/G4 gates; MONO_E1_DEV_P_DECISIONS_V1 execution manifest",
+      "verification_method": "Canonical DEVELOPMENT configuration validator and retained execution manifest; no method or application execution."
+    }
+  ],
+  "experimental_scope": {
+    "actual_post_adaptation_coverage": "NOT_MEASURED",
+    "official_mono_e1_or_canonical_b0p_experiment": false,
+    "track_A": "Source-bound canonical A0.3/A0.4 CI observations plus finite EVAL-01/EVAL-02 static evaluator control studies.",
+    "track_B": "MONO_E1_DEV_P_DECISIONS_V1: eight distinct authored synthetic scenarios, three technical repetitions each, TEST_ONLY trust.",
+    "tracks_are_combined_causally": false
+  },
+  "figure_to_claim": [
+    {
+      "caption_and_footnotes": [
+        "Method P coverage assessment transitions",
+        "Purple outlines mark INCOMPLETE → ADD/REPLACE → COMPLETE candidate assessments. They do not show measured improvement.",
+        "Candidate configuration assessment only; actual post-adaptation coverage: NOT_MEASURED"
+      ],
+      "claim_ids": [
+        "CLAIM-B2",
+        "CLAIM-B4"
+      ],
+      "data_unit": "one synthetic scenario",
+      "figure_files": {
+        "coverage_assessment_transitions.png": "0fd1c39caaeb4ba1580c4a4a69cc761c26b7e49849db9c1bbb5143090dda7d26",
+        "coverage_assessment_transitions.svg": "202ea655bc9216ba1dcf0dac7c4e09957d9ff11ee96944674fae172967f3bf74"
+      },
+      "figure_id": "FIG-01",
+      "file_stem": "coverage_assessment_transitions",
+      "monograph_interpretation": "Categorical current/candidate assessments and decision states; not measured post-adaptation change.",
+      "source_data": "Raw Method P records replayed into results_v1.json; dashboard preflight PASS.",
+      "title": "Method P coverage assessment transitions",
+      "x_axis_or_columns": [
+        [
+          "Current coverage assessment",
+          "Observed operation",
+          "Candidate coverage assessment",
+          "Governance"
+        ]
+      ],
+      "y_axis_labels": []
+    },
+    {
+      "caption_and_footnotes": [
+        "Method P operations and governance outcomes",
+        "Expected labels are AUTHOR_DECLARED / DEVELOPMENT / NON_INDEPENDENT references.",
+        "Red outlines mark reference mismatches. D2 records HOLD / REJECT in all three technical repetitions; the declared HOLD governance reference is preserved."
+      ],
+      "claim_ids": [
+        "CLAIM-B1",
+        "CLAIM-B3"
+      ],
+      "data_unit": "one synthetic scenario",
+      "figure_files": {
+        "operations_and_governance.png": "c94572a197aae0ce5818d36a8de7406dc04929870778c63d9dcef131115401ec",
+        "operations_and_governance.svg": "b1131d57ee2e371642f978a70ec37d5531b2b545e8393b32e0ab08a2a35d213b"
+      },
+      "figure_id": "FIG-02",
+      "file_stem": "operations_and_governance",
+      "monograph_interpretation": "Scenario-level expected/observed operation and governance relative to an AUTHOR_DECLARED, NON_INDEPENDENT reference; D2 mismatch retained.",
+      "source_data": "Raw Method P records replayed into results_v1.json; dashboard preflight PASS.",
+      "title": "Method P operations and governance outcomes",
+      "x_axis_or_columns": [
+        [
+          "Expected\noperation",
+          "Observed\noperation",
+          "Expected\ngovernance",
+          "Observed\ngovernance",
+          "Author-declared\nreference match"
+        ]
+      ],
+      "y_axis_labels": []
+    },
+    {
+      "caption_and_footnotes": [
+        "Method P execution duration by operation and scenario",
+        "Each dot is an individual technical repetition. The horizontal offsets only separate overlapping points; three runs per scenario are not independent cases.",
+        "RETAIN",
+        "ADD",
+        "REPLACE",
+        "HOLD"
+      ],
+      "claim_ids": [
+        "CLAIM-C1"
+      ],
+      "data_unit": "one technical repetition",
+      "figure_files": {
+        "execution_duration_by_operation_scenario.png": "7a33a6934dd2a1138997e3fa88c7739111b23016910303c2e3d28ef940515eef",
+        "execution_duration_by_operation_scenario.svg": "9674f11d842a9636fde0d080c4797e14273e0611c298df6d5d9ecd4d65e51491"
+      },
+      "figure_id": "FIG-03",
+      "file_stem": "execution_duration_by_operation_scenario",
+      "monograph_interpretation": "Recorded technical repetitions by scenario and operation; no independent baseline comparison.",
+      "source_data": "Raw Method P records replayed into results_v1.json; dashboard preflight PASS.",
+      "title": "Method P execution duration by operation and scenario",
+      "x_axis_or_columns": [
+        [
+          "A1",
+          "A2"
+        ],
+        [
+          "B1",
+          "B2"
+        ],
+        [
+          "C1",
+          "C2"
+        ],
+        [
+          "D1",
+          "D2"
+        ]
+      ],
+      "y_axis_labels": [
+        "Execution duration (ms)"
+      ]
+    }
+  ],
+  "package_id": "MONO_E1_CI_EVIDENCE_PACKAGE_V1",
+  "provenance": {
+    "a03_development_fitness_configuration_sha256": "8f74330e03b6b96d4213037e0b76dcb29ef72017876411625e5b96edf1400cdf",
+    "base_main_sha": "e5dca56e1ad287eece538e93a6fa9294afeb2e73",
+    "canonical_states": [
+      {
+        "application_tree_sha": "b147b8961ea9e76c966663d4832e4c303581151a",
+        "source_sha": "26a9bb667da7d0938e38aca15d2bf29fd1de4829",
+        "state": "A0_3_GOVERNED_MODULE_GRAPH"
+      },
+      {
+        "application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+        "source_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+        "state": "A0_4_REPORT_QUERY_PORT"
+      }
+    ],
+    "evaluator_archives": {
+      "EVAL-01": "f6cd3c7180a0719c0f410f51acc9596b0843950d7650da7f7d2924716188c9bf",
+      "EVAL-02": "9039e17b5b640db5641b808719c6b972a389b8f5e833ac1dc7783e658f4bf18c"
+    },
+    "p_execution_source_commit_sha": "c7ca08f73fda5473adbe2690ea3dc0a527fee69d",
+    "p_reference_sha256": "5dcf0b2784a3fce370d5d3fd097397174025a76b3c8d2396d82423ea0f221bfa",
+    "p_scorer_source_commit_sha": "d8a157f6fd93585214210aa364e3a86fb0487fde"
+  },
+  "schema_version": 1,
+  "tables": {
+    "table_1_scope": [
+      {
+        "application_tree_sha": "b147b8961ea9e76c966663d4832e4c303581151a",
+        "architecture_after": "NOT_APPLICABLE",
+        "architecture_before": "NOT_APPLICABLE",
+        "architecture_state": "A0_3_GOVERNED_MODULE_GRAPH",
+        "evaluator_id": "AC_PUBLIC_API",
+        "evidence_source": "architecture/acceptance/a1/a0_3_canonical_checkpoint.json + architecture/acceptance/a1/a0_3_canonical_public_api_observation.json",
+        "evidence_type": "CANONICAL_SOURCE_BOUND_OBSERVATION",
+        "inspection_scope": "статична інспекція app/modules; 31 файлів; 185 імпортів; повний задекларований обсяг",
+        "lifecycle_stage": "CI — статична перевірка вихідного коду",
+        "limitations": "Одне зафіксоване спостереження на оцінювача/стан; лише задекларований статичний обсяг; не є доказом повного семантичного покриття зобов'язань або runtime/розгортання.",
+        "outcome": "COMPLIANT",
+        "repository_tree_sha": "7b951421395f532ca403dab09d76902ff08a807d",
+        "source_commit_sha": "26a9bb667da7d0938e38aca15d2bf29fd1de4829",
+        "track": "A"
+      },
+      {
+        "application_tree_sha": "b147b8961ea9e76c966663d4832e4c303581151a",
+        "architecture_after": "NOT_APPLICABLE",
+        "architecture_before": "NOT_APPLICABLE",
+        "architecture_state": "A0_3_GOVERNED_MODULE_GRAPH",
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "evidence_source": "architecture/acceptance/a1/a0_3_canonical_checkpoint.json + architecture/acceptance/a1/a0_3_canonical_module_graph_observation.json",
+        "evidence_type": "CANONICAL_SOURCE_BOUND_OBSERVATION",
+        "inspection_scope": "статична інспекція app/modules; 31 файлів; 185 імпортів; повний задекларований обсяг",
+        "lifecycle_stage": "CI — статична перевірка вихідного коду",
+        "limitations": "Одне зафіксоване спостереження на оцінювача/стан; лише задекларований статичний обсяг; не є доказом повного семантичного покриття зобов'язань або runtime/розгортання.",
+        "outcome": "COMPLIANT",
+        "repository_tree_sha": "7b951421395f532ca403dab09d76902ff08a807d",
+        "source_commit_sha": "26a9bb667da7d0938e38aca15d2bf29fd1de4829",
+        "track": "A"
+      },
+      {
+        "application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+        "architecture_after": "NOT_APPLICABLE",
+        "architecture_before": "NOT_APPLICABLE",
+        "architecture_state": "A0_4_REPORT_QUERY_PORT",
+        "evaluator_id": "AC_PUBLIC_API",
+        "evidence_source": "architecture/acceptance/a1/a0_4_canonical_checkpoint.json + architecture/acceptance/a1/a0_4_canonical_public_api_observation.json",
+        "evidence_type": "CANONICAL_SOURCE_BOUND_OBSERVATION",
+        "inspection_scope": "статична інспекція app/modules; 31 файлів; 185 імпортів; повний задекларований обсяг",
+        "lifecycle_stage": "CI — статична перевірка вихідного коду",
+        "limitations": "Одне зафіксоване спостереження на оцінювача/стан; лише задекларований статичний обсяг; не є доказом повного семантичного покриття зобов'язань або runtime/розгортання.",
+        "outcome": "COMPLIANT",
+        "repository_tree_sha": "2b436e0aaf09403ea516d73d20a466a122f86592",
+        "source_commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+        "track": "A"
+      },
+      {
+        "application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+        "architecture_after": "NOT_APPLICABLE",
+        "architecture_before": "NOT_APPLICABLE",
+        "architecture_state": "A0_4_REPORT_QUERY_PORT",
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "evidence_source": "architecture/acceptance/a1/a0_4_canonical_checkpoint.json + architecture/acceptance/a1/a0_4_canonical_module_graph_observation.json",
+        "evidence_type": "CANONICAL_SOURCE_BOUND_OBSERVATION",
+        "inspection_scope": "статична інспекція app/modules; 31 файлів; 185 імпортів; повний задекларований обсяг",
+        "lifecycle_stage": "CI — статична перевірка вихідного коду",
+        "limitations": "Одне зафіксоване спостереження на оцінювача/стан; лише задекларований статичний обсяг; не є доказом повного семантичного покриття зобов'язань або runtime/розгортання.",
+        "outcome": "COMPLIANT",
+        "repository_tree_sha": "2b436e0aaf09403ea516d73d20a466a122f86592",
+        "source_commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+        "track": "A"
+      },
+      {
+        "application_tree_sha": "109f28c713bd54a34c3ba38e668b8af4bfb7ac79",
+        "architecture_after": "The application changes by adding reporting configuration metadata; module membership and the represented layering scope remain unchanged.",
+        "architecture_before": "One synthetic application process with a CI layering representation scoped to the application modules.",
+        "architecture_state": "A1",
+        "evaluator_id": "synthetic_scope_probe_v1 + Method P DEVELOPMENT V1",
+        "evidence_source": "experiments/pilots/mono_e1_dev_p_decisions_v1/scenarios_v1.json + run_v1/raw/A1_method_p_rep_01.json",
+        "evidence_type": "SYNTHETIC_TEST_ONLY_SCENARIO",
+        "inspection_scope": "синтетичні докази режиму complete; 1 зобов'язань; хеш пакета ee40bbae62a463ba9622aeb1b489dcedad585a23b60dd4d88cb7c6701221bb37",
+        "lifecycle_stage": "CI — синтетична фікстура TEST_ONLY",
+        "limitations": "Авторський синтетичний перехід і довіра до політики/оцінювача; не виконання A0.3/A0.4, не незалежний еталон і не вимірювання канонічного методу P.",
+        "outcome": "RETAIN",
+        "repository_tree_sha": "NOT_APPLICABLE",
+        "source_commit_sha": "SYNTHETIC_FIXTURE — no canonical application revision",
+        "track": "B"
+      },
+      {
+        "application_tree_sha": "fa71f77d90bd814c67821e35656819bc1b93ac93",
+        "architecture_after": "A telemetry settings file is added under synthetic infrastructure metadata without changing the layering obligation or evaluator contract.",
+        "architecture_before": "One synthetic application process with a CI layering representation scoped to the application modules.",
+        "architecture_state": "A2",
+        "evaluator_id": "synthetic_scope_probe_v1 + Method P DEVELOPMENT V1",
+        "evidence_source": "experiments/pilots/mono_e1_dev_p_decisions_v1/scenarios_v1.json + run_v1/raw/A2_method_p_rep_01.json",
+        "evidence_type": "SYNTHETIC_TEST_ONLY_SCENARIO",
+        "inspection_scope": "синтетичні докази режиму complete; 1 зобов'язань; хеш пакета c1f7f8c56e13c462281491a92e691f8c2d62e039413fcd0c2db9c373c9b4cbf3",
+        "lifecycle_stage": "CI — синтетична фікстура TEST_ONLY",
+        "limitations": "Авторський синтетичний перехід і довіра до політики/оцінювача; не виконання A0.3/A0.4, не незалежний еталон і не вимірювання канонічного методу P.",
+        "outcome": "RETAIN",
+        "repository_tree_sha": "NOT_APPLICABLE",
+        "source_commit_sha": "SYNTHETIC_FIXTURE — no canonical application revision",
+        "track": "B"
+      },
+      {
+        "application_tree_sha": "6faf19dc490812874fb98eae38a125c6d1b567eb",
+        "architecture_after": "The same obligation remains active after a reporting metadata change; a generic CI evaluator template is available.",
+        "architecture_before": "The synthetic application has no active fitness representation for the mandatory layering obligation.",
+        "architecture_state": "B1",
+        "evaluator_id": "synthetic_scope_probe_v1 + Method P DEVELOPMENT V1",
+        "evidence_source": "experiments/pilots/mono_e1_dev_p_decisions_v1/scenarios_v1.json + run_v1/raw/B1_method_p_rep_01.json",
+        "evidence_type": "SYNTHETIC_TEST_ONLY_SCENARIO",
+        "inspection_scope": "синтетичні докази режиму complete; 1 зобов'язань; хеш пакета c6d7c9b0c5fa17ea72b095d09de1f8017640d1a5c448bd69659cc6a21c58262a",
+        "lifecycle_stage": "CI — синтетична фікстура TEST_ONLY",
+        "limitations": "Авторський синтетичний перехід і довіра до політики/оцінювача; не виконання A0.3/A0.4, не незалежний еталон і не вимірювання канонічного методу P.",
+        "outcome": "ADD",
+        "repository_tree_sha": "NOT_APPLICABLE",
+        "source_commit_sha": "SYNTHETIC_FIXTURE — no canonical application revision",
+        "track": "B"
+      },
+      {
+        "application_tree_sha": "df2f50a13aeaf282ffaad71540fd002a44bd3355",
+        "architecture_after": "A TEST_ONLY policy-state transition makes the mandatory layering obligation active; a generic CI evaluator template is available.",
+        "architecture_before": "The policy candidate is inactive before the transition and its mandatory layering obligation has no representation.",
+        "architecture_state": "B2",
+        "evaluator_id": "synthetic_scope_probe_v1 + Method P DEVELOPMENT V1",
+        "evidence_source": "experiments/pilots/mono_e1_dev_p_decisions_v1/scenarios_v1.json + run_v1/raw/B2_method_p_rep_01.json",
+        "evidence_type": "SYNTHETIC_TEST_ONLY_SCENARIO",
+        "inspection_scope": "синтетичні докази режиму complete; 1 зобов'язань; хеш пакета 81742f195cbea99975c05244057bf659cb7920165e05affe6e25f2ccc4839cc0",
+        "lifecycle_stage": "CI — синтетична фікстура TEST_ONLY",
+        "limitations": "Авторський синтетичний перехід і довіра до політики/оцінювача; не виконання A0.3/A0.4, не незалежний еталон і не вимірювання канонічного методу P.",
+        "outcome": "ADD",
+        "repository_tree_sha": "NOT_APPLICABLE",
+        "source_commit_sha": "SYNTHETIC_FIXTURE — no canonical application revision",
+        "track": "B"
+      },
+      {
+        "application_tree_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+        "architecture_after": "The legacy orders contract is removed and replaced by a v2 contract; the successor template inspects the new target.",
+        "architecture_before": "The existing layering representation inspects a legacy orders contract file.",
+        "architecture_state": "C1",
+        "evaluator_id": "synthetic_scope_probe_v1 + Method P DEVELOPMENT V1",
+        "evidence_source": "experiments/pilots/mono_e1_dev_p_decisions_v1/scenarios_v1.json + run_v1/raw/C1_method_p_rep_01.json",
+        "evidence_type": "SYNTHETIC_TEST_ONLY_SCENARIO",
+        "inspection_scope": "синтетичні докази режиму pair_scope; 1 зобов'язань; хеш пакета 9c5abf4f69c29c5c6707660e8c869f1f88d27b8fc8c5b441efcc97e3336bdd7b",
+        "lifecycle_stage": "CI — синтетична фікстура TEST_ONLY",
+        "limitations": "Авторський синтетичний перехід і довіра до політики/оцінювача; не виконання A0.3/A0.4, не незалежний еталон і не вимірювання канонічного методу P.",
+        "outcome": "REPLACE",
+        "repository_tree_sha": "NOT_APPLICABLE",
+        "source_commit_sha": "SYNTHETIC_FIXTURE — no canonical application revision",
+        "track": "B"
+      },
+      {
+        "application_tree_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+        "architecture_after": "A reporting module is added to the required inspection scope; a successor template covers both modules.",
+        "architecture_before": "The existing layering representation inspects the orders module only.",
+        "architecture_state": "C2",
+        "evaluator_id": "synthetic_scope_probe_v1 + Method P DEVELOPMENT V1",
+        "evidence_source": "experiments/pilots/mono_e1_dev_p_decisions_v1/scenarios_v1.json + run_v1/raw/C2_method_p_rep_01.json",
+        "evidence_type": "SYNTHETIC_TEST_ONLY_SCENARIO",
+        "inspection_scope": "синтетичні докази режиму pair_scope; 1 зобов'язань; хеш пакета 0193e1b08d33a3d5e1735fadc3b0e7a93d4d5dad542a326d7e5a52ed458348d2",
+        "lifecycle_stage": "CI — синтетична фікстура TEST_ONLY",
+        "limitations": "Авторський синтетичний перехід і довіра до політики/оцінювача; не виконання A0.3/A0.4, не незалежний еталон і не вимірювання канонічного методу P.",
+        "outcome": "REPLACE",
+        "repository_tree_sha": "NOT_APPLICABLE",
+        "source_commit_sha": "SYNTHETIC_FIXTURE — no canonical application revision",
+        "track": "B"
+      },
+      {
+        "application_tree_sha": "432524d75390d36ec04d5c29d21fef6488186cec",
+        "architecture_after": "The synthetic architecture changes, but the after-state semantic evidence is intentionally omitted.",
+        "architecture_before": "The mandatory layering obligation has an existing representation and complete after-state scope evidence.",
+        "architecture_state": "D1",
+        "evaluator_id": "synthetic_scope_probe_v1 + Method P DEVELOPMENT V1",
+        "evidence_source": "experiments/pilots/mono_e1_dev_p_decisions_v1/scenarios_v1.json + run_v1/raw/D1_method_p_rep_01.json",
+        "evidence_type": "SYNTHETIC_TEST_ONLY_SCENARIO",
+        "inspection_scope": "синтетичні докази режиму missing; 1 зобов'язань; хеш пакета 6d827bf150349cd1c5e3f7b0e0b48f30d4cc9067d2dab14405bfea1182435e55",
+        "lifecycle_stage": "CI — синтетична фікстура TEST_ONLY",
+        "limitations": "Авторський синтетичний перехід і довіра до політики/оцінювача; не виконання A0.3/A0.4, не незалежний еталон і не вимірювання канонічного методу P.",
+        "outcome": "HOLD",
+        "repository_tree_sha": "NOT_APPLICABLE",
+        "source_commit_sha": "SYNTHETIC_FIXTURE — no canonical application revision",
+        "track": "B"
+      },
+      {
+        "application_tree_sha": "79354be5baf44519fca8d94708a5a4ef4d4a2948",
+        "architecture_after": "The application changes while the only pair evidence remains attached to the stale before revision.",
+        "architecture_before": "The mandatory layering obligation has an existing representation with evaluator evidence bound to the before revision.",
+        "architecture_state": "D2",
+        "evaluator_id": "synthetic_scope_probe_v1 + Method P DEVELOPMENT V1",
+        "evidence_source": "experiments/pilots/mono_e1_dev_p_decisions_v1/scenarios_v1.json + run_v1/raw/D2_method_p_rep_01.json",
+        "evidence_type": "SYNTHETIC_TEST_ONLY_SCENARIO",
+        "inspection_scope": "синтетичні докази режиму stale; 1 зобов'язань; хеш пакета 2759bec665c47c55ac0c5cd420225a90169160e4a32a27165e843fc3b13dac0f",
+        "lifecycle_stage": "CI — синтетична фікстура TEST_ONLY",
+        "limitations": "Авторський синтетичний перехід і довіра до політики/оцінювача; не виконання A0.3/A0.4, не незалежний еталон і не вимірювання канонічного методу P.",
+        "outcome": "HOLD",
+        "repository_tree_sha": "NOT_APPLICABLE",
+        "source_commit_sha": "SYNTHETIC_FIXTURE — no canonical application revision",
+        "track": "B"
+      }
+    ],
+    "table_2_evaluators": [
+      {
+        "architecture_state": "A0_3_GOVERNED_MODULE_GRAPH",
+        "diagnostic_mismatches": 0,
+        "evaluable_conditions": 1,
+        "evaluator_id": "AC_PUBLIC_API",
+        "excluded_or_not_evaluable_conditions": 0,
+        "f1": "NOT_MEASURED",
+        "fn": "NOT_APPLICABLE",
+        "fp": "NOT_APPLICABLE",
+        "outcome": "COMPLIANT",
+        "scope_and_limit": "статична інспекція app/modules; 31 файлів; 185 імпортів; повний задекларований обсяг; Одне зафіксоване спостереження на оцінювача/стан; лише задекларований статичний обсяг; не є доказом повного семантичного покриття зобов'язань або runtime/розгортання.",
+        "source_identity": "26a9bb667da7d0938e38aca15d2bf29fd1de4829 / app tree b147b8961ea9e76c966663d4832e4c303581151a",
+        "study": "CANONICAL_SOURCE_OBSERVATION",
+        "technical_calls": 1,
+        "tn": "NOT_APPLICABLE",
+        "tp": "NOT_APPLICABLE",
+        "track": "A"
+      },
+      {
+        "architecture_state": "A0_3_GOVERNED_MODULE_GRAPH",
+        "diagnostic_mismatches": 0,
+        "evaluable_conditions": 1,
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "excluded_or_not_evaluable_conditions": 0,
+        "f1": "NOT_MEASURED",
+        "fn": "NOT_APPLICABLE",
+        "fp": "NOT_APPLICABLE",
+        "outcome": "COMPLIANT",
+        "scope_and_limit": "статична інспекція app/modules; 31 файлів; 185 імпортів; повний задекларований обсяг; Одне зафіксоване спостереження на оцінювача/стан; лише задекларований статичний обсяг; не є доказом повного семантичного покриття зобов'язань або runtime/розгортання.",
+        "source_identity": "26a9bb667da7d0938e38aca15d2bf29fd1de4829 / app tree b147b8961ea9e76c966663d4832e4c303581151a",
+        "study": "CANONICAL_SOURCE_OBSERVATION",
+        "technical_calls": 1,
+        "tn": "NOT_APPLICABLE",
+        "tp": "NOT_APPLICABLE",
+        "track": "A"
+      },
+      {
+        "architecture_state": "A0_4_REPORT_QUERY_PORT",
+        "diagnostic_mismatches": 0,
+        "evaluable_conditions": 1,
+        "evaluator_id": "AC_PUBLIC_API",
+        "excluded_or_not_evaluable_conditions": 0,
+        "f1": "NOT_MEASURED",
+        "fn": "NOT_APPLICABLE",
+        "fp": "NOT_APPLICABLE",
+        "outcome": "COMPLIANT",
+        "scope_and_limit": "статична інспекція app/modules; 31 файлів; 185 імпортів; повний задекларований обсяг; Одне зафіксоване спостереження на оцінювача/стан; лише задекларований статичний обсяг; не є доказом повного семантичного покриття зобов'язань або runtime/розгортання.",
+        "source_identity": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9 / app tree 007196f68652bc13f6798805793ffdfae96f95f7",
+        "study": "CANONICAL_SOURCE_OBSERVATION",
+        "technical_calls": 1,
+        "tn": "NOT_APPLICABLE",
+        "tp": "NOT_APPLICABLE",
+        "track": "A"
+      },
+      {
+        "architecture_state": "A0_4_REPORT_QUERY_PORT",
+        "diagnostic_mismatches": 0,
+        "evaluable_conditions": 1,
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "excluded_or_not_evaluable_conditions": 0,
+        "f1": "NOT_MEASURED",
+        "fn": "NOT_APPLICABLE",
+        "fp": "NOT_APPLICABLE",
+        "outcome": "COMPLIANT",
+        "scope_and_limit": "статична інспекція app/modules; 31 файлів; 185 імпортів; повний задекларований обсяг; Одне зафіксоване спостереження на оцінювача/стан; лише задекларований статичний обсяг; не є доказом повного семантичного покриття зобов'язань або runtime/розгортання.",
+        "source_identity": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9 / app tree 007196f68652bc13f6798805793ffdfae96f95f7",
+        "study": "CANONICAL_SOURCE_OBSERVATION",
+        "technical_calls": 1,
+        "tn": "NOT_APPLICABLE",
+        "tp": "NOT_APPLICABLE",
+        "track": "A"
+      },
+      {
+        "architecture_state": "A0_4_REPORT_QUERY_PORT",
+        "diagnostic_mismatches": 0,
+        "evaluable_conditions": 6,
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "excluded_or_not_evaluable_conditions": 1,
+        "f1": 1.0,
+        "fn": 0,
+        "fp": 0,
+        "outcome": "FINITE_BINARY_CASE_METRICS",
+        "scope_and_limit": "Одна базова версія A0.4; три технічні виклики на умову згорнуто до одного випадку; відсутня очікувана можливість має статус NOT_EVALUABLE і виключається. Лише скінченні умови, обрані автором.",
+        "source_identity": "A0.4 source commit d3101c0d3aa9b7b709253b6ec7518416f05f65b9 / app tree 007196f68652bc13f6798805793ffdfae96f95f7",
+        "study": "EVAL-01",
+        "technical_calls": 21,
+        "tn": 3,
+        "tp": 3,
+        "track": "A"
+      },
+      {
+        "architecture_state": "A0_4_REPORT_QUERY_PORT",
+        "diagnostic_mismatches": 0,
+        "evaluable_conditions": 6,
+        "evaluator_id": "AC_PUBLIC_API",
+        "excluded_or_not_evaluable_conditions": 1,
+        "f1": 1.0,
+        "fn": 0,
+        "fp": 0,
+        "outcome": "FINITE_BINARY_CASE_METRICS",
+        "scope_and_limit": "Одна базова версія A0.4; три технічні виклики на умову згорнуто до одного випадку; відсутня очікувана можливість має статус NOT_EVALUABLE і виключається. Лише скінченні умови, обрані автором.",
+        "source_identity": "A0.4 source commit d3101c0d3aa9b7b709253b6ec7518416f05f65b9 / app tree 007196f68652bc13f6798805793ffdfae96f95f7",
+        "study": "EVAL-01",
+        "technical_calls": 21,
+        "tn": 5,
+        "tp": 1,
+        "track": "A"
+      },
+      {
+        "architecture_state": "A0_4_REPORT_QUERY_PORT",
+        "diagnostic_mismatches": 0,
+        "evaluable_conditions": 6,
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "excluded_or_not_evaluable_conditions": 4,
+        "f1": 1.0,
+        "fn": 0,
+        "fp": 0,
+        "outcome": "FINITE_BINARY_CASE_METRICS",
+        "scope_and_limit": "Десять умов вихідного коду; три виклики на умову; бінарні метрики охоплюють лише застосовні умови. Кількість за застосовністю: {\"APPLICABLE\": 6, \"NOT_APPLICABLE_PUBLIC_CONTRACT_CONSTRUCT\": 3, \"OUT_OF_SCOPE_DYNAMIC_IMPORT\": 1}. Три розбіжності набору діагностик AC_PUBLIC_API збережено; вони не змінюють бінарну класифікацію NON_COMPLIANT.",
+        "source_identity": "A0.4 source commit d3101c0d3aa9b7b709253b6ec7518416f05f65b9 / app tree 007196f68652bc13f6798805793ffdfae96f95f7",
+        "study": "EVAL-02",
+        "technical_calls": 30,
+        "tn": 4,
+        "tp": 2,
+        "track": "A"
+      },
+      {
+        "architecture_state": "A0_4_REPORT_QUERY_PORT",
+        "diagnostic_mismatches": 3,
+        "evaluable_conditions": 8,
+        "evaluator_id": "AC_PUBLIC_API",
+        "excluded_or_not_evaluable_conditions": 2,
+        "f1": 1.0,
+        "fn": 0,
+        "fp": 0,
+        "outcome": "FINITE_BINARY_CASE_METRICS",
+        "scope_and_limit": "Десять умов вихідного коду; три виклики на умову; бінарні метрики охоплюють лише застосовні умови. Кількість за застосовністю: {\"APPLICABLE\": 8, \"OUT_OF_SCOPE_CALL_SIGNATURE\": 1, \"OUT_OF_SCOPE_DYNAMIC_IMPORT\": 1}. Три розбіжності набору діагностик AC_PUBLIC_API збережено; вони не змінюють бінарну класифікацію NON_COMPLIANT.",
+        "source_identity": "A0.4 source commit d3101c0d3aa9b7b709253b6ec7518416f05f65b9 / app tree 007196f68652bc13f6798805793ffdfae96f95f7",
+        "study": "EVAL-02",
+        "technical_calls": 30,
+        "tn": 4,
+        "tp": 4,
+        "track": "A"
+      }
+    ],
+    "table_3_method_p": [
+      {
+        "actual_post_adaptation_coverage": "NOT_MEASURED (3/3)",
+        "candidate_coverage_assessment": "COMPLETE (3/3)",
+        "combined_reference_agreement": "3/3 classifications; CORRECT",
+        "evidence_status": "sidecar=PRESENT; evaluator_records=1; sidecar_pair_proofs=VALID; Method_P_current_pairs=VALID; Method_P_candidate_pairs=VALID",
+        "expected_governance_author_declared": "ACCEPT",
+        "expected_operation_author_declared": "RETAIN",
+        "independent_scenario_unit": true,
+        "observed_governance": "ACCEPT",
+        "observed_operation": "RETAIN",
+        "operation_agreement": "3/3 technical repetitions",
+        "scenario_id": "A1",
+        "technical_repetitions": 3
+      },
+      {
+        "actual_post_adaptation_coverage": "NOT_MEASURED (3/3)",
+        "candidate_coverage_assessment": "COMPLETE (3/3)",
+        "combined_reference_agreement": "3/3 classifications; CORRECT",
+        "evidence_status": "sidecar=PRESENT; evaluator_records=1; sidecar_pair_proofs=VALID; Method_P_current_pairs=VALID; Method_P_candidate_pairs=VALID",
+        "expected_governance_author_declared": "ACCEPT",
+        "expected_operation_author_declared": "RETAIN",
+        "independent_scenario_unit": true,
+        "observed_governance": "ACCEPT",
+        "observed_operation": "RETAIN",
+        "operation_agreement": "3/3 technical repetitions",
+        "scenario_id": "A2",
+        "technical_repetitions": 3
+      },
+      {
+        "actual_post_adaptation_coverage": "NOT_MEASURED (3/3)",
+        "candidate_coverage_assessment": "COMPLETE (3/3)",
+        "combined_reference_agreement": "3/3 classifications; CORRECT",
+        "evidence_status": "sidecar=PRESENT; evaluator_records=1; sidecar_pair_proofs=VALID; Method_P_current_pairs=NO_RECORDS; Method_P_candidate_pairs=VALID",
+        "expected_governance_author_declared": "ACCEPT",
+        "expected_operation_author_declared": "ADD",
+        "independent_scenario_unit": true,
+        "observed_governance": "ACCEPT",
+        "observed_operation": "ADD",
+        "operation_agreement": "3/3 technical repetitions",
+        "scenario_id": "B1",
+        "technical_repetitions": 3
+      },
+      {
+        "actual_post_adaptation_coverage": "NOT_MEASURED (3/3)",
+        "candidate_coverage_assessment": "COMPLETE (3/3)",
+        "combined_reference_agreement": "3/3 classifications; CORRECT",
+        "evidence_status": "sidecar=PRESENT; evaluator_records=1; sidecar_pair_proofs=VALID; Method_P_current_pairs=NO_RECORDS; Method_P_candidate_pairs=VALID",
+        "expected_governance_author_declared": "ACCEPT",
+        "expected_operation_author_declared": "ADD",
+        "independent_scenario_unit": true,
+        "observed_governance": "ACCEPT",
+        "observed_operation": "ADD",
+        "operation_agreement": "3/3 technical repetitions",
+        "scenario_id": "B2",
+        "technical_repetitions": 3
+      },
+      {
+        "actual_post_adaptation_coverage": "NOT_MEASURED (3/3)",
+        "candidate_coverage_assessment": "COMPLETE (3/3)",
+        "combined_reference_agreement": "3/3 classifications; CORRECT",
+        "evidence_status": "sidecar=PRESENT; evaluator_records=2; sidecar_pair_proofs=INVALID,VALID; Method_P_current_pairs=INVALID; Method_P_candidate_pairs=VALID",
+        "expected_governance_author_declared": "ACCEPT",
+        "expected_operation_author_declared": "REPLACE",
+        "independent_scenario_unit": true,
+        "observed_governance": "ACCEPT",
+        "observed_operation": "REPLACE",
+        "operation_agreement": "3/3 technical repetitions",
+        "scenario_id": "C1",
+        "technical_repetitions": 3
+      },
+      {
+        "actual_post_adaptation_coverage": "NOT_MEASURED (3/3)",
+        "candidate_coverage_assessment": "COMPLETE (3/3)",
+        "combined_reference_agreement": "3/3 classifications; CORRECT",
+        "evidence_status": "sidecar=PRESENT; evaluator_records=2; sidecar_pair_proofs=INVALID,VALID; Method_P_current_pairs=INVALID; Method_P_candidate_pairs=VALID",
+        "expected_governance_author_declared": "ACCEPT",
+        "expected_operation_author_declared": "REPLACE",
+        "independent_scenario_unit": true,
+        "observed_governance": "ACCEPT",
+        "observed_operation": "REPLACE",
+        "operation_agreement": "3/3 technical repetitions",
+        "scenario_id": "C2",
+        "technical_repetitions": 3
+      },
+      {
+        "actual_post_adaptation_coverage": "NOT_MEASURED (3/3)",
+        "candidate_coverage_assessment": "UNKNOWN (3/3)",
+        "combined_reference_agreement": "3/3 classifications; CORRECT",
+        "evidence_status": "sidecar=ABSENT; evaluator_records=0; sidecar_pair_proofs=NO_RECORDS; Method_P_current_pairs=UNKNOWN; Method_P_candidate_pairs=UNKNOWN",
+        "expected_governance_author_declared": "HOLD",
+        "expected_operation_author_declared": "HOLD",
+        "independent_scenario_unit": true,
+        "observed_governance": "HOLD",
+        "observed_operation": "HOLD",
+        "operation_agreement": "3/3 technical repetitions",
+        "scenario_id": "D1",
+        "technical_repetitions": 3
+      },
+      {
+        "actual_post_adaptation_coverage": "NOT_MEASURED (3/3)",
+        "candidate_coverage_assessment": "INCOMPLETE (3/3)",
+        "combined_reference_agreement": "0/3 classifications; INCORRECT",
+        "evidence_status": "sidecar=PRESENT; evaluator_records=1; sidecar_pair_proofs=VALID; Method_P_current_pairs=INVALID; Method_P_candidate_pairs=INVALID",
+        "expected_governance_author_declared": "HOLD",
+        "expected_operation_author_declared": "HOLD",
+        "independent_scenario_unit": true,
+        "observed_governance": "REJECT",
+        "observed_operation": "HOLD",
+        "operation_agreement": "3/3 technical repetitions",
+        "scenario_id": "D2",
+        "technical_repetitions": 3
+      }
+    ],
+    "table_4_governance": [
+      {
+        "expected_governance": "ACCEPT",
+        "governance_reason_codes": "NONE_RECORDED",
+        "interpretation": "Рішення врядування збігається з оголошеним еталоном у цих технічних повторах.",
+        "matching_repetitions": 18,
+        "mismatching_repetitions": 0,
+        "observed_governance": "ACCEPT",
+        "scenario_ids": "A1,A2,B1,B2,C1,C2",
+        "technical_repetition_count": 18
+      },
+      {
+        "expected_governance": "HOLD",
+        "governance_reason_codes": "CANDIDATE_NOT_POSITIVELY_VALIDATED,COST_MODEL_UNRESOLVED,COST_VERDICT_UNRESOLVED,INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED,INVARIANT_VERDICTS_NOT_ALL_POSITIVE,MANDATORY_APPLICABILITY_UNKNOWN,MANDATORY_CLASSIFICATION_UNRESOLVED,UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION,VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING",
+        "interpretation": "Невизначеність і недостатність доказів не дозволили прийняти кандидата; HOLD збігається з оголошеним еталоном.",
+        "matching_repetitions": 3,
+        "mismatching_repetitions": 0,
+        "observed_governance": "HOLD",
+        "scenario_ids": "D1",
+        "technical_repetition_count": 3
+      },
+      {
+        "expected_governance": "HOLD",
+        "governance_reason_codes": "ACTIVE_MANDATORY_CONTROL_UNCOVERED,INVARIANT_VIOLATION_PROVEN,MATERIALIZABLE_TEMPLATE_MISSING,REPLACEMENT_NOT_MATERIALIZABLE",
+        "interpretation": "Захисну відмову винесено після зареєстрованих порушень інваріантів і неможливості матеріалізувати заміну; це залишається розбіжністю з оголошеним автором очікуванням HOLD.",
+        "matching_repetitions": 0,
+        "mismatching_repetitions": 3,
+        "observed_governance": "REJECT",
+        "scenario_ids": "D2",
+        "technical_repetition_count": 3
+      }
+    ],
+    "table_5_execution_cost": [
+      {
+        "distinct_scenarios_n": 8,
+        "interpretation": "Лише описова тривалість технічних повторів; незалежної базової групи та статистичного порівняння немає.",
+        "maximum_ms": 500.404792,
+        "mean_ms": 451.4006023333333,
+        "measurement_boundary": "perf_counter_ns: від початку verify_v3_p_bundle() до результату run_adaptation(); не охоплює створення фікстур/sidecar, архівування пакета, оцінювання, застосування чи повторну оцінку.",
+        "median_ms": 460.32102050000003,
+        "minimum_ms": 369.33725,
+        "missing_measurements_n": 0,
+        "observed_operation": "ALL",
+        "sample_standard_deviation_ms": 36.027063554583414,
+        "technical_repetitions_n": 24
+      },
+      {
+        "distinct_scenarios_n": 2,
+        "interpretation": "Лише описова тривалість технічних повторів; незалежної базової групи та статистичного порівняння немає.",
+        "maximum_ms": 489.866958,
+        "mean_ms": 477.00309016666665,
+        "measurement_boundary": "perf_counter_ns: від початку verify_v3_p_bundle() до результату run_adaptation(); не охоплює створення фікстур/sidecar, архівування пакета, оцінювання, застосування чи повторну оцінку.",
+        "median_ms": 479.9860625,
+        "minimum_ms": 461.241416,
+        "missing_measurements_n": 0,
+        "observed_operation": "RETAIN",
+        "sample_standard_deviation_ms": 10.978987956262044,
+        "technical_repetitions_n": 6
+      },
+      {
+        "distinct_scenarios_n": 2,
+        "interpretation": "Лише описова тривалість технічних повторів; незалежної базової групи та статистичного порівняння немає.",
+        "maximum_ms": 462.127791,
+        "mean_ms": 454.89780533333334,
+        "measurement_boundary": "perf_counter_ns: від початку verify_v3_p_bundle() до результату run_adaptation(); не охоплює створення фікстур/sidecar, архівування пакета, оцінювання, застосування чи повторну оцінку.",
+        "median_ms": 452.1350415,
+        "minimum_ms": 450.2855,
+        "missing_measurements_n": 0,
+        "observed_operation": "ADD",
+        "sample_standard_deviation_ms": 5.569088061805335,
+        "technical_repetitions_n": 6
+      },
+      {
+        "distinct_scenarios_n": 2,
+        "interpretation": "Лише описова тривалість технічних повторів; незалежної базової групи та статистичного порівняння немає.",
+        "maximum_ms": 500.404792,
+        "mean_ms": 473.59239583333334,
+        "measurement_boundary": "perf_counter_ns: від початку verify_v3_p_bundle() до результату run_adaptation(); не охоплює створення фікстур/sidecar, архівування пакета, оцінювання, застосування чи повторну оцінку.",
+        "median_ms": 471.431104,
+        "minimum_ms": 456.216708,
+        "missing_measurements_n": 0,
+        "observed_operation": "REPLACE",
+        "sample_standard_deviation_ms": 16.566389254290307,
+        "technical_repetitions_n": 6
+      },
+      {
+        "distinct_scenarios_n": 2,
+        "interpretation": "Лише описова тривалість технічних повторів; незалежної базової групи та статистичного порівняння немає.",
+        "maximum_ms": 438.69825,
+        "mean_ms": 400.109118,
+        "measurement_boundary": "perf_counter_ns: від початку verify_v3_p_bundle() до результату run_adaptation(); не охоплює створення фікстур/sidecar, архівування пакета, оцінювання, застосування чи повторну оцінку.",
+        "median_ms": 398.3942705,
+        "minimum_ms": 369.33725,
+        "missing_measurements_n": 0,
+        "observed_operation": "HOLD",
+        "sample_standard_deviation_ms": 31.549275681766705,
+        "technical_repetitions_n": 6
+      }
+    ],
+    "table_6_limitations": [
+      {
+        "evidence_sources": "Канонічні checkpoints і спостереження A0.3/A0.4; звіти та перевірені архіви EVAL-01/EVAL-02.",
+        "evidence_status": "OBSERVED",
+        "limitation_class": "OBSERVED",
+        "what_is_not_supported": "Повна семантична відповідність усім архітектурним зобов'язанням, runtime-поведінка, ідентичність розгортання або контроль упродовж життєвого циклу.",
+        "what_is_supported": "По два source-bound CI-спостереження оцінювачів для кожного канонічного стану та результати скінченних контрольованих змін EVAL-01/EVAL-02."
+      },
+      {
+        "evidence_sources": "Сценарії MONO_E1_DEV_P_DECISIONS_V1, сирі записи та не незалежний еталон, оголошений автором.",
+        "evidence_status": "SYNTHETICALLY_VERIFIED",
+        "limitation_class": "SYNTHETIC_ONLY",
+        "what_is_not_supported": "Результативність методу P на канонічному переході A0.3→A0.4 або на незалежно відібраних реальних архітектурах.",
+        "what_is_supported": "Поведінка рішень методу P у восьми авторських синтетичних переходах TEST_ONLY із трьома технічними повторами на сценарій."
+      },
+      {
+        "evidence_sources": "Сирі записи методу P та повторно розрахований results_v1.json.",
+        "evidence_status": "OBSERVED_AS_ASSESSMENT",
+        "limitation_class": "ASSESSED_NOT_APPLIED",
+        "what_is_not_supported": "Твердження, що кандидатні конфігурації активували або що вони поліпшили реальну архітектуру.",
+        "what_is_supported": "Для запропонованих конфігурацій-кандидатів зафіксовано оцінку покриття: COMPLETE у шести сценаріях, UNKNOWN в одному та INCOMPLETE в одному."
+      },
+      {
+        "evidence_sources": "Сирі записи методу P і похідна таблиця 3; офіційні ворота залишаються P_ALGORITHM_STATUS=NOT_READY, G1=INCOMPLETE, G4=NOT_AUTHORIZED.",
+        "evidence_status": "NOT_MEASURED",
+        "limitation_class": "NOT_MEASURED",
+        "what_is_not_supported": "Фактичне покриття після адаптації, канонічне виконання B0/P або порівняння з участю людей для B1.",
+        "what_is_supported": "Пакет явно фіксує NOT_MEASURED для фактичного покриття після адаптації в кожному технічному повторі."
+      },
+      {
+        "evidence_sources": "Дослідницький контекст, поточні ворота готовності та обмежені інвентарі доказів.",
+        "evidence_status": "PROPOSED_MODEL_SCOPE_ONLY",
+        "limitation_class": "OUTSIDE_SCOPE",
+        "what_is_not_supported": "Перевірка розгортання/runtime, виробнича авторитетність, точність на популяції, статистично значуща перевага або емпірична валідація всього життєвого циклу.",
+        "what_is_supported": "Пакет охоплює лише CI/статичну інспекцію вихідного коду та окремий синтетичний CI-трек рішень."
+      }
+    ]
+  },
+  "verification": {
+    "canonical_source_and_checkpoint_validation": {
+      "G1": "INCOMPLETE",
+      "G4": "NOT_AUTHORIZED",
+      "MONO_E1": "NO_GO",
+      "P_ALGORITHM_STATUS": "NOT_READY",
+      "canonical_source_and_checkpoint_provenance": "PASS",
+      "complete_method_input_bundle": false,
+      "configuration_id": "MONO_E1_A03_CI_FITNESS_DEVELOPMENT",
+      "configuration_sha256": "8f74330e03b6b96d4213037e0b76dcb29ef72017876411625e5b96edf1400cdf",
+      "configuration_version": "1.0.0",
+      "evaluator_control_evidence": {
+        "EVAL-01": {
+          "archive_sha256": "f6cd3c7180a0719c0f410f51acc9596b0843950d7650da7f7d2924716188c9bf",
+          "calls_completed": 42,
+          "confusion_matrices": {
+            "AC_MODULE_GRAPH": {
+              "fn": 0,
+              "fp": 0,
+              "tn": 3,
+              "tp": 3
+            },
+            "AC_PUBLIC_API": {
+              "fn": 0,
+              "fp": 0,
+              "tn": 5,
+              "tp": 1
+            }
+          },
+          "diagnostic_mismatches": 0,
+          "internal_checksums_verified": 116
+        },
+        "EVAL-02": {
+          "archive_sha256": "9039e17b5b640db5641b808719c6b972a389b8f5e833ac1dc7783e658f4bf18c",
+          "calls_completed": 60,
+          "confusion_matrices": {
+            "AC_MODULE_GRAPH": {
+              "fn": 0,
+              "fp": 0,
+              "tn": 4,
+              "tp": 2
+            },
+            "AC_PUBLIC_API": {
+              "fn": 0,
+              "fp": 0,
+              "tn": 4,
+              "tp": 4
+            }
+          },
+          "diagnostic_mismatches": 3,
+          "internal_checksums_verified": 161
+        }
+      },
+      "historical_a0_b0_bytes": "PRESERVED",
+      "method_input_component_status": "PROPOSED_COMPONENT_ONLY",
+      "method_p_execution_authorized": false,
+      "official_mono_e1_baseline_authorized": false,
+      "schema_status": "PASS",
+      "semantic_fitness_validity": "UNKNOWN"
+    },
+    "checked_in_figure_asset_sha256": "PASS",
+    "dashboard_rows_match_replayed_results": "PASS",
+    "eval02_postrun_validation": {
+      "diagnostic_expectation_mismatches": 3,
+      "diagnostic_mismatch_repeats": [
+        1,
+        2,
+        3
+      ],
+      "evaluator_invocation_failures": 0,
+      "evidence_status": "COMPLETE_WITH_DIAGNOSTIC_EXPECTATION_MISMATCHES",
+      "source_provenance_failures": 0
+    },
+    "evaluator_control_validation": {
+      "EVAL-01": {
+        "archive_sha256": "f6cd3c7180a0719c0f410f51acc9596b0843950d7650da7f7d2924716188c9bf",
+        "diagnostic_mismatches": 0,
+        "internal_checksums_verified": 116,
+        "published_report_csv_archive_match": "PASS",
+        "recalculated_metrics": {
+          "AC_MODULE_GRAPH": {
+            "accuracy": 1.0,
+            "confusion_matrix": {
+              "fn": 0,
+              "fp": 0,
+              "tn": 3,
+              "tp": 3
+            },
+            "evaluable_cases": 6,
+            "excluded_cases": 1,
+            "f1": 1.0,
+            "precision": 1.0,
+            "recall_sensitivity": 1.0,
+            "specificity": 1.0
+          },
+          "AC_PUBLIC_API": {
+            "accuracy": 1.0,
+            "confusion_matrix": {
+              "fn": 0,
+              "fp": 0,
+              "tn": 5,
+              "tp": 1
+            },
+            "evaluable_cases": 6,
+            "excluded_cases": 1,
+            "f1": 1.0,
+            "precision": 1.0,
+            "recall_sensitivity": 1.0,
+            "specificity": 1.0
+          }
+        },
+        "repeats_are_independent_cases": false,
+        "technical_calls": 42
+      },
+      "EVAL-02": {
+        "archive_sha256": "9039e17b5b640db5641b808719c6b972a389b8f5e833ac1dc7783e658f4bf18c",
+        "diagnostic_mismatch_repeats": [
+          1,
+          2,
+          3
+        ],
+        "diagnostic_mismatches": 3,
+        "internal_checksums_verified": 161,
+        "postrun_validator": "PASS",
+        "published_report_csv_archive_match": "PASS",
+        "recalculated_metrics": {
+          "AC_MODULE_GRAPH": {
+            "accuracy": 1.0,
+            "confusion_matrix": {
+              "fn": 0,
+              "fp": 0,
+              "tn": 4,
+              "tp": 2
+            },
+            "evaluable_cases": 6,
+            "excluded_cases": 4,
+            "f1": 1.0,
+            "precision": 1.0,
+            "recall_sensitivity": 1.0,
+            "specificity": 1.0
+          },
+          "AC_PUBLIC_API": {
+            "accuracy": 1.0,
+            "confusion_matrix": {
+              "fn": 0,
+              "fp": 0,
+              "tn": 4,
+              "tp": 4
+            },
+            "evaluable_cases": 8,
+            "excluded_cases": 2,
+            "f1": 1.0,
+            "precision": 1.0,
+            "recall_sensitivity": 1.0,
+            "specificity": 1.0
+          }
+        },
+        "repeats_are_independent_cases": false,
+        "technical_calls": 60
+      }
+    },
+    "figure_metadata_matches_validated_source_data": "PASS",
+    "method_p_raw_replay": {
+      "actual_post_adaptation_coverage": {
+        "NOT_MEASURED": 24
+      },
+      "b0_synth_is_independent_arm": false,
+      "combined_correct_incorrect_not_evaluable": [
+        21,
+        3,
+        0
+      ],
+      "dashboard_checksum_files_expected": 57,
+      "dashboard_checksum_files_verified": 57,
+      "dashboard_raw_inventory_and_report_consistency": "PASS",
+      "execution_source_commit_sha": "c7ca08f73fda5473adbe2690ea3dc0a527fee69d",
+      "governance_distribution": {
+        "ACCEPT": 18,
+        "HOLD": 3,
+        "REJECT": 3
+      },
+      "input_bundle_archives_verified": 8,
+      "operation_matches": "24/24",
+      "raw_manifest_sha256": "7d17120ed4bc3dc6363f3ec9243ff375271c9fb2d579b70572443461573e0ed5",
+      "raw_record_files_verified": 51,
+      "reference_sha256": "5dcf0b2784a3fce370d5d3fd097397174025a76b3c8d2396d82423ea0f221bfa",
+      "results_report_score_manifest_match": "PASS",
+      "scenario_count": 8,
+      "scorer_code_sha256": "0932f7cff513f3f2d08b277a14b8006ac4d02efea859c651067a1698a5795d32",
+      "scorer_replay": "PASS",
+      "scorer_source_commit_sha": "d8a157f6fd93585214210aa364e3a86fb0487fde",
+      "technical_repetition_count": 24
+    }
+  }
+}

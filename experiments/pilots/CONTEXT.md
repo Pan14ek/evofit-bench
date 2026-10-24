@@ -10,6 +10,7 @@ Store pilot-specific protocols, reports, derived result tables, and narrow tools
 ## Local landmarks
 
 - `mono_e1_dev_p_decisions_v1/` — separately versioned eight-case TEST_ONLY Method P DEVELOPMENT decision rehearsal, scorer-only frozen author-declared reference, three technical repetitions per case, B0_SYNTH output, raw V3 inputs/traces, result table, and checksums; not official MONO-E1 or DA01 execution.
+- `mono_e1_ci_evidence_v1/` and `verify_monograph_evidence.py` — derived tables, claim matrix, figure exports, Ukrainian report, and read-only replay/integrity verifier for separate canonical-CI and synthetic tracks; figure metadata comes from validated data and retained render assets are digest-bound; never a method input or official MONO-E1 result.
 - `mono_e1_dev_p_decisions_v1/runner.py` — reference-blind `execute` phase followed by digest-checked `score`; uses the existing verified V3 and `run_adaptation()` path.
 - `EVAL01_PROTOCOL_V1.md`, `EVAL01_MUTATION_CATALOG_V1.json`, and `run_eval01.py` — preregistered A0.4 W2 evaluator-validation protocol, mutation cases, clean Git provenance, repeated source-bound evaluator calls, analysis, and raw evidence packaging; independent of MONO-E1/E2 and Method P.
 - `EVAL01_REPORT_V1.md`, `EVAL01_CASE_RESULTS_V1.csv`, `EVAL01_ANALYSIS_V1.json`, and `EVAL01_RAW_EVIDENCE_V1.zip` — evidence-derived EVAL-01 report, finite case-level confusion metrics, machine-readable analysis, and checksummed raw runs; the ZIP sidecar holds its external SHA-256.

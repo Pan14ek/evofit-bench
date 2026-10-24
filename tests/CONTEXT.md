@@ -10,6 +10,7 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 ## Local landmarks
 
 - unit/test_research_dashboard.py — dashboard reader schema, checksum/report cross-check, categorical aggregation, D2 reference mismatch, B0_SYNTH boundary, duration handling, strict publication-export failure cases, and deterministic figure export; no experiment execution
+- unit/test_monograph_evidence_package.py — read-only pinned-scorer replay, raw-source immutability, EVAL report/archive alignment, metric-drift rejection, and cross-platform figure metadata plus checked-in asset digest consistency for the derived CI-only package.
 
 - `__init__.py`
 - `architecture/a1/test_evaluators.py` — W2 evaluator fixtures plus exact-byte A0.3/A0.4 canonical checkpoint readback, later-revision reproduction, and fail-closed tamper controls.
@@ -41,6 +42,7 @@ Python unit, architecture and PostgreSQL integration suites, including EXP-01/02
 ## Established conventions
 
 Synthetic tests and quality gates must be distinguished from scientific measured runs.
+The monograph evidence package tests consume preserved source evidence and compare text-derived files exactly. Figure definitions are rebuilt from validated data and stored SVG/PNG assets are checked against recorded digests; platform-specific render bytes are not compared. Tests must not rewrite source records.
 
 ## Constraints and known gaps
 

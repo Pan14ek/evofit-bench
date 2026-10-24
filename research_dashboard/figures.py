@@ -105,9 +105,9 @@ def coverage_figure(dataset: ExperimentDataset) -> Any:
     rows = scenario_rows(dataset)
     figure, axis = plt.subplots(figsize=(11.2, max(4.5, 0.48 * len(rows) + 1.6)))
     columns = (
-        "Current coverage",
+        "Current coverage assessment",
         "Observed operation",
-        "Candidate coverage",
+        "Candidate coverage assessment",
         "Governance",
     )
     fields = ("current_coverage", "operation", "candidate_coverage", "governance")
@@ -233,7 +233,7 @@ def operations_governance_figure(dataset: ExperimentDataset) -> Any:
         "Observed\noperation",
         "Expected\ngovernance",
         "Observed\ngovernance",
-        "Reference\nclassification",
+        "Author-declared\nreference match",
     )
     matrix_values = (
         "expected_operation",
@@ -488,6 +488,12 @@ def export_publication_figures(
                 facecolor="white",
                 metadata=metadata,
             )
+            if extension == "svg":
+                lines = output_path.read_text(encoding="utf-8").splitlines()
+                output_path.write_text(
+                    "\n".join(line.rstrip() for line in lines) + "\n",
+                    encoding="utf-8",
+                )
             created.append(output_path)
     import matplotlib.pyplot as plt
 

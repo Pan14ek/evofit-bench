@@ -39,6 +39,36 @@ by the focused test and typecheck targets. The repository's experiment dependenc
 lock remains unchanged. Passing these tests does not establish independent reference validity,
 P_ALGORITHM_STATUS readiness, G1/G4 authorization, or official MONO-E1 results.
 
+## CI-only monograph evidence package traceability
+
+The derived package under `experiments/pilots/mono_e1_ci_evidence_v1/` combines
+two explicitly separate evidence tracks: canonical source-bound CI observations
+and evaluator-control studies (Track A), plus retained synthetic Method P
+DEVELOPMENT records (Track B). Its read-only verifier replays the pinned scorer
+on a temporary copy, revalidates existing source evidence, and compares generated
+tables, report, and claim mapping with checked-in artifacts. Figure titles, axes,
+captions and claim links are rebuilt from validated data; checked-in SVG/PNG
+assets are bound by their recorded SHA-256 values. Render bytes are not compared
+across platforms because Matplotlib output varies by renderer and operating system.
+`make test-monograph-evidence` is included in `make development-regression-test`
+and therefore the hosted CI workflow.
+
+| Requirement | Expected behavior | Test owner | Status |
+| --- | --- | --- | --- |
+| MONO-CI-EVID-01 | Verify the complete P raw manifest/checksum inventory and eight input archives; rerun the pinned scorer on a temporary copy and require exact results/report/score-manifest equality without changing retained evidence | `tests/unit/test_monograph_evidence_package.py::test_package_replays_read_only_and_keeps_claim_boundaries` | Source-bound integrity and replay |
+| MONO-CI-EVID-02 | Revalidate canonical A0.3/A0.4 source/checkpoint provenance and preserve UNKNOWN semantic validity and unauthorized P status | Same full-package test; `validate_project()` | Existing canonical readback validator |
+| MONO-CI-EVID-03 | Recalculate EVAL-01/EVAL-02 finite binary metrics from eligible evaluator-by-condition rows and compare analyses, case CSVs, reports, and archived originals; preserve the three EVAL-02 diagnostic mismatches and documented report erratum | `test_package_replays_read_only_and_keeps_claim_boundaries`, `test_evaluator_report_rejects_drift_in_published_confusion_metrics`, `test_eval02_report_rejects_undocumented_changes_to_archived_evidence` | Source-bound aggregation plus negative drift checks |
+| MONO-CI-EVID-04 | Keep eight scenarios distinct from 24 technical repetitions, preserve operation 24/24 versus combined reference agreement 21/24, and identify B0_SYNTH as non-independent | Full-package test; Method P scorer replay | Synthetic descriptive evidence only |
+| MONO-CI-EVID-05 | Distinguish current and candidate coverage assessments from actual post-adaptation coverage, which remains `NOT_MEASURED` in all repetitions | Full-package test and figure metadata assertions | Synthetic descriptive evidence only |
+| MONO-CI-EVID-06 | Reproduce six publication tables, claim-to-evidence matrix, figure-to-claim map and Ukrainian report byte-for-byte; derive figure labels from validated data and verify all six checked-in SVG/PNG assets against recorded SHA-256 values | Full-package test and `verify_package()` | Cross-platform data/metadata checks plus figure-asset integrity |
+
+Focused command: `make test-monograph-evidence`. This package validates preserved
+engineering and synthetic DEVELOPMENT evidence only; it does not establish
+semantic coverage, a canonical B0/P experiment, human B1 comparison, measured
+MONO-E1 readiness, G1/G4 authorization, deployment/runtime behavior, or a
+generalizable scientific result. It does not alter raw experiment evidence or
+the readiness gates.
+
 A test described in a specification must have a stable requirement ID, fixture provenance, preconditions, input, expected behavior, test level, location, and PASS/FAIL/SKIP/BLOCKED outcome. Never mark unimplemented requirements as passed.
 
 ## ΔA4 Reporting query port acceptance
