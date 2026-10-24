@@ -9,6 +9,8 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 
 ## Local landmarks
 
+- tooling/mono_e1_a03_fitness_config.py — read-only schema, digest, canonical-source, and evaluator-archive validation for proposed B0_DEV_A03; it does not invoke Method P or alter readiness
+
 - `P_APPLICABILITY_V1.md`
 - `P_INPUT_V11.md`
 - `P_INPUT_V12_DEVELOPMENT.md`
@@ -50,6 +52,11 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 ## Established conventions
 
 Research implementation under tooling/; DA01 protocol under da01/.
+
+The MONO-E1 A0.3 fitness configuration is a new bounded DEVELOPMENT proposal,
+not a historical parent config or approved method input. Its source-bound
+engineering observations and EVAL-01/02 controls remain separate from
+applicability, semantic validity, reference custody, and scientific approval.
 
 ## Constraints and known gaps
 
