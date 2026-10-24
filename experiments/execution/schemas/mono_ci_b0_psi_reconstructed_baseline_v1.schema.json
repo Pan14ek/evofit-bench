@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_b0_psi_reconstructed_baseline_v1.schema.json",
+  "title": "Prospective reconstructed A0.3 B0 configuration proposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "configuration_id", "status", "historical_identity", "architecture_state", "target_state", "scope", "derivation", "criteria", "representations", "limitations", "authorization"],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_RECONSTRUCTED_B0_A03_V1"},
+    "configuration_id": {"const": "MONO_CI_RECONSTRUCTED_B0_A03_V1"},
+    "status": {"const": "RECONSTRUCTION_PROPOSAL_NOT_APPROVED"},
+    "historical_identity": {"const": "NOT_FOUND"},
+    "architecture_state": {"const": "A0_3_GOVERNED_MODULE_GRAPH"},
+    "target_state": {"const": "A0_4_REPORT_QUERY_PORT"},
+    "scope": {"const": "CI_ONLY_TWO_ENGINEERING_CONTROLS"},
+    "derivation": {"type": "object", "required": ["source_commit_sha", "source_repository_tree_sha", "source_application_tree_sha", "state_manifest_path", "state_manifest_sha256", "basis"], "properties": {"source_commit_sha": {"const": "26a9bb667da7d0938e38aca15d2bf29fd1de4829"}, "source_repository_tree_sha": {"const": "7b951421395f532ca403dab09d76902ff08a807d"}, "source_application_tree_sha": {"const": "b147b8961ea9e76c966663d4832e4c303581151a"}, "state_manifest_path": {"const": "architecture/states/A0_3_GOVERNED_MODULE_GRAPH.yaml"}, "state_manifest_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "basis": {"type": "string", "minLength": 1}}, "additionalProperties": false},
+    "criteria": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["criterion_id", "status", "intent"], "properties": {"criterion_id": {"const": "architecture_compliance"}, "status": {"const": "PROPOSED_UNREVIEWED"}, "intent": {"type": "string"}}, "additionalProperties": false}},
+    "representations": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "object", "required": ["representation_id", "criterion_id", "obligation_id", "stage", "evaluator_id", "evaluator_version", "evaluator_source_sha256", "evaluator_configuration_path", "evaluator_configuration_sha256", "mapping_status", "applicability", "semantic_validity"], "properties": {"representation_id": {"type": "string"}, "criterion_id": {"const": "architecture_compliance"}, "obligation_id": {"enum": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]}, "stage": {"const": "ci_test"}, "evaluator_id": {"enum": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]}, "evaluator_version": {"const": "1.0.0"}, "evaluator_source_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "evaluator_configuration_path": {"type": "string", "minLength": 1}, "evaluator_configuration_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "mapping_status": {"const": "PROPOSED_UNREVIEWED"}, "applicability": {"const": "UNKNOWN"}, "semantic_validity": {"const": "UNKNOWN"}}, "additionalProperties": false}},
+    "limitations": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "authorization": {"type": "object", "required": ["baseline_approval", "method_input_authorized", "scientific_measurement_authorized", "study_readiness", "P_ALGORITHM_STATUS", "G1", "G4", "G_A1_C4_REF_FROZEN"], "properties": {"baseline_approval": {"const": false}, "method_input_authorized": {"const": false}, "scientific_measurement_authorized": {"const": false}, "study_readiness": {"const": "NO_GO"}, "P_ALGORITHM_STATUS": {"const": "NOT_READY"}, "G1": {"const": "INCOMPLETE"}, "G4": {"const": "NOT_AUTHORIZED"}, "G_A1_C4_REF_FROZEN": {"const": "NOT_READY"}}, "additionalProperties": false}
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "schema_version": "MONO_CI_B0_PSI_BASELINE_RECONSTRUCTION_V1",
+  "status": "PROPOSAL_FOR_INDEPENDENT_REVIEW_NOT_APPROVED",
+  "baseline_id": "MONO_CI_RECONSTRUCTED_B0_A03_V1",
+  "configuration_path": "experiments/execution/mono-ci-b0-psi-execution-v1/RECONSTRUCTED_B0_A03_V1.json",
+  "configuration_sha256": "9df6f138118bca83c411cceeff7ed8d2b557ec633baedb1f7e044a779a571ada",
+  "prepared_before_comparative_results": true,
+  "historical_configuration_search": {
+    "canonical_source_commit_sha": "26a9bb667da7d0938e38aca15d2bf29fd1de4829",
+    "searched_paths": [
+      "fitness/configs/",
+      "fitness/catalog/",
+      "fitness/evaluators/",
+      "fitness/traceability/",
+      ".github/workflows/",
+      "architecture/acceptance/"
+    ],
+    "result": "NO_VERSIONED_A03_FITNESS_CONFIGURATION_OR_REPRESENTATION_BINDING_FOUND",
+    "later_B0_DEV_A03_is_historical": false
+  },
+  "derivation": {
+    "source_of_control_inventory": "architecture/states/A0_3_GOVERNED_MODULE_GRAPH.yaml:governance_requirements.required_evaluators",
+    "selected_controls": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"],
+    "evaluator_bindings": "Current digest-pinned engineering evaluator code/configurations, explicitly treated as prospective reconstruction artifacts.",
+    "excluded": [
+      "A0_MONOLITH fitness configuration as a substitute for A0.3",
+      "historical A0.3 representation identity claims",
+      "normative applicability and mandatory classification",
+      "the remaining catalog obligations",
+      "author-declared evaluator expectations and all scorer/reference artifacts"
+    ]
+  },
+  "assumptions_requiring_review": [
+    "The two evaluator IDs required by the A0.3 state manifest are an acceptable bounded reconstruction basis.",
+    "Using later evaluator implementation/configuration bytes is acceptable for a prospective, nonhistorical baseline definition.",
+    "The CI-only two-control scope can be reviewed separately from a complete fitness configuration."
+  ],
+  "claim_boundary": {
+    "may_support_after_review": [
+      "reproducible technical characterization of the two selected CI controls on the frozen case sources"
+    ],
+    "cannot_support": [
+      "what an actual historical A0.3 fitness configuration contained",
+      "complete mandatory-obligation coverage",
+      "generalized adaptation benefit or superiority",
+      "causal conclusions beyond the selected source conditions"
+    ]
+  },
+  "required_review": [
+    "independent reviewer approval of the prospective baseline definition and evaluator mappings",
+    "protocol amendment or separately approved study variant",
+    "complete applicability/mandatory-denominator and stage-scope decision",
+    "Ψ readiness and independent scorer/reference custody",
+    "G1 completion, ΔA4 reference-gate resolution, and separate G4 authorization"
+  ],
+  "authorization_statuses_preserved": {
+    "study_readiness": "NO_GO",
+    "P_ALGORITHM_STATUS": "NOT_READY",
+    "G1": "INCOMPLETE",
+    "G4": "NOT_AUTHORIZED",
+    "G_A1_C4_REF_FROZEN": "NOT_READY"
+  }
+}

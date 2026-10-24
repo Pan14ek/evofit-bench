@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_b0_psi_arm_input_v1.schema.json",
+  "title": "MONO CI B0/Ψ arm input bundle manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "execution_id", "study_id", "mode", "arm_id", "case", "baseline_configuration_sha256", "allowlist_version", "common_input_ids", "common_input_sha256", "files", "bundle_sha256"],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_B0_PSI_ARM_INPUT_V1"},
+    "execution_id": {"type": "string", "pattern": "^DEV_MONO_CI_[A-Za-z0-9_-]{1,48}$"},
+    "study_id": {"const": "MONO_CI_B0_PSI_DEVELOPMENT_TECHNICAL_VALIDATION"},
+    "mode": {"const": "DEVELOPMENT_TECHNICAL_VALIDATION_ONLY"},
+    "arm_id": {"enum": ["B0", "PSI"]},
+    "case": {"type": "object", "additionalProperties": false, "required": ["case_id", "source_commit_sha", "repository_tree_sha", "application_tree_sha"], "properties": {"case_id": {"type": "string", "pattern": "^CASE_0[1-4]$"}, "source_commit_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"}, "repository_tree_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"}, "application_tree_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"}}},
+    "baseline_configuration_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "allowlist_version": {"const": "MONO_CI_B0_PSI_COMMON_INPUTS_DEV_V1"},
+    "common_input_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}},
+    "common_input_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "files": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["path", "role", "size_bytes", "sha256"], "properties": {"path": {"type": "string", "minLength": 1, "pattern": "^(?!/).+$"}, "role": {"enum": ["architecture_before_source", "architecture_case_source", "architecture_state_manifest", "baseline_configuration", "obligation_catalog", "evaluator_configuration"]}, "size_bytes": {"type": "integer", "minimum": 0}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}}},
+    "bundle_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  }
+}

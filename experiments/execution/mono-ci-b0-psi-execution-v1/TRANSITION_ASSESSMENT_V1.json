@@ -1,0 +1,41 @@
+{
+  "schema_version": "MONO_CI_B0_PSI_TRANSITION_ASSESSMENT_V1",
+  "status": "SOURCE_BOUNDED_DEVELOPMENT_ASSESSMENT_NOT_INDEPENDENTLY_REVIEWED",
+  "transition": {
+    "from": "A0_3_GOVERNED_MODULE_GRAPH",
+    "to": "A0_4_REPORT_QUERY_PORT",
+    "before_commit_sha": "26a9bb667da7d0938e38aca15d2bf29fd1de4829",
+    "after_commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9"
+  },
+  "obligation_scope": {
+    "A0_3_state_manifest_required_evaluators": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"],
+    "A0_4_state_manifest_required_evaluators": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"],
+    "catalog_applicability": "UNKNOWN",
+    "mandatory_denominator": "INCOMPLETE",
+    "scientific_semantic_pair_validity": "UNKNOWN"
+  },
+  "representation_observations": [
+    {
+      "evaluator_id": "AC_PUBLIC_API",
+      "A0_3_representation_identity": "NOT_IDENTIFIED_HISTORICALLY",
+      "A0_4_engineering_control_identity": "PRESENT_IN_STATE_MANIFEST",
+      "change_relevant_to_control": "A0.3 carries a temporary Reporting-to-Tasks.service exception that expires at A0.4; A0.4 uses Tasks.public.",
+      "semantic_staleness": "NOT_EVALUABLE_WITHOUT_REVIEWED_BASELINE_AND_EXACT_PAIR_RULE"
+    },
+    {
+      "evaluator_id": "AC_MODULE_GRAPH",
+      "A0_3_representation_identity": "NOT_IDENTIFIED_HISTORICALLY",
+      "A0_4_engineering_control_identity": "PRESENT_IN_STATE_MANIFEST",
+      "change_relevant_to_control": "The same five allowed capability dependency edges are recorded in both state manifests.",
+      "semantic_staleness": "NOT_EVALUABLE_WITHOUT_REVIEWED_BASELINE_AND_EXACT_PAIR_RULE"
+    }
+  ],
+  "adaptation_conclusion": {
+    "positive_adaptation_need_demonstrated": false,
+    "operation": "NOT_EVALUABLE",
+    "governance_decision": "HOLD",
+    "reason": "The selected controls persist, but historical representation identity, normative applicability, complete denominator, and pair-specific semantic validity are unresolved. The four frozen EVAL-01 cases are not a predeclared positive adaptation-benefit case set.",
+    "case_set_changed": false
+  },
+  "claim_boundary": "This is a source-based engineering assessment. It does not establish that adaptation is unnecessary, that adaptation is required, or that either strategy is superior."
+}

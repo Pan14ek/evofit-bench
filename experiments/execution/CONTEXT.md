@@ -26,6 +26,7 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - `MONO_E1_COMPARABILITY_PREPARATION_REPORT_V1.md` — requirement-to-test traceability and authorized-run integration handoff
 - `tooling/mono_e1_preflight.py` — exact source/artifact readback, proposed workload/fixture specification, arm allowlist checks, isolation and measurement-boundary checks; no arm execution or scorer access
 - `mono-ci-b0-psi-v1/` and `tooling/mono_ci_b0_psi_preflight.py` — separate, read-only preparation for a bounded monograph CI comparison; current NO_GO, historical observations excluded from methods/current case status, metric statuses defined by arm, and no method bundles or measured execution.
+- `mono-ci-b0-psi-execution-v1/` and `tooling/mono_ci_b0_psi_execution.py` — separately versioned baseline-reconstruction proposal and DEVELOPMENT-only input/evaluator runner; preserves NO_GO and does not score.
 - `MONO_A1_REFERENCE_FREEZE_CHECKLIST.md` — preserved V1 checklist; see V2 for current W0 readiness
 - `MONO_A1_REFERENCE_FREEZE_CHECKLIST_V2.md` — current W0 checklist for `G-A1-C4-REF-FROZEN`; the source-pair identity sub-item is verified, while all scientific, method, fixture, custody, freeze, and readback blockers remain
 - `../../docs/MONO_E1_W0_READINESS_RESOLUTION.md` — W3 finding dispositions, authority boundary, complete-Q process, pair/P/input/custody blockers, and dependency-ordered plan; contains no scorer labels
@@ -129,6 +130,13 @@ execution but cannot establish research authority. The current A0.1-to-V3
 mapping and runtime source identity stay unresolved, so ordinary runs execute
 P without EXP-02 evidence. See `EXP04_EVIDENCE_ADMISSION.md` for the readback
 contract and unresolved requirements.
+
+The MONO CI B0/Ψ supplement is a separate proposal to PR #51. It records the
+absence of a historical A0.3 fitness configuration, freezes a two-control
+prospective reconstruction for review, and includes a local technical runner.
+Its B0 evaluator probe is DEVELOPMENT-only; the measured P guard, study NO_GO,
+G1/G4, and the ΔA4 reference gate remain intact. No scorer reference or
+positive adaptation case is created.
 
 ## Verification and further reading
 

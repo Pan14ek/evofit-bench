@@ -47,8 +47,17 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `mono_a1_exact_pair_evidence_v1.schema.json` — raw-artifact-bound exact-pair record; excludes self-declared production-authority scope
 - `mono_e1_comparability_preflight_v1.schema.json` — strict additive preparation manifest for exact source pair, shared/arm identities, workload and fixture specification, isolation, runtime, authority gaps, and measurement boundaries; never authorizes execution
 - `mono_ci_b0_psi_case_manifest_v1.schema.json`, `mono_ci_b0_psi_inputs_v1.schema.json`, `mono_ci_b0_psi_evaluator_expectations_v1.schema.json`, and `mono_ci_b0_psi_metric_contract_v1.schema.json` — separate strict draft-study contracts; canonical observations are provenance-only and case-bound evidence is absent in preparation; evaluator expectations remain review-only metadata and none of these schemas authorizes execution.
+- `mono_ci_b0_psi_reconstructed_baseline_v1.schema.json` and `mono_ci_b0_psi_baseline_reconstruction_v1.schema.json` — explicitly prospective baseline review proposal.
+- `mono_ci_b0_psi_arm_input_v1.schema.json` — strict DEVELOPMENT common-input manifest; the paired verifier rejects scorer/expected-output paths.
+- `mono_ci_b0_psi_dev_run_v1.schema.json` — DEVELOPMENT evaluator-probe record with NO_GO, nonmeasurement, and nonnumeric-status invariants.
+- `mono_ci_b0_psi_score_v1.schema.json` — scorer-side categorical status record that forbids numeric outputs while the separate reference is unresolved.
 
 This is a selected list, not a complete source inventory.
+
+The separate MONO CI execution schemas do not alter PR #51's source-case,
+metric, or readiness contracts. They mark the baseline as a nonhistorical
+reconstruction proposal, and DEVELOPMENT run records require
+`measurement_status=NOT_EXECUTED` with Ψ predictions absent.
 
 ## Established conventions
 
