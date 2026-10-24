@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "experiment_id": "MONO_E1_DEV_P_DECISIONS_V1",
+  "repetitions": 3,
+  "scenarios": [
+    {
+      "scenario_id": "A1",
+      "group": "RETAIN",
+      "architecture_before": "One synthetic application process with a CI layering representation scoped to the application modules.",
+      "architecture_after": "The application changes by adding reporting configuration metadata; module membership and the represented layering scope remain unchanged.",
+      "initial_fitness_configuration": {"representations": ["REP_A0_ARCH_CI_LAYERING"], "active_mandatory_obligations": ["AC_LAYERING"]},
+      "obligations": [{"obligation_id": "AC_LAYERING", "mandatory": true, "applicability_before": "ACTIVE", "applicability_after": "ACTIVE"}],
+      "evaluator_capabilities": {"evaluator_id": "synthetic_scope_probe_v1", "stage": "ci", "successor_template_available": false},
+      "evidence": {"mode": "complete", "required_targets_after": ["app.modules"]},
+      "fixture": {
+        "include_parent_representation": true,
+        "include_successor_template": false,
+        "active_policy_states": ["before", "after"],
+        "before_files": {},
+        "after_files": {"app/synthetic/reporting.ini": "[reporting]\nmode=inline\n"},
+        "removed_after_paths": [],
+        "parent_targets": [],
+        "template_targets": [],
+        "complete_module_inventory": true
+      }
+    },
+    {
+      "scenario_id": "A2",
+      "group": "RETAIN",
+      "architecture_before": "One synthetic application process with a CI layering representation scoped to the application modules.",
+      "architecture_after": "A telemetry settings file is added under synthetic infrastructure metadata without changing the layering obligation or evaluator contract.",
+      "initial_fitness_configuration": {"representations": ["REP_A0_ARCH_CI_LAYERING"], "active_mandatory_obligations": ["AC_LAYERING"]},
+      "obligations": [{"obligation_id": "AC_LAYERING", "mandatory": true, "applicability_before": "ACTIVE", "applicability_after": "ACTIVE"}],
+      "evaluator_capabilities": {"evaluator_id": "synthetic_scope_probe_v1", "stage": "ci", "successor_template_available": false},
+      "evidence": {"mode": "complete", "required_targets_after": ["app.modules"]},
+      "fixture": {
+        "include_parent_representation": true,
+        "include_successor_template": false,
+        "active_policy_states": ["before", "after"],
+        "before_files": {},
+        "after_files": {"app/infra/telemetry.ini": "[telemetry]\nenabled=false\n"},
+        "removed_after_paths": [],
+        "parent_targets": [],
+        "template_targets": [],
+        "complete_module_inventory": true
+      }
+    },
+    {
+      "scenario_id": "B1",
+      "group": "ADD",
+      "architecture_before": "The synthetic application has no active fitness representation for the mandatory layering obligation.",
+      "architecture_after": "The same obligation remains active after a reporting metadata change; a generic CI evaluator template is available.",
+      "initial_fitness_configuration": {"representations": [], "active_mandatory_obligations": ["AC_LAYERING"]},
+      "obligations": [{"obligation_id": "AC_LAYERING", "mandatory": true, "applicability_before": "ACTIVE", "applicability_after": "ACTIVE"}],
+      "evaluator_capabilities": {"evaluator_id": "synthetic_scope_probe_v1", "stage": "ci", "successor_template_available": true},
+      "evidence": {"mode": "complete", "required_targets_after": ["app.modules"]},
+      "fixture": {
+        "include_parent_representation": false,
+        "include_successor_template": true,
+        "active_policy_states": ["before", "after"],
+        "before_files": {},
+        "after_files": {"app/synthetic/reporting.ini": "[reporting]\nmode=inline\n"},
+        "removed_after_paths": [],
+        "parent_targets": [],
+        "template_targets": [],
+        "complete_module_inventory": true
+      }
+    },
+    {
+      "scenario_id": "B2",
+      "group": "ADD",
+      "architecture_before": "The policy candidate is inactive before the transition and its mandatory layering obligation has no representation.",
+      "architecture_after": "A TEST_ONLY policy-state transition makes the mandatory layering obligation active; a generic CI evaluator template is available.",
+      "initial_fitness_configuration": {"representations": [], "active_mandatory_obligations": []},
+      "obligations": [{"obligation_id": "AC_LAYERING", "mandatory": true, "applicability_before": "INACTIVE", "applicability_after": "ACTIVE"}],
+      "evaluator_capabilities": {"evaluator_id": "synthetic_scope_probe_v1", "stage": "ci", "successor_template_available": true},
+      "evidence": {"mode": "complete", "required_targets_after": ["app.modules"]},
+      "fixture": {
+        "include_parent_representation": false,
+        "include_successor_template": true,
+        "active_policy_states": ["after"],
+        "before_files": {},
+        "after_files": {"app/policy/extra.ini": "[policy]\nactive=true\n"},
+        "removed_after_paths": [],
+        "parent_targets": [],
+        "template_targets": [],
+        "complete_module_inventory": true
+      }
+    },
+    {
+      "scenario_id": "C1",
+      "group": "REPLACE",
+      "architecture_before": "The existing layering representation inspects a legacy orders contract file.",
+      "architecture_after": "The legacy orders contract is removed and replaced by a v2 contract; the successor template inspects the new target.",
+      "initial_fitness_configuration": {"representations": ["REP_A0_ARCH_CI_LAYERING"], "active_mandatory_obligations": ["AC_LAYERING"]},
+      "obligations": [{"obligation_id": "AC_LAYERING", "mandatory": true, "applicability_before": "ACTIVE", "applicability_after": "ACTIVE"}],
+      "evaluator_capabilities": {"evaluator_id": "synthetic_scope_probe_v1", "stage": "ci", "successor_template_available": true},
+      "evidence": {"mode": "pair_scope", "required_targets_after": ["synthetic/orders_v2.py"]},
+      "fixture": {
+        "include_parent_representation": true,
+        "include_successor_template": true,
+        "active_policy_states": ["before", "after"],
+        "before_files": {"app/synthetic/orders_legacy.py": "ORDER_SCHEMA = 1\n"},
+        "after_files": {"app/synthetic/orders_v2.py": "ORDER_SCHEMA = 2\n"},
+        "removed_after_paths": ["app/synthetic/orders_legacy.py"],
+        "parent_targets": ["synthetic/orders_legacy.py"],
+        "template_targets": ["synthetic/orders_v2.py"],
+        "complete_module_inventory": true
+      }
+    },
+    {
+      "scenario_id": "C2",
+      "group": "REPLACE",
+      "architecture_before": "The existing layering representation inspects the orders module only.",
+      "architecture_after": "A reporting module is added to the required inspection scope; a successor template covers both modules.",
+      "initial_fitness_configuration": {"representations": ["REP_A0_ARCH_CI_LAYERING"], "active_mandatory_obligations": ["AC_LAYERING"]},
+      "obligations": [{"obligation_id": "AC_LAYERING", "mandatory": true, "applicability_before": "ACTIVE", "applicability_after": "ACTIVE"}],
+      "evaluator_capabilities": {"evaluator_id": "synthetic_scope_probe_v1", "stage": "ci", "successor_template_available": true},
+      "evidence": {"mode": "pair_scope", "required_targets_after": ["synthetic/orders.py", "synthetic/reporting.py"]},
+      "fixture": {
+        "include_parent_representation": true,
+        "include_successor_template": true,
+        "active_policy_states": ["before", "after"],
+        "before_files": {"app/synthetic/orders.py": "ORDERS = True\n"},
+        "after_files": {"app/synthetic/reporting.py": "REPORTING = True\n"},
+        "removed_after_paths": [],
+        "parent_targets": ["synthetic/orders.py"],
+        "template_targets": ["synthetic/orders.py", "synthetic/reporting.py"],
+        "complete_module_inventory": true
+      }
+    },
+    {
+      "scenario_id": "D1",
+      "group": "HOLD",
+      "architecture_before": "The mandatory layering obligation has an existing representation and complete after-state scope evidence.",
+      "architecture_after": "The synthetic architecture changes, but the after-state semantic evidence is intentionally omitted.",
+      "initial_fitness_configuration": {"representations": ["REP_A0_ARCH_CI_LAYERING"], "active_mandatory_obligations": ["AC_LAYERING"]},
+      "obligations": [{"obligation_id": "AC_LAYERING", "mandatory": true, "applicability_before": "ACTIVE", "applicability_after": "ACTIVE"}],
+      "evaluator_capabilities": {"evaluator_id": "synthetic_scope_probe_v1", "stage": "ci", "successor_template_available": false},
+      "evidence": {"mode": "missing", "required_targets_after": ["synthetic/unknown_scope.py"]},
+      "fixture": {
+        "include_parent_representation": true,
+        "include_successor_template": false,
+        "active_policy_states": ["before", "after"],
+        "before_files": {},
+        "after_files": {"app/synthetic/unknown_scope.py": "UNKNOWN_SCOPE = True\n"},
+        "removed_after_paths": [],
+        "parent_targets": [],
+        "template_targets": [],
+        "complete_module_inventory": true
+      }
+    },
+    {
+      "scenario_id": "D2",
+      "group": "HOLD",
+      "architecture_before": "The mandatory layering obligation has an existing representation with evaluator evidence bound to the before revision.",
+      "architecture_after": "The application changes while the only pair evidence remains attached to the stale before revision.",
+      "initial_fitness_configuration": {"representations": ["REP_A0_ARCH_CI_LAYERING"], "active_mandatory_obligations": ["AC_LAYERING"]},
+      "obligations": [{"obligation_id": "AC_LAYERING", "mandatory": true, "applicability_before": "ACTIVE", "applicability_after": "ACTIVE"}],
+      "evaluator_capabilities": {"evaluator_id": "synthetic_scope_probe_v1", "stage": "ci", "successor_template_available": false},
+      "evidence": {"mode": "stale", "required_targets_after": ["app.modules"]},
+      "fixture": {
+        "include_parent_representation": true,
+        "include_successor_template": false,
+        "active_policy_states": ["before", "after"],
+        "before_files": {},
+        "after_files": {"app/synthetic/metrics.py": "METRICS = True\n"},
+        "removed_after_paths": [],
+        "parent_targets": [],
+        "template_targets": [],
+        "complete_module_inventory": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,3665 @@
+{
+  "b0_synth_vs_method_p": {
+    "assessment_type": "DERIVED_UNCHANGED_CONFIGURATION_ASSESSMENT",
+    "coverage_source": "METHOD_P_CURRENT_COVERAGE_ON_SAME_VERIFIED_INPUT",
+    "independently_executed_baseline_arm": false,
+    "operation": "UNCHANGED_CONFIGURATION",
+    "scenario_count": 8,
+    "scenario_ids_with_configuration_change_proposal": [
+      "B1",
+      "B2",
+      "C1",
+      "C2"
+    ],
+    "scenarios_with_configuration_change_proposal": 4
+  },
+  "combined_decision_accuracy": {
+    "correct_count": 21,
+    "evaluable_execution_count": 24,
+    "not_evaluable_execution_count": 0,
+    "rate": 0.875
+  },
+  "evidence_reporting_note": "No evidence-set completeness verdict is present in the raw records. Evidence sidecars, evaluator records, pair-proof statuses, and Method P pair assessments are inventoried separately; coverage is not used as an evidence-completeness proxy.",
+  "execution_duration_by_observed_operation_ns": {
+    "add": {
+      "count": 6,
+      "max": 462127791,
+      "mean": 454897805.3333333,
+      "min": 450285500
+    },
+    "hold": {
+      "count": 6,
+      "max": 438698250,
+      "mean": 400109118.0,
+      "min": 369337250
+    },
+    "replace": {
+      "count": 6,
+      "max": 500404792,
+      "mean": 473592395.8333333,
+      "min": 456216708
+    },
+    "retain": {
+      "count": 6,
+      "max": 489866958,
+      "mean": 477003090.1666667,
+      "min": 461241416
+    }
+  },
+  "execution_manifest_sha256": "5091c42af929dc39cf76d85cd2fed9c306b18a96d3d6cce658b8ce1a73b4cc6a",
+  "experiment_id": "MONO_E1_DEV_P_DECISIONS_V1",
+  "governance_distribution": {
+    "ACCEPT": 18,
+    "HOLD": 3,
+    "REJECT": 3
+  },
+  "hold_decision_counts": {
+    "appropriate": 3,
+    "inappropriate": 0,
+    "missed_expected_hold": 0,
+    "operation_hold_with_governance_mismatch": 3
+  },
+  "interpretation_limits": [
+    "Three repetitions are technical repetitions, not independent cases.",
+    "AUTHOR_DECLARED labels are not independent ground truth.",
+    "TEST_ONLY policy and exact-pair proof do not establish production authority or scientific readiness.",
+    "No Coverage_P, Coverage_ref, statistical significance, generalizable superiority, or DA01 claim is made."
+  ],
+  "method_identity": {
+    "catalogs": {
+      "experiments/execution/contracts/fact_vocabulary_v1.json": "ba83520a5c73187459b2d07bf2a49140cd9feef6f55e5c88c746b6b93a4a0856",
+      "fitness/catalog/architectural-obligations.yaml": "8c5bd8fffe3bdb2af8fb85f8d0012bc34673f72866e52daed99fab96f9763011"
+    },
+    "files": {
+      "experiments/execution/tooling/contracts.py": "11c5e9f8bf8b07c4650e4164af79fa23056967f7074e84923e85aab363051d35",
+      "experiments/execution/tooling/errors.py": "25cd9f71060aa49d79ddb9f0f511bedba4b7779a8b33fd500a098bb442f2180d",
+      "experiments/execution/tooling/hashing.py": "e838b47dfa9958c442deac541a6c1c90907bf1d882bd72cca1dae077474aff18",
+      "experiments/execution/tooling/inputs.py": "e724476707e4927aaa5c03b85c0347bcf7f33f2cc87cc515b596394d70ce6031",
+      "experiments/execution/tooling/p_adaptation.py": "149579f43a13b246452dcdc15fbb0f9f549cf2fd4420fe98701fa14c8a50bc05",
+      "experiments/execution/tooling/p_adaptation_evidence.py": "706a768aeeb67e68ab9ceddf976da82471afe3510d11f9d86235f52ea08955cd",
+      "experiments/execution/tooling/p_applicability.py": "96725b5dedb4543895c4034b3f5f70c93f1f93b3718a04623e3215fb5e873681",
+      "experiments/execution/tooling/p_candidate.py": "485f7353944f629a79ec2f50b0cde70de9cc95ffc7dd6eb0047b0883ef282e12",
+      "experiments/execution/tooling/p_governance.py": "39bf05fccac7b3c62bf06baaaa4537d1a794b0f25476a7cd279d4bb17c1643da",
+      "experiments/execution/tooling/p_impact.py": "d914de3ae7f7ccd1192ba29263d825d66915e65f260981d3a9577fad7c5d5b73",
+      "experiments/execution/tooling/p_input_export_v2.py": "4546f5cc7c45aabc3d15210178256254153614212862b6487ad9b51cae8cee9a",
+      "experiments/execution/tooling/p_input_validation.py": "cb6f85be97be67314fc32d90da841451c09b10bfd35ba91a90bd94c211efff43",
+      "experiments/execution/tooling/p_operations.py": "780580c89bfb4d5ef66b32cf3d9c546843d105736bc2c65deb45cc3a9a3654f4",
+      "experiments/execution/tooling/p_policy_source_v3.py": "8642a02f0c13e972753080ab064c0194e00034586fe195350f513c79748da5ed",
+      "experiments/execution/tooling/p_semantic.py": "2aea36fa338473d624f58a1c653ab2f808e88c4dece931bb6df75ca71d76db9a",
+      "experiments/pilots/mono_e1_dev_p_decisions_v1/runner.py": "cba24862923b76bbaa7ebe1fd439d009ede7b673b71f4bd2a9cfebf86462e0b8",
+      "tests/integration/test_p_applicability_v3.py": "fb767f528859c52fdc137c2690c5093479463ab286ba248c075a57c148dc1c56"
+    },
+    "method_version": "P_GOVERNED_ADAPTATION_DEVELOPMENT_V1",
+    "scenario_catalog_sha256": "355895028989e1dcb4e02b53b5bbf1fb04ce4feff772643014112e66bd1a7f8f",
+    "scenario_schema_sha256": "87923430736554732a4603762764ffe1a2505c18b37b584fa5bf141e454807ca",
+    "schemas": {
+      "experiments/execution/schemas/applicability_ruleset_v1.schema.json": "b7c856b0f919102bfac2a6b1e8f0fa347a8c8afd29554b07d8280165ce029326",
+      "experiments/execution/schemas/architecture_policy_snapshot_v1_1.schema.json": "3c84ff3fc786c67ee54df4d0e08af4d29ff35f198047f4e6a2bfe0e0eb9f71ac",
+      "experiments/execution/schemas/architecture_policy_snapshot_v1_2.schema.json": "42362a4cd62b2e2ae2f0f45e99eead33d3fa14dab3978f955bde722499c57106",
+      "experiments/execution/schemas/evaluator_evidence.schema.json": "3ff83150d70023a9e8b0596766d206b850466facae4e36328c6eaa40b9fabc28",
+      "experiments/execution/schemas/method_input_v3_candidate.schema.json": "fbcee8570621127b8347bf600d0ed50d345abdb3b23cdf1dd41a5f419ad10181",
+      "experiments/execution/schemas/p_adaptation_evidence_v1.schema.json": "a3cc54b547c541cfd28c8ea875f2fba81c77bd69549722bc691e4746fed3b708",
+      "experiments/execution/schemas/p_adaptation_evidence_v2.schema.json": "4890acdad4d948a30d85cdc8bf6185760ffb60860efbd892bf0e7cf121426c0d",
+      "experiments/execution/schemas/p_adaptation_trace_v1.schema.json": "cbbd67320d50559824739a071dbb88e6478d31dbe406b63aea3353f77bdda0b4",
+      "experiments/execution/schemas/p_candidate_configuration_v1.schema.json": "cd13f69ce004dcdaa9cfe62e1f4e88e0c45f1aa9beaeefd63f705412324e512f",
+      "experiments/execution/schemas/p_coverage_assessment_v1.schema.json": "a46ce6fae2dd93d4847ec8ffdd57e7fa7f672eddd88354eb4147afab3371f0dc",
+      "experiments/execution/schemas/p_governance_decision_v1.schema.json": "b8ca9c89e71fa833856c3f95ace8bbe307e7b7562e4bf9fc51800a55932f4c8f",
+      "experiments/execution/schemas/p_impact_assessment_v1.schema.json": "330280d5363e3c72f239cad85761b57b1d14bbedab90536575ce60aca1ead427",
+      "experiments/execution/schemas/p_operation_plan_v1.schema.json": "47a932c8aca3764cf1adb2ac044c65cf4bfaeff5c16eff21c7cd9312dea42d74",
+      "experiments/execution/schemas/p_pair_assessment_v1.schema.json": "f19611ed2a0f031bae568cf23cd35951aedd2bbcbb76e13d117bba879257691c",
+      "experiments/execution/schemas/pilot02_method_input_profile_v1.schema.json": "21c7a049a6c2d8a74d42447472f2aaeeec57a2de901449b9d93927852d0d50f1",
+      "experiments/execution/schemas/pilot02_method_input_profile_v2.schema.json": "460af4333ad83db21e0fc88960f9add1fd9a7f3168bb2c5ddadf56524ac6256b"
+    }
+  },
+  "method_input_bundle_archive_sha256": {
+    "A1": "814d6aef735b2f18510f16fcf10e43cb74508ec2da2b2daf7c0e54bd6b0a24b3",
+    "A2": "fb38955ba791895dd6ba8bd5a4d662d27feb4eab5cd83fa46e90ed6f0594b51f",
+    "B1": "171608c518f77372b0d9c604b20c0b873f1d326cc51e1cf38bd62c0fa8a345c3",
+    "B2": "9a3a7f3dcf2a53aa331acf6f3419b542152ffa0cbc581522152bb587482d6b76",
+    "C1": "2d55ddf2c88492b2c57e7bf93d74802b67a2733e206eb7e83681cb77c3a91889",
+    "C2": "5daa6b47aa3d099c7201f903871be1ecbbfb9667273fd73cda36019d9b918300",
+    "D1": "3ac5e4fa0b2a13186781d50566747180f2608e07e7c63891eb447fef2816d237",
+    "D2": "118fa054cce63ac1494d7b3cae685044368218bd43432c27b25707d5d763de58"
+  },
+  "missed_required_adaptation_rate": {
+    "count": 0,
+    "eligible_required_adaptation_execution_count": 12,
+    "rate": 0.0
+  },
+  "operation_confusion_matrix": {
+    "add": {
+      "add": 6
+    },
+    "hold": {
+      "hold": 6
+    },
+    "replace": {
+      "replace": 6
+    },
+    "retain": {
+      "retain": 6
+    }
+  },
+  "operation_decision_accuracy": {
+    "correct_operation_count": 24,
+    "evaluable_execution_count": 24,
+    "not_evaluable_execution_count": 0,
+    "rate": 1.0
+  },
+  "outcome_unit_note": "Scenario-level outcomes are reported separately from technical repetitions; three repetitions per scenario are not independent cases.",
+  "post_adaptation_coverage_note": "Candidate configurations were not applied and re-evaluated; actual post-adaptation coverage is NOT_MEASURED.",
+  "raw_records_manifest_sha256": "7d17120ed4bc3dc6363f3ec9243ff375271c9fb2d579b70572443461573e0ed5",
+  "reference_sha256": "5dcf0b2784a3fce370d5d3fd097397174025a76b3c8d2396d82423ea0f221bfa",
+  "reference_status": "AUTHOR_DECLARED / DEVELOPMENT / NON_INDEPENDENT",
+  "scenario_count": 8,
+  "scenario_results": [
+    {
+      "actual_reason_codes": [],
+      "b0_synth_assessment": {
+        "coverage": {
+          "architecture_source_sha": "109f28c713bd54a34c3ba38e668b8af4bfb7ac79",
+          "assessment_sha256": "d2eb0d8256ae40a7889d03193f097071be3bbb79f3b730e1a497108ed43c02ae",
+          "mandatory_covered": 1,
+          "mandatory_total": 1,
+          "status": "COMPLETE"
+        },
+        "coverage_source": "METHOD_P_CURRENT_COVERAGE_ON_SAME_VERIFIED_INPUT",
+        "governance": "NOT_RUN",
+        "independently_executed_baseline_arm": false,
+        "initial_configuration_sha256": "d16d2eee48a8b2595a07cb748220ddf0a909d3ed1bfcebdfac6f1f7404c3f9c6",
+        "input_bundle_sha256": "ee40bbae62a463ba9622aeb1b489dcedad585a23b60dd4d88cb7c6701221bb37",
+        "operation": "UNCHANGED_CONFIGURATION",
+        "raw_record_sha256": "c98007236e68ab71cc92b2de8accd653f783a7181d1506209785776f83b6f091"
+      },
+      "b0_synth_differs_from_method_p": false,
+      "bundle_sha256": "ee40bbae62a463ba9622aeb1b489dcedad585a23b60dd4d88cb7c6701221bb37",
+      "candidate_configuration_coverage_status_counts": {
+        "COMPLETE": 3
+      },
+      "correct_incorrect_not_evaluable": {
+        "correct": 3,
+        "incorrect": 0,
+        "not_evaluable": 0
+      },
+      "decision_repetition_consistent": true,
+      "duration_ns_max": 489866958,
+      "duration_ns_min": 483265750,
+      "expected_governance": "ACCEPT",
+      "expected_operation": "retain",
+      "hold_decisions": {
+        "appropriate": 0,
+        "inappropriate": 0,
+        "missed_expected_hold": 0,
+        "operation_hold_with_governance_mismatch": 0
+      },
+      "method_p_governance_counts": {
+        "ACCEPT": 3
+      },
+      "method_p_operation_counts": {
+        "retain": 3
+      },
+      "missed_required_adaptation_count": 0,
+      "operation_decision_correct_count": 3,
+      "operation_decision_incorrect_count": 0,
+      "operation_decision_not_evaluable_count": 0,
+      "pre_adaptation_coverage_status_counts": {
+        "COMPLETE": 3
+      },
+      "scenario_id": "A1",
+      "unnecessary_adaptation_count": 0
+    },
+    {
+      "actual_reason_codes": [],
+      "b0_synth_assessment": {
+        "coverage": {
+          "architecture_source_sha": "fa71f77d90bd814c67821e35656819bc1b93ac93",
+          "assessment_sha256": "0ca5f78f25893697d6a3df0342ed928c0841acabc9947c16ad6c0552791c0443",
+          "mandatory_covered": 1,
+          "mandatory_total": 1,
+          "status": "COMPLETE"
+        },
+        "coverage_source": "METHOD_P_CURRENT_COVERAGE_ON_SAME_VERIFIED_INPUT",
+        "governance": "NOT_RUN",
+        "independently_executed_baseline_arm": false,
+        "initial_configuration_sha256": "d16d2eee48a8b2595a07cb748220ddf0a909d3ed1bfcebdfac6f1f7404c3f9c6",
+        "input_bundle_sha256": "c1f7f8c56e13c462281491a92e691f8c2d62e039413fcd0c2db9c373c9b4cbf3",
+        "operation": "UNCHANGED_CONFIGURATION",
+        "raw_record_sha256": "82fc8b8d6d28d58a1e555345f353551af43e00c5ef78050e30e8995b1e41b4ff"
+      },
+      "b0_synth_differs_from_method_p": false,
+      "bundle_sha256": "c1f7f8c56e13c462281491a92e691f8c2d62e039413fcd0c2db9c373c9b4cbf3",
+      "candidate_configuration_coverage_status_counts": {
+        "COMPLETE": 3
+      },
+      "correct_incorrect_not_evaluable": {
+        "correct": 3,
+        "incorrect": 0,
+        "not_evaluable": 0
+      },
+      "decision_repetition_consistent": true,
+      "duration_ns_max": 476706375,
+      "duration_ns_min": 461241416,
+      "expected_governance": "ACCEPT",
+      "expected_operation": "retain",
+      "hold_decisions": {
+        "appropriate": 0,
+        "inappropriate": 0,
+        "missed_expected_hold": 0,
+        "operation_hold_with_governance_mismatch": 0
+      },
+      "method_p_governance_counts": {
+        "ACCEPT": 3
+      },
+      "method_p_operation_counts": {
+        "retain": 3
+      },
+      "missed_required_adaptation_count": 0,
+      "operation_decision_correct_count": 3,
+      "operation_decision_incorrect_count": 0,
+      "operation_decision_not_evaluable_count": 0,
+      "pre_adaptation_coverage_status_counts": {
+        "COMPLETE": 3
+      },
+      "scenario_id": "A2",
+      "unnecessary_adaptation_count": 0
+    },
+    {
+      "actual_reason_codes": [],
+      "b0_synth_assessment": {
+        "coverage": {
+          "architecture_source_sha": "6faf19dc490812874fb98eae38a125c6d1b567eb",
+          "assessment_sha256": "3c1804177947f32e5512bc21e16956096087bf3e5b044a7a25704939fb150851",
+          "mandatory_covered": 0,
+          "mandatory_total": 1,
+          "status": "INCOMPLETE"
+        },
+        "coverage_source": "METHOD_P_CURRENT_COVERAGE_ON_SAME_VERIFIED_INPUT",
+        "governance": "NOT_RUN",
+        "independently_executed_baseline_arm": false,
+        "initial_configuration_sha256": "fd5b89ff4d579748621cec13d4deae20f02673e295f8f7bce868162810ff3594",
+        "input_bundle_sha256": "c6d7c9b0c5fa17ea72b095d09de1f8017640d1a5c448bd69659cc6a21c58262a",
+        "operation": "UNCHANGED_CONFIGURATION",
+        "raw_record_sha256": "98d59f70e0b9194e449aadf63ab4bd699eb4cbc28418f2d6a35b9fd62ed43485"
+      },
+      "b0_synth_differs_from_method_p": true,
+      "bundle_sha256": "c6d7c9b0c5fa17ea72b095d09de1f8017640d1a5c448bd69659cc6a21c58262a",
+      "candidate_configuration_coverage_status_counts": {
+        "COMPLETE": 3
+      },
+      "correct_incorrect_not_evaluable": {
+        "correct": 3,
+        "incorrect": 0,
+        "not_evaluable": 0
+      },
+      "decision_repetition_consistent": true,
+      "duration_ns_max": 462127791,
+      "duration_ns_min": 450285500,
+      "expected_governance": "ACCEPT",
+      "expected_operation": "add",
+      "hold_decisions": {
+        "appropriate": 0,
+        "inappropriate": 0,
+        "missed_expected_hold": 0,
+        "operation_hold_with_governance_mismatch": 0
+      },
+      "method_p_governance_counts": {
+        "ACCEPT": 3
+      },
+      "method_p_operation_counts": {
+        "add": 3
+      },
+      "missed_required_adaptation_count": 0,
+      "operation_decision_correct_count": 3,
+      "operation_decision_incorrect_count": 0,
+      "operation_decision_not_evaluable_count": 0,
+      "pre_adaptation_coverage_status_counts": {
+        "INCOMPLETE": 3
+      },
+      "scenario_id": "B1",
+      "unnecessary_adaptation_count": 0
+    },
+    {
+      "actual_reason_codes": [],
+      "b0_synth_assessment": {
+        "coverage": {
+          "architecture_source_sha": "df2f50a13aeaf282ffaad71540fd002a44bd3355",
+          "assessment_sha256": "00472106ec1378426a61c4e20250d793bb0bc3033e9d7097047259751c66e4c5",
+          "mandatory_covered": 0,
+          "mandatory_total": 1,
+          "status": "INCOMPLETE"
+        },
+        "coverage_source": "METHOD_P_CURRENT_COVERAGE_ON_SAME_VERIFIED_INPUT",
+        "governance": "NOT_RUN",
+        "independently_executed_baseline_arm": false,
+        "initial_configuration_sha256": "fd5b89ff4d579748621cec13d4deae20f02673e295f8f7bce868162810ff3594",
+        "input_bundle_sha256": "81742f195cbea99975c05244057bf659cb7920165e05affe6e25f2ccc4839cc0",
+        "operation": "UNCHANGED_CONFIGURATION",
+        "raw_record_sha256": "41aecb5f328c81fdd87cb4b9c0a75b4599389851a14418aabed25b87de98c782"
+      },
+      "b0_synth_differs_from_method_p": true,
+      "bundle_sha256": "81742f195cbea99975c05244057bf659cb7920165e05affe6e25f2ccc4839cc0",
+      "candidate_configuration_coverage_status_counts": {
+        "COMPLETE": 3
+      },
+      "correct_incorrect_not_evaluable": {
+        "correct": 3,
+        "incorrect": 0,
+        "not_evaluable": 0
+      },
+      "decision_repetition_consistent": true,
+      "duration_ns_max": 461863625,
+      "duration_ns_min": 450839833,
+      "expected_governance": "ACCEPT",
+      "expected_operation": "add",
+      "hold_decisions": {
+        "appropriate": 0,
+        "inappropriate": 0,
+        "missed_expected_hold": 0,
+        "operation_hold_with_governance_mismatch": 0
+      },
+      "method_p_governance_counts": {
+        "ACCEPT": 3
+      },
+      "method_p_operation_counts": {
+        "add": 3
+      },
+      "missed_required_adaptation_count": 0,
+      "operation_decision_correct_count": 3,
+      "operation_decision_incorrect_count": 0,
+      "operation_decision_not_evaluable_count": 0,
+      "pre_adaptation_coverage_status_counts": {
+        "INCOMPLETE": 3
+      },
+      "scenario_id": "B2",
+      "unnecessary_adaptation_count": 0
+    },
+    {
+      "actual_reason_codes": [],
+      "b0_synth_assessment": {
+        "coverage": {
+          "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+          "assessment_sha256": "e66954b9978958c4563c98b7f0631caa81793fe3c85d967feb93869c517cfd6a",
+          "mandatory_covered": 0,
+          "mandatory_total": 1,
+          "status": "INCOMPLETE"
+        },
+        "coverage_source": "METHOD_P_CURRENT_COVERAGE_ON_SAME_VERIFIED_INPUT",
+        "governance": "NOT_RUN",
+        "independently_executed_baseline_arm": false,
+        "initial_configuration_sha256": "e25f00ded79a4a1b8de39cbaec5258a1718edefbee5e98fc907df96b4c08bfd2",
+        "input_bundle_sha256": "9c5abf4f69c29c5c6707660e8c869f1f88d27b8fc8c5b441efcc97e3336bdd7b",
+        "operation": "UNCHANGED_CONFIGURATION",
+        "raw_record_sha256": "9529971c2085a2bc178ed23a0959b7942870797d1e4cb39b29b1f012a120b3b2"
+      },
+      "b0_synth_differs_from_method_p": true,
+      "bundle_sha256": "9c5abf4f69c29c5c6707660e8c869f1f88d27b8fc8c5b441efcc97e3336bdd7b",
+      "candidate_configuration_coverage_status_counts": {
+        "COMPLETE": 3
+      },
+      "correct_incorrect_not_evaluable": {
+        "correct": 3,
+        "incorrect": 0,
+        "not_evaluable": 0
+      },
+      "decision_repetition_consistent": true,
+      "duration_ns_max": 466034125,
+      "duration_ns_min": 456216708,
+      "expected_governance": "ACCEPT",
+      "expected_operation": "replace",
+      "hold_decisions": {
+        "appropriate": 0,
+        "inappropriate": 0,
+        "missed_expected_hold": 0,
+        "operation_hold_with_governance_mismatch": 0
+      },
+      "method_p_governance_counts": {
+        "ACCEPT": 3
+      },
+      "method_p_operation_counts": {
+        "replace": 3
+      },
+      "missed_required_adaptation_count": 0,
+      "operation_decision_correct_count": 3,
+      "operation_decision_incorrect_count": 0,
+      "operation_decision_not_evaluable_count": 0,
+      "pre_adaptation_coverage_status_counts": {
+        "INCOMPLETE": 3
+      },
+      "scenario_id": "C1",
+      "unnecessary_adaptation_count": 0
+    },
+    {
+      "actual_reason_codes": [],
+      "b0_synth_assessment": {
+        "coverage": {
+          "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+          "assessment_sha256": "d8d9a9823ae80be2609a7a76cd777abbba0c2c6ec4ef732e03a3e0411860399a",
+          "mandatory_covered": 0,
+          "mandatory_total": 1,
+          "status": "INCOMPLETE"
+        },
+        "coverage_source": "METHOD_P_CURRENT_COVERAGE_ON_SAME_VERIFIED_INPUT",
+        "governance": "NOT_RUN",
+        "independently_executed_baseline_arm": false,
+        "initial_configuration_sha256": "5dbdedda8a0901ec3b6de366fb246b85b7678e9055ea125740b29dbb598b8db9",
+        "input_bundle_sha256": "0193e1b08d33a3d5e1735fadc3b0e7a93d4d5dad542a326d7e5a52ed458348d2",
+        "operation": "UNCHANGED_CONFIGURATION",
+        "raw_record_sha256": "f1f019dcd4ae7e81e3b2bd42ab9296625d364c5662063ddd06a9baa65b321b11"
+      },
+      "b0_synth_differs_from_method_p": true,
+      "bundle_sha256": "0193e1b08d33a3d5e1735fadc3b0e7a93d4d5dad542a326d7e5a52ed458348d2",
+      "candidate_configuration_coverage_status_counts": {
+        "COMPLETE": 3
+      },
+      "correct_incorrect_not_evaluable": {
+        "correct": 3,
+        "incorrect": 0,
+        "not_evaluable": 0
+      },
+      "decision_repetition_consistent": true,
+      "duration_ns_max": 500404792,
+      "duration_ns_min": 476828083,
+      "expected_governance": "ACCEPT",
+      "expected_operation": "replace",
+      "hold_decisions": {
+        "appropriate": 0,
+        "inappropriate": 0,
+        "missed_expected_hold": 0,
+        "operation_hold_with_governance_mismatch": 0
+      },
+      "method_p_governance_counts": {
+        "ACCEPT": 3
+      },
+      "method_p_operation_counts": {
+        "replace": 3
+      },
+      "missed_required_adaptation_count": 0,
+      "operation_decision_correct_count": 3,
+      "operation_decision_incorrect_count": 0,
+      "operation_decision_not_evaluable_count": 0,
+      "pre_adaptation_coverage_status_counts": {
+        "INCOMPLETE": 3
+      },
+      "scenario_id": "C2",
+      "unnecessary_adaptation_count": 0
+    },
+    {
+      "actual_reason_codes": [
+        "CANDIDATE_NOT_POSITIVELY_VALIDATED",
+        "COST_MODEL_UNRESOLVED",
+        "COST_VERDICT_UNRESOLVED",
+        "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED",
+        "INVARIANT_VERDICTS_NOT_ALL_POSITIVE",
+        "MANDATORY_APPLICABILITY_UNKNOWN",
+        "MANDATORY_CLASSIFICATION_UNRESOLVED",
+        "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION",
+        "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING"
+      ],
+      "b0_synth_assessment": {
+        "coverage": {
+          "architecture_source_sha": "432524d75390d36ec04d5c29d21fef6488186cec",
+          "assessment_sha256": "a3ccc10d358879ee5a9f3d0745d29f723797e4362234eb15873ef90359811886",
+          "mandatory_covered": 0,
+          "mandatory_total": 0,
+          "status": "UNKNOWN"
+        },
+        "coverage_source": "METHOD_P_CURRENT_COVERAGE_ON_SAME_VERIFIED_INPUT",
+        "governance": "NOT_RUN",
+        "independently_executed_baseline_arm": false,
+        "initial_configuration_sha256": "d16d2eee48a8b2595a07cb748220ddf0a909d3ed1bfcebdfac6f1f7404c3f9c6",
+        "input_bundle_sha256": "6d827bf150349cd1c5e3f7b0e0b48f30d4cc9067d2dab14405bfea1182435e55",
+        "operation": "UNCHANGED_CONFIGURATION",
+        "raw_record_sha256": "16e82d2918a00e81a2a962323d781e66a8d87217c192d99423c902bdcafb3476"
+      },
+      "b0_synth_differs_from_method_p": false,
+      "bundle_sha256": "6d827bf150349cd1c5e3f7b0e0b48f30d4cc9067d2dab14405bfea1182435e55",
+      "candidate_configuration_coverage_status_counts": {
+        "UNKNOWN": 3
+      },
+      "correct_incorrect_not_evaluable": {
+        "correct": 3,
+        "incorrect": 0,
+        "not_evaluable": 0
+      },
+      "decision_repetition_consistent": true,
+      "duration_ns_max": 376071125,
+      "duration_ns_min": 369337250,
+      "expected_governance": "HOLD",
+      "expected_operation": "hold",
+      "hold_decisions": {
+        "appropriate": 3,
+        "inappropriate": 0,
+        "missed_expected_hold": 0,
+        "operation_hold_with_governance_mismatch": 0
+      },
+      "method_p_governance_counts": {
+        "HOLD": 3
+      },
+      "method_p_operation_counts": {
+        "hold": 3
+      },
+      "missed_required_adaptation_count": 0,
+      "operation_decision_correct_count": 3,
+      "operation_decision_incorrect_count": 0,
+      "operation_decision_not_evaluable_count": 0,
+      "pre_adaptation_coverage_status_counts": {
+        "UNKNOWN": 3
+      },
+      "scenario_id": "D1",
+      "unnecessary_adaptation_count": 0
+    },
+    {
+      "actual_reason_codes": [
+        "ACTIVE_MANDATORY_CONTROL_UNCOVERED",
+        "INVARIANT_VIOLATION_PROVEN",
+        "MATERIALIZABLE_TEMPLATE_MISSING",
+        "REPLACEMENT_NOT_MATERIALIZABLE"
+      ],
+      "b0_synth_assessment": {
+        "coverage": {
+          "architecture_source_sha": "79354be5baf44519fca8d94708a5a4ef4d4a2948",
+          "assessment_sha256": "ca1452d6306d775043cc068b3ef1b4c9609bbfaf09a271a043db02ced7b5c1fa",
+          "mandatory_covered": 0,
+          "mandatory_total": 1,
+          "status": "INCOMPLETE"
+        },
+        "coverage_source": "METHOD_P_CURRENT_COVERAGE_ON_SAME_VERIFIED_INPUT",
+        "governance": "NOT_RUN",
+        "independently_executed_baseline_arm": false,
+        "initial_configuration_sha256": "d16d2eee48a8b2595a07cb748220ddf0a909d3ed1bfcebdfac6f1f7404c3f9c6",
+        "input_bundle_sha256": "2759bec665c47c55ac0c5cd420225a90169160e4a32a27165e843fc3b13dac0f",
+        "operation": "UNCHANGED_CONFIGURATION",
+        "raw_record_sha256": "2de5a877d8d59e37075231cd565ba546ab15509e6c7a6f81a80c4933558ccaec"
+      },
+      "b0_synth_differs_from_method_p": false,
+      "bundle_sha256": "2759bec665c47c55ac0c5cd420225a90169160e4a32a27165e843fc3b13dac0f",
+      "candidate_configuration_coverage_status_counts": {
+        "INCOMPLETE": 3
+      },
+      "correct_incorrect_not_evaluable": {
+        "correct": 0,
+        "incorrect": 3,
+        "not_evaluable": 0
+      },
+      "decision_repetition_consistent": true,
+      "duration_ns_max": 438698250,
+      "duration_ns_min": 420717416,
+      "expected_governance": "HOLD",
+      "expected_operation": "hold",
+      "hold_decisions": {
+        "appropriate": 0,
+        "inappropriate": 0,
+        "missed_expected_hold": 0,
+        "operation_hold_with_governance_mismatch": 3
+      },
+      "method_p_governance_counts": {
+        "REJECT": 3
+      },
+      "method_p_operation_counts": {
+        "hold": 3
+      },
+      "missed_required_adaptation_count": 0,
+      "operation_decision_correct_count": 3,
+      "operation_decision_incorrect_count": 0,
+      "operation_decision_not_evaluable_count": 0,
+      "pre_adaptation_coverage_status_counts": {
+        "INCOMPLETE": 3
+      },
+      "scenario_id": "D2",
+      "unnecessary_adaptation_count": 0
+    }
+  ],
+  "schema_version": 2,
+  "scientific_status_effect": "NONE",
+  "scorer_code_sha256": "0932f7cff513f3f2d08b277a14b8006ac4d02efea859c651067a1698a5795d32",
+  "scorer_source_commit_sha": "d8a157f6fd93585214210aa364e3a86fb0487fde",
+  "scoring_pipeline_note": {
+    "corrected_scorer_source_commit_sha": "d8a157f6fd93585214210aa364e3a86fb0487fde",
+    "first_attempt_after_all_method_p_calls": true,
+    "first_score_attempt": "FAILED:SCORER_RECORD_SHAPE_MISMATCH",
+    "raw_method_p_records_modified": false
+  },
+  "source_commit_sha": "c7ca08f73fda5473adbe2690ea3dc0a527fee69d",
+  "summary_counts": {
+    "correct": 21,
+    "execution_failures": 0,
+    "governance_hold": 3,
+    "incorrect": 3,
+    "not_evaluable": 0
+  },
+  "technical_repetition_count": 24,
+  "technical_repetition_results": [
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "109f28c713bd54a34c3ba38e668b8af4bfb7ac79",
+        "assessment_sha256": "d2eb0d8256ae40a7889d03193f097071be3bbb79f3b730e1a497108ed43c02ae",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "f5fc180b6dd2e8ea96cd94619400959234b45f445df3d13e624616289ed62553",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 489866958,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "187106bc790d160cb5871523c07c2b222db4d71f6f675d6e9c05958709e78016",
+          "file_sha256": "338bee31828914b14e37ed0f156da8c0580ccd53fc5ac42ae302a0843bfdb043",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "109f28c713bd54a34c3ba38e668b8af4bfb7ac79",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/scope_probe.json",
+                "sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_A0_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": null,
+          "present": false,
+          "records": []
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "retain",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "ee40bbae62a463ba9622aeb1b489dcedad585a23b60dd4d88cb7c6701221bb37",
+      "operation_plan_sha256": "437b1d474bad538a5daf093b25ac3a8371a10bf1d22e0b4fc5bb308b9debbdcf",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "109f28c713bd54a34c3ba38e668b8af4bfb7ac79",
+        "assessment_sha256": "d2eb0d8256ae40a7889d03193f097071be3bbb79f3b730e1a497108ed43c02ae",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "proposed_operation": "retain",
+      "proposed_operations": [
+        "retain"
+      ],
+      "raw_record_sha256": "450fd2b88e666f308a07de278fa23d705e73862a3698f282ee0f7ad3c44d63ca",
+      "repetition": 1,
+      "scenario_id": "A1"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "109f28c713bd54a34c3ba38e668b8af4bfb7ac79",
+        "assessment_sha256": "d2eb0d8256ae40a7889d03193f097071be3bbb79f3b730e1a497108ed43c02ae",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "f5fc180b6dd2e8ea96cd94619400959234b45f445df3d13e624616289ed62553",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 483976833,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "187106bc790d160cb5871523c07c2b222db4d71f6f675d6e9c05958709e78016",
+          "file_sha256": "338bee31828914b14e37ed0f156da8c0580ccd53fc5ac42ae302a0843bfdb043",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "109f28c713bd54a34c3ba38e668b8af4bfb7ac79",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/scope_probe.json",
+                "sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_A0_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": null,
+          "present": false,
+          "records": []
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "retain",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "ee40bbae62a463ba9622aeb1b489dcedad585a23b60dd4d88cb7c6701221bb37",
+      "operation_plan_sha256": "437b1d474bad538a5daf093b25ac3a8371a10bf1d22e0b4fc5bb308b9debbdcf",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "109f28c713bd54a34c3ba38e668b8af4bfb7ac79",
+        "assessment_sha256": "d2eb0d8256ae40a7889d03193f097071be3bbb79f3b730e1a497108ed43c02ae",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "proposed_operation": "retain",
+      "proposed_operations": [
+        "retain"
+      ],
+      "raw_record_sha256": "88b5401e5cb4cb89544fd3641f5a1f0497942700494be9abb8e255bdb5f4d569",
+      "repetition": 2,
+      "scenario_id": "A1"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "109f28c713bd54a34c3ba38e668b8af4bfb7ac79",
+        "assessment_sha256": "d2eb0d8256ae40a7889d03193f097071be3bbb79f3b730e1a497108ed43c02ae",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "f5fc180b6dd2e8ea96cd94619400959234b45f445df3d13e624616289ed62553",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 483265750,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "187106bc790d160cb5871523c07c2b222db4d71f6f675d6e9c05958709e78016",
+          "file_sha256": "338bee31828914b14e37ed0f156da8c0580ccd53fc5ac42ae302a0843bfdb043",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "109f28c713bd54a34c3ba38e668b8af4bfb7ac79",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/scope_probe.json",
+                "sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_A0_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": null,
+          "present": false,
+          "records": []
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "retain",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "ee40bbae62a463ba9622aeb1b489dcedad585a23b60dd4d88cb7c6701221bb37",
+      "operation_plan_sha256": "437b1d474bad538a5daf093b25ac3a8371a10bf1d22e0b4fc5bb308b9debbdcf",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "109f28c713bd54a34c3ba38e668b8af4bfb7ac79",
+        "assessment_sha256": "d2eb0d8256ae40a7889d03193f097071be3bbb79f3b730e1a497108ed43c02ae",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "proposed_operation": "retain",
+      "proposed_operations": [
+        "retain"
+      ],
+      "raw_record_sha256": "ca0a58a87fb22b6c95c864d91d20b42f7c446dfeae248b8ea2684f1d58432e88",
+      "repetition": 3,
+      "scenario_id": "A1"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "fa71f77d90bd814c67821e35656819bc1b93ac93",
+        "assessment_sha256": "0ca5f78f25893697d6a3df0342ed928c0841acabc9947c16ad6c0552791c0443",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "3740e598e02f85f4a72c8306eed6550e9c48dfd8198732f47d585073d1cf6dad",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 466961209,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "6efd908cafc12caee296f98959b633b8a9ef5d007a4168ac9c4ca04208205e20",
+          "file_sha256": "a58a028d7a3552d2015bcc883fb3edebf7ac287a0a9577c22c3d238f458c8cde",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "fa71f77d90bd814c67821e35656819bc1b93ac93",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/scope_probe.json",
+                "sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_A0_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": null,
+          "present": false,
+          "records": []
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "retain",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "c1f7f8c56e13c462281491a92e691f8c2d62e039413fcd0c2db9c373c9b4cbf3",
+      "operation_plan_sha256": "437b1d474bad538a5daf093b25ac3a8371a10bf1d22e0b4fc5bb308b9debbdcf",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "fa71f77d90bd814c67821e35656819bc1b93ac93",
+        "assessment_sha256": "0ca5f78f25893697d6a3df0342ed928c0841acabc9947c16ad6c0552791c0443",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "proposed_operation": "retain",
+      "proposed_operations": [
+        "retain"
+      ],
+      "raw_record_sha256": "a447f7061713a90007ae392b7d28fd3304953ff082bbb1ff2a6801b4c28e75c3",
+      "repetition": 1,
+      "scenario_id": "A2"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "fa71f77d90bd814c67821e35656819bc1b93ac93",
+        "assessment_sha256": "0ca5f78f25893697d6a3df0342ed928c0841acabc9947c16ad6c0552791c0443",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "3740e598e02f85f4a72c8306eed6550e9c48dfd8198732f47d585073d1cf6dad",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 461241416,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "6efd908cafc12caee296f98959b633b8a9ef5d007a4168ac9c4ca04208205e20",
+          "file_sha256": "a58a028d7a3552d2015bcc883fb3edebf7ac287a0a9577c22c3d238f458c8cde",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "fa71f77d90bd814c67821e35656819bc1b93ac93",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/scope_probe.json",
+                "sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_A0_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": null,
+          "present": false,
+          "records": []
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "retain",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "c1f7f8c56e13c462281491a92e691f8c2d62e039413fcd0c2db9c373c9b4cbf3",
+      "operation_plan_sha256": "437b1d474bad538a5daf093b25ac3a8371a10bf1d22e0b4fc5bb308b9debbdcf",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "fa71f77d90bd814c67821e35656819bc1b93ac93",
+        "assessment_sha256": "0ca5f78f25893697d6a3df0342ed928c0841acabc9947c16ad6c0552791c0443",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "proposed_operation": "retain",
+      "proposed_operations": [
+        "retain"
+      ],
+      "raw_record_sha256": "3c0b4eabb93e0035a44b70bcf1d5b14b4375a4e720288fbce8c09d8d6e85f82a",
+      "repetition": 2,
+      "scenario_id": "A2"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "fa71f77d90bd814c67821e35656819bc1b93ac93",
+        "assessment_sha256": "0ca5f78f25893697d6a3df0342ed928c0841acabc9947c16ad6c0552791c0443",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "3740e598e02f85f4a72c8306eed6550e9c48dfd8198732f47d585073d1cf6dad",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 476706375,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "6efd908cafc12caee296f98959b633b8a9ef5d007a4168ac9c4ca04208205e20",
+          "file_sha256": "a58a028d7a3552d2015bcc883fb3edebf7ac287a0a9577c22c3d238f458c8cde",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "fa71f77d90bd814c67821e35656819bc1b93ac93",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/scope_probe.json",
+                "sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_A0_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": null,
+          "present": false,
+          "records": []
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "retain",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "c1f7f8c56e13c462281491a92e691f8c2d62e039413fcd0c2db9c373c9b4cbf3",
+      "operation_plan_sha256": "437b1d474bad538a5daf093b25ac3a8371a10bf1d22e0b4fc5bb308b9debbdcf",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "fa71f77d90bd814c67821e35656819bc1b93ac93",
+        "assessment_sha256": "0ca5f78f25893697d6a3df0342ed928c0841acabc9947c16ad6c0552791c0443",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "proposed_operation": "retain",
+      "proposed_operations": [
+        "retain"
+      ],
+      "raw_record_sha256": "adc7f801c69bbd0794ec7ecde18aa1f955557d5ed9945f7f0e219aa6705f4684",
+      "repetition": 3,
+      "scenario_id": "A2"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "6faf19dc490812874fb98eae38a125c6d1b567eb",
+        "assessment_sha256": "7cbead6c979b47ae6a24acdb8bea5492f3feb442504e4af251a77403792fefe1",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "34e0883ce0ca62720f8d925d986fc613b91d9ac113fa6b3de6df7c1cddcbadfd",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 452932583,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "3570686fd3304c6101a84dfec5f4ca24508b3a9ca340a8ed1f65d4b11d9d0d65",
+          "file_sha256": "04a434f40bf4bfae699fb4b5161b534fdcd1ce949833d2f5bae57cae7c54d176",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "6faf19dc490812874fb98eae38a125c6d1b567eb",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/scope_probe.json",
+                "sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": null,
+          "present": false,
+          "records": []
+        },
+        "pre_adaptation_pair_assessments": [],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "add",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "c6d7c9b0c5fa17ea72b095d09de1f8017640d1a5c448bd69659cc6a21c58262a",
+      "operation_plan_sha256": "4cd303a6010491a23c9c2729f91b859ae624fbb3df1b5dee34c3bcf77565cc4c",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "6faf19dc490812874fb98eae38a125c6d1b567eb",
+        "assessment_sha256": "3c1804177947f32e5512bc21e16956096087bf3e5b044a7a25704939fb150851",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "proposed_operation": "add",
+      "proposed_operations": [
+        "add"
+      ],
+      "raw_record_sha256": "27435e26044f3fdbb04de694a6440e066922d2e13fd7fce800fb2732110cc6f8",
+      "repetition": 1,
+      "scenario_id": "B1"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "6faf19dc490812874fb98eae38a125c6d1b567eb",
+        "assessment_sha256": "7cbead6c979b47ae6a24acdb8bea5492f3feb442504e4af251a77403792fefe1",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "34e0883ce0ca62720f8d925d986fc613b91d9ac113fa6b3de6df7c1cddcbadfd",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 450285500,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "3570686fd3304c6101a84dfec5f4ca24508b3a9ca340a8ed1f65d4b11d9d0d65",
+          "file_sha256": "04a434f40bf4bfae699fb4b5161b534fdcd1ce949833d2f5bae57cae7c54d176",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "6faf19dc490812874fb98eae38a125c6d1b567eb",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/scope_probe.json",
+                "sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": null,
+          "present": false,
+          "records": []
+        },
+        "pre_adaptation_pair_assessments": [],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "add",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "c6d7c9b0c5fa17ea72b095d09de1f8017640d1a5c448bd69659cc6a21c58262a",
+      "operation_plan_sha256": "4cd303a6010491a23c9c2729f91b859ae624fbb3df1b5dee34c3bcf77565cc4c",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "6faf19dc490812874fb98eae38a125c6d1b567eb",
+        "assessment_sha256": "3c1804177947f32e5512bc21e16956096087bf3e5b044a7a25704939fb150851",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "proposed_operation": "add",
+      "proposed_operations": [
+        "add"
+      ],
+      "raw_record_sha256": "ebfc5a6f417c4b88deab50d4801e63b9c166a512ec56d3b90cafa5980bc58ba2",
+      "repetition": 2,
+      "scenario_id": "B1"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "6faf19dc490812874fb98eae38a125c6d1b567eb",
+        "assessment_sha256": "7cbead6c979b47ae6a24acdb8bea5492f3feb442504e4af251a77403792fefe1",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "34e0883ce0ca62720f8d925d986fc613b91d9ac113fa6b3de6df7c1cddcbadfd",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 462127791,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "3570686fd3304c6101a84dfec5f4ca24508b3a9ca340a8ed1f65d4b11d9d0d65",
+          "file_sha256": "04a434f40bf4bfae699fb4b5161b534fdcd1ce949833d2f5bae57cae7c54d176",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "6faf19dc490812874fb98eae38a125c6d1b567eb",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/scope_probe.json",
+                "sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": null,
+          "present": false,
+          "records": []
+        },
+        "pre_adaptation_pair_assessments": [],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "add",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "c6d7c9b0c5fa17ea72b095d09de1f8017640d1a5c448bd69659cc6a21c58262a",
+      "operation_plan_sha256": "4cd303a6010491a23c9c2729f91b859ae624fbb3df1b5dee34c3bcf77565cc4c",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "6faf19dc490812874fb98eae38a125c6d1b567eb",
+        "assessment_sha256": "3c1804177947f32e5512bc21e16956096087bf3e5b044a7a25704939fb150851",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "proposed_operation": "add",
+      "proposed_operations": [
+        "add"
+      ],
+      "raw_record_sha256": "4e2135dff81a8431c6187c7a7cfd770232639f4fbb01d0662e246e0138fc55f2",
+      "repetition": 3,
+      "scenario_id": "B1"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "df2f50a13aeaf282ffaad71540fd002a44bd3355",
+        "assessment_sha256": "cbfa484d2495f111243b63ab9967889aca64f8938119500ef51e7868c4ce8054",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "56591e08c3e0b313beb09b21a76a01660e824c0ce2884cc55fe7a4c6319f469e",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 461863625,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "79ca9508f49bdfa674c5bd4d2efbfc8b104f36bbd2688afd5a920a078bd01139",
+          "file_sha256": "f859cb03062cd661ded634fd8493a6b11b70c1e199e70abc631cffafaf23d682",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "df2f50a13aeaf282ffaad71540fd002a44bd3355",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/scope_probe.json",
+                "sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": null,
+          "present": false,
+          "records": []
+        },
+        "pre_adaptation_pair_assessments": [],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "add",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "81742f195cbea99975c05244057bf659cb7920165e05affe6e25f2ccc4839cc0",
+      "operation_plan_sha256": "4cd303a6010491a23c9c2729f91b859ae624fbb3df1b5dee34c3bcf77565cc4c",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "df2f50a13aeaf282ffaad71540fd002a44bd3355",
+        "assessment_sha256": "00472106ec1378426a61c4e20250d793bb0bc3033e9d7097047259751c66e4c5",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "proposed_operation": "add",
+      "proposed_operations": [
+        "add"
+      ],
+      "raw_record_sha256": "6ad8b09ec7188a828b52f6d3e31f15c10586c23ef29a7a53fc657489a391cdfe",
+      "repetition": 1,
+      "scenario_id": "B2"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "df2f50a13aeaf282ffaad71540fd002a44bd3355",
+        "assessment_sha256": "cbfa484d2495f111243b63ab9967889aca64f8938119500ef51e7868c4ce8054",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "56591e08c3e0b313beb09b21a76a01660e824c0ce2884cc55fe7a4c6319f469e",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 450839833,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "79ca9508f49bdfa674c5bd4d2efbfc8b104f36bbd2688afd5a920a078bd01139",
+          "file_sha256": "f859cb03062cd661ded634fd8493a6b11b70c1e199e70abc631cffafaf23d682",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "df2f50a13aeaf282ffaad71540fd002a44bd3355",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/scope_probe.json",
+                "sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": null,
+          "present": false,
+          "records": []
+        },
+        "pre_adaptation_pair_assessments": [],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "add",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "81742f195cbea99975c05244057bf659cb7920165e05affe6e25f2ccc4839cc0",
+      "operation_plan_sha256": "4cd303a6010491a23c9c2729f91b859ae624fbb3df1b5dee34c3bcf77565cc4c",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "df2f50a13aeaf282ffaad71540fd002a44bd3355",
+        "assessment_sha256": "00472106ec1378426a61c4e20250d793bb0bc3033e9d7097047259751c66e4c5",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "proposed_operation": "add",
+      "proposed_operations": [
+        "add"
+      ],
+      "raw_record_sha256": "a2c3f8bc9dc6fb8fcfc367eec37d9144e88f924ded9daa16503ae0925272bc7e",
+      "repetition": 2,
+      "scenario_id": "B2"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "df2f50a13aeaf282ffaad71540fd002a44bd3355",
+        "assessment_sha256": "cbfa484d2495f111243b63ab9967889aca64f8938119500ef51e7868c4ce8054",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "56591e08c3e0b313beb09b21a76a01660e824c0ce2884cc55fe7a4c6319f469e",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 451337500,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "79ca9508f49bdfa674c5bd4d2efbfc8b104f36bbd2688afd5a920a078bd01139",
+          "file_sha256": "f859cb03062cd661ded634fd8493a6b11b70c1e199e70abc631cffafaf23d682",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "df2f50a13aeaf282ffaad71540fd002a44bd3355",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/scope_probe.json",
+                "sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": null,
+          "present": false,
+          "records": []
+        },
+        "pre_adaptation_pair_assessments": [],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "add",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "81742f195cbea99975c05244057bf659cb7920165e05affe6e25f2ccc4839cc0",
+      "operation_plan_sha256": "4cd303a6010491a23c9c2729f91b859ae624fbb3df1b5dee34c3bcf77565cc4c",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "df2f50a13aeaf282ffaad71540fd002a44bd3355",
+        "assessment_sha256": "00472106ec1378426a61c4e20250d793bb0bc3033e9d7097047259751c66e4c5",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "proposed_operation": "add",
+      "proposed_operations": [
+        "add"
+      ],
+      "raw_record_sha256": "024df731429b0b60064e5ada8e42fe196b133b8f445e228d3dc877993fc0bfe7",
+      "repetition": 3,
+      "scenario_id": "B2"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+        "assessment_sha256": "bf9b7da81ecd91c8e80e8ef493a890ec8294e0685af9ef84a2fe737379810b82",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "3dea2ef4f26da28a1a4e15e77d588211e4cb012eee65af605bd39070941c9511",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 459400625,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "6b7e6920809ad7ed7cc22ce8e61933f8944cd4614de8407bf75f981aea21e25a",
+          "file_sha256": "6b44f0d6cf8214edd5aaeab8c49daf12fabcf6bf83a26f2ce9b162f4134f452e",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/current.json",
+                "sha256": "710a7e746088ef48a03c9a02d407086f72d053d15f6f717140aed0c4ba55927e"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_A0_ARCH_CI_LAYERING"
+          },
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/successor.json",
+                "sha256": "ff73b1b3b2faa7d17c6151596e84289f377502f9150d978b7abce5a6d9bb53fe"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": "0b0360e438b4676a5ede6f78f0159a9a3ddff2d32366a8f6329d3eeac15fa690",
+          "present": true,
+          "records": [
+            {
+              "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+              "evaluator_report": {
+                "configured_targets": [
+                  "synthetic/orders_legacy.py"
+                ],
+                "expected_subjects": [
+                  "synthetic/orders_v2.py"
+                ],
+                "inspected_edge_count": 1,
+                "inspected_subjects": [
+                  "synthetic/orders_v2.py"
+                ],
+                "inspection_unit": "file",
+                "measured_count": 1,
+                "missing_targets": [
+                  "synthetic/orders_v2.py"
+                ],
+                "resolved_targets": []
+              },
+              "process_exit_code": 2,
+              "representation_id": "REP_A0_ARCH_CI_LAYERING",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "710a7e746088ef48a03c9a02d407086f72d053d15f6f717140aed0c4ba55927e",
+              "tag": "current"
+            },
+            {
+              "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+              "evaluator_report": {
+                "configured_targets": [
+                  "synthetic/orders_v2.py"
+                ],
+                "expected_subjects": [
+                  "synthetic/orders_v2.py"
+                ],
+                "inspected_edge_count": 1,
+                "inspected_subjects": [
+                  "synthetic/orders_v2.py"
+                ],
+                "inspection_unit": "file",
+                "measured_count": 1,
+                "missing_targets": [],
+                "resolved_targets": [
+                  "synthetic/orders_v2.py"
+                ]
+              },
+              "process_exit_code": 0,
+              "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "ff73b1b3b2faa7d17c6151596e84289f377502f9150d978b7abce5a6d9bb53fe",
+              "tag": "successor"
+            }
+          ]
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "COMPLIANCE_RESULT_UNDETERMINED",
+              "SYNTHETIC_REQUIRED_SCOPE_MISSING",
+              "VACUOUS_SUCCESS"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "INVALID",
+            "status": "INVALID"
+          }
+        ],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "SYNTHETIC_REQUIRED_SCOPE_MISSING"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "status": "INVALID"
+          },
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "replace",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "9c5abf4f69c29c5c6707660e8c869f1f88d27b8fc8c5b441efcc97e3336bdd7b",
+      "operation_plan_sha256": "7465720d95bdb8c1fd9c8316c0a4a0423590d43f86bd7ba4666e2d385471ba5a",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+        "assessment_sha256": "e66954b9978958c4563c98b7f0631caa81793fe3c85d967feb93869c517cfd6a",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "proposed_operation": "replace",
+      "proposed_operations": [
+        "replace"
+      ],
+      "raw_record_sha256": "350da0c218d385c11980f1769b24ba51c85c630b045b5a65158147fec5f4d384",
+      "repetition": 1,
+      "scenario_id": "C1"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+        "assessment_sha256": "bf9b7da81ecd91c8e80e8ef493a890ec8294e0685af9ef84a2fe737379810b82",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "3dea2ef4f26da28a1a4e15e77d588211e4cb012eee65af605bd39070941c9511",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 456216708,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "6b7e6920809ad7ed7cc22ce8e61933f8944cd4614de8407bf75f981aea21e25a",
+          "file_sha256": "6b44f0d6cf8214edd5aaeab8c49daf12fabcf6bf83a26f2ce9b162f4134f452e",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/current.json",
+                "sha256": "710a7e746088ef48a03c9a02d407086f72d053d15f6f717140aed0c4ba55927e"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_A0_ARCH_CI_LAYERING"
+          },
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/successor.json",
+                "sha256": "ff73b1b3b2faa7d17c6151596e84289f377502f9150d978b7abce5a6d9bb53fe"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": "0b0360e438b4676a5ede6f78f0159a9a3ddff2d32366a8f6329d3eeac15fa690",
+          "present": true,
+          "records": [
+            {
+              "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+              "evaluator_report": {
+                "configured_targets": [
+                  "synthetic/orders_legacy.py"
+                ],
+                "expected_subjects": [
+                  "synthetic/orders_v2.py"
+                ],
+                "inspected_edge_count": 1,
+                "inspected_subjects": [
+                  "synthetic/orders_v2.py"
+                ],
+                "inspection_unit": "file",
+                "measured_count": 1,
+                "missing_targets": [
+                  "synthetic/orders_v2.py"
+                ],
+                "resolved_targets": []
+              },
+              "process_exit_code": 2,
+              "representation_id": "REP_A0_ARCH_CI_LAYERING",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "710a7e746088ef48a03c9a02d407086f72d053d15f6f717140aed0c4ba55927e",
+              "tag": "current"
+            },
+            {
+              "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+              "evaluator_report": {
+                "configured_targets": [
+                  "synthetic/orders_v2.py"
+                ],
+                "expected_subjects": [
+                  "synthetic/orders_v2.py"
+                ],
+                "inspected_edge_count": 1,
+                "inspected_subjects": [
+                  "synthetic/orders_v2.py"
+                ],
+                "inspection_unit": "file",
+                "measured_count": 1,
+                "missing_targets": [],
+                "resolved_targets": [
+                  "synthetic/orders_v2.py"
+                ]
+              },
+              "process_exit_code": 0,
+              "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "ff73b1b3b2faa7d17c6151596e84289f377502f9150d978b7abce5a6d9bb53fe",
+              "tag": "successor"
+            }
+          ]
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "COMPLIANCE_RESULT_UNDETERMINED",
+              "SYNTHETIC_REQUIRED_SCOPE_MISSING",
+              "VACUOUS_SUCCESS"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "INVALID",
+            "status": "INVALID"
+          }
+        ],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "SYNTHETIC_REQUIRED_SCOPE_MISSING"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "status": "INVALID"
+          },
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "replace",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "9c5abf4f69c29c5c6707660e8c869f1f88d27b8fc8c5b441efcc97e3336bdd7b",
+      "operation_plan_sha256": "7465720d95bdb8c1fd9c8316c0a4a0423590d43f86bd7ba4666e2d385471ba5a",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+        "assessment_sha256": "e66954b9978958c4563c98b7f0631caa81793fe3c85d967feb93869c517cfd6a",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "proposed_operation": "replace",
+      "proposed_operations": [
+        "replace"
+      ],
+      "raw_record_sha256": "b47cd7189ef4d69e9d4e71eee46e9616c07862eb80f857646ef91be56e991ae9",
+      "repetition": 2,
+      "scenario_id": "C1"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+        "assessment_sha256": "bf9b7da81ecd91c8e80e8ef493a890ec8294e0685af9ef84a2fe737379810b82",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "3dea2ef4f26da28a1a4e15e77d588211e4cb012eee65af605bd39070941c9511",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 466034125,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "6b7e6920809ad7ed7cc22ce8e61933f8944cd4614de8407bf75f981aea21e25a",
+          "file_sha256": "6b44f0d6cf8214edd5aaeab8c49daf12fabcf6bf83a26f2ce9b162f4134f452e",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/current.json",
+                "sha256": "710a7e746088ef48a03c9a02d407086f72d053d15f6f717140aed0c4ba55927e"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_A0_ARCH_CI_LAYERING"
+          },
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/successor.json",
+                "sha256": "ff73b1b3b2faa7d17c6151596e84289f377502f9150d978b7abce5a6d9bb53fe"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": "0b0360e438b4676a5ede6f78f0159a9a3ddff2d32366a8f6329d3eeac15fa690",
+          "present": true,
+          "records": [
+            {
+              "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+              "evaluator_report": {
+                "configured_targets": [
+                  "synthetic/orders_legacy.py"
+                ],
+                "expected_subjects": [
+                  "synthetic/orders_v2.py"
+                ],
+                "inspected_edge_count": 1,
+                "inspected_subjects": [
+                  "synthetic/orders_v2.py"
+                ],
+                "inspection_unit": "file",
+                "measured_count": 1,
+                "missing_targets": [
+                  "synthetic/orders_v2.py"
+                ],
+                "resolved_targets": []
+              },
+              "process_exit_code": 2,
+              "representation_id": "REP_A0_ARCH_CI_LAYERING",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "710a7e746088ef48a03c9a02d407086f72d053d15f6f717140aed0c4ba55927e",
+              "tag": "current"
+            },
+            {
+              "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+              "evaluator_report": {
+                "configured_targets": [
+                  "synthetic/orders_v2.py"
+                ],
+                "expected_subjects": [
+                  "synthetic/orders_v2.py"
+                ],
+                "inspected_edge_count": 1,
+                "inspected_subjects": [
+                  "synthetic/orders_v2.py"
+                ],
+                "inspection_unit": "file",
+                "measured_count": 1,
+                "missing_targets": [],
+                "resolved_targets": [
+                  "synthetic/orders_v2.py"
+                ]
+              },
+              "process_exit_code": 0,
+              "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "ff73b1b3b2faa7d17c6151596e84289f377502f9150d978b7abce5a6d9bb53fe",
+              "tag": "successor"
+            }
+          ]
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "COMPLIANCE_RESULT_UNDETERMINED",
+              "SYNTHETIC_REQUIRED_SCOPE_MISSING",
+              "VACUOUS_SUCCESS"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "INVALID",
+            "status": "INVALID"
+          }
+        ],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "SYNTHETIC_REQUIRED_SCOPE_MISSING"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "status": "INVALID"
+          },
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "replace",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "9c5abf4f69c29c5c6707660e8c869f1f88d27b8fc8c5b441efcc97e3336bdd7b",
+      "operation_plan_sha256": "7465720d95bdb8c1fd9c8316c0a4a0423590d43f86bd7ba4666e2d385471ba5a",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+        "assessment_sha256": "e66954b9978958c4563c98b7f0631caa81793fe3c85d967feb93869c517cfd6a",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "proposed_operation": "replace",
+      "proposed_operations": [
+        "replace"
+      ],
+      "raw_record_sha256": "602f6ecf324429a5742f1af83f70a35404f514d45ab155e17c837154c3f38eae",
+      "repetition": 3,
+      "scenario_id": "C1"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+        "assessment_sha256": "adefd58efd2937e8715d246bc9c3949d30d382f2c23b8e65e9a7b76224ccb96e",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "100333b4dfb6011c76882037feea4cbb359a2b4e1e7e754251e78009519f823e",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 476828083,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "166a6c89aea94ef9d8a786466579f3b6d31820af806263e74f898ec18f75f45e",
+          "file_sha256": "bfd768ed02f83e25c6688c1dd9e05298ca2e4b88b65732d2bf0a5dded25d7284",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/current.json",
+                "sha256": "f0afb2e32e836d0abd74f4f128bc6c495dee6e43194dbdc19a2562fdd65ce1b8"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_A0_ARCH_CI_LAYERING"
+          },
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/successor.json",
+                "sha256": "2aeefc2d133e37f1c508f2e1d3de24e2e2db38390703de17200f9a71e1171c2b"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": "4bfa7e05f9e3f0c72f3fcb0c0d6e3d9b9729a703657f5f57c760838ef2c70179",
+          "present": true,
+          "records": [
+            {
+              "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+              "evaluator_report": {
+                "configured_targets": [
+                  "synthetic/orders.py"
+                ],
+                "expected_subjects": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ],
+                "inspected_edge_count": 2,
+                "inspected_subjects": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ],
+                "inspection_unit": "file",
+                "measured_count": 2,
+                "missing_targets": [
+                  "synthetic/reporting.py"
+                ],
+                "resolved_targets": [
+                  "synthetic/orders.py"
+                ]
+              },
+              "process_exit_code": 2,
+              "representation_id": "REP_A0_ARCH_CI_LAYERING",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "f0afb2e32e836d0abd74f4f128bc6c495dee6e43194dbdc19a2562fdd65ce1b8",
+              "tag": "current"
+            },
+            {
+              "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+              "evaluator_report": {
+                "configured_targets": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ],
+                "expected_subjects": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ],
+                "inspected_edge_count": 2,
+                "inspected_subjects": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ],
+                "inspection_unit": "file",
+                "measured_count": 2,
+                "missing_targets": [],
+                "resolved_targets": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ]
+              },
+              "process_exit_code": 0,
+              "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "2aeefc2d133e37f1c508f2e1d3de24e2e2db38390703de17200f9a71e1171c2b",
+              "tag": "successor"
+            }
+          ]
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "COMPLIANCE_RESULT_UNDETERMINED",
+              "EVALUATOR_TARGET_RESOLUTION_MISMATCH",
+              "SYNTHETIC_REQUIRED_SCOPE_MISSING"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "INVALID",
+            "status": "INVALID"
+          }
+        ],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "SYNTHETIC_REQUIRED_SCOPE_MISSING"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "status": "INVALID"
+          },
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "replace",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "0193e1b08d33a3d5e1735fadc3b0e7a93d4d5dad542a326d7e5a52ed458348d2",
+      "operation_plan_sha256": "0c36796b01b12b29af8f0a7513bf997cfcbea04037e15d2dbf34fa075817488c",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+        "assessment_sha256": "d8d9a9823ae80be2609a7a76cd777abbba0c2c6ec4ef732e03a3e0411860399a",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "proposed_operation": "replace",
+      "proposed_operations": [
+        "replace"
+      ],
+      "raw_record_sha256": "2e8872e7a71120611259abbe276a1d0061d25f7f9e968ff89beccad316e24579",
+      "repetition": 1,
+      "scenario_id": "C2"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+        "assessment_sha256": "adefd58efd2937e8715d246bc9c3949d30d382f2c23b8e65e9a7b76224ccb96e",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "100333b4dfb6011c76882037feea4cbb359a2b4e1e7e754251e78009519f823e",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 500404792,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "166a6c89aea94ef9d8a786466579f3b6d31820af806263e74f898ec18f75f45e",
+          "file_sha256": "bfd768ed02f83e25c6688c1dd9e05298ca2e4b88b65732d2bf0a5dded25d7284",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/current.json",
+                "sha256": "f0afb2e32e836d0abd74f4f128bc6c495dee6e43194dbdc19a2562fdd65ce1b8"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_A0_ARCH_CI_LAYERING"
+          },
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/successor.json",
+                "sha256": "2aeefc2d133e37f1c508f2e1d3de24e2e2db38390703de17200f9a71e1171c2b"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": "4bfa7e05f9e3f0c72f3fcb0c0d6e3d9b9729a703657f5f57c760838ef2c70179",
+          "present": true,
+          "records": [
+            {
+              "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+              "evaluator_report": {
+                "configured_targets": [
+                  "synthetic/orders.py"
+                ],
+                "expected_subjects": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ],
+                "inspected_edge_count": 2,
+                "inspected_subjects": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ],
+                "inspection_unit": "file",
+                "measured_count": 2,
+                "missing_targets": [
+                  "synthetic/reporting.py"
+                ],
+                "resolved_targets": [
+                  "synthetic/orders.py"
+                ]
+              },
+              "process_exit_code": 2,
+              "representation_id": "REP_A0_ARCH_CI_LAYERING",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "f0afb2e32e836d0abd74f4f128bc6c495dee6e43194dbdc19a2562fdd65ce1b8",
+              "tag": "current"
+            },
+            {
+              "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+              "evaluator_report": {
+                "configured_targets": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ],
+                "expected_subjects": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ],
+                "inspected_edge_count": 2,
+                "inspected_subjects": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ],
+                "inspection_unit": "file",
+                "measured_count": 2,
+                "missing_targets": [],
+                "resolved_targets": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ]
+              },
+              "process_exit_code": 0,
+              "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "2aeefc2d133e37f1c508f2e1d3de24e2e2db38390703de17200f9a71e1171c2b",
+              "tag": "successor"
+            }
+          ]
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "COMPLIANCE_RESULT_UNDETERMINED",
+              "EVALUATOR_TARGET_RESOLUTION_MISMATCH",
+              "SYNTHETIC_REQUIRED_SCOPE_MISSING"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "INVALID",
+            "status": "INVALID"
+          }
+        ],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "SYNTHETIC_REQUIRED_SCOPE_MISSING"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "status": "INVALID"
+          },
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "replace",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "0193e1b08d33a3d5e1735fadc3b0e7a93d4d5dad542a326d7e5a52ed458348d2",
+      "operation_plan_sha256": "0c36796b01b12b29af8f0a7513bf997cfcbea04037e15d2dbf34fa075817488c",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+        "assessment_sha256": "d8d9a9823ae80be2609a7a76cd777abbba0c2c6ec4ef732e03a3e0411860399a",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "proposed_operation": "replace",
+      "proposed_operations": [
+        "replace"
+      ],
+      "raw_record_sha256": "1271e34aac278e37f7b60e043e20643a1b9418787090d2e6e0c2df6bc4c80cda",
+      "repetition": 2,
+      "scenario_id": "C2"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+        "assessment_sha256": "adefd58efd2937e8715d246bc9c3949d30d382f2c23b8e65e9a7b76224ccb96e",
+        "mandatory_covered": 1,
+        "mandatory_total": 1,
+        "status": "COMPLETE"
+      },
+      "candidate_configuration_sha256": "100333b4dfb6011c76882037feea4cbb359a2b4e1e7e754251e78009519f823e",
+      "candidate_validation_status": "valid",
+      "classification": "CORRECT",
+      "duration_ns": 482670042,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "166a6c89aea94ef9d8a786466579f3b6d31820af806263e74f898ec18f75f45e",
+          "file_sha256": "bfd768ed02f83e25c6688c1dd9e05298ca2e4b88b65732d2bf0a5dded25d7284",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "VALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/current.json",
+                "sha256": "f0afb2e32e836d0abd74f4f128bc6c495dee6e43194dbdc19a2562fdd65ce1b8"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_A0_ARCH_CI_LAYERING"
+          },
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/successor.json",
+                "sha256": "2aeefc2d133e37f1c508f2e1d3de24e2e2db38390703de17200f9a71e1171c2b"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": "4bfa7e05f9e3f0c72f3fcb0c0d6e3d9b9729a703657f5f57c760838ef2c70179",
+          "present": true,
+          "records": [
+            {
+              "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+              "evaluator_report": {
+                "configured_targets": [
+                  "synthetic/orders.py"
+                ],
+                "expected_subjects": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ],
+                "inspected_edge_count": 2,
+                "inspected_subjects": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ],
+                "inspection_unit": "file",
+                "measured_count": 2,
+                "missing_targets": [
+                  "synthetic/reporting.py"
+                ],
+                "resolved_targets": [
+                  "synthetic/orders.py"
+                ]
+              },
+              "process_exit_code": 2,
+              "representation_id": "REP_A0_ARCH_CI_LAYERING",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "f0afb2e32e836d0abd74f4f128bc6c495dee6e43194dbdc19a2562fdd65ce1b8",
+              "tag": "current"
+            },
+            {
+              "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+              "evaluator_report": {
+                "configured_targets": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ],
+                "expected_subjects": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ],
+                "inspected_edge_count": 2,
+                "inspected_subjects": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ],
+                "inspection_unit": "file",
+                "measured_count": 2,
+                "missing_targets": [],
+                "resolved_targets": [
+                  "synthetic/orders.py",
+                  "synthetic/reporting.py"
+                ]
+              },
+              "process_exit_code": 0,
+              "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "2aeefc2d133e37f1c508f2e1d3de24e2e2db38390703de17200f9a71e1171c2b",
+              "tag": "successor"
+            }
+          ]
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "COMPLIANCE_RESULT_UNDETERMINED",
+              "EVALUATOR_TARGET_RESOLUTION_MISMATCH",
+              "SYNTHETIC_REQUIRED_SCOPE_MISSING"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "INVALID",
+            "status": "INVALID"
+          }
+        ],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "SYNTHETIC_REQUIRED_SCOPE_MISSING"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "status": "INVALID"
+          },
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "ACCEPT",
+      "expected_operation": "replace",
+      "governance_accepted": true,
+      "governance_reason_codes": [],
+      "governance_result": "ACCEPT",
+      "input_bundle_sha256": "0193e1b08d33a3d5e1735fadc3b0e7a93d4d5dad542a326d7e5a52ed458348d2",
+      "operation_plan_sha256": "0c36796b01b12b29af8f0a7513bf997cfcbea04037e15d2dbf34fa075817488c",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+        "assessment_sha256": "d8d9a9823ae80be2609a7a76cd777abbba0c2c6ec4ef732e03a3e0411860399a",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "proposed_operation": "replace",
+      "proposed_operations": [
+        "replace"
+      ],
+      "raw_record_sha256": "fb4794e050473361514bd3743f9e83f468858ef31c5269c84dcea1c492aea0e9",
+      "repetition": 3,
+      "scenario_id": "C2"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "432524d75390d36ec04d5c29d21fef6488186cec",
+        "assessment_sha256": "a3ccc10d358879ee5a9f3d0745d29f723797e4362234eb15873ef90359811886",
+        "mandatory_covered": 0,
+        "mandatory_total": 0,
+        "status": "UNKNOWN"
+      },
+      "candidate_configuration_sha256": "62f4056eb6e0ec2f0db11681895239101aa8132501a848bdaf98c68d7547ca53",
+      "candidate_validation_status": "failed",
+      "classification": "CORRECT",
+      "duration_ns": 376071125,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": null,
+          "declared_sha256": null,
+          "file_sha256": null,
+          "present": false,
+          "scope": null,
+          "verifier_id": null
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "PAIR_EVIDENCE_MISSING"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "UNDETERMINED",
+            "status": "UNKNOWN"
+          }
+        ],
+        "evaluator_evidence_records": [],
+        "evaluator_execution_records": {
+          "file_sha256": null,
+          "present": false,
+          "records": []
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "PAIR_EVIDENCE_MISSING"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "UNDETERMINED",
+            "status": "UNKNOWN"
+          }
+        ],
+        "sidecar_pair_proofs": []
+      },
+      "expected_governance": "HOLD",
+      "expected_operation": "hold",
+      "governance_accepted": false,
+      "governance_reason_codes": [
+        "CANDIDATE_NOT_POSITIVELY_VALIDATED",
+        "COST_MODEL_UNRESOLVED",
+        "COST_VERDICT_UNRESOLVED",
+        "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED",
+        "INVARIANT_VERDICTS_NOT_ALL_POSITIVE",
+        "MANDATORY_APPLICABILITY_UNKNOWN",
+        "MANDATORY_CLASSIFICATION_UNRESOLVED",
+        "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION",
+        "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING"
+      ],
+      "governance_result": "HOLD",
+      "input_bundle_sha256": "6d827bf150349cd1c5e3f7b0e0b48f30d4cc9067d2dab14405bfea1182435e55",
+      "operation_plan_sha256": "760b1cf5367830c2d0c1522d70687b15c5c3544953d4e15c4e38b7b8145c924f",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "432524d75390d36ec04d5c29d21fef6488186cec",
+        "assessment_sha256": "a3ccc10d358879ee5a9f3d0745d29f723797e4362234eb15873ef90359811886",
+        "mandatory_covered": 0,
+        "mandatory_total": 0,
+        "status": "UNKNOWN"
+      },
+      "proposed_operation": "hold",
+      "proposed_operations": [],
+      "raw_record_sha256": "a099e7d70bcb9aeba84e8c2fc41d9aad14aa68f9ccfcddffffef304aa582d463",
+      "repetition": 1,
+      "scenario_id": "D1"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "432524d75390d36ec04d5c29d21fef6488186cec",
+        "assessment_sha256": "a3ccc10d358879ee5a9f3d0745d29f723797e4362234eb15873ef90359811886",
+        "mandatory_covered": 0,
+        "mandatory_total": 0,
+        "status": "UNKNOWN"
+      },
+      "candidate_configuration_sha256": "62f4056eb6e0ec2f0db11681895239101aa8132501a848bdaf98c68d7547ca53",
+      "candidate_validation_status": "failed",
+      "classification": "CORRECT",
+      "duration_ns": 370269334,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": null,
+          "declared_sha256": null,
+          "file_sha256": null,
+          "present": false,
+          "scope": null,
+          "verifier_id": null
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "PAIR_EVIDENCE_MISSING"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "UNDETERMINED",
+            "status": "UNKNOWN"
+          }
+        ],
+        "evaluator_evidence_records": [],
+        "evaluator_execution_records": {
+          "file_sha256": null,
+          "present": false,
+          "records": []
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "PAIR_EVIDENCE_MISSING"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "UNDETERMINED",
+            "status": "UNKNOWN"
+          }
+        ],
+        "sidecar_pair_proofs": []
+      },
+      "expected_governance": "HOLD",
+      "expected_operation": "hold",
+      "governance_accepted": false,
+      "governance_reason_codes": [
+        "CANDIDATE_NOT_POSITIVELY_VALIDATED",
+        "COST_MODEL_UNRESOLVED",
+        "COST_VERDICT_UNRESOLVED",
+        "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED",
+        "INVARIANT_VERDICTS_NOT_ALL_POSITIVE",
+        "MANDATORY_APPLICABILITY_UNKNOWN",
+        "MANDATORY_CLASSIFICATION_UNRESOLVED",
+        "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION",
+        "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING"
+      ],
+      "governance_result": "HOLD",
+      "input_bundle_sha256": "6d827bf150349cd1c5e3f7b0e0b48f30d4cc9067d2dab14405bfea1182435e55",
+      "operation_plan_sha256": "760b1cf5367830c2d0c1522d70687b15c5c3544953d4e15c4e38b7b8145c924f",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "432524d75390d36ec04d5c29d21fef6488186cec",
+        "assessment_sha256": "a3ccc10d358879ee5a9f3d0745d29f723797e4362234eb15873ef90359811886",
+        "mandatory_covered": 0,
+        "mandatory_total": 0,
+        "status": "UNKNOWN"
+      },
+      "proposed_operation": "hold",
+      "proposed_operations": [],
+      "raw_record_sha256": "0ed318d808997fba9af91d40c08f27313e5a6a43816108328df5bf0d53f30ccf",
+      "repetition": 2,
+      "scenario_id": "D1"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "432524d75390d36ec04d5c29d21fef6488186cec",
+        "assessment_sha256": "a3ccc10d358879ee5a9f3d0745d29f723797e4362234eb15873ef90359811886",
+        "mandatory_covered": 0,
+        "mandatory_total": 0,
+        "status": "UNKNOWN"
+      },
+      "candidate_configuration_sha256": "62f4056eb6e0ec2f0db11681895239101aa8132501a848bdaf98c68d7547ca53",
+      "candidate_validation_status": "failed",
+      "classification": "CORRECT",
+      "duration_ns": 369337250,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": null,
+          "declared_sha256": null,
+          "file_sha256": null,
+          "present": false,
+          "scope": null,
+          "verifier_id": null
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "PAIR_EVIDENCE_MISSING"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "UNDETERMINED",
+            "status": "UNKNOWN"
+          }
+        ],
+        "evaluator_evidence_records": [],
+        "evaluator_execution_records": {
+          "file_sha256": null,
+          "present": false,
+          "records": []
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "PAIR_EVIDENCE_MISSING"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "UNDETERMINED",
+            "status": "UNKNOWN"
+          }
+        ],
+        "sidecar_pair_proofs": []
+      },
+      "expected_governance": "HOLD",
+      "expected_operation": "hold",
+      "governance_accepted": false,
+      "governance_reason_codes": [
+        "CANDIDATE_NOT_POSITIVELY_VALIDATED",
+        "COST_MODEL_UNRESOLVED",
+        "COST_VERDICT_UNRESOLVED",
+        "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED",
+        "INVARIANT_VERDICTS_NOT_ALL_POSITIVE",
+        "MANDATORY_APPLICABILITY_UNKNOWN",
+        "MANDATORY_CLASSIFICATION_UNRESOLVED",
+        "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION",
+        "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING"
+      ],
+      "governance_result": "HOLD",
+      "input_bundle_sha256": "6d827bf150349cd1c5e3f7b0e0b48f30d4cc9067d2dab14405bfea1182435e55",
+      "operation_plan_sha256": "760b1cf5367830c2d0c1522d70687b15c5c3544953d4e15c4e38b7b8145c924f",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "432524d75390d36ec04d5c29d21fef6488186cec",
+        "assessment_sha256": "a3ccc10d358879ee5a9f3d0745d29f723797e4362234eb15873ef90359811886",
+        "mandatory_covered": 0,
+        "mandatory_total": 0,
+        "status": "UNKNOWN"
+      },
+      "proposed_operation": "hold",
+      "proposed_operations": [],
+      "raw_record_sha256": "d2119c12b18cb1254ceb94153e8b70f2bad3cc98fa4a86ad6e4cb708d002859c",
+      "repetition": 3,
+      "scenario_id": "D1"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "79354be5baf44519fca8d94708a5a4ef4d4a2948",
+        "assessment_sha256": "ca1452d6306d775043cc068b3ef1b4c9609bbfaf09a271a043db02ced7b5c1fa",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "candidate_configuration_sha256": "efba3eb16686dc837e469cb6ab09e51938d4e0301f98ed2c1018059a978ebd7b",
+      "candidate_validation_status": "valid",
+      "classification": "INCORRECT",
+      "duration_ns": 425561333,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "91dacdb3ec76c70cf191643e074400ea4ebb916001009951c2cf71a259b99839",
+          "file_sha256": "999961bcf985fbad6bb98ab5e8c9f02a726092449877fec2489880e156cfcbe7",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "ARCHITECTURE_REVISION_MISMATCH",
+              "COMPLIANCE_RESULT_UNDETERMINED",
+              "PAIR_SEMANTIC_PROOF_SUBJECT_MISMATCH"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "INVALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "82f9ee98fbc49aefc3787d9b42007e0a149a5973",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/stale_before.json",
+                "sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_A0_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": "2721e6cef4f6a137bb611683f647223d7f61640103505811d3cd17d84805b3ef",
+          "present": true,
+          "records": [
+            {
+              "architecture_source_sha": "82f9ee98fbc49aefc3787d9b42007e0a149a5973",
+              "evaluator_report": {
+                "configured_targets": [
+                  "app.modules"
+                ],
+                "expected_subjects": [
+                  "modules/__init__.py",
+                  "modules/audit/__init__.py",
+                  "modules/audit/model.py",
+                  "modules/audit/public.py",
+                  "modules/audit/repository.py",
+                  "modules/audit/service.py",
+                  "modules/notifications/__init__.py",
+                  "modules/notifications/api.py",
+                  "modules/notifications/model.py",
+                  "modules/notifications/public.py",
+                  "modules/notifications/repository.py",
+                  "modules/notifications/schemas.py",
+                  "modules/notifications/service.py",
+                  "modules/reporting/__init__.py",
+                  "modules/reporting/api.py",
+                  "modules/reporting/public.py",
+                  "modules/reporting/schemas.py",
+                  "modules/reporting/service.py",
+                  "modules/tasks/__init__.py",
+                  "modules/tasks/api.py",
+                  "modules/tasks/model.py",
+                  "modules/tasks/public.py",
+                  "modules/tasks/repository.py",
+                  "modules/tasks/schemas.py",
+                  "modules/tasks/service.py",
+                  "modules/users/__init__.py",
+                  "modules/users/api.py",
+                  "modules/users/model.py",
+                  "modules/users/public.py",
+                  "modules/users/repository.py",
+                  "modules/users/schemas.py",
+                  "modules/users/service.py"
+                ],
+                "inspected_edge_count": 32,
+                "inspected_subjects": [
+                  "modules/__init__.py",
+                  "modules/audit/__init__.py",
+                  "modules/audit/model.py",
+                  "modules/audit/public.py",
+                  "modules/audit/repository.py",
+                  "modules/audit/service.py",
+                  "modules/notifications/__init__.py",
+                  "modules/notifications/api.py",
+                  "modules/notifications/model.py",
+                  "modules/notifications/public.py",
+                  "modules/notifications/repository.py",
+                  "modules/notifications/schemas.py",
+                  "modules/notifications/service.py",
+                  "modules/reporting/__init__.py",
+                  "modules/reporting/api.py",
+                  "modules/reporting/public.py",
+                  "modules/reporting/schemas.py",
+                  "modules/reporting/service.py",
+                  "modules/tasks/__init__.py",
+                  "modules/tasks/api.py",
+                  "modules/tasks/model.py",
+                  "modules/tasks/public.py",
+                  "modules/tasks/repository.py",
+                  "modules/tasks/schemas.py",
+                  "modules/tasks/service.py",
+                  "modules/users/__init__.py",
+                  "modules/users/api.py",
+                  "modules/users/model.py",
+                  "modules/users/public.py",
+                  "modules/users/repository.py",
+                  "modules/users/schemas.py",
+                  "modules/users/service.py"
+                ],
+                "inspection_unit": "file",
+                "measured_count": 32,
+                "missing_targets": [],
+                "resolved_targets": [
+                  "app.modules"
+                ]
+              },
+              "process_exit_code": 0,
+              "representation_id": "REP_A0_ARCH_CI_LAYERING",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219",
+              "tag": "stale_before"
+            }
+          ]
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "ARCHITECTURE_REVISION_MISMATCH",
+              "COMPLIANCE_RESULT_UNDETERMINED",
+              "PAIR_SEMANTIC_PROOF_SUBJECT_MISMATCH"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "INVALID"
+          }
+        ],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "HOLD",
+      "expected_operation": "hold",
+      "governance_accepted": false,
+      "governance_reason_codes": [
+        "ACTIVE_MANDATORY_CONTROL_UNCOVERED",
+        "INVARIANT_VIOLATION_PROVEN",
+        "MATERIALIZABLE_TEMPLATE_MISSING",
+        "REPLACEMENT_NOT_MATERIALIZABLE"
+      ],
+      "governance_result": "REJECT",
+      "input_bundle_sha256": "2759bec665c47c55ac0c5cd420225a90169160e4a32a27165e843fc3b13dac0f",
+      "operation_plan_sha256": "25cdb202207832b585363a94cb7aa471968baf58c066badcaec52b7bfbdd90c4",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "79354be5baf44519fca8d94708a5a4ef4d4a2948",
+        "assessment_sha256": "ca1452d6306d775043cc068b3ef1b4c9609bbfaf09a271a043db02ced7b5c1fa",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "proposed_operation": "hold",
+      "proposed_operations": [],
+      "raw_record_sha256": "59b6e2e187fc22a1cfde5bdefc4a741527b768808900305f39c7acfe4e80d0f6",
+      "repetition": 1,
+      "scenario_id": "D2"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "79354be5baf44519fca8d94708a5a4ef4d4a2948",
+        "assessment_sha256": "ca1452d6306d775043cc068b3ef1b4c9609bbfaf09a271a043db02ced7b5c1fa",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "candidate_configuration_sha256": "efba3eb16686dc837e469cb6ab09e51938d4e0301f98ed2c1018059a978ebd7b",
+      "candidate_validation_status": "valid",
+      "classification": "INCORRECT",
+      "duration_ns": 420717416,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "91dacdb3ec76c70cf191643e074400ea4ebb916001009951c2cf71a259b99839",
+          "file_sha256": "999961bcf985fbad6bb98ab5e8c9f02a726092449877fec2489880e156cfcbe7",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "ARCHITECTURE_REVISION_MISMATCH",
+              "COMPLIANCE_RESULT_UNDETERMINED",
+              "PAIR_SEMANTIC_PROOF_SUBJECT_MISMATCH"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "INVALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "82f9ee98fbc49aefc3787d9b42007e0a149a5973",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/stale_before.json",
+                "sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_A0_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": "2721e6cef4f6a137bb611683f647223d7f61640103505811d3cd17d84805b3ef",
+          "present": true,
+          "records": [
+            {
+              "architecture_source_sha": "82f9ee98fbc49aefc3787d9b42007e0a149a5973",
+              "evaluator_report": {
+                "configured_targets": [
+                  "app.modules"
+                ],
+                "expected_subjects": [
+                  "modules/__init__.py",
+                  "modules/audit/__init__.py",
+                  "modules/audit/model.py",
+                  "modules/audit/public.py",
+                  "modules/audit/repository.py",
+                  "modules/audit/service.py",
+                  "modules/notifications/__init__.py",
+                  "modules/notifications/api.py",
+                  "modules/notifications/model.py",
+                  "modules/notifications/public.py",
+                  "modules/notifications/repository.py",
+                  "modules/notifications/schemas.py",
+                  "modules/notifications/service.py",
+                  "modules/reporting/__init__.py",
+                  "modules/reporting/api.py",
+                  "modules/reporting/public.py",
+                  "modules/reporting/schemas.py",
+                  "modules/reporting/service.py",
+                  "modules/tasks/__init__.py",
+                  "modules/tasks/api.py",
+                  "modules/tasks/model.py",
+                  "modules/tasks/public.py",
+                  "modules/tasks/repository.py",
+                  "modules/tasks/schemas.py",
+                  "modules/tasks/service.py",
+                  "modules/users/__init__.py",
+                  "modules/users/api.py",
+                  "modules/users/model.py",
+                  "modules/users/public.py",
+                  "modules/users/repository.py",
+                  "modules/users/schemas.py",
+                  "modules/users/service.py"
+                ],
+                "inspected_edge_count": 32,
+                "inspected_subjects": [
+                  "modules/__init__.py",
+                  "modules/audit/__init__.py",
+                  "modules/audit/model.py",
+                  "modules/audit/public.py",
+                  "modules/audit/repository.py",
+                  "modules/audit/service.py",
+                  "modules/notifications/__init__.py",
+                  "modules/notifications/api.py",
+                  "modules/notifications/model.py",
+                  "modules/notifications/public.py",
+                  "modules/notifications/repository.py",
+                  "modules/notifications/schemas.py",
+                  "modules/notifications/service.py",
+                  "modules/reporting/__init__.py",
+                  "modules/reporting/api.py",
+                  "modules/reporting/public.py",
+                  "modules/reporting/schemas.py",
+                  "modules/reporting/service.py",
+                  "modules/tasks/__init__.py",
+                  "modules/tasks/api.py",
+                  "modules/tasks/model.py",
+                  "modules/tasks/public.py",
+                  "modules/tasks/repository.py",
+                  "modules/tasks/schemas.py",
+                  "modules/tasks/service.py",
+                  "modules/users/__init__.py",
+                  "modules/users/api.py",
+                  "modules/users/model.py",
+                  "modules/users/public.py",
+                  "modules/users/repository.py",
+                  "modules/users/schemas.py",
+                  "modules/users/service.py"
+                ],
+                "inspection_unit": "file",
+                "measured_count": 32,
+                "missing_targets": [],
+                "resolved_targets": [
+                  "app.modules"
+                ]
+              },
+              "process_exit_code": 0,
+              "representation_id": "REP_A0_ARCH_CI_LAYERING",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219",
+              "tag": "stale_before"
+            }
+          ]
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "ARCHITECTURE_REVISION_MISMATCH",
+              "COMPLIANCE_RESULT_UNDETERMINED",
+              "PAIR_SEMANTIC_PROOF_SUBJECT_MISMATCH"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "INVALID"
+          }
+        ],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "HOLD",
+      "expected_operation": "hold",
+      "governance_accepted": false,
+      "governance_reason_codes": [
+        "ACTIVE_MANDATORY_CONTROL_UNCOVERED",
+        "INVARIANT_VIOLATION_PROVEN",
+        "MATERIALIZABLE_TEMPLATE_MISSING",
+        "REPLACEMENT_NOT_MATERIALIZABLE"
+      ],
+      "governance_result": "REJECT",
+      "input_bundle_sha256": "2759bec665c47c55ac0c5cd420225a90169160e4a32a27165e843fc3b13dac0f",
+      "operation_plan_sha256": "25cdb202207832b585363a94cb7aa471968baf58c066badcaec52b7bfbdd90c4",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "79354be5baf44519fca8d94708a5a4ef4d4a2948",
+        "assessment_sha256": "ca1452d6306d775043cc068b3ef1b4c9609bbfaf09a271a043db02ced7b5c1fa",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "proposed_operation": "hold",
+      "proposed_operations": [],
+      "raw_record_sha256": "5a8bd6475602a09169523d3b7551a7f1d3d327a1a11e2f13bf8681db936bbf32",
+      "repetition": 2,
+      "scenario_id": "D2"
+    },
+    {
+      "actual_post_adaptation_coverage": {
+        "reason": "The candidate configuration was not applied and re-evaluated in this experiment.",
+        "status": "NOT_MEASURED"
+      },
+      "candidate_configuration_coverage": {
+        "architecture_source_sha": "79354be5baf44519fca8d94708a5a4ef4d4a2948",
+        "assessment_sha256": "ca1452d6306d775043cc068b3ef1b4c9609bbfaf09a271a043db02ced7b5c1fa",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "candidate_configuration_sha256": "efba3eb16686dc837e469cb6ab09e51938d4e0301f98ed2c1018059a978ebd7b",
+      "candidate_validation_status": "valid",
+      "classification": "INCORRECT",
+      "duration_ns": 438698250,
+      "evidence_record_inventory": {
+        "adaptation_evidence_sidecar": {
+          "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+          "declared_sha256": "91dacdb3ec76c70cf191643e074400ea4ebb916001009951c2cf71a259b99839",
+          "file_sha256": "999961bcf985fbad6bb98ab5e8c9f02a726092449877fec2489880e156cfcbe7",
+          "present": true,
+          "scope": "source:app",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "candidate_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "ARCHITECTURE_REVISION_MISMATCH",
+              "COMPLIANCE_RESULT_UNDETERMINED",
+              "PAIR_SEMANTIC_PROOF_SUBJECT_MISMATCH"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "INVALID"
+          }
+        ],
+        "evaluator_evidence_records": [
+          {
+            "adequacy_proven": true,
+            "architecture_source_sha": "82f9ee98fbc49aefc3787d9b42007e0a149a5973",
+            "evaluator_id": "synthetic_scope_probe_v1",
+            "evidence_artifacts": [
+              {
+                "path": "synthetic/evidence/stale_before.json",
+                "sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+              }
+            ],
+            "evidence_contract_satisfied": true,
+            "infrastructure_status": "completed",
+            "obligation_id": "AC_LAYERING",
+            "representation_id": "REP_A0_ARCH_CI_LAYERING"
+          }
+        ],
+        "evaluator_execution_records": {
+          "file_sha256": "2721e6cef4f6a137bb611683f647223d7f61640103505811d3cd17d84805b3ef",
+          "present": true,
+          "records": [
+            {
+              "architecture_source_sha": "82f9ee98fbc49aefc3787d9b42007e0a149a5973",
+              "evaluator_report": {
+                "configured_targets": [
+                  "app.modules"
+                ],
+                "expected_subjects": [
+                  "modules/__init__.py",
+                  "modules/audit/__init__.py",
+                  "modules/audit/model.py",
+                  "modules/audit/public.py",
+                  "modules/audit/repository.py",
+                  "modules/audit/service.py",
+                  "modules/notifications/__init__.py",
+                  "modules/notifications/api.py",
+                  "modules/notifications/model.py",
+                  "modules/notifications/public.py",
+                  "modules/notifications/repository.py",
+                  "modules/notifications/schemas.py",
+                  "modules/notifications/service.py",
+                  "modules/reporting/__init__.py",
+                  "modules/reporting/api.py",
+                  "modules/reporting/public.py",
+                  "modules/reporting/schemas.py",
+                  "modules/reporting/service.py",
+                  "modules/tasks/__init__.py",
+                  "modules/tasks/api.py",
+                  "modules/tasks/model.py",
+                  "modules/tasks/public.py",
+                  "modules/tasks/repository.py",
+                  "modules/tasks/schemas.py",
+                  "modules/tasks/service.py",
+                  "modules/users/__init__.py",
+                  "modules/users/api.py",
+                  "modules/users/model.py",
+                  "modules/users/public.py",
+                  "modules/users/repository.py",
+                  "modules/users/schemas.py",
+                  "modules/users/service.py"
+                ],
+                "inspected_edge_count": 32,
+                "inspected_subjects": [
+                  "modules/__init__.py",
+                  "modules/audit/__init__.py",
+                  "modules/audit/model.py",
+                  "modules/audit/public.py",
+                  "modules/audit/repository.py",
+                  "modules/audit/service.py",
+                  "modules/notifications/__init__.py",
+                  "modules/notifications/api.py",
+                  "modules/notifications/model.py",
+                  "modules/notifications/public.py",
+                  "modules/notifications/repository.py",
+                  "modules/notifications/schemas.py",
+                  "modules/notifications/service.py",
+                  "modules/reporting/__init__.py",
+                  "modules/reporting/api.py",
+                  "modules/reporting/public.py",
+                  "modules/reporting/schemas.py",
+                  "modules/reporting/service.py",
+                  "modules/tasks/__init__.py",
+                  "modules/tasks/api.py",
+                  "modules/tasks/model.py",
+                  "modules/tasks/public.py",
+                  "modules/tasks/repository.py",
+                  "modules/tasks/schemas.py",
+                  "modules/tasks/service.py",
+                  "modules/users/__init__.py",
+                  "modules/users/api.py",
+                  "modules/users/model.py",
+                  "modules/users/public.py",
+                  "modules/users/repository.py",
+                  "modules/users/schemas.py",
+                  "modules/users/service.py"
+                ],
+                "inspection_unit": "file",
+                "measured_count": 32,
+                "missing_targets": [],
+                "resolved_targets": [
+                  "app.modules"
+                ]
+              },
+              "process_exit_code": 0,
+              "representation_id": "REP_A0_ARCH_CI_LAYERING",
+              "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "stdout_sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219",
+              "tag": "stale_before"
+            }
+          ]
+        },
+        "pre_adaptation_pair_assessments": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [
+              "ARCHITECTURE_REVISION_MISMATCH",
+              "COMPLIANCE_RESULT_UNDETERMINED",
+              "PAIR_SEMANTIC_PROOF_SUBJECT_MISMATCH"
+            ],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "semantic_proof_status": "VALID",
+            "status": "INVALID"
+          }
+        ],
+        "sidecar_pair_proofs": [
+          {
+            "obligation_id": "AC_LAYERING",
+            "reason_codes": [],
+            "representation_id": "REP_A0_ARCH_CI_LAYERING",
+            "status": "VALID"
+          }
+        ]
+      },
+      "expected_governance": "HOLD",
+      "expected_operation": "hold",
+      "governance_accepted": false,
+      "governance_reason_codes": [
+        "ACTIVE_MANDATORY_CONTROL_UNCOVERED",
+        "INVARIANT_VIOLATION_PROVEN",
+        "MATERIALIZABLE_TEMPLATE_MISSING",
+        "REPLACEMENT_NOT_MATERIALIZABLE"
+      ],
+      "governance_result": "REJECT",
+      "input_bundle_sha256": "2759bec665c47c55ac0c5cd420225a90169160e4a32a27165e843fc3b13dac0f",
+      "operation_plan_sha256": "25cdb202207832b585363a94cb7aa471968baf58c066badcaec52b7bfbdd90c4",
+      "pre_adaptation_coverage": {
+        "architecture_source_sha": "79354be5baf44519fca8d94708a5a4ef4d4a2948",
+        "assessment_sha256": "ca1452d6306d775043cc068b3ef1b4c9609bbfaf09a271a043db02ced7b5c1fa",
+        "mandatory_covered": 0,
+        "mandatory_total": 1,
+        "status": "INCOMPLETE"
+      },
+      "proposed_operation": "hold",
+      "proposed_operations": [],
+      "raw_record_sha256": "3fe343901893f51e0b5adc851f6cbf51bf4391501b0863169ba2ebc7c0db16f5",
+      "repetition": 3,
+      "scenario_id": "D2"
+    }
+  ],
+  "unnecessary_adaptation_rate": {
+    "count": 0,
+    "eligible_nonadaptation_execution_count": 12,
+    "rate": 0.0
+  }
+}

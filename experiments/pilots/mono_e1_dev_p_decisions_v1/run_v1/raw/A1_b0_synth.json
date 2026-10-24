@@ -1,0 +1,214 @@
+{
+  "architecture_after_sha": "109f28c713bd54a34c3ba38e668b8af4bfb7ac79",
+  "architecture_before_sha": "82f9ee98fbc49aefc3787d9b42007e0a149a5973",
+  "coverage": {
+    "applicability_assessment_sha256": "ab8faf0a5de45b2f5ada1874874f3447aa8fe50a049f3109695af1a3b48c21d3",
+    "architecture_source_sha": "109f28c713bd54a34c3ba38e668b8af4bfb7ac79",
+    "assessment_sha256": "d2eb0d8256ae40a7889d03193f097071be3bbb79f3b730e1a497108ed43c02ae",
+    "mandatory_covered": 1,
+    "mandatory_total": 1,
+    "obligations": [
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": false,
+        "obligation_id": "AC_COMMUNICATION_POLICY",
+        "reason_codes": [],
+        "required_stages": [],
+        "status": "NOT_REQUIRED",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": false,
+        "obligation_id": "AC_DATA_OWNERSHIP",
+        "reason_codes": [],
+        "required_stages": [],
+        "status": "NOT_REQUIRED",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": false,
+        "obligation_id": "AC_DEPLOYMENT_TOPOLOGY",
+        "reason_codes": [],
+        "required_stages": [],
+        "status": "NOT_REQUIRED",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "ACTIVE",
+        "covered_stages": [
+          "ci"
+        ],
+        "mandatory": true,
+        "obligation_id": "AC_LAYERING",
+        "reason_codes": [],
+        "required_stages": [
+          "ci"
+        ],
+        "status": "COVERED",
+        "valid_pair_ids": [
+          "REP_A0_ARCH_CI_LAYERING"
+        ]
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": false,
+        "obligation_id": "AC_MODULE_GRAPH",
+        "reason_codes": [],
+        "required_stages": [],
+        "status": "NOT_REQUIRED",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": false,
+        "obligation_id": "AC_MODULE_STRUCTURE",
+        "reason_codes": [],
+        "required_stages": [],
+        "status": "NOT_REQUIRED",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": false,
+        "obligation_id": "AC_PUBLIC_API",
+        "reason_codes": [],
+        "required_stages": [],
+        "status": "NOT_REQUIRED",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": false,
+        "obligation_id": "AC_SERVICE_BOUNDARY",
+        "reason_codes": [],
+        "required_stages": [],
+        "status": "NOT_REQUIRED",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": false,
+        "obligation_id": "P_ASYNC_LAG",
+        "reason_codes": [],
+        "required_stages": [],
+        "status": "NOT_REQUIRED",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": false,
+        "obligation_id": "P_EXT_LATENCY",
+        "reason_codes": [],
+        "required_stages": [],
+        "status": "NOT_REQUIRED",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": false,
+        "obligation_id": "P_REMOTE_LATENCY",
+        "reason_codes": [],
+        "required_stages": [],
+        "status": "NOT_REQUIRED",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": false,
+        "obligation_id": "R_BUSINESS_FAILURE",
+        "reason_codes": [],
+        "required_stages": [],
+        "status": "NOT_REQUIRED",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": false,
+        "obligation_id": "R_EVENT_DELIVERY",
+        "reason_codes": [],
+        "required_stages": [],
+        "status": "NOT_REQUIRED",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": false,
+        "obligation_id": "R_HTTP_5XX",
+        "reason_codes": [],
+        "required_stages": [],
+        "status": "NOT_REQUIRED",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": false,
+        "obligation_id": "R_IDEMPOTENCY",
+        "reason_codes": [],
+        "required_stages": [],
+        "status": "NOT_REQUIRED",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": false,
+        "obligation_id": "R_LOCAL_ATOMICITY",
+        "reason_codes": [],
+        "required_stages": [],
+        "status": "NOT_REQUIRED",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": false,
+        "obligation_id": "R_READMODEL_CONVERGENCE",
+        "reason_codes": [],
+        "required_stages": [],
+        "status": "NOT_REQUIRED",
+        "valid_pair_ids": []
+      },
+      {
+        "applicability_status": "INACTIVE",
+        "covered_stages": [],
+        "mandatory": false,
+        "obligation_id": "R_REMOTE_DEPENDENCY",
+        "reason_codes": [],
+        "required_stages": [],
+        "status": "NOT_REQUIRED",
+        "valid_pair_ids": []
+      }
+    ],
+    "policy_bundle_sha256": "3834a2baefd85fb3e5b1647e9ea05c133d85e35770c13bafdfbf839c3bd4b1e4",
+    "policy_source_revision": "synthetic-positive-policy-v1",
+    "reason_codes": [],
+    "ruleset_sha256": "b8166f5cf19966d6705d92a9b8adc457f17f0f0eb26ce0ebc92fb25baba7e7a8",
+    "schema_version": 1,
+    "status": "COMPLETE"
+  },
+  "experiment_id": "MONO_E1_DEV_P_DECISIONS_V1",
+  "governance": "NOT_RUN",
+  "initial_configuration_sha256": "d16d2eee48a8b2595a07cb748220ddf0a909d3ed1bfcebdfac6f1f7404c3f9c6",
+  "input_bundle_sha256": "ee40bbae62a463ba9622aeb1b489dcedad585a23b60dd4d88cb7c6701221bb37",
+  "interpretation": "Synthetic no-op configuration assessed on the same after-state and obligation universe; no semantic adaptation is applied.",
+  "method": "B0_SYNTH",
+  "operation": "UNCHANGED_CONFIGURATION",
+  "scenario_id": "A1",
+  "schema_version": 1
+}

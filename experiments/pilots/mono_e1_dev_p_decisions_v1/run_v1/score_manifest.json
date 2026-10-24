@@ -1,0 +1,13 @@
+{
+  "execution_manifest_sha256": "5091c42af929dc39cf76d85cd2fed9c306b18a96d3d6cce658b8ce1a73b4cc6a",
+  "raw_manifest_sha256": "7d17120ed4bc3dc6363f3ec9243ff375271c9fb2d579b70572443461573e0ed5",
+  "reference_sha256": "5dcf0b2784a3fce370d5d3fd097397174025a76b3c8d2396d82423ea0f221bfa",
+  "report_sha256": "e55af403c274e1bc121b94173c3a5397beb28b669fa5ea9e255ebb208da78130",
+  "result_sha256": "76da651e130c133267d2dd4fe6f6a0b40c4b7c74af08ba205ff8e683ee7b8a52",
+  "scenario_count": 8,
+  "schema_version": 2,
+  "scored_record_count": 24,
+  "scorer_code_sha256": "0932f7cff513f3f2d08b277a14b8006ac4d02efea859c651067a1698a5795d32",
+  "scorer_source_commit_sha": "d8a157f6fd93585214210aa364e3a86fb0487fde",
+  "technical_repetition_count": 24
+}

@@ -1,0 +1,1636 @@
+{
+  "architecture_after_sha": "df2f50a13aeaf282ffaad71540fd002a44bd3355",
+  "architecture_before_sha": "82f9ee98fbc49aefc3787d9b42007e0a149a5973",
+  "contract_id": "P_ADAPTATION_EVIDENCE_V2",
+  "evaluation_as_of": "2026-10-14T00:00:00Z",
+  "input_bundle_sha256": "81742f195cbea99975c05244057bf659cb7920165e05affe6e25f2ccc4839cc0",
+  "payload": {
+    "adjustment_rules": [],
+    "artifact_bytes": [
+      {
+        "content_base64": "ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCmltcG9ydCBqc29uLCBzeXMKcm9vdCA9IFBhdGgoc3lzLmFyZ3ZbMV0pCmlmIGxlbihzeXMuYXJndikgPiAzOgogY29uZmlndXJlZCA9IGpzb24ubG9hZHMoc3lzLmFyZ3ZbMl0pCiByZXF1aXJlZCA9IGpzb24ubG9hZHMoc3lzLmFyZ3ZbM10pCiByZXNvbHZlZCA9IHNvcnRlZCh0YXJnZXQgZm9yIHRhcmdldCBpbiBjb25maWd1cmVkIGlmIHRhcmdldCBpbiByZXF1aXJlZCBhbmQgKHJvb3QgLyB0YXJnZXQpLmlzX2ZpbGUoKSkKIG1pc3NpbmcgPSBzb3J0ZWQoc2V0KHJlcXVpcmVkKSAtIHNldChyZXNvbHZlZCkpCiBpbnNwZWN0ZWQgPSBzb3J0ZWQoc2V0KHJlcXVpcmVkKSkKZWxzZToKIHRhcmdldHMgPSBzb3J0ZWQocGF0aC5yZWxhdGl2ZV90byhyb290KS5hc19wb3NpeCgpIGZvciBwYXRoIGluIHJvb3Qucmdsb2IoJyoucHknKSkKIHJlc29sdmVkID0gWydhcHAubW9kdWxlcyddIGlmIGFueShuYW1lLnN0YXJ0c3dpdGgoJ21vZHVsZXMvJykgZm9yIG5hbWUgaW4gdGFyZ2V0cykgZWxzZSBbXQogcmVxdWlyZWQgPSBbJ2FwcC5tb2R1bGVzJ10KIGNvbmZpZ3VyZWQgPSBbJ2FwcC5tb2R1bGVzJ10KIG1pc3NpbmcgPSBbXSBpZiByZXNvbHZlZCBlbHNlIHJlcXVpcmVkCiBpbnNwZWN0ZWQgPSBbbmFtZSBmb3IgbmFtZSBpbiB0YXJnZXRzIGlmIG5hbWUuc3RhcnRzd2l0aCgnbW9kdWxlcy8nKV0Kb2sgPSBib29sKHJlc29sdmVkKSBhbmQgbm90IG1pc3NpbmcKcHJpbnQoanNvbi5kdW1wcyh7J2NvbmZpZ3VyZWRfdGFyZ2V0cyc6IGNvbmZpZ3VyZWQsICdyZXNvbHZlZF90YXJnZXRzJzogcmVzb2x2ZWQsICdpbnNwZWN0ZWRfc3ViamVjdHMnOiBpbnNwZWN0ZWQsICdtaXNzaW5nX3RhcmdldHMnOiBtaXNzaW5nLCAnaW5zcGVjdGVkX2VkZ2VfY291bnQnOiBsZW4oaW5zcGVjdGVkKSwgJ2luc3BlY3Rpb25fdW5pdCc6ICdmaWxlJywgJ2V4cGVjdGVkX3N1YmplY3RzJzogaW5zcGVjdGVkLCAnbWVhc3VyZWRfY291bnQnOiBsZW4oaW5zcGVjdGVkKX0sIHNvcnRfa2V5cz1UcnVlKSkKcmFpc2UgU3lzdGVtRXhpdCgwIGlmIG9rIGVsc2UgMikK",
+        "path": "synthetic/evaluators/scope_probe.py",
+        "sha256": "724d5cd6441378a22a84c4191c810dd1b01813b4b7412f31cccb13ce156a5f42"
+      },
+      {
+        "content_base64": "eyJjb25maWd1cmVkX3RhcmdldHMiOiBbImFwcC5tb2R1bGVzIl0sICJleHBlY3RlZF9zdWJqZWN0cyI6IFsibW9kdWxlcy9fX2luaXRfXy5weSIsICJtb2R1bGVzL2F1ZGl0L19faW5pdF9fLnB5IiwgIm1vZHVsZXMvYXVkaXQvbW9kZWwucHkiLCAibW9kdWxlcy9hdWRpdC9wdWJsaWMucHkiLCAibW9kdWxlcy9hdWRpdC9yZXBvc2l0b3J5LnB5IiwgIm1vZHVsZXMvYXVkaXQvc2VydmljZS5weSIsICJtb2R1bGVzL25vdGlmaWNhdGlvbnMvX19pbml0X18ucHkiLCAibW9kdWxlcy9ub3RpZmljYXRpb25zL2FwaS5weSIsICJtb2R1bGVzL25vdGlmaWNhdGlvbnMvbW9kZWwucHkiLCAibW9kdWxlcy9ub3RpZmljYXRpb25zL3B1YmxpYy5weSIsICJtb2R1bGVzL25vdGlmaWNhdGlvbnMvcmVwb3NpdG9yeS5weSIsICJtb2R1bGVzL25vdGlmaWNhdGlvbnMvc2NoZW1hcy5weSIsICJtb2R1bGVzL25vdGlmaWNhdGlvbnMvc2VydmljZS5weSIsICJtb2R1bGVzL3JlcG9ydGluZy9fX2luaXRfXy5weSIsICJtb2R1bGVzL3JlcG9ydGluZy9hcGkucHkiLCAibW9kdWxlcy9yZXBvcnRpbmcvcHVibGljLnB5IiwgIm1vZHVsZXMvcmVwb3J0aW5nL3NjaGVtYXMucHkiLCAibW9kdWxlcy9yZXBvcnRpbmcvc2VydmljZS5weSIsICJtb2R1bGVzL3Rhc2tzL19faW5pdF9fLnB5IiwgIm1vZHVsZXMvdGFza3MvYXBpLnB5IiwgIm1vZHVsZXMvdGFza3MvbW9kZWwucHkiLCAibW9kdWxlcy90YXNrcy9wdWJsaWMucHkiLCAibW9kdWxlcy90YXNrcy9yZXBvc2l0b3J5LnB5IiwgIm1vZHVsZXMvdGFza3Mvc2NoZW1hcy5weSIsICJtb2R1bGVzL3Rhc2tzL3NlcnZpY2UucHkiLCAibW9kdWxlcy91c2Vycy9fX2luaXRfXy5weSIsICJtb2R1bGVzL3VzZXJzL2FwaS5weSIsICJtb2R1bGVzL3VzZXJzL21vZGVsLnB5IiwgIm1vZHVsZXMvdXNlcnMvcHVibGljLnB5IiwgIm1vZHVsZXMvdXNlcnMvcmVwb3NpdG9yeS5weSIsICJtb2R1bGVzL3VzZXJzL3NjaGVtYXMucHkiLCAibW9kdWxlcy91c2Vycy9zZXJ2aWNlLnB5Il0sICJpbnNwZWN0ZWRfZWRnZV9jb3VudCI6IDMyLCAiaW5zcGVjdGVkX3N1YmplY3RzIjogWyJtb2R1bGVzL19faW5pdF9fLnB5IiwgIm1vZHVsZXMvYXVkaXQvX19pbml0X18ucHkiLCAibW9kdWxlcy9hdWRpdC9tb2RlbC5weSIsICJtb2R1bGVzL2F1ZGl0L3B1YmxpYy5weSIsICJtb2R1bGVzL2F1ZGl0L3JlcG9zaXRvcnkucHkiLCAibW9kdWxlcy9hdWRpdC9zZXJ2aWNlLnB5IiwgIm1vZHVsZXMvbm90aWZpY2F0aW9ucy9fX2luaXRfXy5weSIsICJtb2R1bGVzL25vdGlmaWNhdGlvbnMvYXBpLnB5IiwgIm1vZHVsZXMvbm90aWZpY2F0aW9ucy9tb2RlbC5weSIsICJtb2R1bGVzL25vdGlmaWNhdGlvbnMvcHVibGljLnB5IiwgIm1vZHVsZXMvbm90aWZpY2F0aW9ucy9yZXBvc2l0b3J5LnB5IiwgIm1vZHVsZXMvbm90aWZpY2F0aW9ucy9zY2hlbWFzLnB5IiwgIm1vZHVsZXMvbm90aWZpY2F0aW9ucy9zZXJ2aWNlLnB5IiwgIm1vZHVsZXMvcmVwb3J0aW5nL19faW5pdF9fLnB5IiwgIm1vZHVsZXMvcmVwb3J0aW5nL2FwaS5weSIsICJtb2R1bGVzL3JlcG9ydGluZy9wdWJsaWMucHkiLCAibW9kdWxlcy9yZXBvcnRpbmcvc2NoZW1hcy5weSIsICJtb2R1bGVzL3JlcG9ydGluZy9zZXJ2aWNlLnB5IiwgIm1vZHVsZXMvdGFza3MvX19pbml0X18ucHkiLCAibW9kdWxlcy90YXNrcy9hcGkucHkiLCAibW9kdWxlcy90YXNrcy9tb2RlbC5weSIsICJtb2R1bGVzL3Rhc2tzL3B1YmxpYy5weSIsICJtb2R1bGVzL3Rhc2tzL3JlcG9zaXRvcnkucHkiLCAibW9kdWxlcy90YXNrcy9zY2hlbWFzLnB5IiwgIm1vZHVsZXMvdGFza3Mvc2VydmljZS5weSIsICJtb2R1bGVzL3VzZXJzL19faW5pdF9fLnB5IiwgIm1vZHVsZXMvdXNlcnMvYXBpLnB5IiwgIm1vZHVsZXMvdXNlcnMvbW9kZWwucHkiLCAibW9kdWxlcy91c2Vycy9wdWJsaWMucHkiLCAibW9kdWxlcy91c2Vycy9yZXBvc2l0b3J5LnB5IiwgIm1vZHVsZXMvdXNlcnMvc2NoZW1hcy5weSIsICJtb2R1bGVzL3VzZXJzL3NlcnZpY2UucHkiXSwgImluc3BlY3Rpb25fdW5pdCI6ICJmaWxlIiwgIm1lYXN1cmVkX2NvdW50IjogMzIsICJtaXNzaW5nX3RhcmdldHMiOiBbXSwgInJlc29sdmVkX3RhcmdldHMiOiBbImFwcC5tb2R1bGVzIl19Cg==",
+        "path": "synthetic/evidence/scope_probe.json",
+        "sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+      }
+    ],
+    "authorized_template_descriptor_sha256": [
+      "f506ddd37e1c82764c4f92d69b57bcd3fa078e6bfa77dd077a22ef54b847c4c7"
+    ],
+    "change_inventory_proof": {
+      "architecture_source_shas": [
+        "82f9ee98fbc49aefc3787d9b42007e0a149a5973",
+        "df2f50a13aeaf282ffaad71540fd002a44bd3355"
+      ],
+      "evidence_refs": [
+        "ARCH_AFTER",
+        "ARCH_BEFORE",
+        "CHARTER",
+        "REGISTRY",
+        "SYNTHETIC_APPROVAL_1",
+        "SYNTHETIC_APPROVAL_10",
+        "SYNTHETIC_APPROVAL_11",
+        "SYNTHETIC_APPROVAL_12",
+        "SYNTHETIC_APPROVAL_13",
+        "SYNTHETIC_APPROVAL_14",
+        "SYNTHETIC_APPROVAL_15",
+        "SYNTHETIC_APPROVAL_16",
+        "SYNTHETIC_APPROVAL_17",
+        "SYNTHETIC_APPROVAL_18",
+        "SYNTHETIC_APPROVAL_2",
+        "SYNTHETIC_APPROVAL_3",
+        "SYNTHETIC_APPROVAL_4",
+        "SYNTHETIC_APPROVAL_5",
+        "SYNTHETIC_APPROVAL_6",
+        "SYNTHETIC_APPROVAL_7",
+        "SYNTHETIC_APPROVAL_8",
+        "SYNTHETIC_APPROVAL_9",
+        "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+        "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+        "SYNTHETIC_MODULE_DELTA_MODULE_ADDED_EVIDENCE",
+        "SYNTHETIC_MODULE_DELTA_MODULE_REMOVED_EVIDENCE"
+      ],
+      "scope": "source:app",
+      "source_bindings": [
+        {
+          "sha256": "9e0c830342269b59d0ed193ec777b984061b29400d1b90fe9594b7056525aa3c",
+          "source_id": "ARCH_AFTER"
+        },
+        {
+          "sha256": "24d9555abc937ad4c99122c7bfdfaae5d1cc58d4622485b9499c342ecb9383de",
+          "source_id": "ARCH_BEFORE"
+        },
+        {
+          "sha256": "c58093f65771b98dae195e9d1220aa8136843492320cec41463bd4d56958461d",
+          "source_id": "CHARTER"
+        },
+        {
+          "sha256": "a981e57355e6620097ecae14493df4c3fb452333cff7dfd37da0a3199e8fad3c",
+          "source_id": "REGISTRY"
+        },
+        {
+          "sha256": "3a13d9594b96d8b6d97016afd38c7f7efbcb9b274c04793ec895b9ab1c27b73c",
+          "source_id": "SYNTHETIC_APPROVAL_1"
+        },
+        {
+          "sha256": "b99a677072e8ae7c3cd5abb1a8631ed0eb786d472bff4de3e94cd811c71c8546",
+          "source_id": "SYNTHETIC_APPROVAL_10"
+        },
+        {
+          "sha256": "0d4e2b6413447b5e62b4346f32451e106670ff155ad4d9c757fe8af2ccc6eeb8",
+          "source_id": "SYNTHETIC_APPROVAL_11"
+        },
+        {
+          "sha256": "e81b1ab448b2eb63f5f5ba2c803d7b35caba7b1166e8a08cb9571c43430953f1",
+          "source_id": "SYNTHETIC_APPROVAL_12"
+        },
+        {
+          "sha256": "b42f19621fc656c02f39e1e3acf00cc3bf26cbcfb4feb168e12931c6a9eb7e2b",
+          "source_id": "SYNTHETIC_APPROVAL_13"
+        },
+        {
+          "sha256": "c5d603397f11a4a2d6b089e7c6209d76c4db84a783342c9ba15e093c4829ff18",
+          "source_id": "SYNTHETIC_APPROVAL_14"
+        },
+        {
+          "sha256": "57e53793d8f207552adb5231778008b50c3876e7f540d75af76358eda11a0539",
+          "source_id": "SYNTHETIC_APPROVAL_15"
+        },
+        {
+          "sha256": "2dd894edd089afbc8d7ce659b41239a6969c42d2dc1609f90aeff848088e1a0d",
+          "source_id": "SYNTHETIC_APPROVAL_16"
+        },
+        {
+          "sha256": "da51fc9421a7d4c5dacf05349a3c8b527fc974233a47c19434f80bc119cb5a4e",
+          "source_id": "SYNTHETIC_APPROVAL_17"
+        },
+        {
+          "sha256": "a9f1654b213b0c0c9054b72a5dbcbd4c3fcf6b11539cbbdb6007ccafa52804c4",
+          "source_id": "SYNTHETIC_APPROVAL_18"
+        },
+        {
+          "sha256": "8a1099e195e7a37072b19f0c822c3c4571195552a51cc22685988307d8f63cbf",
+          "source_id": "SYNTHETIC_APPROVAL_2"
+        },
+        {
+          "sha256": "9074113a7d3db936138862de73b523f16ba733bc3d730c61b816a13e92a60151",
+          "source_id": "SYNTHETIC_APPROVAL_3"
+        },
+        {
+          "sha256": "46ca408dfe58f6fe599c81f83ae6d0187fb1c9ef9ab2839083bb9b2081850e8a",
+          "source_id": "SYNTHETIC_APPROVAL_4"
+        },
+        {
+          "sha256": "47dc46b6fbc55955aeef2118e79a88f8c2ba67718d039242e3b08685b70fe950",
+          "source_id": "SYNTHETIC_APPROVAL_5"
+        },
+        {
+          "sha256": "4486865e7ab6d76b0de78304d330ac17fae048ee4eceff61bdc78b359aeb954a",
+          "source_id": "SYNTHETIC_APPROVAL_6"
+        },
+        {
+          "sha256": "b85b8720d31edc2e2e77608c3d7e98c68d0154787755d58ba1353042f1cbf363",
+          "source_id": "SYNTHETIC_APPROVAL_7"
+        },
+        {
+          "sha256": "c24d573bd07c7530954e5ab3e34eb1ef9d5a76487d1d2bfc6cd8a1570317a997",
+          "source_id": "SYNTHETIC_APPROVAL_8"
+        },
+        {
+          "sha256": "2a256932001494ae28df64286f4f64b0510e191f1690a9aaeb7902fca9552eb8",
+          "source_id": "SYNTHETIC_APPROVAL_9"
+        },
+        {
+          "sha256": "585244b10d0baaa96b80948dbd95fbe2497a02611f51b000cb3fad5571631a47",
+          "source_id": "SYNTHETIC_CLOSURE_EVIDENCE_AFTER"
+        },
+        {
+          "sha256": "cc658910673f1cd2ba7a5fed37e82546977ce1cac3c23a7ac3a822dcc65c39df",
+          "source_id": "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE"
+        },
+        {
+          "sha256": "bbaec154e3209927546b0875ee49d401caefb77f97b5d30784e92a9a2268f573",
+          "source_id": "SYNTHETIC_MODULE_DELTA_MODULE_ADDED_EVIDENCE"
+        },
+        {
+          "sha256": "58ce492925bc72db475fcdb6fa8214777cac1aa355f34efa73039511009576dd",
+          "source_id": "SYNTHETIC_MODULE_DELTA_MODULE_REMOVED_EVIDENCE"
+        }
+      ],
+      "status": "VALID",
+      "subject_sha256": "b4a06f279c722d88558f963d3fa0de32e0f48c2992fd00feadc8e85b164276df",
+      "verifier_id": "synthetic_adaptation_test_verifier_v1"
+    },
+    "cost_model_proof": {
+      "architecture_source_shas": [
+        "df2f50a13aeaf282ffaad71540fd002a44bd3355"
+      ],
+      "evidence_refs": [
+        "P_CAPABILITIES"
+      ],
+      "scope": "source:app",
+      "source_bindings": [
+        {
+          "sha256": "67952f5fe0bf05bda720687217065cad29ffdb6ed40da95559bbc1ac09a1abef",
+          "source_id": "P_CAPABILITIES"
+        }
+      ],
+      "status": "VALID",
+      "subject_sha256": "f1704cc0e298dd531f02ebb195be73381a08a659eb2fb41bcc3458e6ffe4af39",
+      "verifier_id": "synthetic_adaptation_test_verifier_v1"
+    },
+    "evaluator_evidence": [
+      {
+        "evidence": {
+          "adequacy_proven": true,
+          "architecture_source_sha": "df2f50a13aeaf282ffaad71540fd002a44bd3355",
+          "configured_targets": [
+            "app.modules"
+          ],
+          "evaluator_id": "synthetic_scope_probe_v1",
+          "evidence_artifacts": [
+            {
+              "path": "synthetic/evidence/scope_probe.json",
+              "sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+            }
+          ],
+          "evidence_contract_satisfied": true,
+          "infrastructure_status": "completed",
+          "inspected_edge_count": 32,
+          "inspected_subjects": [
+            "modules/__init__.py",
+            "modules/audit/__init__.py",
+            "modules/audit/model.py",
+            "modules/audit/public.py",
+            "modules/audit/repository.py",
+            "modules/audit/service.py",
+            "modules/notifications/__init__.py",
+            "modules/notifications/api.py",
+            "modules/notifications/model.py",
+            "modules/notifications/public.py",
+            "modules/notifications/repository.py",
+            "modules/notifications/schemas.py",
+            "modules/notifications/service.py",
+            "modules/reporting/__init__.py",
+            "modules/reporting/api.py",
+            "modules/reporting/public.py",
+            "modules/reporting/schemas.py",
+            "modules/reporting/service.py",
+            "modules/tasks/__init__.py",
+            "modules/tasks/api.py",
+            "modules/tasks/model.py",
+            "modules/tasks/public.py",
+            "modules/tasks/repository.py",
+            "modules/tasks/schemas.py",
+            "modules/tasks/service.py",
+            "modules/users/__init__.py",
+            "modules/users/api.py",
+            "modules/users/model.py",
+            "modules/users/public.py",
+            "modules/users/repository.py",
+            "modules/users/schemas.py",
+            "modules/users/service.py"
+          ],
+          "mapping_resolved": true,
+          "missing_targets": [],
+          "process_exit_code": 0,
+          "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+          "resolved_targets": [
+            "app.modules"
+          ],
+          "schema_version": 1,
+          "semantic_compatible": true,
+          "stage_applicable": true,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "1074447132cb5b3c5aecda5b63d89f82c459036dd6467c021e2baef7f17f3219"
+        },
+        "obligation_id": "AC_LAYERING",
+        "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING"
+      }
+    ],
+    "fact_absence_proofs": [
+      {
+        "architecture_source_sha": "82f9ee98fbc49aefc3787d9b42007e0a149a5973",
+        "predicate": "component.module_added",
+        "proof": {
+          "architecture_source_shas": [
+            "82f9ee98fbc49aefc3787d9b42007e0a149a5973"
+          ],
+          "evidence_refs": [
+            "SYNTHETIC_MODULE_DELTA_MODULE_ADDED_EVIDENCE"
+          ],
+          "scope": "source:app",
+          "source_bindings": [
+            {
+              "sha256": "bbaec154e3209927546b0875ee49d401caefb77f97b5d30784e92a9a2268f573",
+              "source_id": "SYNTHETIC_MODULE_DELTA_MODULE_ADDED_EVIDENCE"
+            }
+          ],
+          "status": "VALID",
+          "subject_sha256": "b5c9a67854e0393d87398cbb92c432206f0a285e6b7bb463a2d94f2e5a29db00",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "scope": "source:app",
+        "state": "before"
+      },
+      {
+        "architecture_source_sha": "82f9ee98fbc49aefc3787d9b42007e0a149a5973",
+        "predicate": "component.module_removed",
+        "proof": {
+          "architecture_source_shas": [
+            "82f9ee98fbc49aefc3787d9b42007e0a149a5973"
+          ],
+          "evidence_refs": [
+            "SYNTHETIC_MODULE_DELTA_MODULE_REMOVED_EVIDENCE"
+          ],
+          "scope": "source:app",
+          "source_bindings": [
+            {
+              "sha256": "58ce492925bc72db475fcdb6fa8214777cac1aa355f34efa73039511009576dd",
+              "source_id": "SYNTHETIC_MODULE_DELTA_MODULE_REMOVED_EVIDENCE"
+            }
+          ],
+          "status": "VALID",
+          "subject_sha256": "e851e9c95fd846943c2f2fae48dcd7d3a334d9b2ecc3a356487843f671be3bc6",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "scope": "source:app",
+        "state": "before"
+      }
+    ],
+    "pair_proofs": [
+      {
+        "evidence_refs": [
+          "P_TRACEABILITY"
+        ],
+        "obligation_id": "AC_LAYERING",
+        "reason_codes": [],
+        "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+        "source_bindings": [
+          {
+            "sha256": "67952f5fe0bf05bda720687217065cad29ffdb6ed40da95559bbc1ac09a1abef",
+            "source_id": "P_CAPABILITIES"
+          },
+          {
+            "sha256": "1ef316a4d93094b6bc681a797ad4f3f87b3d83af7e1ff2b538d69046cbceac13",
+            "source_id": "P_TRACEABILITY"
+          }
+        ],
+        "status": "VALID",
+        "subject_sha256": "2e614c33ae3d2237f88ea376584cea57aed8d1fa4d5bddc770bbcc4079dec8db",
+        "verifier_id": "synthetic_adaptation_test_verifier_v1"
+      }
+    ],
+    "policy_inventories": [
+      {
+        "architecture_source_sha": "82f9ee98fbc49aefc3787d9b42007e0a149a5973",
+        "proof": {
+          "architecture_source_shas": [
+            "82f9ee98fbc49aefc3787d9b42007e0a149a5973"
+          ],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_1",
+            "SYNTHETIC_APPROVAL_10",
+            "SYNTHETIC_APPROVAL_11",
+            "SYNTHETIC_APPROVAL_12",
+            "SYNTHETIC_APPROVAL_13",
+            "SYNTHETIC_APPROVAL_14",
+            "SYNTHETIC_APPROVAL_15",
+            "SYNTHETIC_APPROVAL_16",
+            "SYNTHETIC_APPROVAL_17",
+            "SYNTHETIC_APPROVAL_18",
+            "SYNTHETIC_APPROVAL_2",
+            "SYNTHETIC_APPROVAL_3",
+            "SYNTHETIC_APPROVAL_4",
+            "SYNTHETIC_APPROVAL_5",
+            "SYNTHETIC_APPROVAL_6",
+            "SYNTHETIC_APPROVAL_7",
+            "SYNTHETIC_APPROVAL_8",
+            "SYNTHETIC_APPROVAL_9"
+          ],
+          "scope": "source:app",
+          "source_bindings": [
+            {
+              "sha256": "c58093f65771b98dae195e9d1220aa8136843492320cec41463bd4d56958461d",
+              "source_id": "CHARTER"
+            },
+            {
+              "sha256": "a981e57355e6620097ecae14493df4c3fb452333cff7dfd37da0a3199e8fad3c",
+              "source_id": "REGISTRY"
+            },
+            {
+              "sha256": "3a13d9594b96d8b6d97016afd38c7f7efbcb9b274c04793ec895b9ab1c27b73c",
+              "source_id": "SYNTHETIC_APPROVAL_1"
+            },
+            {
+              "sha256": "b99a677072e8ae7c3cd5abb1a8631ed0eb786d472bff4de3e94cd811c71c8546",
+              "source_id": "SYNTHETIC_APPROVAL_10"
+            },
+            {
+              "sha256": "0d4e2b6413447b5e62b4346f32451e106670ff155ad4d9c757fe8af2ccc6eeb8",
+              "source_id": "SYNTHETIC_APPROVAL_11"
+            },
+            {
+              "sha256": "e81b1ab448b2eb63f5f5ba2c803d7b35caba7b1166e8a08cb9571c43430953f1",
+              "source_id": "SYNTHETIC_APPROVAL_12"
+            },
+            {
+              "sha256": "b42f19621fc656c02f39e1e3acf00cc3bf26cbcfb4feb168e12931c6a9eb7e2b",
+              "source_id": "SYNTHETIC_APPROVAL_13"
+            },
+            {
+              "sha256": "c5d603397f11a4a2d6b089e7c6209d76c4db84a783342c9ba15e093c4829ff18",
+              "source_id": "SYNTHETIC_APPROVAL_14"
+            },
+            {
+              "sha256": "57e53793d8f207552adb5231778008b50c3876e7f540d75af76358eda11a0539",
+              "source_id": "SYNTHETIC_APPROVAL_15"
+            },
+            {
+              "sha256": "2dd894edd089afbc8d7ce659b41239a6969c42d2dc1609f90aeff848088e1a0d",
+              "source_id": "SYNTHETIC_APPROVAL_16"
+            },
+            {
+              "sha256": "da51fc9421a7d4c5dacf05349a3c8b527fc974233a47c19434f80bc119cb5a4e",
+              "source_id": "SYNTHETIC_APPROVAL_17"
+            },
+            {
+              "sha256": "a9f1654b213b0c0c9054b72a5dbcbd4c3fcf6b11539cbbdb6007ccafa52804c4",
+              "source_id": "SYNTHETIC_APPROVAL_18"
+            },
+            {
+              "sha256": "8a1099e195e7a37072b19f0c822c3c4571195552a51cc22685988307d8f63cbf",
+              "source_id": "SYNTHETIC_APPROVAL_2"
+            },
+            {
+              "sha256": "9074113a7d3db936138862de73b523f16ba733bc3d730c61b816a13e92a60151",
+              "source_id": "SYNTHETIC_APPROVAL_3"
+            },
+            {
+              "sha256": "46ca408dfe58f6fe599c81f83ae6d0187fb1c9ef9ab2839083bb9b2081850e8a",
+              "source_id": "SYNTHETIC_APPROVAL_4"
+            },
+            {
+              "sha256": "47dc46b6fbc55955aeef2118e79a88f8c2ba67718d039242e3b08685b70fe950",
+              "source_id": "SYNTHETIC_APPROVAL_5"
+            },
+            {
+              "sha256": "4486865e7ab6d76b0de78304d330ac17fae048ee4eceff61bdc78b359aeb954a",
+              "source_id": "SYNTHETIC_APPROVAL_6"
+            },
+            {
+              "sha256": "b85b8720d31edc2e2e77608c3d7e98c68d0154787755d58ba1353042f1cbf363",
+              "source_id": "SYNTHETIC_APPROVAL_7"
+            },
+            {
+              "sha256": "c24d573bd07c7530954e5ab3e34eb1ef9d5a76487d1d2bfc6cd8a1570317a997",
+              "source_id": "SYNTHETIC_APPROVAL_8"
+            },
+            {
+              "sha256": "2a256932001494ae28df64286f4f64b0510e191f1690a9aaeb7902fca9552eb8",
+              "source_id": "SYNTHETIC_APPROVAL_9"
+            }
+          ],
+          "status": "VALID",
+          "subject_sha256": "4fdfc2ac8b9ae088fe52f3bc560fae802f6ed1327f090ac547fe9e76842dccd5",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "rows": [
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_1",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_AC_COMMUNICATION_POLICY",
+            "issuer_role": "research_policy_author",
+            "kind": "UNCONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "AC_COMMUNICATION_POLICY"
+            ],
+            "proposition": "Candidate communication policy; declared channels do not establish a complete runtime inventory.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_2",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_AC_DATA_OWNERSHIP",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "AC_DATA_OWNERSHIP"
+            ],
+            "proposition": "Candidate data ownership policy; ownership relation fact source is missing.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_3",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_AC_DEPLOYMENT_TOPOLOGY",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "AC_DEPLOYMENT_TOPOLOGY"
+            ],
+            "proposition": "Candidate actual topology policy; runtime topology fact source is missing.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_4",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_AC_LAYERING",
+            "issuer_role": "research_policy_author",
+            "kind": "UNCONDITIONAL_MANDATE",
+            "normative_status": "APPROVED",
+            "obligation_ids": [
+              "AC_LAYERING"
+            ],
+            "proposition": "Candidate layering constraint; conformance is evaluated separately from applicability.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_5",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_AC_MODULE_GRAPH",
+            "issuer_role": "research_policy_author",
+            "kind": "UNCONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "AC_MODULE_GRAPH"
+            ],
+            "proposition": "Candidate dependency graph constraint; full import graph evidence is not in FV_CORE_V1.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_6",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_AC_MODULE_STRUCTURE",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "AC_MODULE_STRUCTURE"
+            ],
+            "proposition": "Candidate condition over declared capability-module structure only.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_7",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_AC_PUBLIC_API",
+            "issuer_role": "research_policy_author",
+            "kind": "UNCONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "AC_PUBLIC_API"
+            ],
+            "proposition": "Candidate public module API policy; declared enforcement does not establish compliance.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_8",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_AC_SERVICE_BOUNDARY",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "AC_SERVICE_BOUNDARY"
+            ],
+            "proposition": "Candidate declared deployment-unit rule; it does not establish actual service separation.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_9",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_P_ASYNC_LAG",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "P_ASYNC_LAG"
+            ],
+            "proposition": "Candidate asynchronous delivery lag policy; runtime channel fact source is missing.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_10",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_P_EXT_LATENCY",
+            "issuer_role": "research_policy_author",
+            "kind": "UNCONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "P_EXT_LATENCY"
+            ],
+            "proposition": "Candidate user-facing API latency policy for a declared controlled scope.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_11",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_P_REMOTE_LATENCY",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "P_REMOTE_LATENCY"
+            ],
+            "proposition": "Candidate synchronous remote dependency latency policy; runtime fact source is missing.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_12",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_R_BUSINESS_FAILURE",
+            "issuer_role": "research_policy_author",
+            "kind": "UNCONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "R_BUSINESS_FAILURE"
+            ],
+            "proposition": "Candidate observability rule for unexpected business-operation failures.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_13",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_R_EVENT_DELIVERY",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "R_EVENT_DELIVERY"
+            ],
+            "proposition": "Candidate event delivery reliability policy; runtime channel fact source is missing.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_14",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_R_HTTP_5XX",
+            "issuer_role": "research_policy_author",
+            "kind": "UNCONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "R_HTTP_5XX"
+            ],
+            "proposition": "Candidate policy for external or business HTTP 5xx observability.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_15",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_R_IDEMPOTENCY",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "R_IDEMPOTENCY"
+            ],
+            "proposition": "Candidate duplicate-delivery idempotency policy; runtime channel fact source is missing.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_16",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_R_LOCAL_ATOMICITY",
+            "issuer_role": "research_policy_author",
+            "kind": "UNCONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "R_LOCAL_ATOMICITY"
+            ],
+            "proposition": "Candidate local transaction atomicity policy; transaction facts require a future vocabulary extension.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_17",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_R_READMODEL_CONVERGENCE",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "R_READMODEL_CONVERGENCE"
+            ],
+            "proposition": "Candidate event-driven read model convergence policy; runtime fact source is missing.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_18",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_R_REMOTE_DEPENDENCY",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "R_REMOTE_DEPENDENCY"
+            ],
+            "proposition": "Candidate remote dependency timeout and retry policy; runtime fact source is missing.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          }
+        ],
+        "scope": "source:app",
+        "state": "before"
+      },
+      {
+        "architecture_source_sha": "df2f50a13aeaf282ffaad71540fd002a44bd3355",
+        "proof": {
+          "architecture_source_shas": [
+            "df2f50a13aeaf282ffaad71540fd002a44bd3355"
+          ],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_1",
+            "SYNTHETIC_APPROVAL_10",
+            "SYNTHETIC_APPROVAL_11",
+            "SYNTHETIC_APPROVAL_12",
+            "SYNTHETIC_APPROVAL_13",
+            "SYNTHETIC_APPROVAL_14",
+            "SYNTHETIC_APPROVAL_15",
+            "SYNTHETIC_APPROVAL_16",
+            "SYNTHETIC_APPROVAL_17",
+            "SYNTHETIC_APPROVAL_18",
+            "SYNTHETIC_APPROVAL_2",
+            "SYNTHETIC_APPROVAL_3",
+            "SYNTHETIC_APPROVAL_4",
+            "SYNTHETIC_APPROVAL_5",
+            "SYNTHETIC_APPROVAL_6",
+            "SYNTHETIC_APPROVAL_7",
+            "SYNTHETIC_APPROVAL_8",
+            "SYNTHETIC_APPROVAL_9"
+          ],
+          "scope": "source:app",
+          "source_bindings": [
+            {
+              "sha256": "c58093f65771b98dae195e9d1220aa8136843492320cec41463bd4d56958461d",
+              "source_id": "CHARTER"
+            },
+            {
+              "sha256": "a981e57355e6620097ecae14493df4c3fb452333cff7dfd37da0a3199e8fad3c",
+              "source_id": "REGISTRY"
+            },
+            {
+              "sha256": "3a13d9594b96d8b6d97016afd38c7f7efbcb9b274c04793ec895b9ab1c27b73c",
+              "source_id": "SYNTHETIC_APPROVAL_1"
+            },
+            {
+              "sha256": "b99a677072e8ae7c3cd5abb1a8631ed0eb786d472bff4de3e94cd811c71c8546",
+              "source_id": "SYNTHETIC_APPROVAL_10"
+            },
+            {
+              "sha256": "0d4e2b6413447b5e62b4346f32451e106670ff155ad4d9c757fe8af2ccc6eeb8",
+              "source_id": "SYNTHETIC_APPROVAL_11"
+            },
+            {
+              "sha256": "e81b1ab448b2eb63f5f5ba2c803d7b35caba7b1166e8a08cb9571c43430953f1",
+              "source_id": "SYNTHETIC_APPROVAL_12"
+            },
+            {
+              "sha256": "b42f19621fc656c02f39e1e3acf00cc3bf26cbcfb4feb168e12931c6a9eb7e2b",
+              "source_id": "SYNTHETIC_APPROVAL_13"
+            },
+            {
+              "sha256": "c5d603397f11a4a2d6b089e7c6209d76c4db84a783342c9ba15e093c4829ff18",
+              "source_id": "SYNTHETIC_APPROVAL_14"
+            },
+            {
+              "sha256": "57e53793d8f207552adb5231778008b50c3876e7f540d75af76358eda11a0539",
+              "source_id": "SYNTHETIC_APPROVAL_15"
+            },
+            {
+              "sha256": "2dd894edd089afbc8d7ce659b41239a6969c42d2dc1609f90aeff848088e1a0d",
+              "source_id": "SYNTHETIC_APPROVAL_16"
+            },
+            {
+              "sha256": "da51fc9421a7d4c5dacf05349a3c8b527fc974233a47c19434f80bc119cb5a4e",
+              "source_id": "SYNTHETIC_APPROVAL_17"
+            },
+            {
+              "sha256": "a9f1654b213b0c0c9054b72a5dbcbd4c3fcf6b11539cbbdb6007ccafa52804c4",
+              "source_id": "SYNTHETIC_APPROVAL_18"
+            },
+            {
+              "sha256": "8a1099e195e7a37072b19f0c822c3c4571195552a51cc22685988307d8f63cbf",
+              "source_id": "SYNTHETIC_APPROVAL_2"
+            },
+            {
+              "sha256": "9074113a7d3db936138862de73b523f16ba733bc3d730c61b816a13e92a60151",
+              "source_id": "SYNTHETIC_APPROVAL_3"
+            },
+            {
+              "sha256": "46ca408dfe58f6fe599c81f83ae6d0187fb1c9ef9ab2839083bb9b2081850e8a",
+              "source_id": "SYNTHETIC_APPROVAL_4"
+            },
+            {
+              "sha256": "47dc46b6fbc55955aeef2118e79a88f8c2ba67718d039242e3b08685b70fe950",
+              "source_id": "SYNTHETIC_APPROVAL_5"
+            },
+            {
+              "sha256": "4486865e7ab6d76b0de78304d330ac17fae048ee4eceff61bdc78b359aeb954a",
+              "source_id": "SYNTHETIC_APPROVAL_6"
+            },
+            {
+              "sha256": "b85b8720d31edc2e2e77608c3d7e98c68d0154787755d58ba1353042f1cbf363",
+              "source_id": "SYNTHETIC_APPROVAL_7"
+            },
+            {
+              "sha256": "c24d573bd07c7530954e5ab3e34eb1ef9d5a76487d1d2bfc6cd8a1570317a997",
+              "source_id": "SYNTHETIC_APPROVAL_8"
+            },
+            {
+              "sha256": "2a256932001494ae28df64286f4f64b0510e191f1690a9aaeb7902fca9552eb8",
+              "source_id": "SYNTHETIC_APPROVAL_9"
+            }
+          ],
+          "status": "VALID",
+          "subject_sha256": "333e4014ad210b7c3e50e7552468bd570e2ff1b3d9c60a6edf535406411c4e2e",
+          "verifier_id": "synthetic_adaptation_test_verifier_v1"
+        },
+        "rows": [
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_1",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_AC_COMMUNICATION_POLICY",
+            "issuer_role": "research_policy_author",
+            "kind": "UNCONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "AC_COMMUNICATION_POLICY"
+            ],
+            "proposition": "Candidate communication policy; declared channels do not establish a complete runtime inventory.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_2",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_AC_DATA_OWNERSHIP",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "AC_DATA_OWNERSHIP"
+            ],
+            "proposition": "Candidate data ownership policy; ownership relation fact source is missing.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_3",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_AC_DEPLOYMENT_TOPOLOGY",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "AC_DEPLOYMENT_TOPOLOGY"
+            ],
+            "proposition": "Candidate actual topology policy; runtime topology fact source is missing.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_4",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_AC_LAYERING",
+            "issuer_role": "research_policy_author",
+            "kind": "UNCONDITIONAL_MANDATE",
+            "normative_status": "APPROVED",
+            "obligation_ids": [
+              "AC_LAYERING"
+            ],
+            "proposition": "Candidate layering constraint; conformance is evaluated separately from applicability.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_5",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_AC_MODULE_GRAPH",
+            "issuer_role": "research_policy_author",
+            "kind": "UNCONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "AC_MODULE_GRAPH"
+            ],
+            "proposition": "Candidate dependency graph constraint; full import graph evidence is not in FV_CORE_V1.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_6",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_AC_MODULE_STRUCTURE",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "AC_MODULE_STRUCTURE"
+            ],
+            "proposition": "Candidate condition over declared capability-module structure only.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_7",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_AC_PUBLIC_API",
+            "issuer_role": "research_policy_author",
+            "kind": "UNCONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "AC_PUBLIC_API"
+            ],
+            "proposition": "Candidate public module API policy; declared enforcement does not establish compliance.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_8",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_AC_SERVICE_BOUNDARY",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "AC_SERVICE_BOUNDARY"
+            ],
+            "proposition": "Candidate declared deployment-unit rule; it does not establish actual service separation.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_9",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_P_ASYNC_LAG",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "P_ASYNC_LAG"
+            ],
+            "proposition": "Candidate asynchronous delivery lag policy; runtime channel fact source is missing.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_10",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_P_EXT_LATENCY",
+            "issuer_role": "research_policy_author",
+            "kind": "UNCONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "P_EXT_LATENCY"
+            ],
+            "proposition": "Candidate user-facing API latency policy for a declared controlled scope.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_11",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_P_REMOTE_LATENCY",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "P_REMOTE_LATENCY"
+            ],
+            "proposition": "Candidate synchronous remote dependency latency policy; runtime fact source is missing.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_12",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_R_BUSINESS_FAILURE",
+            "issuer_role": "research_policy_author",
+            "kind": "UNCONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "R_BUSINESS_FAILURE"
+            ],
+            "proposition": "Candidate observability rule for unexpected business-operation failures.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_13",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_R_EVENT_DELIVERY",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "R_EVENT_DELIVERY"
+            ],
+            "proposition": "Candidate event delivery reliability policy; runtime channel fact source is missing.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_14",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_R_HTTP_5XX",
+            "issuer_role": "research_policy_author",
+            "kind": "UNCONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "R_HTTP_5XX"
+            ],
+            "proposition": "Candidate policy for external or business HTTP 5xx observability.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_15",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_R_IDEMPOTENCY",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "R_IDEMPOTENCY"
+            ],
+            "proposition": "Candidate duplicate-delivery idempotency policy; runtime channel fact source is missing.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_16",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_R_LOCAL_ATOMICITY",
+            "issuer_role": "research_policy_author",
+            "kind": "UNCONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "R_LOCAL_ATOMICITY"
+            ],
+            "proposition": "Candidate local transaction atomicity policy; transaction facts require a future vocabulary extension.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_17",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_R_READMODEL_CONVERGENCE",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "R_READMODEL_CONVERGENCE"
+            ],
+            "proposition": "Candidate event-driven read model convergence policy; runtime fact source is missing.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          },
+          {
+            "applies_to_states": [
+              "after"
+            ],
+            "approval_source_id": "SYNTHETIC_APPROVAL_18",
+            "condition_ref": "COND_HAS_SHARED_INFRASTRUCTURE",
+            "effective_from": "2026-10-14T00:00:00Z",
+            "effective_until": null,
+            "id": "POLICY_CANDIDATE_R_REMOTE_DEPENDENCY",
+            "issuer_role": "research_policy_author",
+            "kind": "CONDITIONAL_MANDATE",
+            "normative_status": "REVOKED",
+            "obligation_ids": [
+              "R_REMOTE_DEPENDENCY"
+            ],
+            "proposition": "Candidate remote dependency timeout and retry policy; runtime fact source is missing.",
+            "scope": "source:app",
+            "source_id": "REGISTRY",
+            "target_policy_ids": []
+          }
+        ],
+        "scope": "source:app",
+        "state": "after"
+      }
+    ],
+    "required_stages": {
+      "AC_LAYERING": [
+        "ci"
+      ]
+    },
+    "stage_contract_proof": {
+      "architecture_source_shas": [
+        "df2f50a13aeaf282ffaad71540fd002a44bd3355"
+      ],
+      "evidence_refs": [
+        "P_CAPABILITIES"
+      ],
+      "scope": "source:app",
+      "source_bindings": [
+        {
+          "sha256": "67952f5fe0bf05bda720687217065cad29ffdb6ed40da95559bbc1ac09a1abef",
+          "source_id": "P_CAPABILITIES"
+        }
+      ],
+      "status": "VALID",
+      "subject_sha256": "c1ce1295524fe67ad499ac9889c22737fd8b8023d2ec7df51501383e78c2c9c5",
+      "verifier_id": "synthetic_adaptation_test_verifier_v1"
+    },
+    "test_only_mandatory_classification": {
+      "proof": {
+        "architecture_source_shas": [
+          "82f9ee98fbc49aefc3787d9b42007e0a149a5973",
+          "df2f50a13aeaf282ffaad71540fd002a44bd3355"
+        ],
+        "evidence_refs": [
+          "CHARTER",
+          "REGISTRY",
+          "SYNTHETIC_APPROVAL_1",
+          "SYNTHETIC_APPROVAL_10",
+          "SYNTHETIC_APPROVAL_11",
+          "SYNTHETIC_APPROVAL_12",
+          "SYNTHETIC_APPROVAL_13",
+          "SYNTHETIC_APPROVAL_14",
+          "SYNTHETIC_APPROVAL_15",
+          "SYNTHETIC_APPROVAL_16",
+          "SYNTHETIC_APPROVAL_17",
+          "SYNTHETIC_APPROVAL_18",
+          "SYNTHETIC_APPROVAL_2",
+          "SYNTHETIC_APPROVAL_3",
+          "SYNTHETIC_APPROVAL_4",
+          "SYNTHETIC_APPROVAL_5",
+          "SYNTHETIC_APPROVAL_6",
+          "SYNTHETIC_APPROVAL_7",
+          "SYNTHETIC_APPROVAL_8",
+          "SYNTHETIC_APPROVAL_9"
+        ],
+        "scope": "source:app",
+        "source_bindings": [
+          {
+            "sha256": "c58093f65771b98dae195e9d1220aa8136843492320cec41463bd4d56958461d",
+            "source_id": "CHARTER"
+          },
+          {
+            "sha256": "a981e57355e6620097ecae14493df4c3fb452333cff7dfd37da0a3199e8fad3c",
+            "source_id": "REGISTRY"
+          },
+          {
+            "sha256": "3a13d9594b96d8b6d97016afd38c7f7efbcb9b274c04793ec895b9ab1c27b73c",
+            "source_id": "SYNTHETIC_APPROVAL_1"
+          },
+          {
+            "sha256": "b99a677072e8ae7c3cd5abb1a8631ed0eb786d472bff4de3e94cd811c71c8546",
+            "source_id": "SYNTHETIC_APPROVAL_10"
+          },
+          {
+            "sha256": "0d4e2b6413447b5e62b4346f32451e106670ff155ad4d9c757fe8af2ccc6eeb8",
+            "source_id": "SYNTHETIC_APPROVAL_11"
+          },
+          {
+            "sha256": "e81b1ab448b2eb63f5f5ba2c803d7b35caba7b1166e8a08cb9571c43430953f1",
+            "source_id": "SYNTHETIC_APPROVAL_12"
+          },
+          {
+            "sha256": "b42f19621fc656c02f39e1e3acf00cc3bf26cbcfb4feb168e12931c6a9eb7e2b",
+            "source_id": "SYNTHETIC_APPROVAL_13"
+          },
+          {
+            "sha256": "c5d603397f11a4a2d6b089e7c6209d76c4db84a783342c9ba15e093c4829ff18",
+            "source_id": "SYNTHETIC_APPROVAL_14"
+          },
+          {
+            "sha256": "57e53793d8f207552adb5231778008b50c3876e7f540d75af76358eda11a0539",
+            "source_id": "SYNTHETIC_APPROVAL_15"
+          },
+          {
+            "sha256": "2dd894edd089afbc8d7ce659b41239a6969c42d2dc1609f90aeff848088e1a0d",
+            "source_id": "SYNTHETIC_APPROVAL_16"
+          },
+          {
+            "sha256": "da51fc9421a7d4c5dacf05349a3c8b527fc974233a47c19434f80bc119cb5a4e",
+            "source_id": "SYNTHETIC_APPROVAL_17"
+          },
+          {
+            "sha256": "a9f1654b213b0c0c9054b72a5dbcbd4c3fcf6b11539cbbdb6007ccafa52804c4",
+            "source_id": "SYNTHETIC_APPROVAL_18"
+          },
+          {
+            "sha256": "8a1099e195e7a37072b19f0c822c3c4571195552a51cc22685988307d8f63cbf",
+            "source_id": "SYNTHETIC_APPROVAL_2"
+          },
+          {
+            "sha256": "9074113a7d3db936138862de73b523f16ba733bc3d730c61b816a13e92a60151",
+            "source_id": "SYNTHETIC_APPROVAL_3"
+          },
+          {
+            "sha256": "46ca408dfe58f6fe599c81f83ae6d0187fb1c9ef9ab2839083bb9b2081850e8a",
+            "source_id": "SYNTHETIC_APPROVAL_4"
+          },
+          {
+            "sha256": "47dc46b6fbc55955aeef2118e79a88f8c2ba67718d039242e3b08685b70fe950",
+            "source_id": "SYNTHETIC_APPROVAL_5"
+          },
+          {
+            "sha256": "4486865e7ab6d76b0de78304d330ac17fae048ee4eceff61bdc78b359aeb954a",
+            "source_id": "SYNTHETIC_APPROVAL_6"
+          },
+          {
+            "sha256": "b85b8720d31edc2e2e77608c3d7e98c68d0154787755d58ba1353042f1cbf363",
+            "source_id": "SYNTHETIC_APPROVAL_7"
+          },
+          {
+            "sha256": "c24d573bd07c7530954e5ab3e34eb1ef9d5a76487d1d2bfc6cd8a1570317a997",
+            "source_id": "SYNTHETIC_APPROVAL_8"
+          },
+          {
+            "sha256": "2a256932001494ae28df64286f4f64b0510e191f1690a9aaeb7902fca9552eb8",
+            "source_id": "SYNTHETIC_APPROVAL_9"
+          }
+        ],
+        "status": "VALID",
+        "subject_sha256": "7061227623b43af387916e29c2ac0b1fd19d78c50409fa4d146e9daf3f4af39c",
+        "verifier_id": "synthetic_adaptation_test_verifier_v1"
+      },
+      "rows": [
+        {
+          "mandatory": false,
+          "obligation_id": "AC_COMMUNICATION_POLICY"
+        },
+        {
+          "mandatory": false,
+          "obligation_id": "AC_DATA_OWNERSHIP"
+        },
+        {
+          "mandatory": false,
+          "obligation_id": "AC_DEPLOYMENT_TOPOLOGY"
+        },
+        {
+          "mandatory": true,
+          "obligation_id": "AC_LAYERING"
+        },
+        {
+          "mandatory": false,
+          "obligation_id": "AC_MODULE_GRAPH"
+        },
+        {
+          "mandatory": false,
+          "obligation_id": "AC_MODULE_STRUCTURE"
+        },
+        {
+          "mandatory": false,
+          "obligation_id": "AC_PUBLIC_API"
+        },
+        {
+          "mandatory": false,
+          "obligation_id": "AC_SERVICE_BOUNDARY"
+        },
+        {
+          "mandatory": false,
+          "obligation_id": "P_ASYNC_LAG"
+        },
+        {
+          "mandatory": false,
+          "obligation_id": "P_EXT_LATENCY"
+        },
+        {
+          "mandatory": false,
+          "obligation_id": "P_REMOTE_LATENCY"
+        },
+        {
+          "mandatory": false,
+          "obligation_id": "R_BUSINESS_FAILURE"
+        },
+        {
+          "mandatory": false,
+          "obligation_id": "R_EVENT_DELIVERY"
+        },
+        {
+          "mandatory": false,
+          "obligation_id": "R_HTTP_5XX"
+        },
+        {
+          "mandatory": false,
+          "obligation_id": "R_IDEMPOTENCY"
+        },
+        {
+          "mandatory": false,
+          "obligation_id": "R_LOCAL_ATOMICITY"
+        },
+        {
+          "mandatory": false,
+          "obligation_id": "R_READMODEL_CONVERGENCE"
+        },
+        {
+          "mandatory": false,
+          "obligation_id": "R_REMOTE_DEPENDENCY"
+        }
+      ]
+    },
+    "trace_inventory_proof": {
+      "architecture_source_shas": [
+        "82f9ee98fbc49aefc3787d9b42007e0a149a5973",
+        "df2f50a13aeaf282ffaad71540fd002a44bd3355"
+      ],
+      "evidence_refs": [
+        "P_TRACEABILITY"
+      ],
+      "scope": "source:app",
+      "source_bindings": [
+        {
+          "sha256": "1ef316a4d93094b6bc681a797ad4f3f87b3d83af7e1ff2b538d69046cbceac13",
+          "source_id": "P_TRACEABILITY"
+        }
+      ],
+      "status": "VALID",
+      "subject_sha256": "086fb16eeec109dd3bdc8222240e7ffcb79d5bfc35e6dab402f2a4b3a84e1bfb",
+      "verifier_id": "synthetic_adaptation_test_verifier_v1"
+    }
+  },
+  "policy_bundle_sha256": "29df104b9e6f923b1f8b5b0ce9e28c80787b19b40c469094933afcb344dc515c",
+  "policy_source_revision": "synthetic-positive-policy-v1",
+  "schema_version": 2,
+  "scope": "source:app",
+  "sidecar_sha256": "79ca9508f49bdfa674c5bd4d2efbfc8b104f36bbd2688afd5a920a078bd01139",
+  "signature": "765f200ccaae92a8780ad59064daf03e31211a403a9e3dfbbaa00347f4263f61",
+  "source_bindings": [
+    {
+      "sha256": "9e0c830342269b59d0ed193ec777b984061b29400d1b90fe9594b7056525aa3c",
+      "source_id": "ARCH_AFTER"
+    },
+    {
+      "sha256": "24d9555abc937ad4c99122c7bfdfaae5d1cc58d4622485b9499c342ecb9383de",
+      "source_id": "ARCH_BEFORE"
+    },
+    {
+      "sha256": "9187911a1d8b6de9f5f438163cdb85425c90c06245488364c3e25fd7cc31ccff",
+      "source_id": "ARCH_OBS"
+    },
+    {
+      "sha256": "c58093f65771b98dae195e9d1220aa8136843492320cec41463bd4d56958461d",
+      "source_id": "CHARTER"
+    },
+    {
+      "sha256": "01c99e1c692442db283ef45e608a21f64fa2b21a64982875e0a6b3035f4968d4",
+      "source_id": "PILOT_AUTHORITY_DESIGN"
+    },
+    {
+      "sha256": "67952f5fe0bf05bda720687217065cad29ffdb6ed40da95559bbc1ac09a1abef",
+      "source_id": "P_CAPABILITIES"
+    },
+    {
+      "sha256": "1ef316a4d93094b6bc681a797ad4f3f87b3d83af7e1ff2b538d69046cbceac13",
+      "source_id": "P_TRACEABILITY"
+    },
+    {
+      "sha256": "a981e57355e6620097ecae14493df4c3fb452333cff7dfd37da0a3199e8fad3c",
+      "source_id": "REGISTRY"
+    },
+    {
+      "sha256": "3a13d9594b96d8b6d97016afd38c7f7efbcb9b274c04793ec895b9ab1c27b73c",
+      "source_id": "SYNTHETIC_APPROVAL_1"
+    },
+    {
+      "sha256": "b99a677072e8ae7c3cd5abb1a8631ed0eb786d472bff4de3e94cd811c71c8546",
+      "source_id": "SYNTHETIC_APPROVAL_10"
+    },
+    {
+      "sha256": "0d4e2b6413447b5e62b4346f32451e106670ff155ad4d9c757fe8af2ccc6eeb8",
+      "source_id": "SYNTHETIC_APPROVAL_11"
+    },
+    {
+      "sha256": "e81b1ab448b2eb63f5f5ba2c803d7b35caba7b1166e8a08cb9571c43430953f1",
+      "source_id": "SYNTHETIC_APPROVAL_12"
+    },
+    {
+      "sha256": "b42f19621fc656c02f39e1e3acf00cc3bf26cbcfb4feb168e12931c6a9eb7e2b",
+      "source_id": "SYNTHETIC_APPROVAL_13"
+    },
+    {
+      "sha256": "c5d603397f11a4a2d6b089e7c6209d76c4db84a783342c9ba15e093c4829ff18",
+      "source_id": "SYNTHETIC_APPROVAL_14"
+    },
+    {
+      "sha256": "57e53793d8f207552adb5231778008b50c3876e7f540d75af76358eda11a0539",
+      "source_id": "SYNTHETIC_APPROVAL_15"
+    },
+    {
+      "sha256": "2dd894edd089afbc8d7ce659b41239a6969c42d2dc1609f90aeff848088e1a0d",
+      "source_id": "SYNTHETIC_APPROVAL_16"
+    },
+    {
+      "sha256": "da51fc9421a7d4c5dacf05349a3c8b527fc974233a47c19434f80bc119cb5a4e",
+      "source_id": "SYNTHETIC_APPROVAL_17"
+    },
+    {
+      "sha256": "a9f1654b213b0c0c9054b72a5dbcbd4c3fcf6b11539cbbdb6007ccafa52804c4",
+      "source_id": "SYNTHETIC_APPROVAL_18"
+    },
+    {
+      "sha256": "8a1099e195e7a37072b19f0c822c3c4571195552a51cc22685988307d8f63cbf",
+      "source_id": "SYNTHETIC_APPROVAL_2"
+    },
+    {
+      "sha256": "9074113a7d3db936138862de73b523f16ba733bc3d730c61b816a13e92a60151",
+      "source_id": "SYNTHETIC_APPROVAL_3"
+    },
+    {
+      "sha256": "46ca408dfe58f6fe599c81f83ae6d0187fb1c9ef9ab2839083bb9b2081850e8a",
+      "source_id": "SYNTHETIC_APPROVAL_4"
+    },
+    {
+      "sha256": "47dc46b6fbc55955aeef2118e79a88f8c2ba67718d039242e3b08685b70fe950",
+      "source_id": "SYNTHETIC_APPROVAL_5"
+    },
+    {
+      "sha256": "4486865e7ab6d76b0de78304d330ac17fae048ee4eceff61bdc78b359aeb954a",
+      "source_id": "SYNTHETIC_APPROVAL_6"
+    },
+    {
+      "sha256": "b85b8720d31edc2e2e77608c3d7e98c68d0154787755d58ba1353042f1cbf363",
+      "source_id": "SYNTHETIC_APPROVAL_7"
+    },
+    {
+      "sha256": "c24d573bd07c7530954e5ab3e34eb1ef9d5a76487d1d2bfc6cd8a1570317a997",
+      "source_id": "SYNTHETIC_APPROVAL_8"
+    },
+    {
+      "sha256": "2a256932001494ae28df64286f4f64b0510e191f1690a9aaeb7902fca9552eb8",
+      "source_id": "SYNTHETIC_APPROVAL_9"
+    },
+    {
+      "sha256": "585244b10d0baaa96b80948dbd95fbe2497a02611f51b000cb3fad5571631a47",
+      "source_id": "SYNTHETIC_CLOSURE_EVIDENCE_AFTER"
+    },
+    {
+      "sha256": "cc658910673f1cd2ba7a5fed37e82546977ce1cac3c23a7ac3a822dcc65c39df",
+      "source_id": "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE"
+    },
+    {
+      "sha256": "bbaec154e3209927546b0875ee49d401caefb77f97b5d30784e92a9a2268f573",
+      "source_id": "SYNTHETIC_MODULE_DELTA_MODULE_ADDED_EVIDENCE"
+    },
+    {
+      "sha256": "58ce492925bc72db475fcdb6fa8214777cac1aa355f34efa73039511009576dd",
+      "source_id": "SYNTHETIC_MODULE_DELTA_MODULE_REMOVED_EVIDENCE"
+    }
+  ],
+  "verifier_id": "synthetic_adaptation_test_verifier_v1"
+}

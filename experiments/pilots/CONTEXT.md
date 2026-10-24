@@ -9,6 +9,8 @@ Store pilot-specific protocols, reports, derived result tables, and narrow tools
 
 ## Local landmarks
 
+- `mono_e1_dev_p_decisions_v1/` — separately versioned eight-case TEST_ONLY Method P DEVELOPMENT decision rehearsal, scorer-only frozen author-declared reference, three technical repetitions per case, B0_SYNTH output, raw V3 inputs/traces, result table, and checksums; not official MONO-E1 or DA01 execution.
+- `mono_e1_dev_p_decisions_v1/runner.py` — reference-blind `execute` phase followed by digest-checked `score`; uses the existing verified V3 and `run_adaptation()` path.
 - `EVAL01_PROTOCOL_V1.md`, `EVAL01_MUTATION_CATALOG_V1.json`, and `run_eval01.py` — preregistered A0.4 W2 evaluator-validation protocol, mutation cases, clean Git provenance, repeated source-bound evaluator calls, analysis, and raw evidence packaging; independent of MONO-E1/E2 and Method P.
 - `EVAL01_REPORT_V1.md`, `EVAL01_CASE_RESULTS_V1.csv`, `EVAL01_ANALYSIS_V1.json`, and `EVAL01_RAW_EVIDENCE_V1.zip` — evidence-derived EVAL-01 report, finite case-level confusion metrics, machine-readable analysis, and checksummed raw runs; the ZIP sidecar holds its external SHA-256.
 - `EVAL02_PROTOCOL_V1.md`, `EVAL02_MUTATION_CATALOG_V1.json`, and `run_eval02.py` — preregistered W2 continuation on canonical A0.4, with case-specific architecture labels, evaluator applicability, clean source revisions, repeated calls, and evidence analysis.
@@ -128,3 +130,10 @@ repeated calls are not independent cases.
 The post-run validator distinguishes evaluator invocation, source/evaluator
 binding, preregistered diagnostic mismatch, analysis, and archive-integrity
 status without changing the frozen run or its derived metrics.
+
+`MONO_E1_DEV_P_DECISIONS_V1` is a distinct TEST_ONLY synthetic decision
+experiment on eight authored architecture transitions. It invokes the current
+verified V3 P path, records three technical repetitions per case, and compares
+only after raw traces exist with the frozen non-independent author reference.
+It does not execute the canonical A0.3→A0.4 pair or establish G1/G4, `Coverage_P`,
+`Coverage_ref`, scientific improvement, or P readiness.

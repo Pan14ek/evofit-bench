@@ -11,7 +11,7 @@ import shutil
 import subprocess
 import sys
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from copy import deepcopy
 from dataclasses import replace
 from pathlib import Path
@@ -123,7 +123,12 @@ def _commit(repository: Path, message: str) -> str:
 
 
 def _synthetic_architecture_repository(
-    root: Path, *, include_structural_facts: bool = True
+    root: Path,
+    *,
+    include_structural_facts: bool = True,
+    before_files: Mapping[str, bytes] | None = None,
+    after_files: Mapping[str, bytes] | None = None,
+    removed_after_paths: Sequence[str] = (),
 ) -> tuple[Path, str, str]:
     repository = root / "synthetic-architecture"
     repository.mkdir()
@@ -147,10 +152,16 @@ def _synthetic_architecture_repository(
         ):
             manifest.pop(key, None)
         manifest_path.write_text(yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8")
+    for relative, content in sorted((before_files or {}).items()):
+        _write(repository, relative, content)
     before_sha = _commit(repository, "synthetic architecture before")
 
     app_init = repository / "app/__init__.py"
     app_init.write_bytes(app_init.read_bytes() + b"\n# synthetic target revision\n")
+    for relative in sorted(removed_after_paths):
+        (repository / relative).unlink()
+    for relative, content in sorted((after_files or {}).items()):
+        _write(repository, relative, content)
     after_sha = _commit(repository, "synthetic architecture after")
     return repository, before_sha, after_sha
 
@@ -161,12 +172,26 @@ def _synthetic_evaluator_source() -> bytes:
         b"from pathlib import Path\n"
         b"import json, sys\n"
         b"root = Path(sys.argv[1])\n"
-        b"targets = sorted(path.relative_to(root).as_posix() for path in root.rglob('*.py'))\n"
-        b"resolved = [name for name in targets if name.startswith('modules/') ]\n"
-        b"ok = bool(resolved) and (root / 'modules').is_dir()\n"
-        b"print(json.dumps({'configured_targets': ['app.modules'], 'resolved_targets': "
-        b"['app.modules'] if ok else [], 'inspected_subjects': resolved, "
-        b"'inspected_edge_count': len(resolved)}, sort_keys=True))\n"
+        b"if len(sys.argv) > 3:\n"
+        b" configured = json.loads(sys.argv[2])\n"
+        b" required = json.loads(sys.argv[3])\n"
+        b" resolved = sorted(target for target in configured if target in required "
+        b"and (root / target).is_file())\n"
+        b" missing = sorted(set(required) - set(resolved))\n"
+        b" inspected = sorted(set(required))\n"
+        b"else:\n"
+        b" targets = sorted(path.relative_to(root).as_posix() for path in root.rglob('*.py'))\n"
+        b" resolved = ['app.modules'] if any(name.startswith('modules/') "
+        b"for name in targets) else []\n"
+        b" required = ['app.modules']\n"
+        b" configured = ['app.modules']\n"
+        b" missing = [] if resolved else required\n"
+        b" inspected = [name for name in targets if name.startswith('modules/')]\n"
+        b"ok = bool(resolved) and not missing\n"
+        b"print(json.dumps({'configured_targets': configured, 'resolved_targets': resolved, "
+        b"'inspected_subjects': inspected, 'missing_targets': missing, "
+        b"'inspected_edge_count': len(inspected), 'inspection_unit': 'file', "
+        b"'expected_subjects': inspected, 'measured_count': len(inspected)}, sort_keys=True))\n"
         b"raise SystemExit(0 if ok else 2)\n"
     )
 
@@ -175,10 +200,18 @@ def _synthetic_positive_architecture_repository(
     root: Path,
     *,
     include_parent_representation: bool = True,
+    before_files: Mapping[str, bytes] | None = None,
+    after_files: Mapping[str, bytes] | None = None,
+    removed_after_paths: Sequence[str] = (),
+    parent_scope: Mapping[str, Any] | None = None,
 ) -> tuple[Path, str, str, bytes]:
     """Pin a TEST_ONLY evaluator input in a throwaway Git repository."""
     repository, before_sha, after_sha = _synthetic_architecture_repository(
-        root, include_structural_facts=False
+        root,
+        include_structural_facts=False,
+        before_files=before_files,
+        after_files=after_files,
+        removed_after_paths=removed_after_paths,
     )
     artifact = _synthetic_evaluator_source()
     representations_path = repository / "fitness/catalog/a0-fitness-elements.yaml"
@@ -192,6 +225,8 @@ def _synthetic_positive_architecture_repository(
                 "sha256": sha256_bytes(artifact),
             }
             row["evidence_contract"] = {"contract_id": "SYNTHETIC_SCOPE_PROBE_V1"}
+            if parent_scope is not None:
+                row["applicability_scope"] = dict(parent_scope)
     representation_doc["representations"] = (
         [
             row
@@ -429,6 +464,8 @@ def _synthetic_policy_source_for_pipeline(
     multi_state_closure: bool = True,
     closure_binding_override: tuple[str, str, str] | None = None,
     complete_fact_inventory: bool = False,
+    active_policy_states: Sequence[str] = ("before", "after"),
+    architecture_repository: Path | None = None,
 ) -> tuple[Path, str]:
     """Build a closed test-only source; the optional positive fixture resolves all candidates."""
     source = root / "synthetic-policy-source"
@@ -454,7 +491,7 @@ def _synthetic_policy_source_for_pipeline(
     for policy in registry["policies"]:
         policy["scope"] = "source:app"
     if positive_active_policy_id is not None:
-        active[0]["applies_to_states"] = ["before", "after"]
+        active[0]["applies_to_states"] = list(active_policy_states)
     charter_path = source / "fitness/policy/authority-charter.json"
     charter = json.loads(charter_path.read_text(encoding="utf-8"))
     charter["version"] = "synthetic-integration-test-v1"
@@ -569,11 +606,18 @@ def _synthetic_policy_source_for_pipeline(
         }
         _write_json(source / f"fitness/policy/evidence/{evidence_id}.json", evidence)
     if complete_fact_inventory:
-        for fact_type in ("component.module_added", "component.module_removed"):
-            claim_id = f"SYNTHETIC_EMPTY_{fact_type.rsplit('.', maxsplit=1)[-1].upper()}_BEFORE"
-            evidence_id = (
-                f"SYNTHETIC_EMPTY_{fact_type.rsplit('.', maxsplit=1)[-1].upper()}_EVIDENCE"
-            )
+        if architecture_repository is None or before_revision is None:
+            raise ValueError("Complete synthetic module inventory requires both Git revisions")
+        before_modules = _synthetic_python_modules(architecture_repository, before_revision)
+        after_modules = _synthetic_python_modules(architecture_repository, after_revision)
+        module_deltas = {
+            "component.module_added": sorted(after_modules - before_modules),
+            "component.module_removed": sorted(before_modules - after_modules),
+        }
+        for fact_type, module_delta_value in module_deltas.items():
+            delta_suffix = fact_type.rsplit(".", maxsplit=1)[-1].upper()
+            claim_id = f"SYNTHETIC_MODULE_DELTA_{delta_suffix}_BEFORE"
+            evidence_id = f"SYNTHETIC_MODULE_DELTA_{delta_suffix}_EVIDENCE"
             claim = {
                 "id": claim_id,
                 "kind": "EXACT_ENUMERATION",
@@ -590,12 +634,12 @@ def _synthetic_policy_source_for_pipeline(
             _write_json(
                 source / f"fitness/policy/evidence/{evidence_id}.json",
                 {
-                    "fixture": "synthetic-empty-module-delta-v1",
+                    "fixture": "synthetic-exact-module-delta-v1",
                     "state": "before",
                     "fact_type": fact_type,
                     "scope": registry["scope"],
                     "architecture_revision": before_revision,
-                    "value": [],
+                    "value": module_delta_value,
                 },
             )
     _write_json(
@@ -603,6 +647,20 @@ def _synthetic_policy_source_for_pipeline(
         sorted(closure_claims, key=lambda claim: str(claim["id"])),
     )
     return source, "SYNTHETIC_POLICY_CLOSURE_AFTER"
+
+
+def _synthetic_python_modules(repository: Path, revision: str) -> set[str]:
+    paths = _git(repository, "ls-tree", "-r", "--name-only", revision, "--", "app").splitlines()
+    modules: set[str] = set()
+    for value in paths:
+        path = Path(value)
+        if path.suffix != ".py" or not path.parts or path.parts[0] != "app":
+            continue
+        parts = list(path.parts[1:-1]) + [path.stem]
+        if parts[-1] == "__init__":
+            parts.pop()
+        modules.add("app" if not parts else "app." + ".".join(parts))
+    return modules
 
 
 def _synthetic_completeness_verifier(
@@ -650,18 +708,47 @@ def _synthetic_completeness_verifier(
         and fact.get("state") == "after"
         and fact.get("scope") == claim.get("scope")
     ]
+    before_module_facts = [
+        fact
+        for fact in facts
+        if isinstance(fact, Mapping)
+        and fact.get("predicate") == "component.python_module_identity"
+        and fact.get("state") == "before"
+        and fact.get("scope") == claim.get("scope")
+    ]
+    after_module_facts = [
+        fact
+        for fact in facts
+        if isinstance(fact, Mapping)
+        and fact.get("predicate") == "component.python_module_identity"
+        and fact.get("state") == "after"
+        and fact.get("scope") == claim.get("scope")
+    ]
+    expected_module_delta: list[str] | None = None
+    if len(before_module_facts) == 1 and len(after_module_facts) == 1:
+        before_modules = set(before_module_facts[0].get("value", []))
+        after_modules = set(after_module_facts[0].get("value", []))
+        if claim.get("fact_type") == "component.module_added":
+            expected_module_delta = sorted(after_modules - before_modules)
+        elif claim.get("fact_type") == "component.module_removed":
+            expected_module_delta = sorted(before_modules - after_modules)
+    exact_module_delta = (
+        expected_module_delta is not None
+        and evidence.get("value") == expected_module_delta
+        and len(matching_facts) == 1
+        and matching_facts[0].get("value") == expected_module_delta
+    )
     return bool(
         claim.get("kind") == "EXACT_ENUMERATION"
         and state == "before"
-        and evidence.get("fixture") == "synthetic-empty-module-delta-v1"
+        and evidence.get("fixture") == "synthetic-exact-module-delta-v1"
         and evidence.get("state") == state
         and evidence.get("fact_type") == claim.get("fact_type")
         and evidence.get("scope") == claim.get("scope") == registry.get("scope")
         and evidence.get("architecture_revision")
         == claim.get("architecture_revision")
         == architecture.get("before_commit")
-        and architecture.get("before_tree") == architecture.get("after_tree")
-        and evidence.get("value") == []
+        and exact_module_delta
         and len(matching_facts) == 1
         and matching_facts[0].get("value") == evidence.get("value")
     )
@@ -882,11 +969,22 @@ def _synthetic_positive_bundle(
     multi_state_closure: bool = True,
     closure_binding_override: tuple[str, str, str] | None = None,
     architecture_noop: bool = False,
+    before_files: Mapping[str, bytes] | None = None,
+    after_files: Mapping[str, bytes] | None = None,
+    removed_after_paths: Sequence[str] = (),
+    complete_fact_inventory: bool | None = None,
+    active_policy_states: Sequence[str] = ("before", "after"),
+    parent_scope: Mapping[str, Any] | None = None,
+    template_scope: Mapping[str, Any] | None = None,
 ) -> tuple[Any, _SyntheticTrustContext, bytes]:
     repository, before_sha, after_sha, evaluator_artifact = (
         _synthetic_positive_architecture_repository(
             tmp_path,
             include_parent_representation=include_parent_representation,
+            before_files=before_files,
+            after_files=after_files,
+            removed_after_paths=removed_after_paths,
+            parent_scope=parent_scope,
         )
     )
     if architecture_noop:
@@ -900,7 +998,11 @@ def _synthetic_positive_bundle(
         positive_active_policy_id="POLICY_CANDIDATE_AC_LAYERING",
         multi_state_closure=multi_state_closure,
         closure_binding_override=closure_binding_override,
-        complete_fact_inventory=architecture_noop,
+        complete_fact_inventory=(
+            architecture_noop if complete_fact_inventory is None else complete_fact_inventory
+        ),
+        active_policy_states=active_policy_states,
+        architecture_repository=repository,
     )
     policy_bundle = tmp_path / "policy-bundles/synthetic-positive"
     package_policy_source_v3(policy_source, policy_bundle, "synthetic-positive-policy-v1")
@@ -926,7 +1028,9 @@ def _synthetic_positive_bundle(
                     "evaluator": "synthetic_scope_probe_v1",
                     "evaluator_artifact": template_artifact,
                     "covers": ["AC_LAYERING"],
-                    "applicability_scope": {"scope": "source:app"},
+                    "applicability_scope": dict(template_scope)
+                    if template_scope is not None
+                    else {"scope": "source:app"},
                     "evidence_contract": {"contract_id": "SYNTHETIC_SCOPE_PROBE_V1"},
                 },
             }

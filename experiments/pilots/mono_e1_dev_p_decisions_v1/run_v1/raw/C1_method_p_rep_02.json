@@ -1,0 +1,2281 @@
+{
+  "architecture_after_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+  "architecture_before_sha": "50a29c7f0f723fb45f65315683d0a36c3aabeb26",
+  "duration_ns": 456216708,
+  "experiment_id": "MONO_E1_DEV_P_DECISIONS_V1",
+  "input_bundle_sha256": "9c5abf4f69c29c5c6707660e8c869f1f88d27b8fc8c5b441efcc97e3336bdd7b",
+  "method_identity": {
+    "catalogs": {
+      "experiments/execution/contracts/fact_vocabulary_v1.json": "ba83520a5c73187459b2d07bf2a49140cd9feef6f55e5c88c746b6b93a4a0856",
+      "fitness/catalog/architectural-obligations.yaml": "8c5bd8fffe3bdb2af8fb85f8d0012bc34673f72866e52daed99fab96f9763011"
+    },
+    "files": {
+      "experiments/execution/tooling/contracts.py": "11c5e9f8bf8b07c4650e4164af79fa23056967f7074e84923e85aab363051d35",
+      "experiments/execution/tooling/errors.py": "25cd9f71060aa49d79ddb9f0f511bedba4b7779a8b33fd500a098bb442f2180d",
+      "experiments/execution/tooling/hashing.py": "e838b47dfa9958c442deac541a6c1c90907bf1d882bd72cca1dae077474aff18",
+      "experiments/execution/tooling/inputs.py": "e724476707e4927aaa5c03b85c0347bcf7f33f2cc87cc515b596394d70ce6031",
+      "experiments/execution/tooling/p_adaptation.py": "149579f43a13b246452dcdc15fbb0f9f549cf2fd4420fe98701fa14c8a50bc05",
+      "experiments/execution/tooling/p_adaptation_evidence.py": "706a768aeeb67e68ab9ceddf976da82471afe3510d11f9d86235f52ea08955cd",
+      "experiments/execution/tooling/p_applicability.py": "96725b5dedb4543895c4034b3f5f70c93f1f93b3718a04623e3215fb5e873681",
+      "experiments/execution/tooling/p_candidate.py": "485f7353944f629a79ec2f50b0cde70de9cc95ffc7dd6eb0047b0883ef282e12",
+      "experiments/execution/tooling/p_governance.py": "39bf05fccac7b3c62bf06baaaa4537d1a794b0f25476a7cd279d4bb17c1643da",
+      "experiments/execution/tooling/p_impact.py": "d914de3ae7f7ccd1192ba29263d825d66915e65f260981d3a9577fad7c5d5b73",
+      "experiments/execution/tooling/p_input_export_v2.py": "4546f5cc7c45aabc3d15210178256254153614212862b6487ad9b51cae8cee9a",
+      "experiments/execution/tooling/p_input_validation.py": "cb6f85be97be67314fc32d90da841451c09b10bfd35ba91a90bd94c211efff43",
+      "experiments/execution/tooling/p_operations.py": "780580c89bfb4d5ef66b32cf3d9c546843d105736bc2c65deb45cc3a9a3654f4",
+      "experiments/execution/tooling/p_policy_source_v3.py": "8642a02f0c13e972753080ab064c0194e00034586fe195350f513c79748da5ed",
+      "experiments/execution/tooling/p_semantic.py": "2aea36fa338473d624f58a1c653ab2f808e88c4dece931bb6df75ca71d76db9a",
+      "experiments/pilots/mono_e1_dev_p_decisions_v1/runner.py": "cba24862923b76bbaa7ebe1fd439d009ede7b673b71f4bd2a9cfebf86462e0b8",
+      "tests/integration/test_p_applicability_v3.py": "fb767f528859c52fdc137c2690c5093479463ab286ba248c075a57c148dc1c56"
+    },
+    "method_version": "P_GOVERNED_ADAPTATION_DEVELOPMENT_V1",
+    "scenario_catalog_sha256": "355895028989e1dcb4e02b53b5bbf1fb04ce4feff772643014112e66bd1a7f8f",
+    "scenario_schema_sha256": "87923430736554732a4603762764ffe1a2505c18b37b584fa5bf141e454807ca",
+    "schemas": {
+      "experiments/execution/schemas/applicability_ruleset_v1.schema.json": "b7c856b0f919102bfac2a6b1e8f0fa347a8c8afd29554b07d8280165ce029326",
+      "experiments/execution/schemas/architecture_policy_snapshot_v1_1.schema.json": "3c84ff3fc786c67ee54df4d0e08af4d29ff35f198047f4e6a2bfe0e0eb9f71ac",
+      "experiments/execution/schemas/architecture_policy_snapshot_v1_2.schema.json": "42362a4cd62b2e2ae2f0f45e99eead33d3fa14dab3978f955bde722499c57106",
+      "experiments/execution/schemas/evaluator_evidence.schema.json": "3ff83150d70023a9e8b0596766d206b850466facae4e36328c6eaa40b9fabc28",
+      "experiments/execution/schemas/method_input_v3_candidate.schema.json": "fbcee8570621127b8347bf600d0ed50d345abdb3b23cdf1dd41a5f419ad10181",
+      "experiments/execution/schemas/p_adaptation_evidence_v1.schema.json": "a3cc54b547c541cfd28c8ea875f2fba81c77bd69549722bc691e4746fed3b708",
+      "experiments/execution/schemas/p_adaptation_evidence_v2.schema.json": "4890acdad4d948a30d85cdc8bf6185760ffb60860efbd892bf0e7cf121426c0d",
+      "experiments/execution/schemas/p_adaptation_trace_v1.schema.json": "cbbd67320d50559824739a071dbb88e6478d31dbe406b63aea3353f77bdda0b4",
+      "experiments/execution/schemas/p_candidate_configuration_v1.schema.json": "cd13f69ce004dcdaa9cfe62e1f4e88e0c45f1aa9beaeefd63f705412324e512f",
+      "experiments/execution/schemas/p_coverage_assessment_v1.schema.json": "a46ce6fae2dd93d4847ec8ffdd57e7fa7f672eddd88354eb4147afab3371f0dc",
+      "experiments/execution/schemas/p_governance_decision_v1.schema.json": "b8ca9c89e71fa833856c3f95ace8bbe307e7b7562e4bf9fc51800a55932f4c8f",
+      "experiments/execution/schemas/p_impact_assessment_v1.schema.json": "330280d5363e3c72f239cad85761b57b1d14bbedab90536575ce60aca1ead427",
+      "experiments/execution/schemas/p_operation_plan_v1.schema.json": "47a932c8aca3764cf1adb2ac044c65cf4bfaeff5c16eff21c7cd9312dea42d74",
+      "experiments/execution/schemas/p_pair_assessment_v1.schema.json": "f19611ed2a0f031bae568cf23cd35951aedd2bbcbb76e13d117bba879257691c",
+      "experiments/execution/schemas/pilot02_method_input_profile_v1.schema.json": "21c7a049a6c2d8a74d42447472f2aaeeec57a2de901449b9d93927852d0d50f1",
+      "experiments/execution/schemas/pilot02_method_input_profile_v2.schema.json": "460af4333ad83db21e0fc88960f9add1fd9a7f3168bb2c5ddadf56524ac6256b"
+    }
+  },
+  "repetition": 2,
+  "result": {
+    "after_applicability": {
+      "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+      "architecture_state": "after",
+      "common_input_sha256": "c322e3bf55a7dd4ea49156268bb795f4e6ab064195b428987b4e91feeafc7229",
+      "engine_version": "P_APPLICABILITY_ENGINE_V1",
+      "fact_vocabulary_version": "FV_CORE_V1",
+      "input_validation": {
+        "authority_status": "VALID",
+        "completeness_status": "VALID",
+        "fact_status": "VALID",
+        "integrity_status": "VALID",
+        "reason_codes": [],
+        "schema_status": "VALID"
+      },
+      "policy_as_of": "2026-10-14T00:00:00Z",
+      "policy_bundle_sha256": "172f0985d14281b093f681f6318b053c3d6e33c6ea32edf29d21000e72147e42",
+      "policy_registry_version": "controlled-policy-pilot-candidates-v1",
+      "policy_source_revision": "synthetic-positive-policy-v1",
+      "results": [
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_AC_COMMUNICATION_POLICY",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_1",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "AC_COMMUNICATION_POLICY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_AC_DATA_OWNERSHIP",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_2",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "AC_DATA_OWNERSHIP",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_AC_DEPLOYMENT_TOPOLOGY",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_3",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "AC_DEPLOYMENT_TOPOLOGY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [
+            "POLICY_CANDIDATE_AC_LAYERING"
+          ],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_AC_LAYERING",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_4",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "AC_LAYERING",
+          "reason_codes": [
+            "APPLICABILITY_ACTIVE_PROVEN"
+          ],
+          "status": "ACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_AC_MODULE_GRAPH",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_5",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "AC_MODULE_GRAPH",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_AC_MODULE_STRUCTURE",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_6",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "AC_MODULE_STRUCTURE",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_AC_PUBLIC_API",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_7",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "AC_PUBLIC_API",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_AC_SERVICE_BOUNDARY",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_8",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "AC_SERVICE_BOUNDARY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_P_ASYNC_LAG",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_9",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "P_ASYNC_LAG",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_P_EXT_LATENCY",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_10",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "P_EXT_LATENCY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_P_REMOTE_LATENCY",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_11",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "P_REMOTE_LATENCY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_R_BUSINESS_FAILURE",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_12",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "R_BUSINESS_FAILURE",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_R_EVENT_DELIVERY",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_13",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "R_EVENT_DELIVERY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_R_HTTP_5XX",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_14",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "R_HTTP_5XX",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_R_IDEMPOTENCY",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_15",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "R_IDEMPOTENCY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_R_LOCAL_ATOMICITY",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_16",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "R_LOCAL_ATOMICITY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_R_READMODEL_CONVERGENCE",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_17",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "R_READMODEL_CONVERGENCE",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_R_REMOTE_DEPENDENCY",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_18",
+            "SYNTHETIC_CLOSURE_EVIDENCE_AFTER",
+            "SYNTHETIC_POLICY_CLOSURE_AFTER"
+          ],
+          "obligation_id": "R_REMOTE_DEPENDENCY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        }
+      ],
+      "ruleset_sha256": "b8166f5cf19966d6705d92a9b8adc457f17f0f0eb26ce0ebc92fb25baba7e7a8",
+      "ruleset_version": "AR_V1_CANDIDATE_PILOT_1",
+      "schema_version": 1
+    },
+    "before_applicability": {
+      "architecture_source_sha": "50a29c7f0f723fb45f65315683d0a36c3aabeb26",
+      "architecture_state": "before",
+      "common_input_sha256": "c322e3bf55a7dd4ea49156268bb795f4e6ab064195b428987b4e91feeafc7229",
+      "engine_version": "P_APPLICABILITY_ENGINE_V1",
+      "fact_vocabulary_version": "FV_CORE_V1",
+      "input_validation": {
+        "authority_status": "VALID",
+        "completeness_status": "VALID",
+        "fact_status": "VALID",
+        "integrity_status": "VALID",
+        "reason_codes": [],
+        "schema_status": "VALID"
+      },
+      "policy_as_of": "2026-10-14T00:00:00Z",
+      "policy_bundle_sha256": "172f0985d14281b093f681f6318b053c3d6e33c6ea32edf29d21000e72147e42",
+      "policy_registry_version": "controlled-policy-pilot-candidates-v1",
+      "policy_source_revision": "synthetic-positive-policy-v1",
+      "results": [
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "AC_COMMUNICATION_POLICY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "AC_DATA_OWNERSHIP",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "AC_DEPLOYMENT_TOPOLOGY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [
+            "POLICY_CANDIDATE_AC_LAYERING"
+          ],
+          "evidence_refs": [
+            "CHARTER",
+            "POLICY_CANDIDATE_AC_LAYERING",
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_4",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "AC_LAYERING",
+          "reason_codes": [
+            "APPLICABILITY_ACTIVE_PROVEN"
+          ],
+          "status": "ACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "AC_MODULE_GRAPH",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "AC_MODULE_STRUCTURE",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "AC_PUBLIC_API",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "AC_SERVICE_BOUNDARY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "P_ASYNC_LAG",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "P_EXT_LATENCY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "P_REMOTE_LATENCY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "R_BUSINESS_FAILURE",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "R_EVENT_DELIVERY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "R_HTTP_5XX",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "R_IDEMPOTENCY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "R_LOCAL_ATOMICITY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "R_READMODEL_CONVERGENCE",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        },
+        {
+          "condition_ids": [],
+          "contributing_policy_ids": [],
+          "evidence_refs": [
+            "CHARTER",
+            "REGISTRY",
+            "SYNTHETIC_CLOSURE_EVIDENCE_BEFORE",
+            "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+          ],
+          "obligation_id": "R_REMOTE_DEPENDENCY",
+          "reason_codes": [
+            "APPLICABILITY_INACTIVE_PROVEN",
+            "NO_APPLICABLE_POLICY_PROVEN"
+          ],
+          "status": "INACTIVE",
+          "unresolved_refs": []
+        }
+      ],
+      "ruleset_sha256": "b8166f5cf19966d6705d92a9b8adc457f17f0f0eb26ce0ebc92fb25baba7e7a8",
+      "ruleset_version": "AR_V1_CANDIDATE_PILOT_1",
+      "schema_version": 1
+    },
+    "bundle_provenance": "VERIFIED_V3",
+    "candidate": {
+      "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+      "candidate_validation": {
+        "evidence_refs": [
+          "synthetic/evaluators/scope_probe.py"
+        ],
+        "reason_codes": [],
+        "status": "valid"
+      },
+      "changes": [
+        {
+          "artifact_sha256": "724d5cd6441378a22a84c4191c810dd1b01813b4b7412f31cccb13ce156a5f42",
+          "evidence_refs": [
+            "synthetic/evidence/current.json"
+          ],
+          "incremental_cost": 0.0,
+          "operation": "replace",
+          "payload": {
+            "applicability_scope": {
+              "scope": "source:app",
+              "targets": [
+                "synthetic/orders_v2.py"
+              ]
+            },
+            "covers": [
+              "AC_LAYERING"
+            ],
+            "criterion": "architecture_compliance",
+            "evaluator": "synthetic_scope_probe_v1",
+            "evaluator_artifact": {
+              "path": "synthetic/evaluators/scope_probe.py",
+              "sha256": "724d5cd6441378a22a84c4191c810dd1b01813b4b7412f31cccb13ce156a5f42"
+            },
+            "evidence_contract": {
+              "contract_id": "SYNTHETIC_SCOPE_PROBE_V1"
+            },
+            "id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "stage": "ci"
+          },
+          "reason_codes": [
+            "EXACT_PAIR_INADEQUACY_PROVEN"
+          ],
+          "target_id": "REP_A0_ARCH_CI_LAYERING",
+          "target_type": "representation"
+        }
+      ],
+      "configuration_version": "p-candidate-a10d0901981d8a6b3d4cd3cac18b0687",
+      "impact_assessment_sha256": "b13951edcb90434d8097ffbb497bacb3dec8cb91e0669a8d27d5f46b8638077b",
+      "input_bundle_sha256": "9c5abf4f69c29c5c6707660e8c869f1f88d27b8fc8c5b441efcc97e3336bdd7b",
+      "method_id": "P",
+      "method_version": "P_GOVERNED_ADAPTATION_DEVELOPMENT_V1",
+      "parent_configuration": {
+        "path": "fitness/a0-representations.yaml",
+        "sha256": "e25f00ded79a4a1b8de39cbaec5258a1718edefbee5e98fc907df96b4c08bfd2"
+      },
+      "policy_bundle_sha256": "172f0985d14281b093f681f6318b053c3d6e33c6ea32edf29d21000e72147e42",
+      "policy_ruleset_sha256": "b1b679a9275d226c0bc85b8dc7d1f19c91addf8fa9acbc577f1c944adec09df7",
+      "policy_source_revision": "synthetic-positive-policy-v1",
+      "representations": [
+        {
+          "active": false,
+          "applicability_scope": {
+            "scope": "source:app",
+            "targets": [
+              "synthetic/orders_legacy.py"
+            ]
+          },
+          "covers": [
+            "AC_LAYERING"
+          ],
+          "criterion": "architecture_compliance",
+          "evaluator": "synthetic_scope_probe_v1",
+          "evaluator_artifact": {
+            "path": "synthetic/evaluators/scope_probe.py",
+            "sha256": "724d5cd6441378a22a84c4191c810dd1b01813b4b7412f31cccb13ce156a5f42"
+          },
+          "evidence_contract": {
+            "contract_id": "SYNTHETIC_SCOPE_PROBE_V1"
+          },
+          "id": "REP_A0_ARCH_CI_LAYERING",
+          "stage": "ci"
+        },
+        {
+          "active": true,
+          "applicability_scope": {
+            "scope": "source:app",
+            "targets": [
+              "synthetic/orders_v2.py"
+            ]
+          },
+          "covers": [
+            "AC_LAYERING"
+          ],
+          "criterion": "architecture_compliance",
+          "evaluator": "synthetic_scope_probe_v1",
+          "evaluator_artifact": {
+            "path": "synthetic/evaluators/scope_probe.py",
+            "sha256": "724d5cd6441378a22a84c4191c810dd1b01813b4b7412f31cccb13ce156a5f42"
+          },
+          "evidence_contract": {
+            "contract_id": "SYNTHETIC_SCOPE_PROBE_V1"
+          },
+          "id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+          "stage": "ci"
+        }
+      ],
+      "schema_version": 1,
+      "soft_parameter_overrides": []
+    },
+    "candidate_coverage": {
+      "applicability_assessment_sha256": "ff40d0a9cf1ab4e0af4730e5ddfe7b734031d6a007f06947d2182cf8749bc085",
+      "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+      "assessment_sha256": "bf9b7da81ecd91c8e80e8ef493a890ec8294e0685af9ef84a2fe737379810b82",
+      "mandatory_covered": 1,
+      "mandatory_total": 1,
+      "obligations": [
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "AC_COMMUNICATION_POLICY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "AC_DATA_OWNERSHIP",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "AC_DEPLOYMENT_TOPOLOGY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "ACTIVE",
+          "covered_stages": [
+            "ci"
+          ],
+          "mandatory": true,
+          "obligation_id": "AC_LAYERING",
+          "reason_codes": [],
+          "required_stages": [
+            "ci"
+          ],
+          "status": "COVERED",
+          "valid_pair_ids": [
+            "REP_SYNTHETIC_ARCH_CI_LAYERING"
+          ]
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "AC_MODULE_GRAPH",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "AC_MODULE_STRUCTURE",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "AC_PUBLIC_API",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "AC_SERVICE_BOUNDARY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "P_ASYNC_LAG",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "P_EXT_LATENCY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "P_REMOTE_LATENCY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "R_BUSINESS_FAILURE",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "R_EVENT_DELIVERY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "R_HTTP_5XX",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "R_IDEMPOTENCY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "R_LOCAL_ATOMICITY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "R_READMODEL_CONVERGENCE",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "R_REMOTE_DEPENDENCY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        }
+      ],
+      "policy_bundle_sha256": "172f0985d14281b093f681f6318b053c3d6e33c6ea32edf29d21000e72147e42",
+      "policy_source_revision": "synthetic-positive-policy-v1",
+      "reason_codes": [],
+      "ruleset_sha256": "b8166f5cf19966d6705d92a9b8adc457f17f0f0eb26ce0ebc92fb25baba7e7a8",
+      "schema_version": 1,
+      "status": "COMPLETE"
+    },
+    "candidate_pairs": [
+      {
+        "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+        "assessment_sha256": "36e3c2213ebc767383bba7fea62020840d676e1a8974bc9667d5bfdbc9b22ee1",
+        "compliance_status": "COMPLIANT",
+        "criterion_id": "architecture_compliance",
+        "evaluator_artifact_sha256": "724d5cd6441378a22a84c4191c810dd1b01813b4b7412f31cccb13ce156a5f42",
+        "evaluator_evidence_sha256": "25abfceda1b65d13f4ec3fd9fa84a53e37e30080f81b85bdff1196215f83e4e8",
+        "evidence_artifacts": [
+          {
+            "path": "synthetic/evidence/successor.json",
+            "sha256": "ff73b1b3b2faa7d17c6151596e84289f377502f9150d978b7abce5a6d9bb53fe"
+          }
+        ],
+        "evidence_refs": [
+          "P_TRACEABILITY",
+          "synthetic/evidence/successor.json"
+        ],
+        "obligation_id": "AC_LAYERING",
+        "reason_codes": [],
+        "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+        "schema_version": 1,
+        "semantic_proof_status": "VALID",
+        "semantic_verifier_id": "synthetic_adaptation_test_verifier_v1",
+        "stage": "ci",
+        "status": "VALID"
+      }
+    ],
+    "candidate_sha256": "3dea2ef4f26da28a1a4e15e77d588211e4cb012eee65af605bd39070941c9511",
+    "candidate_validation": {
+      "evidence_refs": [
+        "synthetic/evaluators/scope_probe.py"
+      ],
+      "reason_codes": [],
+      "status": "valid"
+    },
+    "current_coverage": {
+      "applicability_assessment_sha256": "ff40d0a9cf1ab4e0af4730e5ddfe7b734031d6a007f06947d2182cf8749bc085",
+      "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+      "assessment_sha256": "e66954b9978958c4563c98b7f0631caa81793fe3c85d967feb93869c517cfd6a",
+      "mandatory_covered": 0,
+      "mandatory_total": 1,
+      "obligations": [
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "AC_COMMUNICATION_POLICY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "AC_DATA_OWNERSHIP",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "AC_DEPLOYMENT_TOPOLOGY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "ACTIVE",
+          "covered_stages": [],
+          "mandatory": true,
+          "obligation_id": "AC_LAYERING",
+          "reason_codes": [
+            "REQUIRED_STAGE_NOT_COVERED"
+          ],
+          "required_stages": [
+            "ci"
+          ],
+          "status": "NOT_DEMONSTRATED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "AC_MODULE_GRAPH",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "AC_MODULE_STRUCTURE",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "AC_PUBLIC_API",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "AC_SERVICE_BOUNDARY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "P_ASYNC_LAG",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "P_EXT_LATENCY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "P_REMOTE_LATENCY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "R_BUSINESS_FAILURE",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "R_EVENT_DELIVERY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "R_HTTP_5XX",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "R_IDEMPOTENCY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "R_LOCAL_ATOMICITY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "R_READMODEL_CONVERGENCE",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        },
+        {
+          "applicability_status": "INACTIVE",
+          "covered_stages": [],
+          "mandatory": false,
+          "obligation_id": "R_REMOTE_DEPENDENCY",
+          "reason_codes": [],
+          "required_stages": [],
+          "status": "NOT_REQUIRED",
+          "valid_pair_ids": []
+        }
+      ],
+      "policy_bundle_sha256": "172f0985d14281b093f681f6318b053c3d6e33c6ea32edf29d21000e72147e42",
+      "policy_source_revision": "synthetic-positive-policy-v1",
+      "reason_codes": [
+        "MANDATORY_COVERAGE_INCOMPLETE",
+        "REQUIRED_STAGE_NOT_COVERED"
+      ],
+      "ruleset_sha256": "b8166f5cf19966d6705d92a9b8adc457f17f0f0eb26ce0ebc92fb25baba7e7a8",
+      "schema_version": 1,
+      "status": "INCOMPLETE"
+    },
+    "current_pairs": [
+      {
+        "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+        "assessment_sha256": "833b7170f80867ee2f100213f3926384696c82a709c252fb904a2c64fcaa3a06",
+        "compliance_status": "UNKNOWN",
+        "criterion_id": "architecture_compliance",
+        "evaluator_artifact_sha256": "724d5cd6441378a22a84c4191c810dd1b01813b4b7412f31cccb13ce156a5f42",
+        "evaluator_evidence_sha256": "fd8ee8a8fe53e614dce65a7cce3fe59daca3489a80caff33b011336d2b7a0671",
+        "evidence_artifacts": [
+          {
+            "path": "synthetic/evidence/current.json",
+            "sha256": "710a7e746088ef48a03c9a02d407086f72d053d15f6f717140aed0c4ba55927e"
+          }
+        ],
+        "evidence_refs": [
+          "synthetic/evidence/current.json"
+        ],
+        "obligation_id": "AC_LAYERING",
+        "reason_codes": [
+          "COMPLIANCE_RESULT_UNDETERMINED",
+          "SYNTHETIC_REQUIRED_SCOPE_MISSING",
+          "VACUOUS_SUCCESS"
+        ],
+        "representation_id": "REP_A0_ARCH_CI_LAYERING",
+        "schema_version": 1,
+        "semantic_proof_status": "INVALID",
+        "semantic_verifier_id": "synthetic_adaptation_test_verifier_v1",
+        "stage": "ci",
+        "status": "INVALID"
+      }
+    ],
+    "evidence_trust_scope": "TEST_ONLY",
+    "execution_status": "COMPLETED",
+    "governance": {
+      "algorithm_version": "P_GOVERNED_ADAPTATION_V1",
+      "architecture_after_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+      "architecture_before_sha": "50a29c7f0f723fb45f65315683d0a36c3aabeb26",
+      "blocking_obligations": [],
+      "blocking_pairs": [],
+      "candidate_configuration_sha256": "3dea2ef4f26da28a1a4e15e77d588211e4cb012eee65af605bd39070941c9511",
+      "cost_verdict": "PASS",
+      "coverage_assessment_sha256": "bf9b7da81ecd91c8e80e8ef493a890ec8294e0685af9ef84a2fe737379810b82",
+      "decision_sha256": "a9edf2af2a8299415c0b96ab01b728ddb27ccd7c400262a56196d9162bd72a84",
+      "evidence_refs": [
+        "ARCH_AFTER",
+        "ARCH_BEFORE",
+        "CHARTER",
+        "SYNTHETIC_APPROVAL_1",
+        "SYNTHETIC_APPROVAL_10",
+        "SYNTHETIC_APPROVAL_11",
+        "SYNTHETIC_APPROVAL_12",
+        "SYNTHETIC_APPROVAL_13",
+        "SYNTHETIC_APPROVAL_14",
+        "SYNTHETIC_APPROVAL_15",
+        "SYNTHETIC_APPROVAL_16",
+        "SYNTHETIC_APPROVAL_17",
+        "SYNTHETIC_APPROVAL_18",
+        "SYNTHETIC_APPROVAL_2",
+        "SYNTHETIC_APPROVAL_3",
+        "SYNTHETIC_APPROVAL_4",
+        "SYNTHETIC_APPROVAL_5",
+        "SYNTHETIC_APPROVAL_6",
+        "SYNTHETIC_APPROVAL_7",
+        "SYNTHETIC_APPROVAL_8",
+        "SYNTHETIC_APPROVAL_9",
+        "SYNTHETIC_MODULE_DELTA_MODULE_ADDED_BEFORE",
+        "SYNTHETIC_MODULE_DELTA_MODULE_REMOVED_BEFORE",
+        "SYNTHETIC_POLICY_CLOSURE_AFTER",
+        "SYNTHETIC_POLICY_CLOSURE_BEFORE"
+      ],
+      "impact_assessment_sha256": "b13951edcb90434d8097ffbb497bacb3dec8cb91e0669a8d27d5f46b8638077b",
+      "input_bundle_sha256": "9c5abf4f69c29c5c6707660e8c869f1f88d27b8fc8c5b441efcc97e3336bdd7b",
+      "invariant_verdicts": {
+        "INV-01": "PASS",
+        "INV-02": "PASS",
+        "INV-03": "PASS",
+        "INV-04": "PASS",
+        "INV-05": "PASS",
+        "INV-06": "PASS",
+        "INV-07": "PASS",
+        "INV-08": "PASS",
+        "INV-09": "PASS",
+        "INV-10": "PASS",
+        "INV-11": "PASS",
+        "INV-12": "PASS"
+      },
+      "method_version": "P_GOVERNED_ADAPTATION_DEVELOPMENT_V1",
+      "operations": [
+        {
+          "artifact_sha256": "724d5cd6441378a22a84c4191c810dd1b01813b4b7412f31cccb13ce156a5f42",
+          "evidence_refs": [
+            "synthetic/evidence/current.json"
+          ],
+          "incremental_cost": 0.0,
+          "operation": "replace",
+          "payload": {
+            "applicability_scope": {
+              "scope": "source:app",
+              "targets": [
+                "synthetic/orders_v2.py"
+              ]
+            },
+            "covers": [
+              "AC_LAYERING"
+            ],
+            "criterion": "architecture_compliance",
+            "evaluator": "synthetic_scope_probe_v1",
+            "evaluator_artifact": {
+              "path": "synthetic/evaluators/scope_probe.py",
+              "sha256": "724d5cd6441378a22a84c4191c810dd1b01813b4b7412f31cccb13ce156a5f42"
+            },
+            "evidence_contract": {
+              "contract_id": "SYNTHETIC_SCOPE_PROBE_V1"
+            },
+            "id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "stage": "ci"
+          },
+          "reason_codes": [
+            "EXACT_PAIR_INADEQUACY_PROVEN"
+          ],
+          "target_id": "REP_A0_ARCH_CI_LAYERING",
+          "target_type": "representation"
+        }
+      ],
+      "parent_configuration_sha256": "e25f00ded79a4a1b8de39cbaec5258a1718edefbee5e98fc907df96b4c08bfd2",
+      "policy_ruleset_sha256": "b1b679a9275d226c0bc85b8dc7d1f19c91addf8fa9acbc577f1c944adec09df7",
+      "policy_source_revision": "synthetic-positive-policy-v1",
+      "reason_codes": [],
+      "result": "ACCEPT",
+      "schema_version": 1
+    },
+    "impact": {
+      "algorithm_version": "P_IMPACT_V1",
+      "architecture_after_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+      "architecture_before_sha": "50a29c7f0f723fb45f65315683d0a36c3aabeb26",
+      "assessment_sha256": "b13951edcb90434d8097ffbb497bacb3dec8cb91e0669a8d27d5f46b8638077b",
+      "changes": [
+        {
+          "change_id": "fact:component.python_module_identity:app:source:app:source:app",
+          "change_kind": "VALUE_CHANGED",
+          "entity_id": "FV01_AFTER",
+          "entity_kind": "fact",
+          "evidence_refs": [
+            "ARCH_AFTER",
+            "ARCH_BEFORE"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": "98f097c06db5f90ce82406cb93c3c0dec4753a6e2a9e46672306212468d73088",
+          "new_version": "ARCH_AFTER=d44447a13102a8a7c5691cdd06f0e0834cfa995886042acb4fc34cfef22bcf18",
+          "old_scope": "source:app",
+          "old_value_sha256": "193c7a6a8f88ae6785798405c67e77785e9ad59985bd7c86af4e4fdc2a0be1ab",
+          "old_version": "ARCH_BEFORE=c46d78afbe544052cc8d3306da4551aef1c91fd1bc75b869c5bfee99868d63ed",
+          "predicate": "component.python_module_identity",
+          "reason_codes": [
+            "FACT_VALUE_CHANGED"
+          ],
+          "subject": "app"
+        },
+        {
+          "change_id": "fact:component.module_added:app:-:source:app",
+          "change_kind": "ADDED",
+          "entity_id": "FV02_MODULES_ADDED",
+          "entity_kind": "fact",
+          "evidence_refs": [
+            "ARCH_AFTER",
+            "ARCH_BEFORE"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": "a4d54f2c81aac2adf5386817f033e5a202edb81cd8d9738cf2f1ac9d0e0c3eb8",
+          "new_version": "ARCH_AFTER=d44447a13102a8a7c5691cdd06f0e0834cfa995886042acb4fc34cfef22bcf18,ARCH_BEFORE=c46d78afbe544052cc8d3306da4551aef1c91fd1bc75b869c5bfee99868d63ed",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": null,
+          "predicate": "component.module_added",
+          "reason_codes": [
+            "FACT_ADDED_WITH_SCOPED_COMPLETENESS"
+          ],
+          "subject": "app"
+        },
+        {
+          "change_id": "fact:component.module_removed:app:-:source:app",
+          "change_kind": "ADDED",
+          "entity_id": "FV03_MODULES_REMOVED",
+          "entity_kind": "fact",
+          "evidence_refs": [
+            "ARCH_AFTER",
+            "ARCH_BEFORE"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": "968453b8e175f4c774af64ce0cfd382092575eba7b16e1759f9f060ef2369e83",
+          "new_version": "ARCH_AFTER=d44447a13102a8a7c5691cdd06f0e0834cfa995886042acb4fc34cfef22bcf18,ARCH_BEFORE=c46d78afbe544052cc8d3306da4551aef1c91fd1bc75b869c5bfee99868d63ed",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": null,
+          "predicate": "component.module_removed",
+          "reason_codes": [
+            "FACT_ADDED_WITH_SCOPED_COMPLETENESS"
+          ],
+          "subject": "app"
+        },
+        {
+          "change_id": "obligation:AC_COMMUNICATION_POLICY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "AC_COMMUNICATION_POLICY",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "INACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "INACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "obligation:AC_DATA_OWNERSHIP",
+          "change_kind": "UNCHANGED",
+          "entity_id": "AC_DATA_OWNERSHIP",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "INACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "INACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "obligation:AC_DEPLOYMENT_TOPOLOGY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "AC_DEPLOYMENT_TOPOLOGY",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "INACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "INACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "obligation:AC_LAYERING",
+          "change_kind": "UNCHANGED",
+          "entity_id": "AC_LAYERING",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "ACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "ACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "obligation:AC_MODULE_GRAPH",
+          "change_kind": "UNCHANGED",
+          "entity_id": "AC_MODULE_GRAPH",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "INACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "INACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "obligation:AC_MODULE_STRUCTURE",
+          "change_kind": "UNCHANGED",
+          "entity_id": "AC_MODULE_STRUCTURE",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "INACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "INACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "obligation:AC_PUBLIC_API",
+          "change_kind": "UNCHANGED",
+          "entity_id": "AC_PUBLIC_API",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "INACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "INACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "obligation:AC_SERVICE_BOUNDARY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "AC_SERVICE_BOUNDARY",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "INACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "INACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "obligation:P_ASYNC_LAG",
+          "change_kind": "UNCHANGED",
+          "entity_id": "P_ASYNC_LAG",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "INACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "INACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "obligation:P_EXT_LATENCY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "P_EXT_LATENCY",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "INACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "INACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "obligation:P_REMOTE_LATENCY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "P_REMOTE_LATENCY",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "INACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "INACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "obligation:R_BUSINESS_FAILURE",
+          "change_kind": "UNCHANGED",
+          "entity_id": "R_BUSINESS_FAILURE",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "INACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "INACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "obligation:R_EVENT_DELIVERY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "R_EVENT_DELIVERY",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "INACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "INACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "obligation:R_HTTP_5XX",
+          "change_kind": "UNCHANGED",
+          "entity_id": "R_HTTP_5XX",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "INACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "INACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "obligation:R_IDEMPOTENCY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "R_IDEMPOTENCY",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "INACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "INACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "obligation:R_LOCAL_ATOMICITY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "R_LOCAL_ATOMICITY",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "INACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "INACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "obligation:R_READMODEL_CONVERGENCE",
+          "change_kind": "UNCHANGED",
+          "entity_id": "R_READMODEL_CONVERGENCE",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "INACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "INACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "obligation:R_REMOTE_DEPENDENCY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "R_REMOTE_DEPENDENCY",
+          "entity_kind": "obligation",
+          "evidence_refs": [],
+          "new_scope": null,
+          "new_value_sha256": null,
+          "new_version": "INACTIVE",
+          "old_scope": null,
+          "old_value_sha256": null,
+          "old_version": "INACTIVE",
+          "predicate": null,
+          "reason_codes": [
+            "APPLICABILITY_STATE_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_AC_COMMUNICATION_POLICY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_AC_COMMUNICATION_POLICY",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_1"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_1=3a13d9594b96d8b6d97016afd38c7f7efbcb9b274c04793ec895b9ab1c27b73c:9428f536eed2555898b4cff715d37cde4f6414d9439bbb06baad12f4f4ecfa39",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_1=3a13d9594b96d8b6d97016afd38c7f7efbcb9b274c04793ec895b9ab1c27b73c:9428f536eed2555898b4cff715d37cde4f6414d9439bbb06baad12f4f4ecfa39",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_AC_DATA_OWNERSHIP",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_AC_DATA_OWNERSHIP",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_2"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_2=8a1099e195e7a37072b19f0c822c3c4571195552a51cc22685988307d8f63cbf:eea19f441b27339420e28fc49e9b467f3573021dad2a5b81ad173aa0018d5013",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_2=8a1099e195e7a37072b19f0c822c3c4571195552a51cc22685988307d8f63cbf:eea19f441b27339420e28fc49e9b467f3573021dad2a5b81ad173aa0018d5013",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_AC_DEPLOYMENT_TOPOLOGY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_AC_DEPLOYMENT_TOPOLOGY",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_3"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_3=9074113a7d3db936138862de73b523f16ba733bc3d730c61b816a13e92a60151:c35c2e719102148c62bd1d29b4fb57f9f5a509cc2df4c1f58ef82f35ed5480d1",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_3=9074113a7d3db936138862de73b523f16ba733bc3d730c61b816a13e92a60151:c35c2e719102148c62bd1d29b4fb57f9f5a509cc2df4c1f58ef82f35ed5480d1",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_AC_LAYERING",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_AC_LAYERING",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_4"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "APPROVED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_4=050bcebe188784aeaf10710978f95983121416e7464b487ab0598e5af4bec4a7:178defdde440f5d22bc0f90e482f8149bc8264c57ea3859b9fa2e66a6f88fcbf",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "APPROVED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_4=050bcebe188784aeaf10710978f95983121416e7464b487ab0598e5af4bec4a7:178defdde440f5d22bc0f90e482f8149bc8264c57ea3859b9fa2e66a6f88fcbf",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_AC_MODULE_GRAPH",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_AC_MODULE_GRAPH",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_5"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_5=47dc46b6fbc55955aeef2118e79a88f8c2ba67718d039242e3b08685b70fe950:2feac313f81922ff20ee9b06a2672deb6b233a7c78de2a3d1a22e53f87306f0f",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_5=47dc46b6fbc55955aeef2118e79a88f8c2ba67718d039242e3b08685b70fe950:2feac313f81922ff20ee9b06a2672deb6b233a7c78de2a3d1a22e53f87306f0f",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_AC_MODULE_STRUCTURE",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_AC_MODULE_STRUCTURE",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_6"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_6=4486865e7ab6d76b0de78304d330ac17fae048ee4eceff61bdc78b359aeb954a:902e89798b4225d8febe5990a694919a5c13e6392087efb4e459d5a456f696e7",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_6=4486865e7ab6d76b0de78304d330ac17fae048ee4eceff61bdc78b359aeb954a:902e89798b4225d8febe5990a694919a5c13e6392087efb4e459d5a456f696e7",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_AC_PUBLIC_API",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_AC_PUBLIC_API",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_7"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_7=b85b8720d31edc2e2e77608c3d7e98c68d0154787755d58ba1353042f1cbf363:0908c3740a787329b197ca3d3dea621e07a1021d4d1a74e4d5725e83a6ba2fa9",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_7=b85b8720d31edc2e2e77608c3d7e98c68d0154787755d58ba1353042f1cbf363:0908c3740a787329b197ca3d3dea621e07a1021d4d1a74e4d5725e83a6ba2fa9",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_AC_SERVICE_BOUNDARY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_AC_SERVICE_BOUNDARY",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_8"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_8=c24d573bd07c7530954e5ab3e34eb1ef9d5a76487d1d2bfc6cd8a1570317a997:19de80acec8c3ee9cf7856cee7d70e68db3df71463ba2ff326f0ef79fc6f6809",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_8=c24d573bd07c7530954e5ab3e34eb1ef9d5a76487d1d2bfc6cd8a1570317a997:19de80acec8c3ee9cf7856cee7d70e68db3df71463ba2ff326f0ef79fc6f6809",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_P_ASYNC_LAG",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_P_ASYNC_LAG",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_9"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_9=2a256932001494ae28df64286f4f64b0510e191f1690a9aaeb7902fca9552eb8:7e16ed13d3e9b5d46b45a6a88b9d08c7828501e45092a50043cb1fd025e54d7c",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_9=2a256932001494ae28df64286f4f64b0510e191f1690a9aaeb7902fca9552eb8:7e16ed13d3e9b5d46b45a6a88b9d08c7828501e45092a50043cb1fd025e54d7c",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_P_EXT_LATENCY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_P_EXT_LATENCY",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_10"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_10=b99a677072e8ae7c3cd5abb1a8631ed0eb786d472bff4de3e94cd811c71c8546:19cc2f30dc7bc4d709fc1fd363c60c5564646d8822ee6784bfe0e073e3acc0a3",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_10=b99a677072e8ae7c3cd5abb1a8631ed0eb786d472bff4de3e94cd811c71c8546:19cc2f30dc7bc4d709fc1fd363c60c5564646d8822ee6784bfe0e073e3acc0a3",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_P_REMOTE_LATENCY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_P_REMOTE_LATENCY",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_11"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_11=0d4e2b6413447b5e62b4346f32451e106670ff155ad4d9c757fe8af2ccc6eeb8:051ac26741c2755271726259e2419bc95c6c48bb270b268a9820ce807f9ec389",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_11=0d4e2b6413447b5e62b4346f32451e106670ff155ad4d9c757fe8af2ccc6eeb8:051ac26741c2755271726259e2419bc95c6c48bb270b268a9820ce807f9ec389",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_R_BUSINESS_FAILURE",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_R_BUSINESS_FAILURE",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_12"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_12=e81b1ab448b2eb63f5f5ba2c803d7b35caba7b1166e8a08cb9571c43430953f1:e6b9683aa0b5aea3488b63725c7a2a0b0ec5688cf25851545d919691e1861781",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_12=e81b1ab448b2eb63f5f5ba2c803d7b35caba7b1166e8a08cb9571c43430953f1:e6b9683aa0b5aea3488b63725c7a2a0b0ec5688cf25851545d919691e1861781",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_R_EVENT_DELIVERY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_R_EVENT_DELIVERY",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_13"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_13=b42f19621fc656c02f39e1e3acf00cc3bf26cbcfb4feb168e12931c6a9eb7e2b:5eb4346fb490bfc99e518e4d28069a9812f8ce13fc8b2a6935d5ae791bac96b9",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_13=b42f19621fc656c02f39e1e3acf00cc3bf26cbcfb4feb168e12931c6a9eb7e2b:5eb4346fb490bfc99e518e4d28069a9812f8ce13fc8b2a6935d5ae791bac96b9",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_R_HTTP_5XX",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_R_HTTP_5XX",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_14"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_14=c5d603397f11a4a2d6b089e7c6209d76c4db84a783342c9ba15e093c4829ff18:7bde7371ae2d2b3e37df2cf249244a8e09384418f6afef32cacd17844aa7cd35",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_14=c5d603397f11a4a2d6b089e7c6209d76c4db84a783342c9ba15e093c4829ff18:7bde7371ae2d2b3e37df2cf249244a8e09384418f6afef32cacd17844aa7cd35",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_R_IDEMPOTENCY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_R_IDEMPOTENCY",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_15"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_15=57e53793d8f207552adb5231778008b50c3876e7f540d75af76358eda11a0539:3d73415df739994d7bddd616cec87edca6c97c18069453b67414a3937431c577",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_15=57e53793d8f207552adb5231778008b50c3876e7f540d75af76358eda11a0539:3d73415df739994d7bddd616cec87edca6c97c18069453b67414a3937431c577",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_R_LOCAL_ATOMICITY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_R_LOCAL_ATOMICITY",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_16"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_16=2dd894edd089afbc8d7ce659b41239a6969c42d2dc1609f90aeff848088e1a0d:6461a4d835389e56181642d33adc6d51862ccc14a5aca6f4a9a31af4c6580526",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_16=2dd894edd089afbc8d7ce659b41239a6969c42d2dc1609f90aeff848088e1a0d:6461a4d835389e56181642d33adc6d51862ccc14a5aca6f4a9a31af4c6580526",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_R_READMODEL_CONVERGENCE",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_R_READMODEL_CONVERGENCE",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_17"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_17=da51fc9421a7d4c5dacf05349a3c8b527fc974233a47c19434f80bc119cb5a4e:3114153738e77262c21b33aa84a3941d1a05e759090926e229d48240310b21a6",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_17=da51fc9421a7d4c5dacf05349a3c8b527fc974233a47c19434f80bc119cb5a4e:3114153738e77262c21b33aa84a3941d1a05e759090926e229d48240310b21a6",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        },
+        {
+          "change_id": "policy:POLICY_CANDIDATE_R_REMOTE_DEPENDENCY",
+          "change_kind": "UNCHANGED",
+          "entity_id": "POLICY_CANDIDATE_R_REMOTE_DEPENDENCY",
+          "entity_kind": "policy",
+          "evidence_refs": [
+            "REGISTRY",
+            "SYNTHETIC_APPROVAL_18"
+          ],
+          "new_scope": "source:app",
+          "new_value_sha256": null,
+          "new_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_18=a9f1654b213b0c0c9054b72a5dbcbd4c3fcf6b11539cbbdb6007ccafa52804c4:f13efa6877a5de46ff46826bbba53c55211a09ec6bacdb9822748227bbd24da1",
+          "old_scope": "source:app",
+          "old_value_sha256": null,
+          "old_version": "REVOKED:2026-10-14T00:00:00Z:REGISTRY=68222dcfecffe356e7b752b5408a68fa11ae14127db4a4c982a6ad3c51663ca8,SYNTHETIC_APPROVAL_18=a9f1654b213b0c0c9054b72a5dbcbd4c3fcf6b11539cbbdb6007ccafa52804c4:f13efa6877a5de46ff46826bbba53c55211a09ec6bacdb9822748227bbd24da1",
+          "predicate": null,
+          "reason_codes": [
+            "POLICY_UNCHANGED"
+          ],
+          "subject": null
+        }
+      ],
+      "policy_bundle_sha256": "172f0985d14281b093f681f6318b053c3d6e33c6ea32edf29d21000e72147e42",
+      "policy_source_revision": "synthetic-positive-policy-v1",
+      "representations": [
+        {
+          "causal_paths": [],
+          "evidence_refs": [],
+          "reason_codes": [
+            "COMPLETE_TYPED_GRAPH_NO_PATH"
+          ],
+          "representation_id": "REP_A0_ARCH_CI_LAYERING",
+          "status": "NOT_AFFECTED_WITH_PROOF"
+        }
+      ],
+      "ruleset_sha256": "b1b679a9275d226c0bc85b8dc7d1f19c91addf8fa9acbc577f1c944adec09df7",
+      "schema_version": 1,
+      "snapshot_sha256": "0ac15eeed573eb248a18e287c235624ffc8321a5b99c704b8d55157b7c6b94cc",
+      "trace_graph_sha256": "50aa3586f845dbbe4d3108a4bdae3a18eb73554e7405abe4b8be267744b960ed",
+      "uncovered_obligations": [
+        "AC_LAYERING"
+      ],
+      "unresolved_links": []
+    },
+    "operation_plan": {
+      "hold_reasons": [],
+      "operations": [
+        {
+          "artifact_sha256": "724d5cd6441378a22a84c4191c810dd1b01813b4b7412f31cccb13ce156a5f42",
+          "evidence_refs": [
+            "synthetic/evidence/current.json"
+          ],
+          "incremental_cost": 0.0,
+          "operation": "replace",
+          "payload": {
+            "applicability_scope": {
+              "scope": "source:app",
+              "targets": [
+                "synthetic/orders_v2.py"
+              ]
+            },
+            "covers": [
+              "AC_LAYERING"
+            ],
+            "criterion": "architecture_compliance",
+            "evaluator": "synthetic_scope_probe_v1",
+            "evaluator_artifact": {
+              "path": "synthetic/evaluators/scope_probe.py",
+              "sha256": "724d5cd6441378a22a84c4191c810dd1b01813b4b7412f31cccb13ce156a5f42"
+            },
+            "evidence_contract": {
+              "contract_id": "SYNTHETIC_SCOPE_PROBE_V1"
+            },
+            "id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+            "stage": "ci"
+          },
+          "reason_codes": [
+            "EXACT_PAIR_INADEQUACY_PROVEN"
+          ],
+          "target_id": "REP_A0_ARCH_CI_LAYERING",
+          "target_type": "representation"
+        }
+      ],
+      "plan_sha256": "7465720d95bdb8c1fd9c8316c0a4a0423590d43f86bd7ba4666e2d385471ba5a",
+      "reject_reasons": []
+    },
+    "proposed_operations": [
+      "replace"
+    ],
+    "trust_scope": "TEST_ONLY"
+  },
+  "runner_rss_high_water_bytes": 50003968,
+  "scenario_id": "C1",
+  "schema_version": 1,
+  "sidecar_sha256": "6b7e6920809ad7ed7cc22ce8e61933f8944cd4614de8407bf75f981aea21e25a",
+  "source_commit_sha": "c7ca08f73fda5473adbe2690ea3dc0a527fee69d"
+}

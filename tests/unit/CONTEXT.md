@@ -50,6 +50,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_mono_e1_preflight.py` — exact W0 source identity, workload repeatability/digest and fixture/migration parity, capability inventory, arm allowlists and path isolation, external image verification, timing boundaries, null CPU/RSS, and pending-authority rejection; synthetic preparation only
 - `test_mono_e1_a03_fitness_candidate.py` — verifies the A0.3 DEVELOPMENT lineage candidate stays separate from frozen A0 B0 and binds candidate engineering controls to canonical source/configuration readback without assigning representation IDs.
 - `test_mono_e1_a03_dev_fitness_config.py` — validates the separate B0_DEV_A03 proposal, exact provenance and archived evaluator controls, and rejection of missing evidence or unauthorized scientific promotion.
+- `test_mono_e1_dev_p_decisions.py` — scenario/reference schema and digest, method-input reference exclusion, verified TEST_ONLY replay, missing/stale evidence HOLD behavior, raw digest tamper rejection, and no scientific-status promotion for the separate synthetic experiment.
 
 This is a selected list of direct tracked files, not a complete source inventory.
 

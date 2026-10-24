@@ -63,6 +63,12 @@ ACCEPT and unsupported consumption claims. A conforming and a nonconforming
 digest-valid fixture keep observed compliance distinct from P validity; none
 of these fixtures is a measured evaluator run or production authority.
 
+`test_p_applicability_v3.py` also supplies the TEST_ONLY Git/policy/evaluator
+fixture builder reused by `MONO_E1_DEV_P_DECISIONS_V1`. Its exact module-delta
+closure evidence is reconstructed from pinned before/after Git module inventories;
+the experiment runner performs a fresh V3 bundle verification before every
+Method P call.
+
 ## Verification and further reading
 
 Consult the original source files and nearest relevant tests, then `docs/README.md` for repository-wide architecture, experiment, stack and verification references. DEVELOPMENT validation uses `make development-quality` with a **disposable** PostgreSQL database; it excludes the two protected DA01 test modules. When a context summary conflicts with source code, a reviewed manifest or a frozen scientific protocol, **report the conflict**; do not silently reinterpret research rules.

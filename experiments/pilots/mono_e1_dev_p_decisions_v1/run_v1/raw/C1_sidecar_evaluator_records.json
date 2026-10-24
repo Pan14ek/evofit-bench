@@ -1,0 +1,80 @@
+[
+  {
+    "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+    "command": [
+      "python",
+      "scope_probe.py",
+      "<synthetic-architecture-root>",
+      [
+        "synthetic/orders_legacy.py"
+      ],
+      [
+        "synthetic/orders_v2.py"
+      ]
+    ],
+    "evaluator_report": {
+      "configured_targets": [
+        "synthetic/orders_legacy.py"
+      ],
+      "expected_subjects": [
+        "synthetic/orders_v2.py"
+      ],
+      "inspected_edge_count": 1,
+      "inspected_subjects": [
+        "synthetic/orders_v2.py"
+      ],
+      "inspection_unit": "file",
+      "measured_count": 1,
+      "missing_targets": [
+        "synthetic/orders_v2.py"
+      ],
+      "resolved_targets": []
+    },
+    "process_exit_code": 2,
+    "representation_id": "REP_A0_ARCH_CI_LAYERING",
+    "stderr": "",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\"configured_targets\": [\"synthetic/orders_legacy.py\"], \"expected_subjects\": [\"synthetic/orders_v2.py\"], \"inspected_edge_count\": 1, \"inspected_subjects\": [\"synthetic/orders_v2.py\"], \"inspection_unit\": \"file\", \"measured_count\": 1, \"missing_targets\": [\"synthetic/orders_v2.py\"], \"resolved_targets\": []}\n",
+    "stdout_sha256": "710a7e746088ef48a03c9a02d407086f72d053d15f6f717140aed0c4ba55927e",
+    "tag": "current"
+  },
+  {
+    "architecture_source_sha": "65e27d401507c3e03a2e540c6aee8ac3e89fa138",
+    "command": [
+      "python",
+      "scope_probe.py",
+      "<synthetic-architecture-root>",
+      [
+        "synthetic/orders_v2.py"
+      ],
+      [
+        "synthetic/orders_v2.py"
+      ]
+    ],
+    "evaluator_report": {
+      "configured_targets": [
+        "synthetic/orders_v2.py"
+      ],
+      "expected_subjects": [
+        "synthetic/orders_v2.py"
+      ],
+      "inspected_edge_count": 1,
+      "inspected_subjects": [
+        "synthetic/orders_v2.py"
+      ],
+      "inspection_unit": "file",
+      "measured_count": 1,
+      "missing_targets": [],
+      "resolved_targets": [
+        "synthetic/orders_v2.py"
+      ]
+    },
+    "process_exit_code": 0,
+    "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+    "stderr": "",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\"configured_targets\": [\"synthetic/orders_v2.py\"], \"expected_subjects\": [\"synthetic/orders_v2.py\"], \"inspected_edge_count\": 1, \"inspected_subjects\": [\"synthetic/orders_v2.py\"], \"inspection_unit\": \"file\", \"measured_count\": 1, \"missing_targets\": [], \"resolved_targets\": [\"synthetic/orders_v2.py\"]}\n",
+    "stdout_sha256": "ff73b1b3b2faa7d17c6151596e84289f377502f9150d978b7abce5a6d9bb53fe",
+    "tag": "successor"
+  }
+]

@@ -1,0 +1,91 @@
+[
+  {
+    "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+    "command": [
+      "python",
+      "scope_probe.py",
+      "<synthetic-architecture-root>",
+      [
+        "synthetic/orders.py"
+      ],
+      [
+        "synthetic/orders.py",
+        "synthetic/reporting.py"
+      ]
+    ],
+    "evaluator_report": {
+      "configured_targets": [
+        "synthetic/orders.py"
+      ],
+      "expected_subjects": [
+        "synthetic/orders.py",
+        "synthetic/reporting.py"
+      ],
+      "inspected_edge_count": 2,
+      "inspected_subjects": [
+        "synthetic/orders.py",
+        "synthetic/reporting.py"
+      ],
+      "inspection_unit": "file",
+      "measured_count": 2,
+      "missing_targets": [
+        "synthetic/reporting.py"
+      ],
+      "resolved_targets": [
+        "synthetic/orders.py"
+      ]
+    },
+    "process_exit_code": 2,
+    "representation_id": "REP_A0_ARCH_CI_LAYERING",
+    "stderr": "",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\"configured_targets\": [\"synthetic/orders.py\"], \"expected_subjects\": [\"synthetic/orders.py\", \"synthetic/reporting.py\"], \"inspected_edge_count\": 2, \"inspected_subjects\": [\"synthetic/orders.py\", \"synthetic/reporting.py\"], \"inspection_unit\": \"file\", \"measured_count\": 2, \"missing_targets\": [\"synthetic/reporting.py\"], \"resolved_targets\": [\"synthetic/orders.py\"]}\n",
+    "stdout_sha256": "f0afb2e32e836d0abd74f4f128bc6c495dee6e43194dbdc19a2562fdd65ce1b8",
+    "tag": "current"
+  },
+  {
+    "architecture_source_sha": "d36974e62a2aaba38f5bf373589e6cf748410e59",
+    "command": [
+      "python",
+      "scope_probe.py",
+      "<synthetic-architecture-root>",
+      [
+        "synthetic/orders.py",
+        "synthetic/reporting.py"
+      ],
+      [
+        "synthetic/orders.py",
+        "synthetic/reporting.py"
+      ]
+    ],
+    "evaluator_report": {
+      "configured_targets": [
+        "synthetic/orders.py",
+        "synthetic/reporting.py"
+      ],
+      "expected_subjects": [
+        "synthetic/orders.py",
+        "synthetic/reporting.py"
+      ],
+      "inspected_edge_count": 2,
+      "inspected_subjects": [
+        "synthetic/orders.py",
+        "synthetic/reporting.py"
+      ],
+      "inspection_unit": "file",
+      "measured_count": 2,
+      "missing_targets": [],
+      "resolved_targets": [
+        "synthetic/orders.py",
+        "synthetic/reporting.py"
+      ]
+    },
+    "process_exit_code": 0,
+    "representation_id": "REP_SYNTHETIC_ARCH_CI_LAYERING",
+    "stderr": "",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stdout": "{\"configured_targets\": [\"synthetic/orders.py\", \"synthetic/reporting.py\"], \"expected_subjects\": [\"synthetic/orders.py\", \"synthetic/reporting.py\"], \"inspected_edge_count\": 2, \"inspected_subjects\": [\"synthetic/orders.py\", \"synthetic/reporting.py\"], \"inspection_unit\": \"file\", \"measured_count\": 2, \"missing_targets\": [], \"resolved_targets\": [\"synthetic/orders.py\", \"synthetic/reporting.py\"]}\n",
+    "stdout_sha256": "2aeefc2d133e37f1c508f2e1d3de24e2e2db38390703de17200f9a71e1171c2b",
+    "tag": "successor"
+  }
+]
