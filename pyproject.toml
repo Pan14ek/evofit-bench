@@ -34,7 +34,6 @@ dev = [
   "jsonschema>=4.23,<5",
   "ruff>=0.9,<1",
 ]
-
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
 
@@ -54,6 +53,19 @@ exclude = ["alembic/versions"]
 
 [[tool.mypy.overrides]]
 module = ["locust.*", "prometheus_client.*", "yaml.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+  "matplotlib",
+  "matplotlib.*",
+  "pandas",
+  "pandas.*",
+  "plotly",
+  "plotly.*",
+  "streamlit",
+  "streamlit.*",
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -15,6 +15,8 @@ CI workflow YAML: uv, Python and disposable PostgreSQL.
 
 Keep actions aligned with Makefile and pyproject.toml.
 
+CI installs the optional research dashboard and figure extras so their reader, visualization, and export checks run under the frozen lockfile.
+
 ## Constraints and known gaps
 
 The default push and pull-request workflow runs `make development-quality`.

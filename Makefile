@@ -48,13 +48,23 @@ DEVELOPMENT_PROTECTED_TESTS = \
 	tests/unit/test_da01_execution.py \
 	tests/unit/test_research_schema_foundation.py
 
-.PHONY: install run test test-unit test-integration development-regression-test development-lint development-typecheck development-quality lint typecheck security architecture-test quality migration-test db-upgrade seed seed-fingerprint reset wait-ready load-smoke load-baseline exp01-smoke experiment-reset export-metrics metadata
+.PHONY: install run test test-unit test-integration development-regression-test development-lint development-typecheck development-quality lint typecheck security architecture-test quality migration-test db-upgrade seed seed-fingerprint reset wait-ready load-smoke load-baseline exp01-smoke experiment-reset export-metrics metadata research-dashboard research-figures test-research-dashboard
 
 install:
 	$(UV) sync --extra dev
 
 run:
 	$(UV) run python -m scripts.run_app --reload
+
+research-dashboard:
+	$(UV) run --frozen --with-requirements research_dashboard/requirements.lock streamlit run research_dashboard/app.py
+
+research-figures:
+	$(UV) run --frozen --with-requirements research_dashboard/requirements.lock python -m research_dashboard.figures
+
+test-research-dashboard:
+	$(UV) run --frozen --extra dev --with-requirements research_dashboard/requirements.lock \
+		python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_research_dashboard.py
 
 test:
 	$(UV) run python -m pytest --cov=app --cov-report=term-missing --cov-report=xml
@@ -73,7 +83,7 @@ typecheck:
 	$(UV) run mypy app scripts tests
 
 security:
-	$(UV) run bandit -q -r app scripts experiments/execution/tooling
+	$(UV) run bandit -q -r app scripts experiments/execution/tooling research_dashboard
 
 architecture-test:
 	$(UV) run lint-imports --config architecture/acceptance/importlinter.toml --cache-dir $(IMPORT_LINTER_CACHE_DIR)
@@ -82,7 +92,10 @@ architecture-test:
 quality: lint typecheck security architecture-test migration-test test
 
 development-regression-test:
-	$(UV) run python -m pytest -q --no-cov -p no:cacheprovider \
+	$(UV) run --frozen --extra dev --with-requirements research_dashboard/requirements.lock \
+		python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_research_dashboard.py
+	$(UV) run --frozen --extra dev \
+		python -m pytest -q --no-cov -p no:cacheprovider \
 		$(foreach test,$(DEVELOPMENT_PROTECTED_TESTS),--ignore=$(test)) \
 		$(DEVELOPMENT_REGRESSION_TESTS)
 	$(UV) run python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_exp01_evidence.py
@@ -97,7 +110,8 @@ development-lint:
 		--extend-exclude=tests/unit/test_research_schema_foundation.py
 
 development-typecheck:
-	$(UV) run mypy app scripts tests \
+	$(UV) run --frozen --extra dev --with-requirements research_dashboard/requirements.lock \
+		mypy app scripts tests research_dashboard \
 		--exclude '(^|/)test_da01_execution\.py$$' \
 		--exclude '(^|/)test_research_schema_foundation\.py$$'
 

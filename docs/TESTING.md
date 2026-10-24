@@ -17,6 +17,28 @@ uv run pytest --no-cov tests/unit/test_context_documents.py
 - **Engineering quality:** format, type checks, security scanner, import constraints, migration tests and app coverage.
 - **Research validation:** independent sealed oracle, proper unit of analysis, G1/G4 approvals and later measured B0/B1/P data. Test passes **cannot substitute** for measured evidence.
 
+## Research dashboard traceability
+
+The Method P research dashboard is a read-only view over the retained
+MONO_E1_DEV_P_DECISIONS_V1 result and its source manifests. The new checks are
+engineering tests, not a method evaluation or scientific gate.
+
+| Requirement | Expected behavior | Test owner | Status |
+| --- | --- | --- | --- |
+| DEV-DASHBOARD-01 | Corrected results schema, required fields, supported version, count consistency, finite numeric values, and explicit categorical statuses are validated; invalid input fails with an actionable error | tests/unit/test_research_dashboard.py | Synthetic reader contract |
+| DEV-DASHBOARD-02 | Canonical results, source manifests, raw artifact inventory, and report summaries are cross-checked read-only | tests/unit/test_research_dashboard.py | Source-bound integrity check |
+| DEV-DASHBOARD-03 | Eight scenario rows remain separate from 24 technical repetitions; categorical transitions preserve UNKNOWN and candidate versus actual coverage | tests/unit/test_research_dashboard.py | Source-bound descriptive check |
+| DEV-DASHBOARD-04 | Operation and governance agreement remain separate; D2 keeps its expected HOLD versus observed REJECT classification in all three repetitions | tests/unit/test_research_dashboard.py | Source-bound mismatch preservation |
+| DEV-DASHBOARD-05 | B0_SYNTH remains labeled as a derived assessment, and missing duration values remain missing after unit conversion | tests/unit/test_research_dashboard.py | Synthetic and missing-data checks |
+| DEV-DASHBOARD-06 | Three static figure pairs are emitted as valid SVG and 300 dpi PNG, output is deterministic, and existing outputs are protected unless `--force` is supplied | tests/unit/test_research_dashboard.py | Deterministic export smoke check |
+| DEV-DASHBOARD-07 | Publication export re-reads and verifies required manifests, reference, report, and a complete non-empty checksum inventory before creating or replacing output; invalid evidence fails closed even with `--force` | tests/unit/test_research_dashboard.py | Synthetic negative cases plus retained source verification |
+
+Focused command: make test-research-dashboard. Dashboard and static figure
+dependencies are pinned in research_dashboard/requirements.lock and installed
+by the focused test and typecheck targets. The repository's experiment dependency
+lock remains unchanged. Passing these tests does not establish independent reference validity,
+P_ALGORITHM_STATUS readiness, G1/G4 authorization, or official MONO-E1 results.
+
 A test described in a specification must have a stable requirement ID, fixture provenance, preconditions, input, expected behavior, test level, location, and PASS/FAIL/SKIP/BLOCKED outcome. Never mark unimplemented requirements as passed.
 
 ## ΔA4 Reporting query port acceptance
