@@ -860,6 +860,8 @@ def _score(output_dir: Path) -> None:
     if execution_manifest.get("method_identity") != committed_method_identity:
         raise ProtocolError("METHOD_IDENTITY_MISMATCH")
     references, reference_digest = _expected_reference()
+    scorer_source_commit_sha = _git("rev-parse", "HEAD")
+    scorer_code_sha256 = _sha256(Path(__file__))
     record_paths = [
         str(row["path"]) for row in raw_manifest if "_method_p_rep_" in Path(str(row["path"])).name
     ]
@@ -1073,8 +1075,14 @@ def _score(output_dir: Path) -> None:
         "reference_status": "AUTHOR_DECLARED / DEVELOPMENT / NON_INDEPENDENT",
         "scientific_status_effect": SCIENTIFIC_STATUS_EFFECT,
         "reference_sha256": reference_digest,
-        "scorer_source_commit_sha": _git("rev-parse", "HEAD"),
-        "scorer_code_sha256": _sha256(Path(__file__)),
+        "scorer_source_commit_sha": scorer_source_commit_sha,
+        "scorer_code_sha256": scorer_code_sha256,
+        "scoring_pipeline_note": {
+            "first_score_attempt": "FAILED:SCORER_RECORD_SHAPE_MISMATCH",
+            "first_attempt_after_all_method_p_calls": True,
+            "raw_method_p_records_modified": False,
+            "corrected_scorer_source_commit_sha": scorer_source_commit_sha,
+        },
         "execution_manifest_sha256": _sha256(output_dir / "execution_manifest.json"),
         "raw_records_manifest_sha256": _sha256(output_dir / "raw_records_manifest.json"),
         "method_input_bundle_archive_sha256": execution_manifest[
@@ -1165,8 +1173,8 @@ def _score(output_dir: Path) -> None:
         {
             "schema_version": 1,
             "reference_sha256": reference_digest,
-            "scorer_source_commit_sha": _git("rev-parse", "HEAD"),
-            "scorer_code_sha256": _sha256(Path(__file__)),
+            "scorer_source_commit_sha": scorer_source_commit_sha,
+            "scorer_code_sha256": scorer_code_sha256,
             "execution_manifest_sha256": _sha256(output_dir / "execution_manifest.json"),
             "raw_manifest_sha256": _sha256(output_dir / "raw_records_manifest.json"),
             "scored_record_count": total,
@@ -1204,6 +1212,17 @@ def _render_report(
         f"- Scorer source commit: `{results['scorer_source_commit_sha']}`",
         f"- Method version: `{results['method_identity']['method_version']}`",
         "- Reference scope: AUTHOR_DECLARED / DEVELOPMENT / NON_INDEPENDENT",
+        "",
+        "## Scoring pipeline correction",
+        "",
+        (
+            "The first post-execution scoring attempt failed because it expected an extra "
+            "nested `result` object that the raw execution records do not contain. This "
+            "occurred after all 24 Method P calls; it changed no raw records and triggered "
+            "no Method P rerun. The corrected scorer reverified the raw manifest and all "
+            "input bundle archives before scoring under commit "
+            f"`{results['scorer_source_commit_sha']}`."
+        ),
         "",
         "## Observations",
         "",
