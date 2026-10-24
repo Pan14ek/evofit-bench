@@ -194,3 +194,22 @@ def test_result_metadata_does_not_promote_scientific_status() -> None:
         runner.REFERENCE_PATH.read_bytes().find(case["expected_operation"].encode()) >= 0
         for case in reference.values()
     )
+
+
+def test_scorer_reads_recorded_execution_result_shape() -> None:
+    reference = {
+        "expected_operation": "retain",
+        "expected_governance": "ACCEPT",
+    }
+    record: dict[str, Any] = {
+        "result": {
+            "execution_status": "COMPLETED",
+            "proposed_operations": ["retain"],
+            "operation_plan": {"hold_reasons": [], "reject_reasons": []},
+            "governance": {"result": "ACCEPT"},
+            "current_coverage": {"status": "COMPLETE"},
+            "candidate_coverage": None,
+            "candidate_validation": None,
+        }
+    }
+    assert runner._classify(reference, record) == "CORRECT"

@@ -453,6 +453,39 @@ def _method_identity(repo_root: Path) -> dict[str, Any]:
     }
 
 
+def _git_blob_sha256(repo_root: Path, commit_sha: str, relative_path: str) -> str:
+    if len(commit_sha) != 40 or any(
+        character not in "0123456789abcdef" for character in commit_sha
+    ):
+        raise ProtocolError("METHOD_SOURCE_COMMIT_INVALID")
+    path_parts = PurePosixPath(relative_path).parts
+    if PurePosixPath(relative_path).is_absolute() or ".." in path_parts:
+        raise ProtocolError("METHOD_SOURCE_PATH_INVALID")
+    git_executable = shutil.which("git")
+    if git_executable is None:
+        raise RuntimeError("Git executable is unavailable")
+    completed = subprocess.run(  # noqa: S603 - fixed Git executable and validated commit/path arguments
+        [git_executable, "-C", str(repo_root), "show", f"{commit_sha}:{relative_path}"],
+        check=True,
+        capture_output=True,
+    )
+    return sha256_bytes(completed.stdout)
+
+
+def _method_identity_at_commit(repo_root: Path, commit_sha: str) -> dict[str, Any]:
+    def digest(relative: str) -> str:
+        return _git_blob_sha256(repo_root, commit_sha, relative)
+
+    return {
+        "method_version": METHOD_VERSION,
+        "files": {relative: digest(relative) for relative in P_METHOD_FILES},
+        "schemas": {relative: digest(relative) for relative in P_METHOD_SCHEMA_FILES},
+        "catalogs": {relative: digest(relative) for relative in P_METHOD_DATA_FILES},
+        "scenario_catalog_sha256": digest(SCENARIO_PATH.relative_to(repo_root).as_posix()),
+        "scenario_schema_sha256": digest(SCENARIO_SCHEMA_PATH.relative_to(repo_root).as_posix()),
+    }
+
+
 def _execute(output_dir: Path) -> None:
     if output_dir.exists():
         raise FileExistsError(f"Execution output already exists: {output_dir}")
@@ -769,35 +802,31 @@ def _expected_reference() -> tuple[dict[str, Any], str]:
 def _operation(result: Mapping[str, Any]) -> str:
     if result.get("execution_status") != "COMPLETED":
         return "execution_failure"
-    p_result = result["result"]
-    operations = p_result.get("proposed_operations", [])
+    operations = result.get("proposed_operations", [])
     if len(operations) == 1:
         return str(operations[0])
     if len(operations) > 1:
         return "mixed"
-    plan = p_result.get("operation_plan") or {}
+    plan = result.get("operation_plan") or {}
     if plan.get("hold_reasons") or plan.get("reject_reasons"):
         return "hold"
     return "none"
 
 
 def _is_semantically_supported(record: Mapping[str, Any]) -> bool:
-    result = record.get("result", {}).get("result", {})
-    if not isinstance(result, Mapping):
-        return False
-    candidate_validation = result.get("candidate_validation")
-    candidate_coverage = result.get("candidate_coverage")
+    candidate_validation = record.get("candidate_validation")
+    candidate_coverage = record.get("candidate_coverage")
     if candidate_coverage is not None:
         return (
             candidate_validation is not None
             and candidate_validation.get("status") == "valid"
             and candidate_coverage.get("status") == "COMPLETE"
         )
-    current_coverage = result.get("current_coverage")
+    current_coverage = record.get("current_coverage")
     return bool(
         current_coverage
         and current_coverage.get("status") == "COMPLETE"
-        and result.get("governance", {}).get("result") == "ACCEPT"
+        and record.get("governance", {}).get("result") == "ACCEPT"
     )
 
 
@@ -805,7 +834,7 @@ def _classify(reference: Mapping[str, Any], record: Mapping[str, Any]) -> str:
     if record.get("result", {}).get("execution_status") != "COMPLETED":
         return "NOT_EVALUABLE"
     actual_operation = _operation(record["result"])
-    governance = record["result"]["result"]["governance"].get("result")
+    governance = record["result"].get("governance", {}).get("result")
     if (
         actual_operation != reference["expected_operation"]
         or governance != reference["expected_governance"]
@@ -824,8 +853,11 @@ def _score(output_dir: Path) -> None:
     raw_manifest = _verify_raw_manifest(output_dir)
     execution_manifest = _read_json(output_dir / "execution_manifest.json")
     _verify_method_input_archives(output_dir, execution_manifest)
-    current_method_identity = _method_identity(EXPERIMENT_DIR.parents[2])
-    if execution_manifest.get("method_identity") != current_method_identity:
+    source_commit_sha = str(execution_manifest.get("source_commit_sha", ""))
+    committed_method_identity = _method_identity_at_commit(
+        EXPERIMENT_DIR.parents[2], source_commit_sha
+    )
+    if execution_manifest.get("method_identity") != committed_method_identity:
         raise ProtocolError("METHOD_IDENTITY_MISMATCH")
     references, reference_digest = _expected_reference()
     record_paths = [
@@ -894,7 +926,7 @@ def _score(output_dir: Path) -> None:
         reason_codes_by_repetition: list[list[str]] = []
         for record, observed in zip(scenario_records, observed_ops, strict=True):
             expected = str(reference["expected_operation"])
-            p_result = record["result"].get("result", {})
+            p_result = record["result"]
             governance = p_result.get("governance")
             governance_result = (
                 str(governance.get("result"))
@@ -948,19 +980,17 @@ def _score(output_dir: Path) -> None:
 
         baseline_path = output_dir / "raw" / f"{scenario_id}_b0_synth.json"
         b0 = _read_json(baseline_path) if baseline_path.is_file() else None
-        observed_candidates = [
-            (row["result"].get("result", {}).get("candidate_sha256")) for row in scenario_records
-        ]
+        observed_candidates = [row["result"].get("candidate_sha256") for row in scenario_records]
         observed_plans = [
-            (row["result"].get("result", {}).get("operation_plan") or {}).get("plan_sha256")
+            (row["result"].get("operation_plan") or {}).get("plan_sha256")
             for row in scenario_records
         ]
         decision_signatures = {
             (
                 _operation(row["result"]),
-                (row["result"].get("result", {}).get("governance") or {}).get("result"),
-                (row["result"].get("result", {}).get("operation_plan") or {}).get("plan_sha256"),
-                row["result"].get("result", {}).get("candidate_sha256"),
+                (row["result"].get("governance") or {}).get("result"),
+                (row["result"].get("operation_plan") or {}).get("plan_sha256"),
+                row["result"].get("candidate_sha256"),
             )
             for row in scenario_records
         }
@@ -1023,9 +1053,7 @@ def _score(output_dir: Path) -> None:
                 "duration_ns_min": min(int(row["duration_ns"]) for row in scenario_records),
                 "duration_ns_max": max(int(row["duration_ns"]) for row in scenario_records),
                 "evidence_completeness": [
-                    (row["result"].get("result", {}).get("current_coverage") or {}).get(
-                        "status", "NOT_EVALUABLE"
-                    )
+                    (row["result"].get("current_coverage") or {}).get("status", "NOT_EVALUABLE")
                     for row in scenario_records
                 ],
                 "raw_result_sha256": [row["raw_record_sha256"] for row in scenario_records],
@@ -1045,6 +1073,8 @@ def _score(output_dir: Path) -> None:
         "reference_status": "AUTHOR_DECLARED / DEVELOPMENT / NON_INDEPENDENT",
         "scientific_status_effect": SCIENTIFIC_STATUS_EFFECT,
         "reference_sha256": reference_digest,
+        "scorer_source_commit_sha": _git("rev-parse", "HEAD"),
+        "scorer_code_sha256": _sha256(Path(__file__)),
         "execution_manifest_sha256": _sha256(output_dir / "execution_manifest.json"),
         "raw_records_manifest_sha256": _sha256(output_dir / "raw_records_manifest.json"),
         "method_input_bundle_archive_sha256": execution_manifest[
@@ -1135,6 +1165,8 @@ def _score(output_dir: Path) -> None:
         {
             "schema_version": 1,
             "reference_sha256": reference_digest,
+            "scorer_source_commit_sha": _git("rev-parse", "HEAD"),
+            "scorer_code_sha256": _sha256(Path(__file__)),
             "execution_manifest_sha256": _sha256(output_dir / "execution_manifest.json"),
             "raw_manifest_sha256": _sha256(output_dir / "raw_records_manifest.json"),
             "scored_record_count": total,
@@ -1169,6 +1201,7 @@ def _render_report(
         ),
         f"- Author-declared reference SHA-256: `{results['reference_sha256']}`",
         f"- Pre-registration source commit: `{results['source_commit_sha']}`",
+        f"- Scorer source commit: `{results['scorer_source_commit_sha']}`",
         f"- Method version: `{results['method_identity']['method_version']}`",
         "- Reference scope: AUTHOR_DECLARED / DEVELOPMENT / NON_INDEPENDENT",
         "",
