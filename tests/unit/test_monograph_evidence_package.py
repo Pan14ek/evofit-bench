@@ -11,6 +11,7 @@ from zipfile import ZipFile
 import pytest
 
 from experiments.pilots import verify_monograph_evidence as evidence
+from research_dashboard.figures import export_publication_figures
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -67,7 +68,7 @@ def test_package_replays_read_only_and_keeps_claim_boundaries(
         ),
     )
     before = _digests(protected_paths)
-    export_figures = evidence.export_publication_figures
+    export_figures = export_publication_figures
 
     def export_with_platform_render_metadata(
         dataset: Any,
