@@ -11,6 +11,7 @@ Project-level scope: a controlled evolutionary-architecture fitness-function res
 
 - research_dashboard/ — read-only Streamlit / Plotly research views and Matplotlib publication figures for the retained synthetic Method P development pilot; not a method input or official result.
 - experiments/pilots/mono_e1_ci_evidence_v1/ — reproducible, derived CI-only tables/report/figures for canonical evaluator observations and a separate synthetic Method P track; not official MONO-E1/B0/P evidence.
+- experiments/execution/mono-ci-b0-psi-v1/ — separate draft monograph CI-only B0/Ψ study preparation; current status NO_GO, no measured arm/evaluator/scorer execution.
 
 - `.dockerignore`
 - `.env.example`

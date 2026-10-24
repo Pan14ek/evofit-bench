@@ -1,0 +1,50 @@
+{
+  "schema_version": "MONO_CI_B0_PSI_EVALUATOR_EXPECTATIONS_V1",
+  "study_id": "MONO_CI_B0_PSI_COMPARISON_V1",
+  "reference_status": "AUTHOR_DECLARED_UNREVIEWED_DIAGNOSTIC_ONLY",
+  "source": {
+    "experiment_id": "EVAL-01",
+    "preregistered_catalog_path": "experiments/pilots/EVAL01_MUTATION_CATALOG_V1.json",
+    "preregistered_catalog_sha256": "0d4aeb1b49aa800a4618dbce79966de40dcd070f78dfd515eb100086acab04a8",
+    "raw_archive_sha256": "f6cd3c7180a0719c0f410f51acc9596b0843950d7650da7f7d2924716188c9bf"
+  },
+  "purpose": "Keep the existing evaluator-control expectations separate from all method inputs; these rows are not B0/Ψ target-operation or governance labels.",
+  "independently_reviewed": false,
+  "frozen_for_new_study": false,
+  "included_in_method_inputs": false,
+  "expectations": [
+    {
+      "case_id": "CASE_01",
+      "evaluator_statuses": {
+        "AC_PUBLIC_API": "COMPLIANT",
+        "AC_MODULE_GRAPH": "COMPLIANT"
+      }
+    },
+    {
+      "case_id": "CASE_02",
+      "evaluator_statuses": {
+        "AC_PUBLIC_API": "NON_COMPLIANT",
+        "AC_MODULE_GRAPH": "COMPLIANT"
+      }
+    },
+    {
+      "case_id": "CASE_03",
+      "evaluator_statuses": {
+        "AC_PUBLIC_API": "COMPLIANT",
+        "AC_MODULE_GRAPH": "NON_COMPLIANT"
+      }
+    },
+    {
+      "case_id": "CASE_04",
+      "evaluator_statuses": {
+        "AC_PUBLIC_API": "NOT_EVALUABLE",
+        "AC_MODULE_GRAPH": "NOT_EVALUABLE"
+      }
+    }
+  ],
+  "fitness_operation_reference": "NOT_ESTABLISHED",
+  "governance_reference": "NOT_ESTABLISHED",
+  "coverage_denominator": "INCOMPLETE",
+  "scorer_custody": "NOT_ASSIGNED",
+  "freeze_and_readback": "NOT_PERFORMED"
+}

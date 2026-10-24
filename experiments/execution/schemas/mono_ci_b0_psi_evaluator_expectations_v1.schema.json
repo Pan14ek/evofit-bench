@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_b0_psi_evaluator_expectations_v1.schema.json",
+  "title": "MONO CI B0 vs governed adaptation Ψ evaluator-only expectations v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "study_id", "reference_status", "source", "purpose", "independently_reviewed", "frozen_for_new_study", "included_in_method_inputs", "expectations", "fitness_operation_reference", "governance_reference", "coverage_denominator", "scorer_custody", "freeze_and_readback"],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_B0_PSI_EVALUATOR_EXPECTATIONS_V1"}, "study_id": {"const": "MONO_CI_B0_PSI_COMPARISON_V1"},
+    "reference_status": {"const": "AUTHOR_DECLARED_UNREVIEWED_DIAGNOSTIC_ONLY"},
+    "source": {"type": "object", "additionalProperties": false, "required": ["experiment_id", "preregistered_catalog_path", "preregistered_catalog_sha256", "raw_archive_sha256"], "properties": {"experiment_id": {"const": "EVAL-01"}, "preregistered_catalog_path": {"type": "string"}, "preregistered_catalog_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "raw_archive_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}},
+    "purpose": {"type": "string"}, "independently_reviewed": {"const": false}, "frozen_for_new_study": {"const": false}, "included_in_method_inputs": {"const": false},
+    "expectations": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "object", "additionalProperties": false, "required": ["case_id", "evaluator_statuses"], "properties": {"case_id": {"type": "string", "pattern": "^CASE_0[1-4]$"}, "evaluator_statuses": {"type": "object", "additionalProperties": false, "required": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"], "properties": {"AC_PUBLIC_API": {"enum": ["COMPLIANT", "NON_COMPLIANT", "NOT_EVALUABLE"]}, "AC_MODULE_GRAPH": {"enum": ["COMPLIANT", "NON_COMPLIANT", "NOT_EVALUABLE"]}}}}}},
+    "fitness_operation_reference": {"const": "NOT_ESTABLISHED"}, "governance_reference": {"const": "NOT_ESTABLISHED"}, "coverage_denominator": {"const": "INCOMPLETE"}, "scorer_custody": {"const": "NOT_ASSIGNED"}, "freeze_and_readback": {"const": "NOT_PERFORMED"}
+  }
+}

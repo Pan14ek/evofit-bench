@@ -1,5 +1,9 @@
 # DA01 execution infrastructure
 
+## Separate MONO CI-only B0/Ψ study preparation
+
+[`mono-ci-b0-psi-v1/PROTOCOL.md`](mono-ci-b0-psi-v1/PROTOCOL.md) defines a separate draft protocol for A0.3→A0.4 and the `AC_PUBLIC_API` / `AC_MODULE_GRAPH` controls. The current decision is `NO_GO`; its read-only [preflight](tooling/mono_ci_b0_psi_preflight.py) verifies source/package provenance and blockers only. It does not run DA01, an evaluator, B0, Ψ, or a scorer, and its passing result does not grant approval.
+
 This package prepares the DA01 Phase A protocol. It provides versioned contracts,
 allowlisted method-input bundles, a network-isolated container launcher, write-once
 prediction sealing, independent semantic-evidence assessment, and generic RQ1/RQ2

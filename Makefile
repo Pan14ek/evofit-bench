@@ -24,6 +24,7 @@ DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_context_documents.py \
 	tests/unit/test_mono_policy_review_inventory.py \
 	tests/unit/test_mono_e1_preflight.py \
+	tests/unit/test_mono_ci_b0_psi_preflight.py \
 	tests/unit/test_mono_e1_a03_fitness_candidate.py \
 	tests/unit/test_mono_e1_a03_dev_fitness_config.py \
 	tests/unit/test_architecture_stage_checks.py \
@@ -48,7 +49,7 @@ DEVELOPMENT_PROTECTED_TESTS = \
 	tests/unit/test_da01_execution.py \
 	tests/unit/test_research_schema_foundation.py
 
-.PHONY: install run test test-unit test-integration development-regression-test development-lint development-typecheck development-quality lint typecheck security architecture-test quality migration-test db-upgrade seed seed-fingerprint reset wait-ready load-smoke load-baseline exp01-smoke experiment-reset export-metrics metadata research-dashboard research-figures test-research-dashboard test-monograph-evidence
+.PHONY: install run test test-unit test-integration development-regression-test development-lint development-typecheck development-quality lint typecheck security architecture-test quality migration-test db-upgrade seed seed-fingerprint reset wait-ready load-smoke load-baseline exp01-smoke experiment-reset export-metrics metadata research-dashboard research-figures test-research-dashboard test-monograph-evidence test-mono-ci-b0-psi
 
 install:
 	$(UV) sync --extra dev
@@ -71,6 +72,10 @@ test-monograph-evidence:
 		python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_monograph_evidence_package.py
 	$(UV) run --frozen --extra dev --with-requirements research_dashboard/requirements.lock \
 		python -m experiments.pilots.verify_monograph_evidence verify
+
+test-mono-ci-b0-psi:
+	$(UV) run --frozen --extra dev python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_mono_ci_b0_psi_preflight.py
+	$(UV) run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_b0_psi_preflight
 
 test:
 	$(UV) run python -m pytest --cov=app --cov-report=term-missing --cov-report=xml
@@ -101,6 +106,7 @@ development-regression-test:
 	$(UV) run --frozen --extra dev --with-requirements research_dashboard/requirements.lock \
 		python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_research_dashboard.py
 	$(MAKE) test-monograph-evidence
+	$(MAKE) test-mono-ci-b0-psi
 	$(UV) run --frozen --extra dev \
 		python -m pytest -q --no-cov -p no:cacheprovider \
 		$(foreach test,$(DEVELOPMENT_PROTECTED_TESTS),--ignore=$(test)) \
