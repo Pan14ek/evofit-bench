@@ -10,6 +10,7 @@ from typing import Any, cast
 import pytest
 import yaml
 
+import experiments.execution.tooling.mono_e1_a03_fitness_config as fitness_config
 from experiments.execution.tooling.mono_e1_a03_fitness_config import (
     FitnessConfigurationValidationError,
     validate_document,
@@ -78,6 +79,56 @@ def test_existing_evaluator_archives_contain_positive_and_negative_controls() ->
 
     assert eval01["diagnostic_mismatches"] == 0
     assert eval02["diagnostic_mismatches"] == 3
+
+
+def test_development_validation_schema_requires_exactly_one_of_each_experiment() -> None:
+    duplicate = _load_config()
+    duplicate["development_validation_evidence"][1]["experiment_id"] = "EVAL-01"
+    with pytest.raises(FitnessConfigurationValidationError, match="Configuration schema error"):
+        validate_document(duplicate, _load_schema())
+    with pytest.raises(FitnessConfigurationValidationError, match="duplicate experiment IDs"):
+        validate_evidence_bindings(ROOT, duplicate)
+
+    missing = _load_config()
+    missing["development_validation_evidence"].pop()
+    with pytest.raises(FitnessConfigurationValidationError, match="Configuration schema error"):
+        validate_document(missing, _load_schema())
+    with pytest.raises(
+        FitnessConfigurationValidationError,
+        match="exactly one EVAL-01 and one EVAL-02",
+    ):
+        validate_evidence_bindings(ROOT, missing)
+
+
+def test_experiment_record_cannot_be_bound_to_another_archives_path_or_content() -> None:
+    mismatched = _load_config()
+    eval02_archive = copy.deepcopy(mismatched["development_validation_evidence"][1]["archive"])
+    mismatched["development_validation_evidence"][0]["archive"] = eval02_archive
+
+    with pytest.raises(
+        FitnessConfigurationValidationError,
+        match="EVAL-01 is bound to the wrong evidence archive",
+    ):
+        validate_evidence_bindings(ROOT, mismatched)
+
+
+def test_archive_manifest_experiment_id_must_match_its_configuration_record(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        fitness_config,
+        "_verify_archive_integrity",
+        lambda _root, _record, _experiment_id: {
+            "manifest": {"experiment_id": "EVAL-02"},
+            "analysis": {},
+        },
+    )
+
+    with pytest.raises(
+        FitnessConfigurationValidationError,
+        match="EVAL-01 record does not match the archive's experiment ID",
+    ):
+        fitness_config._verify_validation_evidence(ROOT, _load_config())
 
 
 def test_missing_or_contradictory_source_evidence_is_rejected() -> None:

@@ -167,7 +167,27 @@
       "type": "array",
       "minItems": 2,
       "maxItems": 2,
-      "items": {"$ref": "#/$defs/validationRun"}
+      "items": {"$ref": "#/$defs/validationRun"},
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "required": ["experiment_id"],
+            "properties": {"experiment_id": {"const": "EVAL-01"}}
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "type": "object",
+            "required": ["experiment_id"],
+            "properties": {"experiment_id": {"const": "EVAL-02"}}
+          },
+          "minContains": 1,
+          "maxContains": 1
+        }
+      ]
     },
     "assumptions": {
       "type": "array",

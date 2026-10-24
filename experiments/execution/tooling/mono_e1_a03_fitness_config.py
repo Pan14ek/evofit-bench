@@ -22,6 +22,10 @@ SCHEMA_PATH = Path("fitness/configs/mono-e1-b0-dev-a03-v1.schema.json")
 A03_SHA = "26a9bb667da7d0938e38aca15d2bf29fd1de4829"
 A04_SHA = "d3101c0d3aa9b7b709253b6ec7518416f05f65b9"
 A04_APP_TREE = "007196f68652bc13f6798805793ffdfae96f95f7"
+EXPECTED_VALIDATION_ARCHIVES = {
+    "EVAL-01": "experiments/pilots/EVAL01_RAW_EVIDENCE_V1.zip",
+    "EVAL-02": "experiments/pilots/EVAL02_RAW_EVIDENCE_V1.zip",
+}
 GIT_EXECUTABLE = shutil.which("git")
 
 
@@ -110,6 +114,8 @@ def validate_document(config: Mapping[str, Any], schema: Mapping[str, Any]) -> N
             f"Configuration schema error at {location}: {first.message}"
         )
 
+    _validate_development_validation_records(config)
+
     representations = cast(Sequence[Mapping[str, Any]], config["representations"])
     representation_ids = [str(row["id"]) for row in representations]
     evaluator_ids = [str(row["evaluator"]["id"]) for row in representations]
@@ -140,6 +146,27 @@ def validate_document(config: Mapping[str, Any], schema: Mapping[str, Any]) -> N
         {str(row["id"]): str(row["obligation_id"]) for row in representations} == expected_mappings,
         "Representation-to-obligation bindings contradict the DEVELOPMENT contract",
     )
+
+
+def _validate_development_validation_records(config: Mapping[str, Any]) -> None:
+    records = cast(Sequence[Mapping[str, Any]], config["development_validation_evidence"])
+    experiment_ids = [str(record["experiment_id"]) for record in records]
+    expected_ids = set(EXPECTED_VALIDATION_ARCHIVES)
+    _require(
+        len(experiment_ids) == len(set(experiment_ids)),
+        "Development validation evidence contains duplicate experiment IDs",
+    )
+    _require(
+        set(experiment_ids) == expected_ids,
+        "Development validation evidence must contain exactly one EVAL-01 and one EVAL-02 record",
+    )
+    for record in records:
+        experiment_id = str(record["experiment_id"])
+        archive = cast(Mapping[str, Any], record["archive"])
+        _require(
+            archive["path"] == EXPECTED_VALIDATION_ARCHIVES[experiment_id],
+            f"{experiment_id} is bound to the wrong evidence archive",
+        )
 
 
 def _load_checkpoint(root: Path, state: Mapping[str, Any]) -> dict[str, Any]:
@@ -306,7 +333,13 @@ def _verify_source_artifacts(
             _read_artifact(root, cast(Mapping[str, Any], evidence["raw_diagnostics"]))
 
 
-def _verify_archive_integrity(root: Path, record: Mapping[str, Any]) -> dict[str, Any]:
+def _verify_archive_integrity(
+    root: Path, record: Mapping[str, Any], experiment_id: str
+) -> dict[str, Any]:
+    _require(
+        record["path"] == EXPECTED_VALIDATION_ARCHIVES[experiment_id],
+        f"{experiment_id} is bound to the wrong evidence archive",
+    )
     archive_path = _safe_repository_path(root, str(record["path"]))
     sidecar_path = _safe_repository_path(root, f"{record['path']}.sha256")
     _require(
@@ -349,11 +382,7 @@ def _verify_archive_integrity(root: Path, record: Mapping[str, Any]) -> dict[str
                     f"Archive member checksum mismatch: {name}",
                 )
             manifest = cast(dict[str, Any], json.loads(archive.read("run-manifest.json")))
-            analysis_name = (
-                "EVAL01_ANALYSIS_V1.json"
-                if record["path"].endswith("EVAL01_RAW_EVIDENCE_V1.zip")
-                else "EVAL02_ANALYSIS_V1.json"
-            )
+            analysis_name = f"{experiment_id.replace('-', '')}_ANALYSIS_V1.json"
             analysis = cast(dict[str, Any], json.loads(archive.read(analysis_name)))
             runs = [
                 json.loads(line)
@@ -374,39 +403,45 @@ def _verify_archive_integrity(root: Path, record: Mapping[str, Any]) -> dict[str
 
 
 def _verify_validation_evidence(root: Path, config: Mapping[str, Any]) -> dict[str, Any]:
+    _validate_development_validation_records(config)
     states = cast(Sequence[Mapping[str, Any]], config["provenance"]["canonical_states"])
     a04 = next(state for state in states if state["architecture_state"] == "A0_4_REPORT_QUERY_PORT")
     summaries: dict[str, Any] = {}
     for validation in cast(Sequence[Mapping[str, Any]], config["development_validation_evidence"]):
+        experiment_id = str(validation["experiment_id"])
         archive_data = _verify_archive_integrity(
-            root, cast(Mapping[str, Any], validation["archive"])
+            root, cast(Mapping[str, Any], validation["archive"]), experiment_id
         )
         manifest = cast(Mapping[str, Any], archive_data["manifest"])
         analysis = cast(Mapping[str, Any], archive_data["analysis"])
         _require(
+            manifest.get("experiment_id") == experiment_id,
+            f"{experiment_id} record does not match the archive's experiment ID",
+        )
+        _require(
             manifest["source_baseline"]["commit_sha"] == validation["source_sha"] == A04_SHA
             and manifest["source_baseline"]["application_tree_sha"] == a04["application_tree_sha"],
-            f"{validation['experiment_id']} is bound to the wrong source",
+            f"{experiment_id} is bound to the wrong source",
         )
         _require(
             manifest["evaluator_source_digest"] == validation["evaluator_source_digest_sha256"],
-            f"{validation['experiment_id']} evaluator source digest mismatch",
+            f"{experiment_id} evaluator source digest mismatch",
         )
         _require(
             manifest["execution_environment"]["planned_evaluator_calls"]
             == validation["calls_completed"]
             == archive_data["run_count"],
-            f"{validation['experiment_id']} call inventory mismatch",
+            f"{experiment_id} call inventory mismatch",
         )
         _require(
             len(manifest["failures"]) == validation["diagnostic_mismatches"]
             and len(manifest["failures"]) == 0 + int(validation["diagnostic_mismatches"]),
-            f"{validation['experiment_id']} failure inventory mismatch",
+            f"{experiment_id} failure inventory mismatch",
         )
         _require(
             manifest["analysis_raw_inventory_verification"] == "PASS"
             and analysis["raw_inventory_verification"] == "PASS",
-            f"{validation['experiment_id']} raw analysis inventory did not pass",
+            f"{experiment_id} raw analysis inventory did not pass",
         )
         expected_archive_sources = [
             {
@@ -417,7 +452,7 @@ def _verify_validation_evidence(root: Path, config: Mapping[str, Any]) -> dict[s
         ]
         _require(
             manifest["evaluator_source_artifacts"] == expected_archive_sources,
-            f"{validation['experiment_id']} evaluator source files differ from configuration",
+            f"{experiment_id} evaluator source files differ from configuration",
         )
         expected_configs = {
             str(row["evaluator"]["id"]): {
@@ -428,12 +463,12 @@ def _verify_validation_evidence(root: Path, config: Mapping[str, Any]) -> dict[s
         }
         _require(
             manifest["configurations"] == expected_configs,
-            f"{validation['experiment_id']} evaluator configuration bindings differ",
+            f"{experiment_id} evaluator configuration bindings differ",
         )
         _require(
             analysis["evaluator_metrics"]
             and set(analysis["evaluator_metrics"]) == {"AC_PUBLIC_API", "AC_MODULE_GRAPH"},
-            f"{validation['experiment_id']} does not contain both evaluator results",
+            f"{experiment_id} does not contain both evaluator results",
         )
         expected_matrices = cast(Mapping[str, Any], validation["confusion_matrices"])
         for evaluator_id in ("AC_PUBLIC_API", "AC_MODULE_GRAPH"):
@@ -443,12 +478,11 @@ def _verify_validation_evidence(root: Path, config: Mapping[str, Any]) -> dict[s
             )
             _require(
                 matrix == expected_matrices[evaluator_id],
-                f"{validation['experiment_id']} binary outcomes differ for {evaluator_id}",
+                f"{experiment_id} binary outcomes differ for {evaluator_id}",
             )
             _require(
                 matrix["tp"] > 0 and matrix["tn"] > 0 and matrix["fp"] == 0 and matrix["fn"] == 0,
-                f"{validation['experiment_id']} lacks both positive and negative controls "
-                f"for {evaluator_id}",
+                f"{experiment_id} lacks both positive and negative controls for {evaluator_id}",
             )
         summaries[str(validation["experiment_id"])] = {
             "archive_sha256": validation["archive"]["sha256"],
@@ -476,6 +510,7 @@ def _verify_validation_evidence(root: Path, config: Mapping[str, Any]) -> dict[s
 
 def validate_evidence_bindings(root: Path, config: Mapping[str, Any]) -> dict[str, Any]:
     """Verify canonical source, frozen A0 bytes, and archived evaluator controls."""
+    _validate_development_validation_records(config)
     states = cast(Sequence[Mapping[str, Any]], config["provenance"]["canonical_states"])
     _require(
         {str(state["architecture_state"]) for state in states}
