@@ -22,6 +22,7 @@ Scientific protocol, scenarios, execution, curated evidence and run results.
 - `results/` (ignored generated run outputs)
 - `pilots/` contains PILOT-01/02 and the separate EVAL-01/02 evaluator-validation protocols, reports, Ukrainian manuscript subsections, generated tables, checksummed evidence archives, and narrow tools
 - `pilots/mono_e1_dev_p_decisions_v1/` contains a separate eight-case TEST_ONLY Method P DEVELOPMENT decision experiment, frozen scorer-side reference, verified-path runner, raw technical repetitions, B0_SYNTH output, and descriptive results; not an official MONO-E1/DA01 result
+- `pilots/mono_e1_ci_evidence_v1/` and `pilots/verify_monograph_evidence.py` hold the derived publication package and read-only source replay/consistency verifier; generated outputs do not amend retained evidence or readiness.
 
 ## Established conventions
 

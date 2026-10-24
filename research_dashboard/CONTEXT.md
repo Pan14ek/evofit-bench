@@ -11,7 +11,7 @@ Load and validate the merged PR #48 results without writing to experiment artifa
 - `data.py` — read-only exploratory loading, schema/digest checks, and strict publication-export readiness validation.
 - `metrics.py` — scenario/repetition summaries, categorical transitions, correctness, duration, report comparison, and evidence inventory.
 - `charts.py` — interactive Plotly chart preparation.
-- `figures.py` — deterministic Matplotlib SVG/PNG exports and CLI.
+- `figures.py` — deterministic Matplotlib SVG/PNG exports with normalized SVG line whitespace and CLI; axis labels call coverage candidate/current assessments, and operation/governance figures identify author-declared reference comparisons.
 - `app.py` — six Streamlit pages; presentation only.
 - `schemas/results_v2.schema.json` — dashboard reader schema for the corrected result format.
 - `screenshots/` — UI samples for code review, not experiment evidence.
@@ -23,3 +23,5 @@ Keep the eight scenario records distinct from the 24 technical repetitions. Pres
 ## Validation
 
 Run `make test-research-dashboard`, `make research-figures`, and the documented development checks. Publication export reloads source artifacts, verifies the complete non-empty checksum inventory and report summaries before writing; `--force` only applies after that preflight passes.
+
+The CI-only monograph evidence package consumes these existing source-bound figures and validates their caption/claim map. It does not change Method P evidence, reference labels, or readiness gates; run `make test-monograph-evidence` for the derived package consistency check.

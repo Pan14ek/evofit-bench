@@ -1,0 +1,107 @@
+[
+  {
+    "caption_and_footnotes": [
+      "Method P coverage assessment transitions",
+      "Purple outlines mark INCOMPLETE → ADD/REPLACE → COMPLETE candidate assessments. They do not show measured improvement.",
+      "Candidate configuration assessment only; actual post-adaptation coverage: NOT_MEASURED"
+    ],
+    "claim_ids": [
+      "CLAIM-B2",
+      "CLAIM-B4"
+    ],
+    "data_unit": "one synthetic scenario",
+    "figure_files": {
+      "coverage_assessment_transitions.png": "0fd1c39caaeb4ba1580c4a4a69cc761c26b7e49849db9c1bbb5143090dda7d26",
+      "coverage_assessment_transitions.svg": "202ea655bc9216ba1dcf0dac7c4e09957d9ff11ee96944674fae172967f3bf74"
+    },
+    "figure_id": "FIG-01",
+    "file_stem": "coverage_assessment_transitions",
+    "monograph_interpretation": "Categorical current/candidate assessments and decision states; not measured post-adaptation change.",
+    "source_data": "Raw Method P records replayed into results_v1.json; dashboard preflight PASS.",
+    "title": "Method P coverage assessment transitions",
+    "x_axis_or_columns": [
+      [
+        "Current coverage assessment",
+        "Observed operation",
+        "Candidate coverage assessment",
+        "Governance"
+      ]
+    ],
+    "y_axis_labels": []
+  },
+  {
+    "caption_and_footnotes": [
+      "Method P operations and governance outcomes",
+      "Expected labels are AUTHOR_DECLARED / DEVELOPMENT / NON_INDEPENDENT references.",
+      "Red outlines mark reference mismatches. D2 records HOLD / REJECT in all three technical repetitions; the declared HOLD governance reference is preserved."
+    ],
+    "claim_ids": [
+      "CLAIM-B1",
+      "CLAIM-B3"
+    ],
+    "data_unit": "one synthetic scenario",
+    "figure_files": {
+      "operations_and_governance.png": "c94572a197aae0ce5818d36a8de7406dc04929870778c63d9dcef131115401ec",
+      "operations_and_governance.svg": "b1131d57ee2e371642f978a70ec37d5531b2b545e8393b32e0ab08a2a35d213b"
+    },
+    "figure_id": "FIG-02",
+    "file_stem": "operations_and_governance",
+    "monograph_interpretation": "Scenario-level expected/observed operation and governance relative to an AUTHOR_DECLARED, NON_INDEPENDENT reference; D2 mismatch retained.",
+    "source_data": "Raw Method P records replayed into results_v1.json; dashboard preflight PASS.",
+    "title": "Method P operations and governance outcomes",
+    "x_axis_or_columns": [
+      [
+        "Expected\noperation",
+        "Observed\noperation",
+        "Expected\ngovernance",
+        "Observed\ngovernance",
+        "Author-declared\nreference match"
+      ]
+    ],
+    "y_axis_labels": []
+  },
+  {
+    "caption_and_footnotes": [
+      "Method P execution duration by operation and scenario",
+      "Each dot is an individual technical repetition. The horizontal offsets only separate overlapping points; three runs per scenario are not independent cases.",
+      "RETAIN",
+      "ADD",
+      "REPLACE",
+      "HOLD"
+    ],
+    "claim_ids": [
+      "CLAIM-C1"
+    ],
+    "data_unit": "one technical repetition",
+    "figure_files": {
+      "execution_duration_by_operation_scenario.png": "7a33a6934dd2a1138997e3fa88c7739111b23016910303c2e3d28ef940515eef",
+      "execution_duration_by_operation_scenario.svg": "9674f11d842a9636fde0d080c4797e14273e0611c298df6d5d9ecd4d65e51491"
+    },
+    "figure_id": "FIG-03",
+    "file_stem": "execution_duration_by_operation_scenario",
+    "monograph_interpretation": "Recorded technical repetitions by scenario and operation; no independent baseline comparison.",
+    "source_data": "Raw Method P records replayed into results_v1.json; dashboard preflight PASS.",
+    "title": "Method P execution duration by operation and scenario",
+    "x_axis_or_columns": [
+      [
+        "A1",
+        "A2"
+      ],
+      [
+        "B1",
+        "B2"
+      ],
+      [
+        "C1",
+        "C2"
+      ],
+      [
+        "D1",
+        "D2"
+      ]
+    ],
+    "y_axis_labels": [
+      "Execution duration (ms)"
+    ]
+  }
+]

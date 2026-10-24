@@ -48,7 +48,7 @@ DEVELOPMENT_PROTECTED_TESTS = \
 	tests/unit/test_da01_execution.py \
 	tests/unit/test_research_schema_foundation.py
 
-.PHONY: install run test test-unit test-integration development-regression-test development-lint development-typecheck development-quality lint typecheck security architecture-test quality migration-test db-upgrade seed seed-fingerprint reset wait-ready load-smoke load-baseline exp01-smoke experiment-reset export-metrics metadata research-dashboard research-figures test-research-dashboard
+.PHONY: install run test test-unit test-integration development-regression-test development-lint development-typecheck development-quality lint typecheck security architecture-test quality migration-test db-upgrade seed seed-fingerprint reset wait-ready load-smoke load-baseline exp01-smoke experiment-reset export-metrics metadata research-dashboard research-figures test-research-dashboard test-monograph-evidence
 
 install:
 	$(UV) sync --extra dev
@@ -65,6 +65,12 @@ research-figures:
 test-research-dashboard:
 	$(UV) run --frozen --extra dev --with-requirements research_dashboard/requirements.lock \
 		python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_research_dashboard.py
+
+test-monograph-evidence:
+	$(UV) run --frozen --extra dev --with-requirements research_dashboard/requirements.lock \
+		python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_monograph_evidence_package.py
+	$(UV) run --frozen --extra dev --with-requirements research_dashboard/requirements.lock \
+		python -m experiments.pilots.verify_monograph_evidence verify
 
 test:
 	$(UV) run python -m pytest --cov=app --cov-report=term-missing --cov-report=xml
@@ -94,6 +100,7 @@ quality: lint typecheck security architecture-test migration-test test
 development-regression-test:
 	$(UV) run --frozen --extra dev --with-requirements research_dashboard/requirements.lock \
 		python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_research_dashboard.py
+	$(MAKE) test-monograph-evidence
 	$(UV) run --frozen --extra dev \
 		python -m pytest -q --no-cov -p no:cacheprovider \
 		$(foreach test,$(DEVELOPMENT_PROTECTED_TESTS),--ignore=$(test)) \

@@ -10,6 +10,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 ## Local landmarks
 
 - test_research_dashboard.py — validated read-only result loading, descriptive scenario/repetition summaries, explicit D2 mismatch, and deterministic figure export; no Method P execution.
+- `test_monograph_evidence_package.py` — validates source replay, EVAL aggregate/archive/report consistency, derived publication files, and read-only behavior; it does not execute the canonical Method P experiment.
 
 - `p_applicability_support.py`
 - `test_module_public_apis.py` — ΔA2 facade exports, shared `TaskSummary` type, delegated semantics and import-boundary regression

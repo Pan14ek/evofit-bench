@@ -42,9 +42,9 @@ _TRANSITION_COLORS = {
     "UNAVAILABLE": "#D9DEE7",
 }
 _TRANSITION_COLUMNS = (
-    "Current coverage",
+    "Current coverage assessment",
     "Observed operation",
-    "Candidate coverage",
+    "Candidate coverage assessment",
     "Governance",
 )
 _TRANSITION_FIELDS = (
@@ -220,9 +220,9 @@ def confusion_matrix_figure(dataset: ExperimentDataset, decision: str) -> go.Fig
         )
     )
     title = (
-        "Expected vs observed operation"
+        "Expected vs observed operation (author-declared reference)"
         if decision == "operation"
-        else ("Expected vs observed governance")
+        else "Expected vs observed governance (author-declared reference)"
     )
     figure.update_layout(
         template="plotly_white",
