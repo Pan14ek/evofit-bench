@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from typing import Any
 from zipfile import ZipFile
 
 import pytest
@@ -54,13 +55,47 @@ def _digests(paths: tuple[Path, ...]) -> dict[Path, str]:
     return {path: hashlib.sha256(path.read_bytes()).hexdigest() for path in paths}
 
 
-def test_package_replays_read_only_and_keeps_claim_boundaries() -> None:
-    source_paths = _source_evidence_paths()
-    before = _digests(source_paths)
+def test_package_replays_read_only_and_keeps_claim_boundaries(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    protected_paths = (
+        *_source_evidence_paths(),
+        *(
+            evidence.PACKAGE_DIR / filename
+            for filenames in evidence.FIGURE_FILES.values()
+            for filename in filenames
+        ),
+    )
+    before = _digests(protected_paths)
+    export_figures = evidence.export_publication_figures
+
+    def export_with_platform_render_metadata(
+        dataset: Any,
+        output_dir: str | Path,
+        force: bool = False,
+    ) -> tuple[Path, ...]:
+        from PIL import Image, PngImagePlugin
+
+        paths = export_figures(dataset, output_dir, force=force)
+        for path in paths:
+            if path.suffix == ".svg":
+                svg = path.read_bytes()
+                path.write_bytes(svg.replace(b"</svg>", b"<!-- host-specific -->\n</svg>"))
+            else:
+                with Image.open(path) as image:
+                    image.load()
+                    pnginfo = PngImagePlugin.PngInfo()
+                    pnginfo.add_text("Host", "linux")
+                    image.save(path, format="PNG", pnginfo=pnginfo)
+        return paths
+
+    monkeypatch.setattr(
+        evidence, "export_publication_figures", export_with_platform_render_metadata
+    )
 
     result = evidence.verify_package()
 
-    assert _digests(source_paths) == before
+    assert _digests(protected_paths) == before
     assert result["status"] == "PASS"
     assert result["verified_derived_files"] == 17
     assert result["p_raw_files_verified"] == 51
@@ -86,7 +121,10 @@ def test_package_replays_read_only_and_keeps_claim_boundaries() -> None:
     assert len(figures) == 3
     assert any("NOT_MEASURED" in caption for caption in figures[0]["caption_and_footnotes"])
     assert "Author-declared" in figures[1]["x_axis_or_columns"][0][-1]
-    assert all(row["figure_files"] for row in figures)
+    for row in figures:
+        assert row["figure_files"]
+        for filename, expected_digest in row["figure_files"].items():
+            assert expected_digest == evidence._sha256_file(evidence.PACKAGE_DIR / filename)
 
 
 def test_binary_metrics_exclude_unavailable_cases() -> None:

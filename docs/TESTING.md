@@ -46,7 +46,10 @@ two explicitly separate evidence tracks: canonical source-bound CI observations
 and evaluator-control studies (Track A), plus retained synthetic Method P
 DEVELOPMENT records (Track B). Its read-only verifier replays the pinned scorer
 on a temporary copy, revalidates existing source evidence, and compares generated
-tables, report, figure exports, and claim mapping with checked-in artifacts.
+tables, report, and claim mapping with checked-in artifacts. Figure titles, axes,
+captions and claim links are rebuilt from validated data; checked-in SVG/PNG
+assets are bound by their recorded SHA-256 values. Render bytes are not compared
+across platforms because Matplotlib output varies by renderer and operating system.
 `make test-monograph-evidence` is included in `make development-regression-test`
 and therefore the hosted CI workflow.
 
@@ -57,7 +60,7 @@ and therefore the hosted CI workflow.
 | MONO-CI-EVID-03 | Recalculate EVAL-01/EVAL-02 finite binary metrics from eligible evaluator-by-condition rows and compare analyses, case CSVs, reports, and archived originals; preserve the three EVAL-02 diagnostic mismatches and documented report erratum | `test_package_replays_read_only_and_keeps_claim_boundaries`, `test_evaluator_report_rejects_drift_in_published_confusion_metrics`, `test_eval02_report_rejects_undocumented_changes_to_archived_evidence` | Source-bound aggregation plus negative drift checks |
 | MONO-CI-EVID-04 | Keep eight scenarios distinct from 24 technical repetitions, preserve operation 24/24 versus combined reference agreement 21/24, and identify B0_SYNTH as non-independent | Full-package test; Method P scorer replay | Synthetic descriptive evidence only |
 | MONO-CI-EVID-05 | Distinguish current and candidate coverage assessments from actual post-adaptation coverage, which remains `NOT_MEASURED` in all repetitions | Full-package test and figure metadata assertions | Synthetic descriptive evidence only |
-| MONO-CI-EVID-06 | Reproduce six publication tables, the claim-to-evidence matrix, three SVG/PNG figure pairs, figure-to-claim map, and Ukrainian report; verify labels and output bytes against source data | Full-package test and `verify_package()` | Deterministic derived-artifact comparison |
+| MONO-CI-EVID-06 | Reproduce six publication tables, claim-to-evidence matrix, figure-to-claim map and Ukrainian report byte-for-byte; derive figure labels from validated data and verify all six checked-in SVG/PNG assets against recorded SHA-256 values | Full-package test and `verify_package()` | Cross-platform data/metadata checks plus figure-asset integrity |
 
 Focused command: `make test-monograph-evidence`. This package validates preserved
 engineering and synthetic DEVELOPMENT evidence only; it does not establish

@@ -17,7 +17,7 @@ This package consolidates two distinct empirical tracks for the Ukrainian monogr
 make test-monograph-evidence
 ```
 
-The read-only verifier validates the P raw manifest and all 57 run checksums, verifies eight V3 input archives, reruns the pinned scorer on a temporary copy, compares P results/report/score manifest, checks canonical A0.3/A0.4 source and evaluator identities, recalculates EVAL binary metrics from case rows, verifies report/CSV/archive parity, and confirms figure exports against validated source data. It writes no experiment or publication files.
+The read-only verifier validates the P raw manifest and all 57 run checksums, verifies eight V3 input archives, reruns the pinned scorer on a temporary copy, compares P results/report/score manifest, checks canonical A0.3/A0.4 source and evaluator identities, recalculates EVAL binary metrics from case rows, verifies report/CSV/archive parity, and derives figure titles, axes and captions from validated source data. It verifies checked-in SVG/PNG assets through the SHA-256 values in the evidence table. Matplotlib render bytes can vary across platforms, so verification does not require regenerated image bytes to match byte-for-byte. It writes no experiment or publication files.
 
 To regenerate only derived tables, report, and dashboard-export figures after source evidence changes:
 

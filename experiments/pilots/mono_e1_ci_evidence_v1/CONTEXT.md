@@ -10,7 +10,7 @@ Provide reproducible tables, claim traceability, figure mapping, and a Ukrainian
 
 - `evidence_tables_v1.json` and `table_*.csv` — deterministic publication tables derived from canonical source observations, EVAL-01/EVAL-02 artifacts, and the retained synthetic Method P raw records.
 - `claim_to_evidence_v1.csv` — permitted and prohibited interpretations with evidence strength and validation route.
-- `figure_to_claim_map_v1.json` — verified dashboard figure labels, source data, claims, and limits.
+- `figure_to_claim_map_v1.json` — figure labels derived from validated source data, claim links, limits, and SHA-256 digests for the checked-in SVG/PNG assets.
 - `../verify_monograph_evidence.py` — read-only integrity, replay, aggregate, and cross-artifact verifier; `write-derived` writes only these derived products and the Ukrainian report.
 - `../../../docs/MONO_E1_CI_EXPERIMENTAL_EVIDENCE_REPORT_UA.md` — monograph-ready synthesis; no Google Docs edit or experiment execution.
 
@@ -20,4 +20,4 @@ Track A contains source-bound A0.3/A0.4 CI observations and finite evaluator-con
 
 ## Validation
 
-Run `make test-monograph-evidence` to verify all source integrity, deterministic derived files, and report/table/figure consistency. The verifier uses existing dashboard publication preflight, the retained Method P scorer on a temporary copy, the canonical A0.3/A0.4 evidence validator, and the EVAL-02 post-run validator. It must never rewrite raw experiment artifacts.
+Run `make test-monograph-evidence` to verify source integrity, byte-stable derived tables/reports, figure metadata and checked-in asset digests. Matplotlib SVG/PNG render bytes can vary across platforms, so verification does not require temporary re-renders to match stored image bytes. The verifier uses existing dashboard publication preflight, the retained Method P scorer on a temporary copy, the canonical A0.3/A0.4 evidence validator, and the EVAL-02 post-run validator. It must never rewrite raw experiment artifacts.

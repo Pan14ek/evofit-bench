@@ -900,6 +900,7 @@
       "schema_status": "PASS",
       "semantic_fitness_validity": "UNKNOWN"
     },
+    "checked_in_figure_asset_sha256": "PASS",
     "dashboard_rows_match_replayed_results": "PASS",
     "eval02_postrun_validation": {
       "diagnostic_expectation_mismatches": 3,
@@ -1000,7 +1001,7 @@
         "technical_calls": 60
       }
     },
-    "figure_exports_match_validated_source_data": "PASS",
+    "figure_metadata_matches_validated_source_data": "PASS",
     "method_p_raw_replay": {
       "actual_post_adaptation_coverage": {
         "NOT_MEASURED": 24

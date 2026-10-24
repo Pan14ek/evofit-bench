@@ -1017,7 +1017,12 @@ def _claim_matrix() -> list[dict[str, Any]]:
     ]
 
 
-def _figure_metadata(dataset: Any, generated_dir: Path) -> list[dict[str, Any]]:
+def _figure_metadata(
+    dataset: Any,
+    generated_dir: Path,
+    *,
+    figure_hash_dir: Path | None = None,
+) -> list[dict[str, Any]]:
     figure_builders = (
         ("coverage_assessment_transitions", coverage_figure),
         ("operations_and_governance", operations_governance_figure),
@@ -1046,10 +1051,14 @@ def _figure_metadata(dataset: Any, generated_dir: Path) -> list[dict[str, Any]]:
                 if axis.get_title(loc=location)
             )
             filenames = FIGURE_FILES[figure_id]
-            generated_hashes = {
-                filename: _sha256_file(generated_dir / filename) for filename in filenames
+            hash_dir = generated_dir if figure_hash_dir is None else figure_hash_dir
+            figure_asset_hashes = {
+                filename: _sha256_file(hash_dir / filename) for filename in filenames
             }
-            if not title or not all((generated_dir / filename).is_file() for filename in filenames):
+            if not title or not all(
+                (generated_dir / filename).is_file() and (hash_dir / filename).is_file()
+                for filename in filenames
+            ):
                 raise EvidencePackageError(f"Figure export is incomplete for {figure_id}")
             if figure_id == "coverage_assessment_transitions" and not any(
                 "NOT_MEASURED" in caption for caption in captions
@@ -1076,7 +1085,7 @@ def _figure_metadata(dataset: Any, generated_dir: Path) -> list[dict[str, Any]]:
                     if index <= 2
                     else "one technical repetition",
                     "source_data": "Raw Method P records replayed into results_v1.json; dashboard preflight PASS.",
-                    "figure_files": generated_hashes,
+                    "figure_files": figure_asset_hashes,
                     "claim_ids": claim_ids[figure_id],
                     "monograph_interpretation": {
                         "coverage_assessment_transitions": "Categorical current/candidate assessments and decision states; not measured post-adaptation change.",
@@ -1092,8 +1101,12 @@ def _figure_metadata(dataset: Any, generated_dir: Path) -> list[dict[str, Any]]:
     return metadata
 
 
-def _build_package(root: Path = ROOT) -> tuple[dict[str, Any], str, dict[str, bytes]]:
-    """Validate sources and derive deterministic tables, report, and existing dashboard figures."""
+def _build_package(
+    root: Path = ROOT,
+    *,
+    figure_hash_dir: Path | None = None,
+) -> tuple[dict[str, Any], str, dict[str, bytes]]:
+    """Validate sources and derive tables, report, figure metadata and temporary dashboard renders."""
 
     if root.resolve() != ROOT.resolve():
         raise EvidencePackageError(
@@ -1157,7 +1170,11 @@ def _build_package(root: Path = ROOT) -> tuple[dict[str, Any], str, dict[str, by
         export_paths = export_publication_figures(dataset, generated_dir)
         if len(export_paths) != 6:
             raise EvidencePackageError(f"Expected six SVG/PNG files, exported {len(export_paths)}")
-        figures = _figure_metadata(dataset, generated_dir)
+        figures = _figure_metadata(
+            dataset,
+            generated_dir,
+            figure_hash_dir=figure_hash_dir,
+        )
         figure_bytes = {path.name: path.read_bytes() for path in export_paths}
 
     metrics = summary_metrics(dataset)
@@ -1245,7 +1262,8 @@ def _build_package(root: Path = ROOT) -> tuple[dict[str, Any], str, dict[str, by
                 ],
             },
             "dashboard_rows_match_replayed_results": "PASS",
-            "figure_exports_match_validated_source_data": "PASS",
+            "figure_metadata_matches_validated_source_data": "PASS",
+            "checked_in_figure_asset_sha256": "PASS",
         },
         "tables": {
             "table_1_scope": table1,
@@ -1430,7 +1448,7 @@ def _render_ukrainian_report(package: dict[str, Any]) -> str:
 
 Мета полягає у відтворюваній перевірці двох окремих масивів уже зібраних доказів: (А) виконання статичних функцій придатності на канонічних станах A0.3 та A0.4 і контрольованих умовах EVAL-01/EVAL-02; (Б) рішень DEVELOPMENT-реалізації методу P у восьми синтетичних сценаріях. Емпіричний обсяг обмежено CI та статичною перевіркою вихідного коду. Ці треки не утворюють спільного причинного експерименту.
 
-Пакет перевіряє цілісність вихідних записів, повторно розраховує результати методом P на тимчасовій копії незмінних сирих записів, звіряє агрегати EVAL-01/EVAL-02 з машинними таблицями, а також перевіряє відповідність похідних таблиць і рисунків валідованим даним. Верифікатор не запускає метод P на канонічному переході, не застосовує кандидат і не виконує повторного експерименту.
+Пакет перевіряє цілісність вихідних записів, повторно розраховує результати методом P на тимчасовій копії незмінних сирих записів, звіряє агрегати EVAL-01/EVAL-02 з машинними таблицями, а також відновлює метадані рисунків із валідованих даних і перевіряє SHA-256 збережених SVG/PNG. Байти Matplotlib-рендерингу залежать від платформи й не порівнюються між операційними системами. Верифікатор не запускає метод P на канонічному переході, не застосовує кандидат і не виконує повторного експерименту.
 
 ## 2. Об'єкт, предмет та умови експерименту
 
@@ -1531,7 +1549,7 @@ This package consolidates two distinct empirical tracks for the Ukrainian monogr
 make test-monograph-evidence
 ```
 
-The read-only verifier validates the P raw manifest and all 57 run checksums, verifies eight V3 input archives, reruns the pinned scorer on a temporary copy, compares P results/report/score manifest, checks canonical A0.3/A0.4 source and evaluator identities, recalculates EVAL binary metrics from case rows, verifies report/CSV/archive parity, and confirms figure exports against validated source data. It writes no experiment or publication files.
+The read-only verifier validates the P raw manifest and all 57 run checksums, verifies eight V3 input archives, reruns the pinned scorer on a temporary copy, compares P results/report/score manifest, checks canonical A0.3/A0.4 source and evaluator identities, recalculates EVAL binary metrics from case rows, verifies report/CSV/archive parity, and derives figure titles, axes and captions from validated source data. It verifies checked-in SVG/PNG assets through the SHA-256 values in the evidence table. Matplotlib render bytes can vary across platforms, so verification does not require regenerated image bytes to match byte-for-byte. It writes no experiment or publication files.
 
 To regenerate only derived tables, report, and dashboard-export figures after source evidence changes:
 
@@ -1566,17 +1584,20 @@ def _all_output_bytes(
 
 
 def verify_package() -> dict[str, Any]:
-    """Verify evidence and compare every checked-in derived artifact without writing to the repository."""
+    """Verify source evidence, exact text outputs, and checked-in figure asset digests read-only."""
 
-    package, report, figures = _build_package(ROOT)
+    package, report, figures = _build_package(ROOT, figure_hash_dir=PACKAGE_DIR)
     outputs = _all_output_bytes(package, report, figures)
     missing = [path.relative_to(ROOT).as_posix() for path in outputs if not path.is_file()]
     if missing:
         raise EvidencePackageError("Derived package files are missing: " + ", ".join(missing))
+    rendered_figure_paths = {
+        PACKAGE_DIR / filename for filenames in FIGURE_FILES.values() for filename in filenames
+    }
     mismatched = [
         path.relative_to(ROOT).as_posix()
         for path, expected in outputs.items()
-        if path.read_bytes() != expected
+        if path not in rendered_figure_paths and path.read_bytes() != expected
     ]
     if mismatched:
         raise EvidencePackageError(
