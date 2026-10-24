@@ -34,15 +34,6 @@ dev = [
   "jsonschema>=4.23,<5",
   "ruff>=0.9,<1",
 ]
-research-dashboard = [
-  "jsonschema>=4.23,<5",
-  "plotly>=5.24,<7",
-  "streamlit>=1.40,<2",
-]
-research-figures = [
-  "matplotlib>=3.8,<4",
-]
-
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
 

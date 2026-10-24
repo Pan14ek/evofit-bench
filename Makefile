@@ -26,7 +26,6 @@ DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_mono_e1_preflight.py \
 	tests/unit/test_mono_e1_a03_fitness_candidate.py \
 	tests/unit/test_mono_e1_a03_dev_fitness_config.py \
-	tests/unit/test_research_dashboard.py \
 	tests/unit/test_architecture_stage_checks.py \
 	tests/unit/test_exp01_evidence.py \
 	tests/unit/test_exp02_fitness_evidence.py \
@@ -58,13 +57,13 @@ run:
 	$(UV) run python -m scripts.run_app --reload
 
 research-dashboard:
-	$(UV) run --extra research-dashboard streamlit run research_dashboard/app.py
+	$(UV) run --frozen --with-requirements research_dashboard/requirements.lock streamlit run research_dashboard/app.py
 
 research-figures:
-	$(UV) run --extra research-figures python -m research_dashboard.figures
+	$(UV) run --frozen --with-requirements research_dashboard/requirements.lock python -m research_dashboard.figures
 
 test-research-dashboard:
-	$(UV) run --extra dev --extra research-dashboard --extra research-figures \
+	$(UV) run --frozen --extra dev --with-requirements research_dashboard/requirements.lock \
 		python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_research_dashboard.py
 
 test:
@@ -93,7 +92,9 @@ architecture-test:
 quality: lint typecheck security architecture-test migration-test test
 
 development-regression-test:
-	$(UV) run --extra dev --extra research-dashboard --extra research-figures \
+	$(UV) run --frozen --extra dev --with-requirements research_dashboard/requirements.lock \
+		python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_research_dashboard.py
+	$(UV) run --frozen --extra dev \
 		python -m pytest -q --no-cov -p no:cacheprovider \
 		$(foreach test,$(DEVELOPMENT_PROTECTED_TESTS),--ignore=$(test)) \
 		$(DEVELOPMENT_REGRESSION_TESTS)

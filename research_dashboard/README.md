@@ -8,10 +8,11 @@ API calls.
 
 ## Install and launch
 
-Install the optional UI and figure dependencies in addition to the repository's
-development dependencies:
+Install the repository's development dependencies, then launch the dashboard.
+Its UI and figure packages are pinned separately in `requirements.lock`, so
+they do not change the repository's experiment dependency lock:
 
-    uv sync --frozen --extra dev --extra research-dashboard --extra research-figures
+    uv sync --frozen --extra dev
     make research-dashboard
 
 The default source is
@@ -78,7 +79,8 @@ transitions, operations/governance outcomes, and execution duration by
 operation/scenario. Existing files are preserved unless the CLI is explicitly
 called with --force:
 
-    uv run --extra research-figures python -m research_dashboard.figures --force
+    uv run --frozen --with-requirements research_dashboard/requirements.lock \
+      python -m research_dashboard.figures --force
 
 Figure generation cross-checks calculated summaries against report_v1.md
 before writing output. It does not edit the source artifacts.
