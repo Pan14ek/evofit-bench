@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_b0_psi_metric_contract_v1.schema.json",
+  "title": "MONO CI B0 vs governed adaptation Ψ metric contract v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "study_id", "protocol_status", "status_semantics", "metrics"],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_B0_PSI_METRIC_CONTRACT_V1"},
+    "study_id": {"const": "MONO_CI_B0_PSI_COMPARISON_V1"},
+    "protocol_status": {"const": "DRAFT_NOT_APPROVED"},
+    "status_semantics": {
+      "type": "object", "additionalProperties": false,
+      "required": ["N/A", "NOT_EVALUABLE", "NOT_MEASURED", "numeric_substitution_prohibited"],
+      "properties": {
+        "N/A": {"type": "string", "minLength": 1},
+        "NOT_EVALUABLE": {"type": "string", "minLength": 1},
+        "NOT_MEASURED": {"type": "string", "minLength": 1},
+        "numeric_substitution_prohibited": {"const": true}
+      }
+    },
+    "metrics": {"type": "array", "minItems": 8, "maxItems": 8, "items": {"$ref": "#/$defs/metric"}}
+  },
+  "$defs": {
+    "armStatus": {
+      "type": "object", "additionalProperties": false, "required": ["B0", "PSI"],
+      "properties": {
+        "B0": {"enum": ["N/A", "NOT_EVALUABLE", "NOT_MEASURED"]},
+        "PSI": {"enum": ["N/A", "NOT_EVALUABLE", "NOT_MEASURED"]}
+      }
+    },
+    "armReason": {
+      "type": "object", "additionalProperties": false, "required": ["B0", "PSI"],
+      "properties": {"B0": {"type": "string", "minLength": 1}, "PSI": {"type": "string", "minLength": 1}}
+    },
+    "metric": {
+      "type": "object", "additionalProperties": false,
+      "required": ["metric_id", "applicable_arms", "between_arm_comparison", "numerator", "denominator", "measurement_boundary", "evidence_source", "current_status_by_arm", "current_status_reason_by_arm"],
+      "properties": {
+        "metric_id": {"enum": ["OPERATION_SELECTION_CORRECTNESS", "GOVERNANCE_DECISION_CORRECTNESS", "CURRENT_CONFIGURATION_VERIFIED_COVERAGE", "CONTROLLED_VIOLATION_DETECTION", "STALE_OR_SEMANTICALLY_INVALID_REPRESENTATIONS", "ASSESSED_CANDIDATE_COVERAGE", "ACTUAL_POST_ADAPTATION_COVERAGE", "END_TO_END_CASE_EXECUTION_DURATION"]},
+        "applicable_arms": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["B0", "PSI"]}},
+        "between_arm_comparison": {"type": "boolean"},
+        "numerator": {"type": "string", "minLength": 1},
+        "denominator": {"type": "string", "minLength": 1},
+        "measurement_boundary": {"type": "string", "minLength": 1},
+        "evidence_source": {"type": "string", "minLength": 1},
+        "current_status_by_arm": {"$ref": "#/$defs/armStatus"},
+        "current_status_reason_by_arm": {"$ref": "#/$defs/armReason"}
+      }
+    }
+  }
+}

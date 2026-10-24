@@ -31,7 +31,7 @@ The preparation package can verify the canonical source pair, the four archived 
 
 The bounded transition is selected because its A0.3 and A0.4 canonical source revisions and source-bound CI observations are available, and the A0.4 state requires the two specified engineering controls. That makes provenance and a small set of controlled evaluator conditions inspectable. It does not establish independent fitness-representation validity or justify generalization to other transitions.
 
-This study does not cover B1 human review, deployment, runtime telemetry, distributed architecture, the complete A1 architecture, weight/threshold optimization, the complete DA01–DA14 program, or population-level inference. A positive adaptation claim would require a separate approved case; the selected controls are primarily a negative-control/detection set.
+This study does not cover B1 human review, deployment, runtime telemetry, distributed architecture, the complete A1 architecture, weight/threshold optimization, the complete DA01–DA14 program, or population-level inference. Its deliberately narrower aim is to compare strategy behavior on the selected CI controls. None of the four cases is a predeclared positive case demonstrating that the fitness-function configuration must change after A0.3→A0.4; they test a clean control, controlled evaluator violations, and incomplete-scope uncertainty. They therefore cannot establish a positive benefit or need for adaptation. A positive adaptation-benefit claim is outside this study's case design and would require a separate approved case and independent reference in a future protocol.
 
 ### Relation to the dissertation research program
 
@@ -55,11 +55,15 @@ Four A0.4 source conditions are reused from the archived, preregistered EVAL-01 
 
 Each archived condition is pinned by source commit, repository/application tree, mutation patch and Git-bundle digest. The EVAL-01 archive is provenance-only. A future exporter may materialize only the case source files into isolated temporary input trees; it must not copy the EVAL archive, reports, expected outputs or `.git` into either method bundle, and must not mutate the canonical source revisions.
 
+The canonical A0.3/A0.4 evaluator observations are historical provenance/context only, bound to their exact source commit and trees. They are excluded from both method-input bundles and cannot support a current status for a case. In particular, the clean A0.4 observations bind to `CASE_01`; they are not observations of `CASE_02`, `CASE_03`, or `CASE_04`. Case-specific evidence may support a case's current status only in a future authorized run when its source commit, repository tree, and application tree all match that case and the evaluator was independently executed on that exact case source. No such case-specific observation is created here.
+
 The case manifest identifies source inputs only. `EVALUATOR_CONTROL_EXPECTATIONS_V1.json` separately records the existing EVAL-01 author-declared expected evaluator statuses for those four controls. Those labels are not a new reference, not independent review, and not expected B0/Ψ operations or governance decisions. `INPUTS_V1.json` contains no expected outcomes.
 
 ## 3. Treatment procedures and fair inputs
 
-Both arms must receive the same exact case source, architecture facts/checkpoint evidence, evaluator source/configuration identities, and any approved common applicability/policy information. Method-specific traceability may be provided to Ψ only if it is explicitly permitted and its digest is recorded. Each arm needs a separate, allowlisted bundle and separate output location. Do not expose the scorer reference, expected outputs, `.git`, network, or the other arm's outputs.
+Both arms must receive the same exact case source, architecture identity/checkpoint evidence, evaluator source/configuration identities, and any approved common applicability/policy information. Canonical evaluator observations are excluded from both method bundles; their exact-bound copies remain provenance/context only. Method-specific traceability may be provided to Ψ only if it is explicitly permitted and its digest is recorded. Each arm needs a separate, allowlisted bundle and separate output location. Do not expose the scorer reference, expected outputs, `.git`, network, or the other arm's outputs.
+
+B0 preserves the identified starting fitness configuration and emits no adaptation operation or governance decision. It is not treated as an implicit `RETAIN` decision: no B0 operation or governance correctness score is defined. Decision correctness is assessed for Ψ only, against a future separate scorer reference.
 
 ### B0 procedure
 
@@ -83,7 +87,7 @@ The measured interface currently sets `P_ALGORITHM_STATUS=NOT_READY` and `requir
 
 ## 4. Inputs, provenance and run environment
 
-`INPUTS_V1.json` records checksummed source artifacts and a proposed common-input inventory. Its arm bundle fields deliberately remain `NOT_CREATED`; list equality is a plan-level parity check, not evidence that comparable bundles exist. The approved policy input is unavailable: the registry is `DRAFT` and `OPEN`, so applicability cannot be resolved from it. The A0.3 baseline and Ψ-specific traceability identity are also missing.
+`INPUTS_V1.json` records checksummed source artifacts and a proposed common-input inventory. Historical canonical observations are explicitly `PROVENANCE_ONLY_HISTORICAL_OBSERVATION`, are not method-input eligible, carry exact commit/tree bindings, and are excluded from the shared-input list. Each case records that case-specific evidence is `NOT_GENERATED`. Future case evidence can support current status only after exact case source/tree matching and independent evaluator execution; the read-only preflight rejects source mismatches and any attempt to add observations to this unexecuted preparation package. Arm bundle fields deliberately remain `NOT_CREATED`; list equality is a plan-level parity check, not evidence that comparable bundles exist. The approved policy input is unavailable: the registry is `DRAFT` and `OPEN`, so applicability cannot be resolved from it. The A0.3 baseline and Ψ-specific traceability identity are also missing.
 
 Before measured execution, create isolated immutable input bundles from the allowlist, verify every included file SHA-256, bind each bundle and allowlist digest to the arm record, and run negative isolation probes in the actual digest-pinned environment. Do not downgrade isolation if the required runtime is unavailable. Pin Python/dependency, runner and timer boundaries. Since this protocol measures CI-only controls, it does not use an application database/workload or report application runtime; reviewer approval is required for this narrower boundary relative to MONO-A1's broader protocol.
 
@@ -99,20 +103,22 @@ Never infer a missing prediction, operation, evidence record or applicability ve
 
 ## 6. Metrics and measurement boundary
 
-Report raw counts before percentages. For each metric retain its full case/pair status table and source record:
+`METRIC_CONTRACT_V1.json` is the machine-readable metric contract for this draft. It fixes each numerator, denominator, boundary, evidence source, arm applicability, and current status. Report raw counts before percentages and preserve the full case/pair status table.
 
-| Metric | Numerator / denominator | Boundary | Current status |
-|---|---|---|---|
-| Operation selection correctness | Correct operation per predeclared `(target_type, target_id)` / all reference-scored targets | Separate B0 and Ψ prediction outputs; operation universe and reference must be frozen first | `NOT_EVALUABLE` |
-| Governance decision correctness | Correct `ACCEPT`/`REJECT`/`HOLD` outcome / all reference-adjudicated cases | Authentic Ψ governance record vs. independent scorer reference | `NOT_EVALUABLE` |
-| Valid coverage of applicable mandatory obligations | Distinct obligations with at least one independently valid exact pair / complete approved active-mandatory denominator | Exact representation–obligation–stage evidence; incomplete denominator emits no percentage | `NOT_EVALUABLE` |
-| Controlled-violation detection | TP/FP/FN/TN per evaluator-by-case over only predeclared binary-evaluable rows | Case-level evaluator observations; keep unknown/invalid rows separate | `NOT_MEASURED` for B0 vs. Ψ |
-| Stale/semantically invalid representations | Count and rate by exact pair, with unresolved rows reported separately | Source/config/evaluator and independent semantic assessment | `NOT_MEASURED` |
-| Execution duration | Nanoseconds from arm start to sealed arm completion; separately adaptation, evaluator and verification boundaries | Same pinned runner, limits, software and timer for both arms | `NOT_MEASURED` |
+| Metric | Applicable arms | Current B0 status | Current Ψ status | Comparison |
+|---|---|---|---|---|
+| Operation-selection correctness | Ψ | `N/A` | `NOT_EVALUABLE` | Ψ only; score against a separate frozen reference |
+| Governance-decision correctness | Ψ | `N/A` | `NOT_EVALUABLE` | Ψ only; B0 does not emit a decision |
+| Current-configuration verified coverage | B0, Ψ | `NOT_EVALUABLE` | `NOT_EVALUABLE` | Comparable after the approved denominator and valid pairs exist |
+| Controlled-violation detection | B0, Ψ | `NOT_MEASURED` | `NOT_MEASURED` | Comparable only from fresh case-bound evaluator outputs |
+| Stale/semantically invalid representations | B0, Ψ | `NOT_EVALUABLE` | `NOT_EVALUABLE` | Comparable after independent pair mappings/review |
+| Assessed candidate coverage | Ψ | `N/A` | `NOT_MEASURED` | Ψ candidate only; not post-adaptation execution |
+| Actual post-adaptation coverage | Ψ | `N/A` | `NOT_MEASURED` | Ψ candidate must be materialized and independently evaluated |
+| End-to-end case execution duration | B0, Ψ | `NOT_MEASURED` | `NOT_MEASURED` | Same pinned runner and timer boundary |
 
-An incomplete-scope case is not a negative detection and is not scored as `FALSE`; preserve `NOT_EVALUABLE`/`UNKNOWN`. Current coverage, candidate-assessed coverage and actual post-adaptation coverage are distinct. Actual post-adaptation coverage is `NOT_MEASURED` unless a materialized candidate is executed and verified. B0 adaptation time may be recorded as zero only after confirming that no adaptation process ran; its evaluator time is not zero by definition.
+`N/A` means the strategy does not produce the decision/artifact by design; it is not a zero, failure, or success. `NOT_EVALUABLE` means a required reference, denominator, or semantic-validity condition is unresolved. `NOT_MEASURED` means an applicable metric has no authorized execution/observation yet. Do not convert any of these statuses to zero, failure, or success. In particular, B0's unchanged configuration is not silently treated as a `RETAIN` operation or governance decision.
 
-Three technical process repeats per case/arm are proposed for repeatability only, with a fixed case order and alternating arm order. They do not create additional architecture transitions and support no significance claim. Reviewers must approve this repeat/failure rule before G1.
+Current-configuration coverage, Ψ assessed-candidate coverage, and actual post-adaptation coverage are separate. The incomplete-scope case is not a negative detection and is not scored as `FALSE`; preserve `NOT_EVALUABLE`/`UNKNOWN`. End-to-end duration is elapsed nanoseconds per completed case-level arm execution, from arm-process start through digest-sealed output; include evaluator execution in both arms and Ψ's impact/adaptation/governance work in Ψ. Retain raw per-case/per-repeat values and summarize descriptively only. Three technical process repeats per case/arm are proposed for repeatability only, with a fixed case order and alternating arm order. They do not create additional architecture transitions and support no significance claim. Reviewers must approve this repeat/failure rule before G1.
 
 ## 7. Stop conditions, approvals and validity limits
 

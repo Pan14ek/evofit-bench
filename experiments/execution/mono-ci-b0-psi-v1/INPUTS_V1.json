@@ -8,10 +8,20 @@
   "common_input_ids_plan": [
     "ARCHITECTURE_A03_IDENTITY",
     "ARCHITECTURE_A04_IDENTITY",
-    "CANONICAL_SOURCE_OBSERVATIONS",
     "EVALUATOR_SOURCE_AND_CONFIGS",
     "OBLIGATION_CATALOG_CONTEXT"
   ],
+  "historical_observation_context": {
+    "status": "PROVENANCE_ONLY_NOT_METHOD_INPUT",
+    "artifact_ids": [
+      "A03_PUBLIC_API_OBSERVATION",
+      "A03_MODULE_GRAPH_OBSERVATION",
+      "A04_PUBLIC_API_OBSERVATION",
+      "A04_MODULE_GRAPH_OBSERVATION"
+    ],
+    "current_case_status_supported_by_canonical_observations": false,
+    "case_evidence_admission_rule": "MATCHING_CASE_COMMIT_TREES_AND_INDEPENDENT_EXECUTION_REQUIRED"
+  },
   "shared_policy_context": {
     "status": "NO_APPROVED_POLICY_AVAILABLE",
     "registry_status": "DRAFT_OPEN",
@@ -21,12 +31,12 @@
   "source_artifacts": [
     {"id":"A03_CHECKPOINT","path":"architecture/acceptance/a1/a0_3_canonical_checkpoint.json","sha256":"5da4a7e1ed359ec8ea1e3288ab81edf32f0b71e2fec946b52a8d0d562dcf43c0","role":"COMMON_SOURCE_IDENTITY_AND_OBSERVATION","method_input_eligible":true},
     {"id":"A03_SOURCE_MANIFEST","path":"architecture/acceptance/a1/a0_3_canonical_source_manifest.yaml","sha256":"cdb85e758647b0590d954e013079d51d0060fefd8425da87e35335f89b722f32","role":"COMMON_SOURCE_IDENTITY","method_input_eligible":true},
-    {"id":"A03_PUBLIC_API_OBSERVATION","path":"architecture/acceptance/a1/a0_3_canonical_public_api_observation.json","sha256":"8d1056a69b6e2c45cbe42dae207d8bbe65454572b34032dc5f969e0f877362ad","role":"COMMON_ENGINEERING_EVIDENCE","method_input_eligible":true},
-    {"id":"A03_MODULE_GRAPH_OBSERVATION","path":"architecture/acceptance/a1/a0_3_canonical_module_graph_observation.json","sha256":"21f2347325d59325501f220476459aef9677c3b7bddd99928b7a62234c1ff0c5","role":"COMMON_ENGINEERING_EVIDENCE","method_input_eligible":true},
+    {"id":"A03_PUBLIC_API_OBSERVATION","path":"architecture/acceptance/a1/a0_3_canonical_public_api_observation.json","sha256":"8d1056a69b6e2c45cbe42dae207d8bbe65454572b34032dc5f969e0f877362ad","role":"PROVENANCE_ONLY_HISTORICAL_OBSERVATION","method_input_eligible":false,"case_evidence_eligible":false,"evidence_scope":"HISTORICAL_CONTEXT_ONLY","source_binding":{"source_state":"A0_3_GOVERNED_MODULE_GRAPH","source_commit_sha":"26a9bb667da7d0938e38aca15d2bf29fd1de4829","repository_tree_sha":"7b951421395f532ca403dab09d76902ff08a807d","application_tree_sha":"b147b8961ea9e76c966663d4832e4c303581151a","case_id":null}},
+    {"id":"A03_MODULE_GRAPH_OBSERVATION","path":"architecture/acceptance/a1/a0_3_canonical_module_graph_observation.json","sha256":"21f2347325d59325501f220476459aef9677c3b7bddd99928b7a62234c1ff0c5","role":"PROVENANCE_ONLY_HISTORICAL_OBSERVATION","method_input_eligible":false,"case_evidence_eligible":false,"evidence_scope":"HISTORICAL_CONTEXT_ONLY","source_binding":{"source_state":"A0_3_GOVERNED_MODULE_GRAPH","source_commit_sha":"26a9bb667da7d0938e38aca15d2bf29fd1de4829","repository_tree_sha":"7b951421395f532ca403dab09d76902ff08a807d","application_tree_sha":"b147b8961ea9e76c966663d4832e4c303581151a","case_id":null}},
     {"id":"A04_CHECKPOINT","path":"architecture/acceptance/a1/a0_4_canonical_checkpoint.json","sha256":"7b0b0c7a0c6ac782540466d283c42d7589b8aaeb4af7df62104faa01fd154e8e","role":"COMMON_SOURCE_IDENTITY_AND_OBSERVATION","method_input_eligible":true},
     {"id":"A04_SOURCE_MANIFEST","path":"architecture/acceptance/a1/a0_4_canonical_source_manifest.yaml","sha256":"9c981442a34830bdc44d77ffc17de5b9f832b0b261d0d92f28bd15dc567febd9","role":"COMMON_SOURCE_IDENTITY","method_input_eligible":true},
-    {"id":"A04_PUBLIC_API_OBSERVATION","path":"architecture/acceptance/a1/a0_4_canonical_public_api_observation.json","sha256":"3b894993e088b5ac73a74f1e6c6c410ebcfe9fcbdf2a73cbe551689e2433e351","role":"COMMON_ENGINEERING_EVIDENCE","method_input_eligible":true},
-    {"id":"A04_MODULE_GRAPH_OBSERVATION","path":"architecture/acceptance/a1/a0_4_canonical_module_graph_observation.json","sha256":"31c3cf5ca864f3f47ff37ae50db068ab792bb863d5be0c7e73b54266fbd766da","role":"COMMON_ENGINEERING_EVIDENCE","method_input_eligible":true},
+    {"id":"A04_PUBLIC_API_OBSERVATION","path":"architecture/acceptance/a1/a0_4_canonical_public_api_observation.json","sha256":"3b894993e088b5ac73a74f1e6c6c410ebcfe9fcbdf2a73cbe551689e2433e351","role":"PROVENANCE_ONLY_HISTORICAL_OBSERVATION","method_input_eligible":false,"case_evidence_eligible":false,"evidence_scope":"HISTORICAL_CONTEXT_ONLY","source_binding":{"source_state":"A0_4_REPORT_QUERY_PORT","source_commit_sha":"d3101c0d3aa9b7b709253b6ec7518416f05f65b9","repository_tree_sha":"2b436e0aaf09403ea516d73d20a466a122f86592","application_tree_sha":"007196f68652bc13f6798805793ffdfae96f95f7","case_id":"CASE_01"}},
+    {"id":"A04_MODULE_GRAPH_OBSERVATION","path":"architecture/acceptance/a1/a0_4_canonical_module_graph_observation.json","sha256":"31c3cf5ca864f3f47ff37ae50db068ab792bb863d5be0c7e73b54266fbd766da","role":"PROVENANCE_ONLY_HISTORICAL_OBSERVATION","method_input_eligible":false,"case_evidence_eligible":false,"evidence_scope":"HISTORICAL_CONTEXT_ONLY","source_binding":{"source_state":"A0_4_REPORT_QUERY_PORT","source_commit_sha":"d3101c0d3aa9b7b709253b6ec7518416f05f65b9","repository_tree_sha":"2b436e0aaf09403ea516d73d20a466a122f86592","application_tree_sha":"007196f68652bc13f6798805793ffdfae96f95f7","case_id":"CASE_01"}},
     {"id":"A04_SOURCE_DIFF","path":"architecture/acceptance/a1/a0_4_canonical_application_source.diff","sha256":"6538147b9aa4fa5075314aaa54a0e24ea51f33cf0d314342e926d41dabec17ac","role":"COMMON_ARCHITECTURE_CHANGE_EVIDENCE","method_input_eligible":true},
     {"id":"AC_PUBLIC_API_CONFIG","path":"architecture/acceptance/a1/public_api_v1.yaml","sha256":"8853c3a933b23f698c7ba7c5b6e511f292e8d9285dc0de4378741c53e466f7bb","role":"COMMON_EVALUATOR_CONFIGURATION","method_input_eligible":true},
     {"id":"AC_MODULE_GRAPH_CONFIG","path":"architecture/acceptance/a1/module_graph_v1.yaml","sha256":"1abae6871a477ff2a07685ad645a70defa2f1ac6745598ae4cdc35aab4e95bf6","role":"COMMON_EVALUATOR_CONFIGURATION","method_input_eligible":true},
@@ -53,15 +63,15 @@
     {"id":"EVALUATOR_EXPECTATIONS","path":"experiments/execution/mono-ci-b0-psi-v1/EVALUATOR_CONTROL_EXPECTATIONS_V1.json","sha256":"af97d3228743a592977479eaad0bae04fb8002a5cfa3a7437dce2398128b531c","role":"AUTHOR_DECLARED_REVIEW_ONLY_NOT_METHOD_INPUT","method_input_eligible":false}
   ],
   "case_sources": [
-    {"case_id":"CASE_01","source_commit_sha":"d3101c0d3aa9b7b709253b6ec7518416f05f65b9","repository_tree_sha":"2b436e0aaf09403ea516d73d20a466a122f86592","application_tree_sha":"007196f68652bc13f6798805793ffdfae96f95f7","source_snapshot_status":"NOT_EXPORTED_TO_METHOD_BUNDLE"},
-    {"case_id":"CASE_02","source_commit_sha":"97ae3947991f58e346620583b53f4ee3646f22e7","repository_tree_sha":"5e705b12fd9cf78fcea96434996f0c742e773e75","application_tree_sha":"effc8bb1a60f99edafa433eb073ec76f8b75c342","source_snapshot_status":"NOT_EXPORTED_TO_METHOD_BUNDLE"},
-    {"case_id":"CASE_03","source_commit_sha":"c97570fa789515808a5de5f187f0a7416e391f39","repository_tree_sha":"987a3aec7d8083c08dc2523d044aae05275727e3","application_tree_sha":"459fe2ccbee82fee8d86536fa57331f77870108e","source_snapshot_status":"NOT_EXPORTED_TO_METHOD_BUNDLE"},
-    {"case_id":"CASE_04","source_commit_sha":"0f93897b2d66fd9bc77ffdfad50b21b6a7b07a3d","repository_tree_sha":"77b1948a7253f66a9a1b159a69d828124a4f9ab2","application_tree_sha":"56fcba37a678697f4367bd42381e6d743696d48f","source_snapshot_status":"NOT_EXPORTED_TO_METHOD_BUNDLE"}
+    {"case_id":"CASE_01","source_commit_sha":"d3101c0d3aa9b7b709253b6ec7518416f05f65b9","repository_tree_sha":"2b436e0aaf09403ea516d73d20a466a122f86592","application_tree_sha":"007196f68652bc13f6798805793ffdfae96f95f7","source_snapshot_status":"NOT_EXPORTED_TO_METHOD_BUNDLE","case_evidence_status":"NOT_GENERATED","case_specific_evidence":[]},
+    {"case_id":"CASE_02","source_commit_sha":"97ae3947991f58e346620583b53f4ee3646f22e7","repository_tree_sha":"5e705b12fd9cf78fcea96434996f0c742e773e75","application_tree_sha":"effc8bb1a60f99edafa433eb073ec76f8b75c342","source_snapshot_status":"NOT_EXPORTED_TO_METHOD_BUNDLE","case_evidence_status":"NOT_GENERATED","case_specific_evidence":[]},
+    {"case_id":"CASE_03","source_commit_sha":"c97570fa789515808a5de5f187f0a7416e391f39","repository_tree_sha":"987a3aec7d8083c08dc2523d044aae05275727e3","application_tree_sha":"459fe2ccbee82fee8d86536fa57331f77870108e","source_snapshot_status":"NOT_EXPORTED_TO_METHOD_BUNDLE","case_evidence_status":"NOT_GENERATED","case_specific_evidence":[]},
+    {"case_id":"CASE_04","source_commit_sha":"0f93897b2d66fd9bc77ffdfad50b21b6a7b07a3d","repository_tree_sha":"77b1948a7253f66a9a1b159a69d828124a4f9ab2","application_tree_sha":"56fcba37a678697f4367bd42381e6d743696d48f","source_snapshot_status":"NOT_EXPORTED_TO_METHOD_BUNDLE","case_evidence_status":"NOT_GENERATED","case_specific_evidence":[]}
   ],
   "arms": {
     "B0": {
       "science_name": "unchanged fitness configuration",
-      "common_input_ids": ["ARCHITECTURE_A03_IDENTITY","ARCHITECTURE_A04_IDENTITY","CANONICAL_SOURCE_OBSERVATIONS","EVALUATOR_SOURCE_AND_CONFIGS","OBLIGATION_CATALOG_CONTEXT"],
+      "common_input_ids": ["ARCHITECTURE_A03_IDENTITY","ARCHITECTURE_A04_IDENTITY","EVALUATOR_SOURCE_AND_CONFIGS","OBLIGATION_CATALOG_CONTEXT"],
       "planned_case_ids": ["CASE_01","CASE_02","CASE_03","CASE_04"],
       "baseline_configuration_status": "NOT_IDENTIFIED",
       "bundle_status": "NOT_CREATED",
@@ -71,7 +81,7 @@
     "PSI": {
       "science_name": "governed adaptation method Ψ",
       "internal_implementation_id": "P",
-      "common_input_ids": ["ARCHITECTURE_A03_IDENTITY","ARCHITECTURE_A04_IDENTITY","CANONICAL_SOURCE_OBSERVATIONS","EVALUATOR_SOURCE_AND_CONFIGS","OBLIGATION_CATALOG_CONTEXT"],
+      "common_input_ids": ["ARCHITECTURE_A03_IDENTITY","ARCHITECTURE_A04_IDENTITY","EVALUATOR_SOURCE_AND_CONFIGS","OBLIGATION_CATALOG_CONTEXT"],
       "planned_case_ids": ["CASE_01","CASE_02","CASE_03","CASE_04"],
       "algorithm_status": "NOT_READY",
       "traceability_status": "NOT_ASSEMBLED",

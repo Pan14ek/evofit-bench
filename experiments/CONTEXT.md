@@ -16,7 +16,7 @@ Scientific protocol, scenarios, execution, curated evidence and run results.
 - `execution/EXP04_EVIDENCE_ADMISSION.md`
 - `execution/tooling/b0p_development.py` — write-once B0/P DEVELOPMENT input preparation and readback checks
 - `execution/MONO_E1_COMPARABILITY_PREFLIGHT_V1.json` and `execution/tooling/mono_e1_preflight.py` — read-only MONO-E1 comparability snapshot and verifier; preparation only, never execution or authorization
-- `execution/mono-ci-b0-psi-v1/` — distinct draft/NO_GO monograph comparison preparation for A0.3→A0.4; source/archive readback only, no arm execution or scorer reference.
+- `execution/mono-ci-b0-psi-v1/` — distinct draft/NO_GO monograph comparison preparation for A0.3→A0.4; source/archive readback only, historical observations excluded from method/current-case evidence, arm-specific metric contract, no arm execution or scorer reference.
 - `execution/MONO_E1_COMPARABILITY_PREPARATION_REPORT_V1.md` — structural checks, open prerequisites, and future authorized integration handoff
 - `execution/schemas/b0p_development_study_v1.schema.json` — strict preparation manifest
 - `execution/schemas/pilot02_inherited_evaluator_results_v1.schema.json`

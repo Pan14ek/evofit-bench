@@ -16,20 +16,31 @@
 | Method Ψ readiness | **BLOCKED** | `P_ALGORITHM_STATUS=NOT_READY`; `require_p_algorithm()` raises `MethodNotReadyError`. No approved E1 executable/configuration identity, digest-bound method bundle or proof of generic support exists for this study. | Freeze a general algorithm/version and contract with independent method/isolation review; do not bypass the interface guard. |
 | Same common inputs and arm isolation | **NOT READY** | `INPUTS_V1.json` defines a common-input plan, but B0/Ψ bundles and allowlist digests are `NOT_CREATED`. No approved applicable policy input or accepted B0/Ψ parity evidence exists. | Assemble separate digest-bound allowlisted bundles from the same common sources, with only approved method-specific additions, then run negative isolation probes. |
 | Case set and case-source provenance | **PASS — source identities only** | Four EVAL-01 source conditions are identified by exact source/tree/patch/bundle hashes. These are evaluator-control cases, not measured B0/Ψ inputs or independent architecture transitions. | Materialize case sources in isolated temporary input trees and confirm exact byte identity before each arm. |
+| Historical versus case-specific evaluator evidence | **PASS — stale reuse blocked** | Canonical A0.3/A0.4 observations are source-bound historical context, excluded from both method bundles. A0.4 observations bind only to clean `CASE_01`; case-specific evidence arrays remain empty. The preflight rejects a current-case observation unless commit, repository tree, application tree, and independent execution all match. | In a future authorized run, independently execute evaluators on each exact case source and record case-matching output digests. |
 | Scorer reference and scoring independence | **NOT READY** | The separate EVAL-01 expectation file is author-declared diagnostic metadata only. No approved target-operation/governance reference, complete applicability denominator, scorer-only custodian, freeze, or verified readback exists. | Independent reviewer/custodian must approve or explicitly label the reference `AUTHOR_DECLARED`, seal it once, and prove it is excluded from both arm bundles. |
 | Reproducible execution environment | **NOT READY** | Existing evaluator evidence records its environment; this study has no common B0/Ψ runner identity, pinned isolated runtime image, arm timer record or source-to-runner provenance. The bounded CI-only timer change requires protocol review. | Pin dependencies, runner/image, resource limits, source provenance, common timer boundaries and failure/repetition rules. |
 | Separate authorization | **NOT AUTHORIZED** | Existing G1 is `INCOMPLETE`, G4 is `NOT AUTHORIZED`, and `G-A1-C4-REF-FROZEN` is `NOT_READY`. None of these records authorizes this separate protocol. | Complete this protocol's independent review/G1 disposition, satisfy the applicable ΔA4 reference gate, then obtain a separate explicit G4 authorization. |
 
 ## Metrics status
 
-| Outcome | Status | Reason |
-|---|---|---|
-| B0-vs-Ψ operation correctness | `NOT_EVALUABLE` | No identified A0.3 parent configuration or approved target-operation reference. |
-| Governance decision correctness | `NOT_EVALUABLE` | No reviewed operation/governance reference or Ψ execution. |
-| Valid mandatory coverage | `NOT_EVALUABLE` | The applicable mandatory denominator and exact-pair validity are unresolved. No percentage is valid. |
-| Detection of controlled violations | `NOT_MEASURED` for this comparison | Existing EVAL-01 evaluator observations are not B0/Ψ outputs. |
-| Stale/invalid evaluator representations | `NOT_MEASURED` | No approved representation mappings or independent exact-pair results. |
-| B0/Ψ duration or resource cost | `NOT_MEASURED` | Neither arm ran under a common measurement boundary. Historical evaluator-only times are not substitutes. |
+See `METRIC_CONTRACT_V1.json` for each numerator, denominator, measurement boundary, and evidence source.
+
+| Metric | B0 | Ψ | Reason |
+|---|---|---|---|
+| Operation-selection correctness | `N/A` | `NOT_EVALUABLE` | B0 emits no operation; Ψ has no separate scorer reference. B0 is not implicitly scored as `RETAIN`. |
+| Governance-decision correctness | `N/A` | `NOT_EVALUABLE` | B0 emits no governance decision; Ψ has no separate scorer reference. |
+| Current-configuration verified coverage | `NOT_EVALUABLE` | `NOT_EVALUABLE` | A0.3 baseline, complete approved denominator, and independent pair validity remain unresolved. |
+| Controlled-violation detection | `NOT_MEASURED` | `NOT_MEASURED` | No evaluator was executed for either strategy on the selected case inputs. |
+| Stale/semantically invalid representations | `NOT_EVALUABLE` | `NOT_EVALUABLE` | No approved representation mappings or independent pair reference exist. |
+| Assessed candidate coverage | `N/A` | `NOT_MEASURED` | B0 creates no candidate; Ψ created and assessed none. |
+| Actual post-adaptation coverage | `N/A` | `NOT_MEASURED` | B0 does not adapt; no Ψ candidate was materialized and evaluated. |
+| End-to-end case execution duration | `NOT_MEASURED` | `NOT_MEASURED` | Neither arm ran under a common pinned timer boundary. |
+
+`N/A`, `NOT_EVALUABLE`, and `NOT_MEASURED` are distinct categorical statuses. None is converted to zero, failure, or success.
+
+## Scientific case limit
+
+The selected cases are a clean control, controlled evaluator violations, and incomplete-scope uncertainty from EVAL-01. None is a predeclared positive adaptation case. This study's narrow aim is strategy behavior on these CI controls; these cases cannot establish that the fitness-function configuration needed to change or that adaptation provided a positive benefit. Such a claim needs a separately approved case and independent reference in a future protocol.
 
 The existing EVAL-01/EVAL-02 studies provide finite, author-selected engineering evaluator checks, not an independent B0 baseline, method Ψ execution, full obligation coverage, or this study's measured comparison.
 

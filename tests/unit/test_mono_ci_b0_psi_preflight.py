@@ -19,6 +19,8 @@ from experiments.execution.tooling.mono_ci_b0_psi_preflight import (
     _parse_archive_checksums,
     _repository_file,
     _verify_case_bindings,
+    _verify_case_specific_observation_binding,
+    _verify_metric_contract,
     _verify_package_checksums,
     verify_preflight,
 )
@@ -41,6 +43,7 @@ def test_preparation_schemas_are_valid_and_current_payloads_validate() -> None:
         "mono_ci_b0_psi_case_manifest_v1.schema.json",
         "mono_ci_b0_psi_inputs_v1.schema.json",
         "mono_ci_b0_psi_evaluator_expectations_v1.schema.json",
+        "mono_ci_b0_psi_metric_contract_v1.schema.json",
     ):
         load_schema(schema_name)
     validate_payload("mono_ci_b0_psi_case_manifest_v1.schema.json", _json("CASE_MANIFEST_V1.json"))
@@ -48,6 +51,10 @@ def test_preparation_schemas_are_valid_and_current_payloads_validate() -> None:
     validate_payload(
         "mono_ci_b0_psi_evaluator_expectations_v1.schema.json",
         _json("EVALUATOR_CONTROL_EXPECTATIONS_V1.json"),
+    )
+    validate_payload(
+        "mono_ci_b0_psi_metric_contract_v1.schema.json",
+        _json("METRIC_CONTRACT_V1.json"),
     )
 
 
@@ -80,6 +87,8 @@ def test_b0_independence_and_paired_input_parity_remain_blocked() -> None:
     assert inputs["arms"]["B0"]["bundle_sha256"] is None
     assert inputs["arms"]["B0"]["common_input_ids"] == inputs["arms"]["PSI"]["common_input_ids"]
     assert inputs["arms"]["B0"]["planned_case_ids"] == inputs["arms"]["PSI"]["planned_case_ids"]
+    assert "CANONICAL_SOURCE_OBSERVATIONS" not in inputs["common_input_ids_plan"]
+    assert all(row["case_specific_evidence"] == [] for row in inputs["case_sources"])
 
     altered = copy.deepcopy(inputs)
     altered["arms"]["PSI"]["common_input_ids"].append("UNMATCHED_INPUT")
@@ -102,6 +111,55 @@ def test_b0_independence_and_paired_input_parity_remain_blocked() -> None:
         validate_payload("mono_ci_b0_psi_inputs_v1.schema.json", promoted)
 
 
+def test_canonical_clean_a04_observations_cannot_be_current_evidence_for_mutated_cases() -> None:
+    inputs = _json("INPUTS_V1.json")
+    artifacts = {row["id"]: row for row in inputs["source_artifacts"]}
+    case_sources = {row["case_id"]: row for row in inputs["case_sources"]}
+    canonical_binding = artifacts["A04_PUBLIC_API_OBSERVATION"]["source_binding"]
+
+    for case_id in ("CASE_02", "CASE_03", "CASE_04"):
+        case_observation = {
+            "case_id": case_id,
+            "source_commit_sha": canonical_binding["source_commit_sha"],
+            "repository_tree_sha": canonical_binding["repository_tree_sha"],
+            "application_tree_sha": canonical_binding["application_tree_sha"],
+            "independent_execution_status": "INDEPENDENTLY_EXECUTED",
+            "raw_output_sha256": "a" * 64,
+        }
+        with pytest.raises(
+            ContractValidationError,
+            match=f"CASE_EVIDENCE_SOURCE_MISMATCH:{case_id}:source_commit_sha",
+        ):
+            _verify_case_specific_observation_binding(case_observation, case_sources[case_id])
+
+    assert artifacts["A04_PUBLIC_API_OBSERVATION"]["method_input_eligible"] is False
+    assert artifacts["A04_PUBLIC_API_OBSERVATION"]["case_evidence_eligible"] is False
+    assert artifacts["A04_PUBLIC_API_OBSERVATION"]["evidence_scope"] == "HISTORICAL_CONTEXT_ONLY"
+
+
+def test_case_specific_observation_requires_an_independent_execution_record() -> None:
+    case_source = _json("INPUTS_V1.json")["case_sources"][0]
+    observation = {
+        "observation_id": "FUTURE_CASE_OBSERVATION",
+        "evidence_scope": "CASE_SPECIFIC",
+        "case_id": case_source["case_id"],
+        "source_commit_sha": case_source["source_commit_sha"],
+        "repository_tree_sha": case_source["repository_tree_sha"],
+        "application_tree_sha": case_source["application_tree_sha"],
+        "independent_execution_status": "HISTORICAL_CANONICAL_OBSERVATION",
+        "raw_output_sha256": "b" * 64,
+    }
+    with pytest.raises(ContractValidationError, match="CASE_EVIDENCE_NOT_INDEPENDENTLY_EXECUTED"):
+        _verify_case_specific_observation_binding(observation, case_source)
+
+    historical = copy.deepcopy(observation)
+    historical["observation_id"] = "A04_PUBLIC_API_OBSERVATION"
+    historical["evidence_scope"] = "HISTORICAL_CONTEXT_ONLY"
+    historical["independent_execution_status"] = "INDEPENDENTLY_EXECUTED"
+    with pytest.raises(ContractValidationError, match="HISTORICAL_OBSERVATION_NOT_CASE_EVIDENCE"):
+        _verify_case_specific_observation_binding(historical, case_source)
+
+
 def test_unknown_applicability_incomplete_denominator_and_missing_reference_stay_explicit() -> None:
     inputs = _json("INPUTS_V1.json")
     cases = _json("CASE_MANIFEST_V1.json")
@@ -118,6 +176,36 @@ def test_unknown_applicability_incomplete_denominator_and_missing_reference_stay
     promoted["shared_policy_context"]["applicability"] = "INACTIVE"
     with pytest.raises(ContractValidationError, match="validation failed"):
         validate_payload("mono_ci_b0_psi_inputs_v1.schema.json", promoted)
+
+
+def test_metric_contract_keeps_arm_applicability_and_statuses_distinct() -> None:
+    contract = _json("METRIC_CONTRACT_V1.json")
+    _verify_metric_contract(contract)
+    by_id = {row["metric_id"]: row for row in contract["metrics"]}
+    assert by_id["OPERATION_SELECTION_CORRECTNESS"]["current_status_by_arm"] == {
+        "B0": "N/A",
+        "PSI": "NOT_EVALUABLE",
+    }
+    assert by_id["GOVERNANCE_DECISION_CORRECTNESS"]["current_status_by_arm"]["B0"] == "N/A"
+    assert by_id["CURRENT_CONFIGURATION_VERIFIED_COVERAGE"]["current_status_by_arm"] == {
+        "B0": "NOT_EVALUABLE",
+        "PSI": "NOT_EVALUABLE",
+    }
+    assert by_id["END_TO_END_CASE_EXECUTION_DURATION"]["current_status_by_arm"] == {
+        "B0": "NOT_MEASURED",
+        "PSI": "NOT_MEASURED",
+    }
+    assert contract["status_semantics"]["numeric_substitution_prohibited"] is True
+
+    mislabeled = copy.deepcopy(contract)
+    mislabeled["metrics"][0]["current_status_by_arm"]["B0"] = "NOT_EVALUABLE"
+    with pytest.raises(ContractValidationError, match="METRIC_ARM_STATUS_MISMATCH"):
+        _verify_metric_contract(mislabeled)
+
+    invalid_status = copy.deepcopy(contract)
+    invalid_status["metrics"][0]["current_status_by_arm"]["B0"] = "0"
+    with pytest.raises(ContractValidationError, match="validation failed"):
+        validate_payload("mono_ci_b0_psi_metric_contract_v1.schema.json", invalid_status)
 
 
 def test_evaluator_expectations_are_review_only_and_scope_is_exactly_two_controls() -> None:

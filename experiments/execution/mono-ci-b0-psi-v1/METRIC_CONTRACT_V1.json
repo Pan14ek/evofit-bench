@@ -1,0 +1,101 @@
+{
+  "schema_version": "MONO_CI_B0_PSI_METRIC_CONTRACT_V1",
+  "study_id": "MONO_CI_B0_PSI_COMPARISON_V1",
+  "protocol_status": "DRAFT_NOT_APPROVED",
+  "status_semantics": {
+    "N/A": "The strategy does not produce this kind of decision or artifact by design. It is not a zero, miss, failure, or success.",
+    "NOT_EVALUABLE": "A required reference, denominator, or semantic validity condition is unresolved, so the defined metric cannot be scored. It is not a zero, failure, or success.",
+    "NOT_MEASURED": "The metric is applicable and can be measured under the protocol, but no authorized execution or observation was collected. It is not a zero, failure, or success.",
+    "numeric_substitution_prohibited": true
+  },
+  "metrics": [
+    {
+      "metric_id": "OPERATION_SELECTION_CORRECTNESS",
+      "applicable_arms": ["PSI"],
+      "between_arm_comparison": false,
+      "numerator": "Ψ-selected operations matching the separately frozen scorer reference, counted per predeclared (target_type, target_id).",
+      "denominator": "All predeclared operation targets that the independent scorer reference adjudicates.",
+      "measurement_boundary": "Compare only an authentic Ψ operation record with a separate scorer-only reference frozen before execution; B0 emits no operation and is not implicitly scored as RETAIN.",
+      "evidence_source": "Digest-bound Ψ output and scorer-only reference with independent custody/readback; EVAL-01 expectations are excluded.",
+      "current_status_by_arm": {"B0": "N/A", "PSI": "NOT_EVALUABLE"},
+      "current_status_reason_by_arm": {"B0": "B0 preserves its configuration and produces no adaptation operation.", "PSI": "No separate scorer reference exists and no authorized Ψ output exists."}
+    },
+    {
+      "metric_id": "GOVERNANCE_DECISION_CORRECTNESS",
+      "applicable_arms": ["PSI"],
+      "between_arm_comparison": false,
+      "numerator": "Ψ governance decisions matching the separately frozen scorer reference, counted per reference-adjudicated case.",
+      "denominator": "All predeclared cases for which the independent scorer reference adjudicates a governance decision.",
+      "measurement_boundary": "Compare an authentic Ψ governance record with a separate scorer-only reference; B0 makes no governance decision and is not implicitly scored as RETAIN.",
+      "evidence_source": "Digest-bound Ψ governance output and scorer-only reference with independent custody/readback; EVAL-01 expectations are excluded.",
+      "current_status_by_arm": {"B0": "N/A", "PSI": "NOT_EVALUABLE"},
+      "current_status_reason_by_arm": {"B0": "B0 preserves its configuration and produces no governance decision.", "PSI": "No separate scorer reference exists and no authorized Ψ output exists."}
+    },
+    {
+      "metric_id": "CURRENT_CONFIGURATION_VERIFIED_COVERAGE",
+      "applicable_arms": ["B0", "PSI"],
+      "between_arm_comparison": true,
+      "numerator": "Distinct applicable mandatory obligations with at least one independently valid representation–obligation–stage pair in the arm's pre-adaptation configuration.",
+      "denominator": "The complete, independently approved set of active mandatory obligations and required stages for the bounded study scope.",
+      "measurement_boundary": "Assess each arm's unchanged starting configuration on identical case sources; preserve applicability, compliance, pair validity, and coverage as separate judgments.",
+      "evidence_source": "Source-bound arm configuration and independently reviewed exact-pair evidence plus the approved denominator; no percentage is emitted for an incomplete denominator.",
+      "current_status_by_arm": {"B0": "NOT_EVALUABLE", "PSI": "NOT_EVALUABLE"},
+      "current_status_reason_by_arm": {"B0": "The A0.3 baseline and complete approved denominator are unresolved.", "PSI": "The A0.3 starting configuration, exact-pair validity, and complete approved denominator are unresolved."}
+    },
+    {
+      "metric_id": "CONTROLLED_VIOLATION_DETECTION",
+      "applicable_arms": ["B0", "PSI"],
+      "between_arm_comparison": true,
+      "numerator": "True-positive controlled-violation detections, with TP/FP/FN/TN reported as raw counts per evaluator, control, case, and repeat.",
+      "denominator": "All predeclared binary-evaluable evaluator-by-case observations; UNKNOWN or NOT_EVALUABLE rows remain separate and are not counted as negatives.",
+      "measurement_boundary": "Compare independently executed arm evaluators on identical case source trees under the same pinned runner and evaluator boundary; case-specific output must bind to that case's commit and trees.",
+      "evidence_source": "Fresh case-bound evaluator outputs, independent source readback, and a separately frozen scorer reference; archived canonical observations are provenance only.",
+      "current_status_by_arm": {"B0": "NOT_MEASURED", "PSI": "NOT_MEASURED"},
+      "current_status_reason_by_arm": {"B0": "No evaluator ran for B0 on the selected case inputs.", "PSI": "No evaluator ran for Ψ on the selected case inputs."}
+    },
+    {
+      "metric_id": "STALE_OR_SEMANTICALLY_INVALID_REPRESENTATIONS",
+      "applicable_arms": ["B0", "PSI"],
+      "between_arm_comparison": true,
+      "numerator": "Exact representation–obligation–stage pairs independently adjudicated stale or semantically invalid for the target case.",
+      "denominator": "All exact pairs with approved mappings and an independently adjudicable semantic reference; unresolved pairs are reported separately.",
+      "measurement_boundary": "Assess source, configuration, evaluator, scope, stage, and case binding for each predeclared pair; do not infer semantic validity from evaluator exit status or a compliance observation.",
+      "evidence_source": "Independently reviewed pair mappings and case-bound raw evaluator records; canonical observations do not establish validity on mutated cases.",
+      "current_status_by_arm": {"B0": "NOT_EVALUABLE", "PSI": "NOT_EVALUABLE"},
+      "current_status_reason_by_arm": {"B0": "No approved representation mappings or independent pair reference exist.", "PSI": "No approved representation mappings or independent pair reference exist."}
+    },
+    {
+      "metric_id": "ASSESSED_CANDIDATE_COVERAGE",
+      "applicable_arms": ["PSI"],
+      "between_arm_comparison": false,
+      "numerator": "Distinct applicable mandatory obligations with a candidate representation assessed as valid before post-adaptation execution.",
+      "denominator": "The complete approved active-mandatory obligation and stage set for the bounded scope.",
+      "measurement_boundary": "Report only for an explicitly materialized Ψ candidate; keep candidate-assessed coverage separate from current and post-adaptation coverage.",
+      "evidence_source": "Digest-bound materialized Ψ candidate, approved denominator, and independent exact-pair assessment.",
+      "current_status_by_arm": {"B0": "N/A", "PSI": "NOT_MEASURED"},
+      "current_status_reason_by_arm": {"B0": "B0 creates no candidate configuration.", "PSI": "No authorized Ψ execution or candidate assessment occurred."}
+    },
+    {
+      "metric_id": "ACTUAL_POST_ADAPTATION_COVERAGE",
+      "applicable_arms": ["PSI"],
+      "between_arm_comparison": false,
+      "numerator": "Distinct applicable mandatory obligations with an independently valid representation–obligation–stage pair after the Ψ candidate was executed.",
+      "denominator": "The complete approved active-mandatory obligation and stage set for the bounded scope.",
+      "measurement_boundary": "Count only after a materialized candidate's evaluators have run and their outputs and source bindings have passed readback.",
+      "evidence_source": "Post-adaptation Ψ evaluator run records, candidate digest, independent exact-pair readback, and approved denominator.",
+      "current_status_by_arm": {"B0": "N/A", "PSI": "NOT_MEASURED"},
+      "current_status_reason_by_arm": {"B0": "B0 performs no adaptation.", "PSI": "No candidate was materialized or evaluated after adaptation."}
+    },
+    {
+      "metric_id": "END_TO_END_CASE_EXECUTION_DURATION",
+      "applicable_arms": ["B0", "PSI"],
+      "between_arm_comparison": true,
+      "numerator": "Elapsed nanoseconds for one case-level arm execution from arm-process start through digest-sealed output.",
+      "denominator": "One completed predeclared case execution; retain raw duration for every case and technical repeat, then summarize descriptively without treating repeats as independent transitions.",
+      "measurement_boundary": "Use the same digest-pinned runner, limits, timer, and start/end events. Include evaluator execution in both arms and Ψ impact/adaptation/governance work in Ψ; do not substitute historical EVAL-01 timing.",
+      "evidence_source": "Raw monotonic-clock records bound to case, arm, runner, and sealed output digests.",
+      "current_status_by_arm": {"B0": "NOT_MEASURED", "PSI": "NOT_MEASURED"},
+      "current_status_reason_by_arm": {"B0": "B0 did not run under a common pinned timer boundary.", "PSI": "Ψ did not run under a common pinned timer boundary."}
+    }
+  ]
+}

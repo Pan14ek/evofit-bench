@@ -24,15 +24,18 @@ PACKAGE_RELATIVE = Path("experiments/execution/mono-ci-b0-psi-v1")
 INPUTS_NAME = "INPUTS_V1.json"
 CASE_MANIFEST_NAME = "CASE_MANIFEST_V1.json"
 EXPECTATIONS_NAME = "EVALUATOR_CONTROL_EXPECTATIONS_V1.json"
+METRIC_CONTRACT_NAME = "METRIC_CONTRACT_V1.json"
 CHECKSUMS_NAME = "SHA256SUMS"
 CASE_SCHEMA = "mono_ci_b0_psi_case_manifest_v1.schema.json"
 INPUTS_SCHEMA = "mono_ci_b0_psi_inputs_v1.schema.json"
 EXPECTATIONS_SCHEMA = "mono_ci_b0_psi_evaluator_expectations_v1.schema.json"
+METRIC_CONTRACT_SCHEMA = "mono_ci_b0_psi_metric_contract_v1.schema.json"
 
 ARTIFACT_SCHEMA_BY_NAME = {
     CASE_MANIFEST_NAME: CASE_SCHEMA,
     INPUTS_NAME: INPUTS_SCHEMA,
     EXPECTATIONS_NAME: EXPECTATIONS_SCHEMA,
+    METRIC_CONTRACT_NAME: METRIC_CONTRACT_SCHEMA,
 }
 
 
@@ -43,13 +46,17 @@ def verify_preflight(repository: Path = REPOSITORY_ROOT) -> dict[str, Any]:
     inputs = _read_json(package / INPUTS_NAME)
     cases = _read_json(package / CASE_MANIFEST_NAME)
     expectations = _read_json(package / EXPECTATIONS_NAME)
+    metric_contract = _read_json(package / METRIC_CONTRACT_NAME)
 
     validate_payload(INPUTS_SCHEMA, inputs)
     validate_payload(CASE_SCHEMA, cases)
     validate_payload(EXPECTATIONS_SCHEMA, expectations)
+    validate_payload(METRIC_CONTRACT_SCHEMA, metric_contract)
     _verify_package_checksums(package)
     _verify_source_artifacts(root, inputs)
     _verify_case_bindings(root, inputs, cases, expectations)
+    _verify_historical_observation_bindings(root, inputs, cases)
+    _verify_metric_contract(metric_contract)
     _verify_eval01_archive(root, cases)
     _verify_canonical_source_pair(root, cases)
     _verify_readiness_blockers(root, inputs, expectations)
@@ -64,6 +71,8 @@ def verify_preflight(repository: Path = REPOSITORY_ROOT) -> dict[str, Any]:
         "scoring": "NOT_EXECUTED",
         "source_pair_readback": "PASS",
         "case_archive_readback": "PASS",
+        "historical_observations": "PROVENANCE_ONLY_NOT_CASE_EVIDENCE",
+        "metric_contract": "PASS",
         "remaining_gates": [
             "A0.3 parent fitness configuration is NOT_IDENTIFIED",
             "complete approved applicability/mandatory denominator and stage scope are unresolved",
@@ -206,6 +215,10 @@ def _verify_case_bindings(
         raise ContractValidationError("MONO_CI_B0_PSI_COMMON_INPUT_PARITY_MISMATCH")
     if arm_b0["common_input_ids"] != inputs["common_input_ids_plan"]:
         raise ContractValidationError("MONO_CI_B0_PSI_COMMON_INPUT_PLAN_MISMATCH")
+    if "CANONICAL_SOURCE_OBSERVATIONS" in inputs["common_input_ids_plan"]:
+        raise ContractValidationError(
+            "MONO_CI_B0_PSI_HISTORICAL_OBSERVATIONS_CANNOT_BE_METHOD_INPUTS"
+        )
     if arm_b0["planned_case_ids"] != arm_psi["planned_case_ids"]:
         raise ContractValidationError("MONO_CI_B0_PSI_CASE_PARITY_MISMATCH")
     if arm_b0["bundle_status"] != "NOT_CREATED" or arm_psi["bundle_status"] != "NOT_CREATED":
@@ -228,6 +241,10 @@ def _verify_case_bindings(
                 )
         if source["source_snapshot_status"] != "NOT_EXPORTED_TO_METHOD_BUNDLE":
             raise ContractValidationError("MONO_CI_B0_PSI_CASE_SNAPSHOT_ALREADY_EXPORTED")
+        if source["case_evidence_status"] != "NOT_GENERATED" or source["case_specific_evidence"]:
+            raise ContractValidationError(
+                f"MONO_CI_B0_PSI_CASE_EVIDENCE_MUST_REMAIN_UNGENERATED:{case_id}"
+            )
     if expectations["included_in_method_inputs"] is not False:
         raise ContractValidationError("MONO_CI_B0_PSI_EXPECTATIONS_MUST_STAY_OUTSIDE_METHOD_INPUTS")
     if (
@@ -247,6 +264,177 @@ def _verify_case_bindings(
         set(expected_case_ids)
     ):
         raise ContractValidationError("MONO_CI_B0_PSI_EXPECTATION_CASE_INVENTORY_MISMATCH")
+
+
+def _verify_case_specific_observation_binding(
+    observation: dict[str, Any], case_source: dict[str, Any]
+) -> None:
+    """Reject case evidence unless it binds to that case and a fresh execution."""
+    case_id = str(case_source["case_id"])
+    if observation.get("case_id") != case_id:
+        raise ContractValidationError(
+            f"MONO_CI_B0_PSI_CASE_EVIDENCE_BINDING_MISMATCH:{case_id}:case_id"
+        )
+    for field in ("source_commit_sha", "repository_tree_sha", "application_tree_sha"):
+        if observation.get(field) != case_source[field]:
+            raise ContractValidationError(
+                f"MONO_CI_B0_PSI_CASE_EVIDENCE_SOURCE_MISMATCH:{case_id}:{field}"
+            )
+    if observation.get("evidence_scope") == "HISTORICAL_CONTEXT_ONLY" or observation.get(
+        "observation_id"
+    ) in {
+        "A03_PUBLIC_API_OBSERVATION",
+        "A03_MODULE_GRAPH_OBSERVATION",
+        "A04_PUBLIC_API_OBSERVATION",
+        "A04_MODULE_GRAPH_OBSERVATION",
+    }:
+        raise ContractValidationError(
+            f"MONO_CI_B0_PSI_HISTORICAL_OBSERVATION_NOT_CASE_EVIDENCE:{case_id}"
+        )
+    if observation.get("independent_execution_status") != "INDEPENDENTLY_EXECUTED":
+        raise ContractValidationError(
+            f"MONO_CI_B0_PSI_CASE_EVIDENCE_NOT_INDEPENDENTLY_EXECUTED:{case_id}"
+        )
+    if not re.fullmatch(r"[0-9a-f]{64}", str(observation.get("raw_output_sha256", ""))):
+        raise ContractValidationError(f"MONO_CI_B0_PSI_CASE_EVIDENCE_RAW_DIGEST_INVALID:{case_id}")
+
+
+def _verify_historical_observation_bindings(
+    root: Path, inputs: dict[str, Any], cases: dict[str, Any]
+) -> None:
+    """Keep canonical observations out of method bundles and bind their historical scope."""
+    expected_ids = [
+        "A03_PUBLIC_API_OBSERVATION",
+        "A03_MODULE_GRAPH_OBSERVATION",
+        "A04_PUBLIC_API_OBSERVATION",
+        "A04_MODULE_GRAPH_OBSERVATION",
+    ]
+    context = inputs["historical_observation_context"]
+    if context["artifact_ids"] != expected_ids:
+        raise ContractValidationError("MONO_CI_B0_PSI_HISTORICAL_OBSERVATION_INVENTORY_MISMATCH")
+    if context["current_case_status_supported_by_canonical_observations"] is not False:
+        raise ContractValidationError("MONO_CI_B0_PSI_CANONICAL_OBSERVATION_CASE_USE_FORBIDDEN")
+    if context["case_evidence_admission_rule"] != (
+        "MATCHING_CASE_COMMIT_TREES_AND_INDEPENDENT_EXECUTION_REQUIRED"
+    ):
+        raise ContractValidationError("MONO_CI_B0_PSI_CASE_EVIDENCE_ADMISSION_RULE_MISMATCH")
+
+    transition = cases["architecture_transition"]
+    case_sources = {row["case_id"]: row for row in inputs["case_sources"]}
+    artifacts = {row["id"]: row for row in inputs["source_artifacts"]}
+    expected_bindings = {
+        "A03_PUBLIC_API_OBSERVATION": ("before", None, "AC_PUBLIC_API"),
+        "A03_MODULE_GRAPH_OBSERVATION": ("before", None, "AC_MODULE_GRAPH"),
+        "A04_PUBLIC_API_OBSERVATION": ("after", "CASE_01", "AC_PUBLIC_API"),
+        "A04_MODULE_GRAPH_OBSERVATION": ("after", "CASE_01", "AC_MODULE_GRAPH"),
+    }
+    for artifact_id, (side, case_id, control_id) in expected_bindings.items():
+        artifact = artifacts.get(artifact_id)
+        if artifact is None:
+            raise ContractValidationError(
+                f"MONO_CI_B0_PSI_HISTORICAL_OBSERVATION_MISSING:{artifact_id}"
+            )
+        if (
+            artifact["method_input_eligible"] is not False
+            or artifact["case_evidence_eligible"] is not False
+            or artifact["evidence_scope"] != "HISTORICAL_CONTEXT_ONLY"
+            or artifact["role"] != "PROVENANCE_ONLY_HISTORICAL_OBSERVATION"
+        ):
+            raise ContractValidationError(
+                f"MONO_CI_B0_PSI_HISTORICAL_OBSERVATION_ELIGIBILITY_MISMATCH:{artifact_id}"
+            )
+        expected_binding = {
+            "source_state": transition[f"{side}_state"],
+            "source_commit_sha": transition[f"{side}_commit_sha"],
+            "repository_tree_sha": transition[f"{side}_repository_tree_sha"],
+            "application_tree_sha": transition[f"{side}_application_tree_sha"],
+            "case_id": case_id,
+        }
+        if artifact["source_binding"] != expected_binding:
+            raise ContractValidationError(
+                f"MONO_CI_B0_PSI_HISTORICAL_OBSERVATION_SOURCE_MISMATCH:{artifact_id}"
+            )
+        if case_id is not None and artifact["source_binding"] != {
+            **expected_binding,
+            **{
+                field: case_sources[case_id][field]
+                for field in ("source_commit_sha", "repository_tree_sha", "application_tree_sha")
+            },
+        }:
+            raise ContractValidationError(
+                f"MONO_CI_B0_PSI_HISTORICAL_OBSERVATION_CASE_MISMATCH:{artifact_id}"
+            )
+
+        observation = _read_json(_repository_file(root, artifact["path"]))
+        architecture = observation.get("architecture", {})
+        # Keep before/after lookup explicit so a new transition cannot silently rebind it.
+        manifest_id = "A03_SOURCE_MANIFEST" if side == "before" else "A04_SOURCE_MANIFEST"
+        manifest = artifacts.get(manifest_id)
+        if (
+            architecture.get("expected_source_sha") != expected_binding["source_commit_sha"]
+            or architecture.get("target_source_sha") != expected_binding["source_commit_sha"]
+            or architecture.get("state") != expected_binding["source_state"]
+            or manifest is None
+            or architecture.get("manifest_digest") != manifest["sha256"]
+            or observation.get("evaluator", {}).get("id") != control_id
+        ):
+            raise ContractValidationError(
+                f"MONO_CI_B0_PSI_HISTORICAL_OBSERVATION_READBACK_MISMATCH:{artifact_id}"
+            )
+
+
+def _verify_metric_contract(metric_contract: dict[str, Any]) -> None:
+    """Enforce the frozen draft's arm applicability and categorical status semantics."""
+    expected = {
+        "OPERATION_SELECTION_CORRECTNESS": (["PSI"], False, {"B0": "N/A", "PSI": "NOT_EVALUABLE"}),
+        "GOVERNANCE_DECISION_CORRECTNESS": (["PSI"], False, {"B0": "N/A", "PSI": "NOT_EVALUABLE"}),
+        "CURRENT_CONFIGURATION_VERIFIED_COVERAGE": (
+            ["B0", "PSI"],
+            True,
+            {"B0": "NOT_EVALUABLE", "PSI": "NOT_EVALUABLE"},
+        ),
+        "CONTROLLED_VIOLATION_DETECTION": (
+            ["B0", "PSI"],
+            True,
+            {"B0": "NOT_MEASURED", "PSI": "NOT_MEASURED"},
+        ),
+        "STALE_OR_SEMANTICALLY_INVALID_REPRESENTATIONS": (
+            ["B0", "PSI"],
+            True,
+            {"B0": "NOT_EVALUABLE", "PSI": "NOT_EVALUABLE"},
+        ),
+        "ASSESSED_CANDIDATE_COVERAGE": (["PSI"], False, {"B0": "N/A", "PSI": "NOT_MEASURED"}),
+        "ACTUAL_POST_ADAPTATION_COVERAGE": (["PSI"], False, {"B0": "N/A", "PSI": "NOT_MEASURED"}),
+        "END_TO_END_CASE_EXECUTION_DURATION": (
+            ["B0", "PSI"],
+            True,
+            {"B0": "NOT_MEASURED", "PSI": "NOT_MEASURED"},
+        ),
+    }
+    semantics = metric_contract["status_semantics"]
+    if semantics["numeric_substitution_prohibited"] is not True or any(
+        phrase not in semantics[status].lower()
+        for status in ("N/A", "NOT_EVALUABLE", "NOT_MEASURED")
+        for phrase in ("not a zero", "failure", "success")
+    ):
+        raise ContractValidationError("MONO_CI_B0_PSI_METRIC_STATUS_SEMANTICS_INVALID")
+    rows = metric_contract["metrics"]
+    rows_by_id = {row["metric_id"]: row for row in rows}
+    if len(rows_by_id) != len(rows) or set(rows_by_id) != set(expected):
+        raise ContractValidationError("MONO_CI_B0_PSI_METRIC_INVENTORY_MISMATCH")
+    for metric_id, (applicable_arms, comparable, statuses) in expected.items():
+        row = rows_by_id[metric_id]
+        if (
+            row["applicable_arms"] != applicable_arms
+            or row["between_arm_comparison"] is not comparable
+            or row["current_status_by_arm"] != statuses
+        ):
+            raise ContractValidationError(f"MONO_CI_B0_PSI_METRIC_ARM_STATUS_MISMATCH:{metric_id}")
+        for arm in ("B0", "PSI"):
+            if (arm not in applicable_arms) != (statuses[arm] == "N/A"):
+                raise ContractValidationError(
+                    f"MONO_CI_B0_PSI_METRIC_NA_APPLICABILITY_MISMATCH:{metric_id}:{arm}"
+                )
 
 
 def _parse_archive_checksums(raw: bytes, member_names: set[str]) -> dict[str, str]:
