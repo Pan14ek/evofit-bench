@@ -61,3 +61,6 @@ Generated run files go under ignored `experiments/results/<run-id>/`. Curated ev
 
 The SPEC 03 DEVELOPMENT pipeline now defines and implements generic impact analysis, candidate/operation choices, governance, and conditional rollback checks. The next scientific milestone is independent method/protocol review and resolution of the open decisions, followed by separate G1 freeze and G4 authorization before any measured comparison. Do not treat DEVELOPMENT implementation or synthetic regression as those approvals.
 
+## Separate monograph CI-only B0/Ψ preparation
+
+[`../experiments/execution/mono-ci-b0-psi-v1/PROTOCOL.md`](../experiments/execution/mono-ci-b0-psi-v1/PROTOCOL.md) defines a separate, draft study for A0.3→A0.4 and `AC_PUBLIC_API` / `AC_MODULE_GRAPH`. Its current readiness is `NO_GO`: the historical A0.3 B0 configuration is unidentified, measured Ψ is `NOT_READY`, the obligation denominator and exact-pair validity remain unresolved, no independent scorer reference exists, G1 is incomplete and G4 is not authorized. This protocol does not alter DA01 or MONO-A1, and its package verifier does not execute evaluators or either arm.

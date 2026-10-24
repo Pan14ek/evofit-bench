@@ -17,6 +17,24 @@ uv run pytest --no-cov tests/unit/test_context_documents.py
 - **Engineering quality:** format, type checks, security scanner, import constraints, migration tests and app coverage.
 - **Research validation:** independent sealed oracle, proper unit of analysis, G1/G4 approvals and later measured B0/B1/P data. Test passes **cannot substitute** for measured evidence.
 
+## Separate MONO CI-only B0/Ψ preparation traceability
+
+`experiments/execution/mono-ci-b0-psi-v1/` is a distinct draft protocol for one A0.3→A0.4 transition and the two bounded CI controls. Its status is `NO_GO`. The preflight validates source and archive provenance, rejects historical observations as current-case evidence, checks the arm-specific metric contract, and reports readiness blockers; it does not execute an evaluator, either strategy, or scoring. A passing preflight means package integrity only.
+
+| Requirement | Expected behavior | Test owner | Status |
+| --- | --- | --- | --- |
+| MONO-CI-B0-PSI-01 | Strict v1 schemas validate case, input, evaluator-expectation, and metric-contract payloads; schema changes or unexpected fields fail closed | `tests/unit/test_mono_ci_b0_psi_preflight.py::test_preparation_schemas_are_valid_and_current_payloads_validate` | Contract checks only |
+| MONO-CI-B0-PSI-02 | A0.3/A0.4 commit, repository tree, `app` tree and ancestry read back against the frozen case manifest | `test_preflight_is_repeatable_no_go_and_never_reports_measurements` | Git source identity only |
+| MONO-CI-B0-PSI-03 | EVAL-01 outer/sidecar/member checksums and selected case commit/tree/patch/bundle identities match the archived manifest | `test_archive_mutation_provenance_mismatch_fails_closed`, `test_archive_checksum_inventory_and_package_digest_tampering_are_rejected` | Archived provenance only; evaluator was not run |
+| MONO-CI-B0-PSI-04 | B0 and Ψ have identical planned common-input/case lists, but the unidentified A0.3 baseline and absent bundles cannot be represented as executed arms | `test_b0_independence_and_paired_input_parity_remain_blocked` | Structural readiness check only |
+| MONO-CI-B0-PSI-05 | Applicability remains `UNKNOWN`, the mandatory denominator remains incomplete, and absent outcomes are not scored or converted to zero/false | `test_unknown_applicability_incomplete_denominator_and_missing_reference_stay_explicit` | No applicability or coverage assessment performed |
+| MONO-CI-B0-PSI-06 | EVAL-01 expectations stay review-only and outside method inputs; only the two declared evaluator controls are in scope | `test_evaluator_expectations_are_review_only_and_scope_is_exactly_two_controls` | Reference separation plan only |
+| MONO-CI-B0-PSI-07 | Source, package, readiness or authorization drift cannot silently promote B0/Ψ readiness; preflight remains read-only and deterministic | `test_preflight_is_repeatable_no_go_and_never_reports_measurements`, `test_unsafe_artifact_paths_are_rejected` | Synthetic negative checks plus source readback |
+| MONO-CI-B0-PSI-08 | Canonical observations stay bound to their historical source and outside method inputs; a current-case observation requires matching case commit/repository/application trees and independent execution | `test_canonical_clean_a04_observations_cannot_be_current_evidence_for_mutated_cases`, `test_case_specific_observation_requires_an_independent_execution_record` | Source-mismatch and execution-status negatives; no evaluator was run |
+| MONO-CI-B0-PSI-09 | B0 operation/governance correctness is `N/A`; Ψ-only decisions require a separate reference; comparable metrics preserve `NOT_EVALUABLE` versus `NOT_MEASURED` and never encode missing status as a number | `test_metric_contract_keeps_arm_applicability_and_statuses_distinct` | Strict metric contract and synthetic status rejection |
+
+Focused command: `make test-mono-ci-b0-psi`. This does not satisfy independent B0 execution, method readiness, input-isolation probes, scorer custody, protocol review, G1, G4, or the ΔA4 reference gate. Those remain explicit prerequisites, not skipped passes.
+
 ## Research dashboard traceability
 
 The Method P research dashboard is a read-only view over the retained

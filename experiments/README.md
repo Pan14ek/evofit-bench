@@ -19,6 +19,8 @@ The canonical machine-readable obligation identities, criteria, intents, and def
 
 ## Research artifact layout
 
+- `execution/mono-ci-b0-psi-v1/` contains the separate draft/NO_GO CI-only B0 vs. governed adaptation Ψ study. It verifies source and archive identities but does not create method bundles or execute evaluators or either strategy.
+
 - `design/` defines the experimental protocol.
 - `schemas/` defines machine-readable research contracts.
 - `scenarios/` contains pre-registered scenario specifications and frozen ground truth.

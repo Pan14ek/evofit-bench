@@ -83,6 +83,7 @@ tracked in `docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`.
 - `b0p_e1_execution.py` — additive E1 isolated B0/P run envelope with run-bound TEST_ONLY sidecar, reference exclusion, exact-pair readback, canonical RQ1 gating and six-row UNKNOWN RQ2
 - `mono_a1.py` — separate MONO-E1/E2 reference custody, prediction-scoring gates, exact-pair RQ2, W2 A1 readback, runtime prerequisites, and checksum archives
 - `mono_e1_preflight.py` — read-only MONO-E1 comparability verifier; reuses source revision, method-bundle, image-provenance, and timing validators without executing either method
+- `mono_ci_b0_psi_preflight.py` — read-only source/archive/package verifier for a separate monograph-specific CI comparison; hard-fails on provenance drift, rejects historical observations as current-case evidence, validates arm-specific metric statuses, and preserves NO_GO without invoking evaluators, methods or scorer.
 - `mono_e1_a03_fitness_config.py` — read-only schema, digest, canonical-source, frozen-A0, and evaluator-archive verifier for proposed B0_DEV_A03; it neither runs Method P nor changes readiness
 - `mono_policy_review_inventory.py` — read-only structural validator for the public MONO-E1 proposal inventory; compares copied rows to the pinned catalog and reports unresolved decision dimensions without certifying approval
 - `b0p_execution.py` — common immutable container preparation and evaluator helpers; P accepts a read-only evidence sidecar mount only when the caller supplies one

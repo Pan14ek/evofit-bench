@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_b0_psi_case_manifest_v1.schema.json",
+  "title": "MONO CI B0 vs governed adaptation Ψ case manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "study_id", "manifest_status", "measurement_status", "architecture_transition", "bounded_engineering_controls", "source_case_archive", "cases", "case_boundary"],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_B0_PSI_CASE_MANIFEST_V1"},
+    "study_id": {"const": "MONO_CI_B0_PSI_COMPARISON_V1"},
+    "manifest_status": {"const": "SOURCE_CASE_IDENTITIES_FROZEN_FOR_REVIEW"},
+    "measurement_status": {"const": "NOT_EXECUTED"},
+    "architecture_transition": {
+      "type": "object", "additionalProperties": false,
+      "required": ["before_state", "before_commit_sha", "before_repository_tree_sha", "before_application_tree_sha", "before_checkpoint_sha256", "after_state", "after_commit_sha", "after_repository_tree_sha", "after_application_tree_sha", "after_checkpoint_sha256", "scientific_description"],
+      "properties": {
+        "before_state": {"const": "A0_3_GOVERNED_MODULE_GRAPH"},
+        "before_commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "before_repository_tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "before_application_tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "before_checkpoint_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "after_state": {"const": "A0_4_REPORT_QUERY_PORT"},
+        "after_commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "after_repository_tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "after_application_tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "after_checkpoint_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "scientific_description": {"const": "Transition from explicitly governed inter-module dependencies to interaction through a public module query interface."}
+      }
+    },
+    "bounded_engineering_controls": {"const": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]},
+    "source_case_archive": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "case_catalog_path", "case_catalog_sha256", "role"],
+      "properties": {
+        "path": {"type": "string"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "case_catalog_path": {"type": "string"}, "case_catalog_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "role": {"const": "PROVENANCE_ONLY_NOT_METHOD_INPUT"}
+      }
+    },
+    "cases": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["case_id", "source_case_id", "case_role", "source_commit_sha", "repository_tree_sha", "application_tree_sha", "mutation_patch_sha256", "mutation_bundle_sha256", "source_parent_sha"],
+        "properties": {
+          "case_id": {"type": "string", "pattern": "^CASE_0[1-4]$"}, "source_case_id": {"type": "string"}, "case_role": {"type": "string"},
+          "source_commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}, "repository_tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+          "application_tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}, "mutation_patch_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "mutation_bundle_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}, "source_parent_sha": {"type": ["string", "null"], "pattern": "^[0-9a-f]{40}$"}
+        }
+      }
+    },
+    "case_boundary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["cases_are_independent_architecture_transitions", "case_repeats_are_independent_architecture_transitions", "operation_reference", "governance_reference", "obligation_denominator", "all_cases_measured_by_b0_and_psi"],
+      "properties": {
+        "cases_are_independent_architecture_transitions": {"const": false}, "case_repeats_are_independent_architecture_transitions": {"const": false},
+        "operation_reference": {"const": "NOT_ESTABLISHED"}, "governance_reference": {"const": "NOT_ESTABLISHED"},
+        "obligation_denominator": {"const": "INCOMPLETE"}, "all_cases_measured_by_b0_and_psi": {"const": false}
+      }
+    }
+  }
+}

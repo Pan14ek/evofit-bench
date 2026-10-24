@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_b0_psi_inputs_v1.schema.json",
+  "title": "MONO CI B0 vs governed adaptation Ψ input inventory v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "study_id", "input_manifest_status", "measurement_status", "case_manifest_path", "case_manifest_sha256", "common_input_ids_plan", "historical_observation_context", "shared_policy_context", "source_artifacts", "case_sources", "arms", "reference_separation"],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_B0_PSI_INPUTS_V1"},
+    "study_id": {"const": "MONO_CI_B0_PSI_COMPARISON_V1"},
+    "input_manifest_status": {"const": "PLAN_ONLY_BUNDLES_NOT_CREATED"},
+    "measurement_status": {"const": "NOT_EXECUTED"},
+    "case_manifest_path": {"type": "string"}, "case_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "common_input_ids_plan": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}},
+    "historical_observation_context": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "artifact_ids", "current_case_status_supported_by_canonical_observations", "case_evidence_admission_rule"],
+      "properties": {
+        "status": {"const": "PROVENANCE_ONLY_NOT_METHOD_INPUT"},
+        "artifact_ids": {"const": ["A03_PUBLIC_API_OBSERVATION", "A03_MODULE_GRAPH_OBSERVATION", "A04_PUBLIC_API_OBSERVATION", "A04_MODULE_GRAPH_OBSERVATION"]},
+        "current_case_status_supported_by_canonical_observations": {"const": false},
+        "case_evidence_admission_rule": {"const": "MATCHING_CASE_COMMIT_TREES_AND_INDEPENDENT_EXECUTION_REQUIRED"}
+      }
+    },
+    "shared_policy_context": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "registry_status", "applicability", "method_input_eligible"],
+      "properties": {"status": {"const": "NO_APPROVED_POLICY_AVAILABLE"}, "registry_status": {"const": "DRAFT_OPEN"}, "applicability": {"const": "UNKNOWN"}, "method_input_eligible": {"const": false}}
+    },
+    "source_artifacts": {
+      "type": "array", "minItems": 1, "items": {
+        "type": "object", "additionalProperties": false, "required": ["id", "path", "sha256", "role", "method_input_eligible"],
+        "properties": {
+          "id": {"type": "string"}, "path": {"type": "string"}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "role": {"type": "string"}, "method_input_eligible": {"type": "boolean"},
+          "case_evidence_eligible": {"type": "boolean"},
+          "evidence_scope": {"type": "string"},
+          "source_binding": {"$ref": "#/$defs/historicalSourceBinding"}
+        },
+        "allOf": [{
+          "if": {"properties": {"id": {"enum": ["A03_PUBLIC_API_OBSERVATION", "A03_MODULE_GRAPH_OBSERVATION", "A04_PUBLIC_API_OBSERVATION", "A04_MODULE_GRAPH_OBSERVATION"]}}, "required": ["id"]},
+          "then": {
+            "required": ["case_evidence_eligible", "evidence_scope", "source_binding"],
+            "properties": {"method_input_eligible": {"const": false}, "role": {"const": "PROVENANCE_ONLY_HISTORICAL_OBSERVATION"}, "case_evidence_eligible": {"const": false}, "evidence_scope": {"const": "HISTORICAL_CONTEXT_ONLY"}}
+          },
+          "else": {"not": {"anyOf": [{"required": ["case_evidence_eligible"]}, {"required": ["evidence_scope"]}, {"required": ["source_binding"]}]}}
+        }]
+      }
+    },
+    "case_sources": {
+      "type": "array", "minItems": 4, "maxItems": 4, "items": {
+        "type": "object", "additionalProperties": false, "required": ["case_id", "source_commit_sha", "repository_tree_sha", "application_tree_sha", "source_snapshot_status", "case_evidence_status", "case_specific_evidence"],
+        "properties": {"case_id": {"type": "string", "pattern": "^CASE_0[1-4]$"}, "source_commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}, "repository_tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}, "application_tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}, "source_snapshot_status": {"const": "NOT_EXPORTED_TO_METHOD_BUNDLE"}, "case_evidence_status": {"const": "NOT_GENERATED"}, "case_specific_evidence": {"type": "array", "maxItems": 0}}
+      }
+    },
+    "arms": {
+      "type": "object", "additionalProperties": false, "required": ["B0", "PSI"],
+      "properties": {
+        "B0": {"$ref": "#/$defs/b0Arm"}, "PSI": {"$ref": "#/$defs/psiArm"}
+      }
+    },
+    "reference_separation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scorer_reference_id", "included_in_either_method_bundle", "expected_operations_status", "governance_labels_status"],
+      "properties": {"scorer_reference_id": {"const": "MONO_CI_B0_PSI_REFERENCE_NOT_ESTABLISHED"}, "included_in_either_method_bundle": {"const": false}, "expected_operations_status": {"const": "NOT_CREATED"}, "governance_labels_status": {"const": "NOT_CREATED"}}
+    }
+  },
+  "$defs": {
+    "historicalSourceBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_state", "source_commit_sha", "repository_tree_sha", "application_tree_sha", "case_id"],
+      "properties": {
+        "source_state": {"enum": ["A0_3_GOVERNED_MODULE_GRAPH", "A0_4_REPORT_QUERY_PORT"]},
+        "source_commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "repository_tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "application_tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "case_id": {"oneOf": [{"type": "string", "const": "CASE_01"}, {"type": "null"}]}
+      }
+    },
+    "baseArm": {
+      "type": "object", "required": ["science_name", "common_input_ids", "planned_case_ids", "bundle_status", "bundle_sha256", "allowlist_sha256"],
+      "properties": {"science_name": {"type": "string"}, "common_input_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}, "planned_case_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^CASE_0[1-4]$"}}, "bundle_status": {"const": "NOT_CREATED"}, "bundle_sha256": {"type": "null"}, "allowlist_sha256": {"type": "null"}}
+    },
+    "b0Arm": {
+      "allOf": [{"$ref": "#/$defs/baseArm"}], "additionalProperties": false,
+      "required": ["science_name", "common_input_ids", "planned_case_ids", "baseline_configuration_status", "bundle_status", "bundle_sha256", "allowlist_sha256"],
+      "properties": {"science_name": {"const": "unchanged fitness configuration"}, "common_input_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}, "planned_case_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^CASE_0[1-4]$"}}, "baseline_configuration_status": {"const": "NOT_IDENTIFIED"}, "bundle_status": {"const": "NOT_CREATED"}, "bundle_sha256": {"type": "null"}, "allowlist_sha256": {"type": "null"}}
+    },
+    "psiArm": {
+      "allOf": [{"$ref": "#/$defs/baseArm"}], "additionalProperties": false,
+      "required": ["science_name", "internal_implementation_id", "common_input_ids", "planned_case_ids", "algorithm_status", "traceability_status", "bundle_status", "bundle_sha256", "allowlist_sha256"],
+      "properties": {"science_name": {"const": "governed adaptation method Ψ"}, "internal_implementation_id": {"const": "P"}, "common_input_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}, "planned_case_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^CASE_0[1-4]$"}}, "algorithm_status": {"const": "NOT_READY"}, "traceability_status": {"const": "NOT_ASSEMBLED"}, "bundle_status": {"const": "NOT_CREATED"}, "bundle_sha256": {"type": "null"}, "allowlist_sha256": {"type": "null"}}
+    }
+  }
+}
