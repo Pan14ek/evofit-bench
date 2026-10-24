@@ -33,8 +33,9 @@ engineering tests, not a method evaluation or scientific gate.
 | DEV-DASHBOARD-06 | Three static figure pairs are emitted as SVG and 300 dpi PNG, and existing outputs are not overwritten without an explicit force option | tests/unit/test_research_dashboard.py | Deterministic export smoke check |
 
 Focused command: make test-research-dashboard. Dashboard and static figure
-dependencies are optional extras and are installed by CI for the regression
-run. Passing these tests does not establish independent reference validity,
+dependencies are pinned in research_dashboard/requirements.lock and installed
+by this focused target. The repository's experiment dependency lock remains
+unchanged. Passing these tests does not establish independent reference validity,
 P_ALGORITHM_STATUS readiness, G1/G4 authorization, or official MONO-E1 results.
 
 A test described in a specification must have a stable requirement ID, fixture provenance, preconditions, input, expected behavior, test level, location, and PASS/FAIL/SKIP/BLOCKED outcome. Never mark unimplemented requirements as passed.
