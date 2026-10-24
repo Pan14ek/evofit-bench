@@ -238,12 +238,10 @@ def _read_optional_manifest(path: Path, warnings: list[str]) -> dict[str, Any] |
     return _read_json(path)
 
 
-def _verify_sha256sums(run_dir: Path, warnings: list[str]) -> tuple[int, int, int]:
-    inventory_path = run_dir / "SHA256SUMS"
-    if not inventory_path.is_file():
-        warnings.append("SHA256SUMS is unavailable; file-level checksum verification was skipped.")
-        return 0, 0, 0
+def _read_sha256sum_entries(run_dir: Path) -> list[tuple[str, str]]:
+    """Parse the checksum inventory after its existence has been established."""
 
+    inventory_path = run_dir / "SHA256SUMS"
     entries: list[tuple[str, str]] = []
     for line_number, line in enumerate(inventory_path.read_text(encoding="utf-8").splitlines(), 1):
         if not line.strip():
@@ -257,6 +255,16 @@ def _verify_sha256sums(run_dir: Path, warnings: list[str]) -> tuple[int, int, in
 
     if len({path for _, path in entries}) != len(entries):
         raise DashboardDataError("SHA256SUMS contains duplicate file paths.")
+    return entries
+
+
+def _verify_sha256sums(run_dir: Path, warnings: list[str]) -> tuple[int, int, int]:
+    inventory_path = run_dir / "SHA256SUMS"
+    if not inventory_path.is_file():
+        warnings.append("SHA256SUMS is unavailable; file-level checksum verification was skipped.")
+        return 0, 0, 0
+
+    entries = _read_sha256sum_entries(run_dir)
 
     verified = 0
     missing = 0
@@ -340,7 +348,12 @@ def _verify_source_manifests(
         recorded_commit = execution_manifest.get("source_commit_sha")
         if recorded_commit and recorded_commit != results.get("source_commit_sha"):
             raise DashboardDataError("Result and execution-manifest source commits do not match.")
-        method_version = execution_manifest.get("method_identity", {}).get("method_version")
+        manifest_method_identity = execution_manifest.get("method_identity")
+        method_version = (
+            manifest_method_identity.get("method_version")
+            if isinstance(manifest_method_identity, dict)
+            else None
+        )
         if method_version and method_version != results.get("method_identity", {}).get(
             "method_version"
         ):
@@ -477,6 +490,158 @@ def load_dataset(
         ),
         warnings=tuple(warnings),
     )
+
+
+def validate_publication_export_readiness(dataset: ExperimentDataset) -> None:
+    """Fail closed unless the dataset and its current source artifacts are publication-ready.
+
+    The exploratory loader intentionally represents missing optional evidence as warnings.
+    Publication export uses a fresh read so validation cannot rely on a stale dataset or on
+    an earlier successful checksum pass.
+    """
+
+    run_dir = dataset.run_dir.expanduser().resolve()
+    results_path = dataset.results_path.expanduser().resolve()
+    experiment_dir = dataset.experiment_dir.expanduser().resolve()
+    expected_results_path = run_dir / "results_v1.json"
+    if results_path != expected_results_path or experiment_dir != run_dir.parent:
+        raise DashboardDataError(
+            "Publication figure export requires results_v1.json and its adjacent source artifacts."
+        )
+
+    required_paths = {
+        "execution manifest": run_dir / "execution_manifest.json",
+        "raw-record manifest": run_dir / "raw_records_manifest.json",
+        "score manifest": run_dir / "score_manifest.json",
+        "checksum inventory": run_dir / "SHA256SUMS",
+        "results": expected_results_path,
+        "source report": run_dir / "report_v1.md",
+        "author-declared reference": experiment_dir / "reference_v1.json",
+    }
+    missing = []
+    for label, path in required_paths.items():
+        if not path.is_file():
+            missing.append(f"{label} ({path.name})")
+    if missing:
+        raise DashboardDataError(
+            "Publication figure export requires verified source artifacts; missing: "
+            + ", ".join(missing)
+            + "."
+        )
+
+    verified = load_dataset(results_path)
+    if (
+        dataset.results != verified.results
+        or dataset.report_text != verified.report_text
+        or dataset.execution_manifest != verified.execution_manifest
+        or dataset.raw_records_manifest != verified.raw_records_manifest
+        or dataset.score_manifest != verified.score_manifest
+    ):
+        raise DashboardDataError(
+            "Publication figure export rejected a dataset that differs from its current "
+            "source artifacts."
+        )
+
+    integrity = verified.integrity
+    if integrity.expected_files == 0:
+        raise DashboardDataError(
+            "Publication figure export requires a non-empty SHA256SUMS inventory; "
+            "0/0 files is not a successful verification."
+        )
+    if integrity.verified_files != integrity.expected_files or integrity.missing_files != 0:
+        raise DashboardDataError(
+            "Publication figure export requires complete checksum verification: "
+            f"{integrity.verified_files}/{integrity.expected_files} files verified, "
+            f"{integrity.missing_files} listed files missing."
+        )
+    if dataset.integrity != integrity:
+        raise DashboardDataError(
+            "Publication figure export rejected stale integrity results; reload the source dataset."
+        )
+
+    entries = _read_sha256sum_entries(run_dir)
+    inventory_paths = {relative_path for _, relative_path in entries}
+    required_inventory_paths = {
+        "execution_manifest.json",
+        "raw_records_manifest.json",
+        "score_manifest.json",
+        "results_v1.json",
+        "report_v1.md",
+    }
+    raw_manifest = verified.raw_records_manifest
+    if raw_manifest is None:
+        raise DashboardDataError(
+            "Publication figure export requires a verified raw-record manifest."
+        )
+    raw_files = raw_manifest.get("files")
+    if not isinstance(raw_files, list) or not raw_files:
+        raise DashboardDataError(
+            "Publication figure export requires a non-empty raw-record manifest."
+        )
+    for item in raw_files:
+        if isinstance(item, dict) and isinstance(item.get("path"), str):
+            required_inventory_paths.add(item["path"])
+    uncovered = sorted(required_inventory_paths - inventory_paths)
+    if uncovered:
+        raise DashboardDataError(
+            "SHA256SUMS does not cover required source artifacts: " + ", ".join(uncovered) + "."
+        )
+
+    execution_manifest = verified.execution_manifest
+    score_manifest = verified.score_manifest
+    if execution_manifest is None or score_manifest is None:
+        raise DashboardDataError(
+            "Publication figure export requires verified execution and score manifests."
+        )
+    for label, manifest, expected_version in (
+        ("execution", execution_manifest, 1),
+        ("raw-record", raw_manifest, 1),
+        ("score", score_manifest, 2),
+    ):
+        if manifest.get("schema_version") != expected_version:
+            raise DashboardDataError(
+                f"Publication figure export found an unsupported {label} manifest schema_version."
+            )
+    if execution_manifest.get("experiment_id") != verified.results.get("experiment_id"):
+        raise DashboardDataError("Execution manifest experiment_id does not match results.")
+    recorded_commit = execution_manifest.get("source_commit_sha")
+    if not recorded_commit or recorded_commit != verified.results.get("source_commit_sha"):
+        raise DashboardDataError(
+            "Execution manifest source_commit_sha is missing or does not match results."
+        )
+    manifest_method_identity = execution_manifest.get("method_identity")
+    result_method_identity = verified.results.get("method_identity")
+    manifest_method = (
+        manifest_method_identity.get("method_version")
+        if isinstance(manifest_method_identity, dict)
+        else None
+    )
+    result_method = (
+        result_method_identity.get("method_version")
+        if isinstance(result_method_identity, dict)
+        else None
+    )
+    if not manifest_method or manifest_method != result_method:
+        raise DashboardDataError(
+            "Execution manifest method_version is missing or does not match results."
+        )
+    for manifest_key, result_key in (
+        ("execution_manifest_sha256", "execution_manifest_sha256"),
+        ("raw_manifest_sha256", "raw_records_manifest_sha256"),
+        ("reference_sha256", "reference_sha256"),
+    ):
+        if score_manifest.get(manifest_key) != verified.results.get(result_key):
+            raise DashboardDataError(
+                f"Score manifest {manifest_key} does not match results.{result_key}."
+            )
+
+    from research_dashboard.metrics import report_consistency_issues
+
+    report_issues = report_consistency_issues(verified)
+    if report_issues:
+        raise DashboardDataError(
+            "Publication figure export report consistency check failed: " + "; ".join(report_issues)
+        )
 
 
 def repository_relative_path(path: Path, repo_root: Path) -> str:

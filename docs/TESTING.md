@@ -30,7 +30,8 @@ engineering tests, not a method evaluation or scientific gate.
 | DEV-DASHBOARD-03 | Eight scenario rows remain separate from 24 technical repetitions; categorical transitions preserve UNKNOWN and candidate versus actual coverage | tests/unit/test_research_dashboard.py | Source-bound descriptive check |
 | DEV-DASHBOARD-04 | Operation and governance agreement remain separate; D2 keeps its expected HOLD versus observed REJECT classification in all three repetitions | tests/unit/test_research_dashboard.py | Source-bound mismatch preservation |
 | DEV-DASHBOARD-05 | B0_SYNTH remains labeled as a derived assessment, and missing duration values remain missing after unit conversion | tests/unit/test_research_dashboard.py | Synthetic and missing-data checks |
-| DEV-DASHBOARD-06 | Three static figure pairs are emitted as SVG and 300 dpi PNG, and existing outputs are not overwritten without an explicit force option | tests/unit/test_research_dashboard.py | Deterministic export smoke check |
+| DEV-DASHBOARD-06 | Three static figure pairs are emitted as valid SVG and 300 dpi PNG, output is deterministic, and existing outputs are protected unless `--force` is supplied | tests/unit/test_research_dashboard.py | Deterministic export smoke check |
+| DEV-DASHBOARD-07 | Publication export re-reads and verifies required manifests, reference, report, and a complete non-empty checksum inventory before creating or replacing output; invalid evidence fails closed even with `--force` | tests/unit/test_research_dashboard.py | Synthetic negative cases plus retained source verification |
 
 Focused command: make test-research-dashboard. Dashboard and static figure
 dependencies are pinned in research_dashboard/requirements.lock and installed

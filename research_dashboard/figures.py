@@ -12,12 +12,12 @@ from research_dashboard.data import (
     ExperimentDataset,
     default_results_path,
     load_dataset,
+    validate_publication_export_readiness,
 )
 from research_dashboard.metrics import (
     GOVERNANCE_RESULTS,
     OPERATIONS,
     duration_rows,
-    report_consistency_issues,
     scenario_rows,
 )
 
@@ -444,8 +444,8 @@ def export_publication_figures(
 ) -> tuple[Path, ...]:
     """Write the three publication figures as SVG and 300 dpi PNG."""
 
+    validate_publication_export_readiness(dataset)
     selected_output = Path(output_dir).expanduser().resolve()
-    selected_output.mkdir(parents=True, exist_ok=True)
     targets = [
         selected_output / f"{basename}.{extension}"
         for basename in OUTPUT_BASENAMES
@@ -458,6 +458,7 @@ def export_publication_figures(
             f"Figure output already exists: {names}. Choose another --output-dir or pass --force."
         )
 
+    selected_output.mkdir(parents=True, exist_ok=True)
     figures = (
         coverage_figure(dataset),
         operations_governance_figure(dataset),
@@ -525,11 +526,6 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         dataset = load_dataset(args.results)
-        issues = report_consistency_issues(dataset)
-        if issues:
-            raise DashboardDataError(
-                "Report cross-check failed; figures were not exported:\n- " + "\n- ".join(issues)
-            )
         paths = export_publication_figures(dataset, args.output_dir, force=args.force)
     except (DashboardDataError, FileExistsError, OSError) as exc:
         print(f"research-figures: {exc}", file=sys.stderr)

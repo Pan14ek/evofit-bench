@@ -18,7 +18,9 @@ they do not change the repository's experiment dependency lock:
 The default source is
 experiments/pilots/mono_e1_dev_p_decisions_v1/run_v1/results_v1.json.
 Use the Results JSON path field in the sidebar to inspect another corrected v2
-result file. Loading validates its schema and nearby manifests before rendering.
+result file. Dashboard loading is exploratory: it validates available evidence,
+shows warnings for unavailable optional source artifacts, and keeps the views
+usable where possible.
 
 ## Pages
 
@@ -82,8 +84,27 @@ called with --force:
     uv run --frozen --with-requirements research_dashboard/requirements.lock \
       python -m research_dashboard.figures --force
 
-Figure generation cross-checks calculated summaries against report_v1.md
-before writing output. It does not edit the source artifacts.
+Publication export applies a strict preflight even when called directly from
+Python. It requires `execution_manifest.json`, `raw_records_manifest.json`,
+`score_manifest.json`, `SHA256SUMS`, `results_v1.json`, and `report_v1.md` in
+the run directory, plus the author-declared `reference_v1.json` beside it. The
+checksum inventory must be non-empty and cover the required run artifacts and
+raw-record files; every listed file must exist and match its SHA-256 digest.
+Manifest identities and score links are checked against the results and
+reference, and the recalculated summaries must agree with `report_v1.md`. The
+retained run currently verifies 57/57 inventory entries.
+
+If a required artifact is missing, a digest or identity does not match, the
+inventory is incomplete, or report summaries disagree, export raises a clear
+error and the CLI exits non-zero before creating output figures or replacing
+existing ones. `--force` only permits replacement after preflight passes. The
+exporter does not edit source artifacts. To reproduce the figures for the
+retained run in a separate directory:
+
+    uv run --frozen --with-requirements research_dashboard/requirements.lock \
+      python -m research_dashboard.figures \
+      --results experiments/pilots/mono_e1_dev_p_decisions_v1/run_v1/results_v1.json \
+      --output-dir /private/tmp/mono-e1-publication-figures
 
 ## Validation
 
