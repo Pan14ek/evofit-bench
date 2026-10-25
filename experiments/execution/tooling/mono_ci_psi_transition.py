@@ -491,6 +491,10 @@ def verify_transition_run(run_root: Path) -> dict[str, Any]:
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_OFFICIAL_GATE_PROMOTED")
     if record["p_algorithm_status"] != "NOT_READY" or record["g1"] != "INCOMPLETE":
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_METHOD_GATE_PROMOTED")
+    for relative, digest in record["output_checksums"].items():
+        path = root / relative
+        if not path.is_file() or sha256_file(path) != digest:
+            raise ContractValidationError("MONO_CI_PSI_TRANSITION_OUTPUT_CHECKSUM_MISMATCH")
     bundle_root = root / record["method_input"]["path"]
     manifest = verify_method_bundle_v3(bundle_root, expected_method_id="P")
     if (
@@ -610,10 +614,6 @@ def verify_transition_run(run_root: Path) -> dict[str, Any]:
         if isinstance(row, dict)
     ):
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_POLICY_AUTHORITY_CHANGED")
-    for relative, digest in record["output_checksums"].items():
-        path = root / relative
-        if not path.is_file() or sha256_file(path) != digest:
-            raise ContractValidationError("MONO_CI_PSI_TRANSITION_OUTPUT_CHECKSUM_MISMATCH")
     sidecar = (root / "development_run.json.sha256").read_text(encoding="utf-8").strip()
     if sidecar != f"{sha256_file(root / 'development_run.json')}  development_run.json":
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_RUN_SEAL_MISMATCH")
