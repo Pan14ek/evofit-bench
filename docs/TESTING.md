@@ -46,7 +46,7 @@ official measurement and cannot change the measured-P or study gates.
 
 | Requirement | Expected behavior | Test owner | Status |
 | --- | --- | --- | --- |
-| MONO-PSI-TRANS-01 | Exact A0.3/A0.4 commits, repository/application trees, and both original state manifests are bound to the V3 P input | `tests/unit/test_mono_ci_psi_transition.py::test_real_transition_executes_psi_and_archive_round_trips` | Source-bound DEVELOPMENT run |
+| MONO-PSI-TRANS-01 | Exact A0.3/A0.4 commits, repository/application trees, and both original state manifests are bound to run provenance; the A0.4 projection is verified inside the V3 P input | `tests/unit/test_mono_ci_psi_transition.py::test_real_transition_executes_psi_and_archive_round_trips` | Source-bound DEVELOPMENT run |
 | MONO-PSI-TRANS-02 | P calls the public V3 verifier and adaptation API once; preserve the observed HOLD/REJECT, operation plan, candidate diagnostics, and UNKNOWN assessments without scoring | Same test | Actual DEVELOPMENT method execution |
 | MONO-PSI-TRANS-03 | Reconstructed B0 remains unapproved/nonhistorical and is never represented as an authorized measurement input | Same test; baseline schema and proposal verifier | Provenance only |
 | MONO-PSI-TRANS-04 | Runtime contains only P modules, required schemas/catalog/vocabulary/dependencies; network and repository roots are denied, with no Git/scorer/oracle/other-arm input | Same test; runtime inventory verification | Runtime isolation/readback |

@@ -26,6 +26,31 @@ def test_real_transition_executes_psi_and_archive_round_trips(tmp_path: Path) ->
     record = verify_transition_run(run_root)
     raw_path = run_root / record["psi"]["raw_result_path"]
     raw = json.loads(raw_path.read_text(encoding="utf-8"))
+    state_manifest_path = run_root / record["transition"]["state_manifest_path"]
+    state_manifest = json.loads(state_manifest_path.read_text(encoding="utf-8"))
+    method_manifest = json.loads(
+        (run_root / record["method_input"]["path"] / "method_input_v3.json").read_text()
+    )
+    assert state_manifest_path.is_relative_to(run_root / "provenance")
+    assert (
+        state_manifest["manifests"][0]["sha256"]
+        == record["transition"]["before_state_manifest_sha256"]
+    )
+    assert (
+        state_manifest["manifests"][1]["sha256"]
+        == record["transition"]["after_state_manifest_sha256"]
+    )
+    assert record["method_input"]["structural_manifest_path"] == (
+        "architecture/states/A0_4_REPORT_QUERY_PORT.yaml"
+    )
+    observation = json.loads(
+        (
+            run_root / record["method_input"]["path"] / "architecture/structural-observations.json"
+        ).read_text()
+    )
+    assert observation["source_commit_sha"] == record["transition"]["after_commit_sha"]
+    assert observation["source_state"] == "after"
+    assert all(row["path"] != state_manifest_path.name for row in method_manifest["files"])
     assert result["psi_decision"] == record["psi"]["decision"] == "HOLD"
     assert record["transition"]["before_commit_sha"] == "26a9bb667da7d0938e38aca15d2bf29fd1de4829"
     assert record["transition"]["after_commit_sha"] == "d3101c0d3aa9b7b709253b6ec7518416f05f65b9"
@@ -73,6 +98,12 @@ def test_real_transition_executes_psi_and_archive_round_trips(tmp_path: Path) ->
     assert verified["verification_status"] == "PASS"
     extracted_record = verify_transition_run(extracted)
     assert extracted_record["psi"]["raw_result_sha256"] == record["psi"]["raw_result_sha256"]
+
+    sidecar_bytes = state_manifest_path.read_bytes()
+    state_manifest_path.write_bytes(sidecar_bytes + b" ")
+    with pytest.raises(ContractValidationError, match="OUTPUT_CHECKSUM_MISMATCH"):
+        verify_transition_run(run_root)
+    state_manifest_path.write_bytes(sidecar_bytes)
 
     raw_path.write_bytes(raw_path.read_bytes() + b" ")
     with pytest.raises(ContractValidationError, match="RAW_RESULT_DIGEST_MISMATCH"):

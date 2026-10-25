@@ -31,7 +31,7 @@
     },
     "transition": {
       "type": "object", "additionalProperties": false,
-      "required": ["before_state", "after_state", "before_commit_sha", "after_commit_sha", "before_repository_tree_sha", "after_repository_tree_sha", "before_application_tree_sha", "after_application_tree_sha", "before_state_manifest_sha256", "after_state_manifest_sha256"],
+      "required": ["before_state", "after_state", "before_commit_sha", "after_commit_sha", "before_repository_tree_sha", "after_repository_tree_sha", "before_application_tree_sha", "after_application_tree_sha", "before_state_manifest_sha256", "after_state_manifest_sha256", "state_manifest_path"],
       "properties": {
         "before_state": {"const": "A0_3_GOVERNED_MODULE_GRAPH"},
         "after_state": {"const": "A0_4_REPORT_QUERY_PORT"},
@@ -42,7 +42,8 @@
         "before_application_tree_sha": {"const": "b147b8961ea9e76c966663d4832e4c303581151a"},
         "after_application_tree_sha": {"const": "007196f68652bc13f6798805793ffdfae96f95f7"},
         "before_state_manifest_sha256": {"$ref": "#/$defs/sha256"},
-        "after_state_manifest_sha256": {"$ref": "#/$defs/sha256"}
+        "after_state_manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "state_manifest_path": {"const": "provenance/transition-state-manifests.json"}
       }
     },
     "policy_source": {
@@ -52,8 +53,8 @@
     },
     "method_input": {
       "type": "object", "additionalProperties": false,
-      "required": ["path", "bundle_sha256", "common_snapshot_sha256", "baseline_proposal_sha256", "source_manifest_path"],
-      "properties": {"path": {"const": "PSI/method-input"}, "bundle_sha256": {"$ref": "#/$defs/sha256"}, "common_snapshot_sha256": {"$ref": "#/$defs/sha256"}, "baseline_proposal_sha256": {"$ref": "#/$defs/sha256"}, "source_manifest_path": {"const": "architecture/state-manifests.json"}}
+      "required": ["path", "bundle_sha256", "common_snapshot_sha256", "baseline_proposal_sha256", "structural_manifest_path"],
+      "properties": {"path": {"const": "PSI/method-input"}, "bundle_sha256": {"$ref": "#/$defs/sha256"}, "common_snapshot_sha256": {"$ref": "#/$defs/sha256"}, "baseline_proposal_sha256": {"$ref": "#/$defs/sha256"}, "structural_manifest_path": {"const": "architecture/states/A0_4_REPORT_QUERY_PORT.yaml"}}
     },
     "runtime": {
       "type": "object", "additionalProperties": false,

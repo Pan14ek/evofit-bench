@@ -16,6 +16,7 @@ from typing import Any
 
 import yaml
 
+import experiments.execution.tooling.p_policy_source_v3 as p_policy_source_v3
 from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError, ProtocolError
 from experiments.execution.tooling.hashing import (
@@ -32,9 +33,12 @@ from experiments.execution.tooling.mono_ci_b0_psi_execution import (
     _write_new_file,
     verify_execution_proposal,
 )
+from experiments.execution.tooling.p_input_export_v2 import (
+    STRUCTURAL_SOURCE_PATH,
+    _project_structural_manifest,
+)
 from experiments.execution.tooling.p_policy_source_v3 import (
     METHOD_INPUT_MANIFEST,
-    export_method_inputs_v3,
     package_policy_source_v3,
     verify_method_bundle_v3,
     verify_policy_source_bundle_v3,
@@ -49,7 +53,7 @@ BEFORE_APP_TREE = "b147b8961ea9e76c966663d4832e4c303581151a"
 AFTER_APP_TREE = "007196f68652bc13f6798805793ffdfae96f95f7"
 BEFORE_STATE = "A0_3_GOVERNED_MODULE_GRAPH"
 AFTER_STATE = "A0_4_REPORT_QUERY_PORT"
-STATE_MANIFESTS_PATH = "architecture/state-manifests.json"
+STATE_MANIFESTS_PATH = "provenance/transition-state-manifests.json"
 TRANSITION_SCHEMA = "mono_ci_psi_transition_run_v1.schema.json"
 RUN_ID_PATTERN = re.compile(r"^DEV_PSI_TRANSITION_[A-Za-z0-9_-]{1,48}$")
 RUNTIME_MODULES = (
@@ -170,19 +174,13 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
         )
         registry = json.loads((policy_root / "fitness/policy/registry.json").read_text())
         bundle_root = psi / "method-input"
-        export_method_inputs_v3(
-            repo,
-            policy_root,
-            bundle_root,
-            "P",
-            BEFORE_COMMIT,
-            AFTER_COMMIT,
-            str(registry["as_of"]),
-            structural_manifest_path=f"architecture/states/{AFTER_STATE}.yaml",
+        method_manifest = _export_transition_method_inputs(
+            repo, policy_root, bundle_root, str(registry["as_of"])
         )
         _bind_reconstructed_baseline(bundle_root, proposal_bytes, policy)
         source_binding = _source_binding(repo)
-        _add_state_manifest_sidecar(repo, bundle_root, source_binding)
+        source_binding["state_manifest_path"] = STATE_MANIFESTS_PATH
+        _add_state_manifest_sidecar(repo, root, source_binding)
         method_manifest = _reseal_method_bundle(bundle_root)
         verify_method_bundle_v3(bundle_root, expected_method_id="P")
 
@@ -231,7 +229,7 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
                 "bundle_sha256": method_manifest["bundle_sha256"],
                 "common_snapshot_sha256": method_manifest["common_snapshot_sha256"],
                 "baseline_proposal_sha256": baseline["baseline_configuration_sha256"],
-                "source_manifest_path": STATE_MANIFESTS_PATH,
+                "structural_manifest_path": f"architecture/states/{AFTER_STATE}.yaml",
             },
             "runtime": {
                 "path": "PSI/method-runtime",
@@ -259,6 +257,7 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
                 "PSI/method-input/method_input_v3.json": sha256_file(
                     bundle_root / METHOD_INPUT_MANIFEST
                 ),
+                STATE_MANIFESTS_PATH: sha256_file(root / STATE_MANIFESTS_PATH),
             },
         }
         _write_new_file(root / "development_run.json", pretty_json_bytes(record))
@@ -335,25 +334,24 @@ def verify_transition_run(run_root: Path) -> dict[str, Any]:
         != record["execution_engine"]["sha256"]
     ):
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_RUNNER_SOURCE_MISMATCH")
-    state_sidecar = json.loads((bundle_root / STATE_MANIFESTS_PATH).read_text(encoding="utf-8"))
-    transition = state_sidecar["transition"]
-    for key in (
-        "before_state",
-        "after_state",
-        "before_commit_sha",
-        "after_commit_sha",
-    ):
-        if transition[key] != record["transition"][key]:
-            raise ContractValidationError("MONO_CI_PSI_TRANSITION_STATE_BINDING_MISMATCH")
+    _verify_transition_state_sidecar(root, record["transition"])
+    sidecar = json.loads(
+        (root / record["transition"]["state_manifest_path"]).read_text(encoding="utf-8")
+    )
+    after_manifest = next(row for row in sidecar["manifests"] if row["state"] == "after")
+    expected_projection = _project_structural_manifest(yaml.safe_load(after_manifest["content"]))
+    structural_observation = json.loads(
+        (bundle_root / STRUCTURAL_SOURCE_PATH).read_text(encoding="utf-8")
+    )
     if (
-        transition["before_tree_sha"] != record["transition"]["before_application_tree_sha"]
-        or transition["after_tree_sha"] != record["transition"]["after_application_tree_sha"]
-        or state_sidecar["manifests"][0]["sha256"]
-        != record["transition"]["before_state_manifest_sha256"]
-        or state_sidecar["manifests"][1]["sha256"]
-        != record["transition"]["after_state_manifest_sha256"]
+        structural_observation.get("source_state") != "after"
+        or structural_observation.get("source_commit_sha")
+        != record["transition"]["after_commit_sha"]
+        or structural_observation.get("source_tree_sha")
+        != record["transition"]["after_application_tree_sha"]
+        or structural_observation.get("target_structural_manifest") != expected_projection
     ):
-        raise ContractValidationError("MONO_CI_PSI_TRANSITION_STATE_BINDING_MISMATCH")
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_STRUCTURAL_PROJECTION_MISMATCH")
     representation_catalog = yaml.safe_load(
         (bundle_root / "fitness/a0-representations.yaml").read_text(encoding="utf-8")
     )
@@ -464,9 +462,92 @@ def _source_binding(repository: Path) -> dict[str, Any]:
     }
 
 
-def _add_state_manifest_sidecar(
-    repository: Path, bundle_root: Path, binding: dict[str, Any]
-) -> None:
+def _export_transition_method_inputs(
+    repository: Path,
+    policy_source_bundle: Path,
+    output_directory: Path,
+    evaluation_as_of: str,
+) -> dict[str, Any]:
+    """Configure the pinned exporter for the A0.4 endpoint state, then restore it."""
+    previous_manifest_path = p_policy_source_v3.STRUCTURAL_MANIFEST_PATH
+    p_policy_source_v3.STRUCTURAL_MANIFEST_PATH = f"architecture/states/{AFTER_STATE}.yaml"
+    try:
+        return p_policy_source_v3.export_method_inputs_v3(
+            repository,
+            policy_source_bundle,
+            output_directory,
+            "P",
+            BEFORE_COMMIT,
+            AFTER_COMMIT,
+            evaluation_as_of,
+        )
+    finally:
+        p_policy_source_v3.STRUCTURAL_MANIFEST_PATH = previous_manifest_path
+
+
+def _verify_transition_state_sidecar(root: Path, binding: dict[str, Any]) -> None:
+    path = root / binding["state_manifest_path"]
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_STATE_MANIFESTS_INVALID") from error
+    if (
+        not isinstance(payload, dict)
+        or set(payload) != {"schema_version", "transition", "manifests"}
+        or payload["schema_version"] != "MONO_CI_B0_PSI_ARCHITECTURE_STATE_MANIFESTS_V1"
+        or not isinstance(payload["transition"], dict)
+        or not isinstance(payload["manifests"], list)
+        or len(payload["manifests"]) != 2
+    ):
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_STATE_MANIFESTS_INVALID")
+    transition = payload["transition"]
+    expected_transition = {
+        "before_state": binding["before_state"],
+        "after_state": binding["after_state"],
+        "before_commit_sha": binding["before_commit_sha"],
+        "after_commit_sha": binding["after_commit_sha"],
+        "before_tree_sha": binding["before_application_tree_sha"],
+        "after_tree_sha": binding["after_application_tree_sha"],
+    }
+    if transition != expected_transition:
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_STATE_BINDING_MISMATCH")
+    expected_manifests = (
+        ("before", "before_state", "before_commit_sha", "before_state_manifest_sha256"),
+        ("after", "after_state", "after_commit_sha", "after_state_manifest_sha256"),
+    )
+    for row, (label, state_key, commit_key, digest_key) in zip(
+        payload["manifests"], expected_manifests, strict=True
+    ):
+        if not isinstance(row, dict) or set(row) != {
+            "state",
+            "path",
+            "source_commit_sha",
+            "sha256",
+            "content",
+        }:
+            raise ContractValidationError("MONO_CI_PSI_TRANSITION_STATE_MANIFESTS_INVALID")
+        content = row["content"]
+        expected_state = binding[state_key]
+        if (
+            row["state"] != label
+            or row["path"] != f"architecture/states/{expected_state}.yaml"
+            or row["source_commit_sha"] != binding[commit_key]
+            or not isinstance(content, str)
+            or sha256_bytes(content.encode("utf-8")) != binding[digest_key]
+            or row["sha256"] != binding[digest_key]
+        ):
+            raise ContractValidationError("MONO_CI_PSI_TRANSITION_STATE_BINDING_MISMATCH")
+        try:
+            manifest = yaml.safe_load(content)
+        except yaml.YAMLError as error:
+            raise ContractValidationError(
+                "MONO_CI_PSI_TRANSITION_STATE_MANIFESTS_INVALID"
+            ) from error
+        if not isinstance(manifest, dict) or manifest.get("architecture_state") != expected_state:
+            raise ContractValidationError("MONO_CI_PSI_TRANSITION_STATE_MANIFESTS_INVALID")
+
+
+def _add_state_manifest_sidecar(repository: Path, run_root: Path, binding: dict[str, Any]) -> None:
     rows = []
     for state, label, commit_key, digest_key in (
         ("before", BEFORE_STATE, "before_commit_sha", "before_state_manifest_sha256"),
@@ -495,7 +576,7 @@ def _add_state_manifest_sidecar(
         },
         "manifests": rows,
     }
-    _write_new_file(bundle_root / STATE_MANIFESTS_PATH, pretty_json_bytes(payload))
+    _write_new_file(run_root / STATE_MANIFESTS_PATH, pretty_json_bytes(payload))
 
 
 def _bind_reconstructed_baseline(
@@ -540,14 +621,12 @@ def _reseal_method_bundle(bundle_root: Path) -> dict[str, Any]:
     manifest_path = bundle_root / METHOD_INPUT_MANIFEST
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     records = {row["path"]: row for row in manifest["files"]}
-    for relative in ("fitness/a0-representations.yaml", STATE_MANIFESTS_PATH):
+    for relative in ("fitness/a0-representations.yaml",):
         path = bundle_root / relative
         if path.is_file():
             records[relative] = {
                 "path": relative,
-                "role": "representation_catalog"
-                if relative.startswith("fitness/")
-                else "structural_observations",
+                "role": "representation_catalog",
                 "size_bytes": path.stat().st_size,
                 "sha256": sha256_file(path),
             }

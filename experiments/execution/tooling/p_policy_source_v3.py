@@ -482,8 +482,6 @@ def export_method_inputs_v3(
     architecture_before_sha: str,
     architecture_source_sha: str,
     evaluation_as_of: str,
-    *,
-    structural_manifest_path: str = STRUCTURAL_MANIFEST_PATH,
 ) -> dict[str, Any]:
     """Export a V3 method bundle while keeping architecture and policy revisions distinct."""
     root = repository.resolve(strict=True)
@@ -491,14 +489,6 @@ def export_method_inputs_v3(
     _validate_repository_root(root)
     _validate_commit_id(architecture_before_sha, "architecture_before_sha")
     _validate_commit_id(architecture_source_sha, "architecture_source_sha")
-    manifest_path = PurePosixPath(structural_manifest_path)
-    if (
-        manifest_path.is_absolute()
-        or ".." in manifest_path.parts
-        or manifest_path.parts[:2] != ("architecture", "states")
-        or manifest_path.suffix not in {".yaml", ".yml"}
-    ):
-        raise ProtocolError("V3 structural manifest path is not allowlisted")
     if method_id not in {"B1", "P"}:
         raise ProtocolError("V3 candidate export supports only B1 and P")
     if destination.exists():
@@ -528,7 +518,7 @@ def export_method_inputs_v3(
         root, architecture_before_sha, before_paths
     )
     after_inventory_files = _git_inventory_file_records(root, architecture_source_sha, after_paths)
-    manifest_bytes = _git_blob(root, architecture_source_sha, manifest_path.as_posix())
+    manifest_bytes = _git_blob(root, architecture_source_sha, STRUCTURAL_MANIFEST_PATH)
     import yaml
 
     raw_manifest = yaml.safe_load(manifest_bytes)
@@ -830,8 +820,6 @@ def verify_method_bundle_v3(
         "approval_evidence"
     }:
         raise ProtocolError("V3 method bundle roles differ from the candidate profile")
-    if "architecture/state-manifests.json" in declared:
-        _verify_transition_state_manifests(root, manifest, declared)
     snapshot_bytes = (root / P_INPUT_SNAPSHOT_PATH).read_bytes()
     if sha256_bytes(snapshot_bytes) != manifest.get("common_snapshot_sha256"):
         raise ProtocolError("COMMON_PROJECTION_MISMATCH: V3 Snapshot digest differs")
@@ -870,90 +858,14 @@ def _verify_v3_path_role(path: PurePosixPath, role: str, method_id: PolicyMethod
         RULESET_PATH: "applicability_ruleset",
         POLICY_CLAIMS_PATH: "policy_completeness_claims",
         METHOD_POLICY_MANIFEST_PATH: "policy_source_manifest",
-        "architecture/state-manifests.json": "structural_observations",
     }
     if relative in extra_paths:
-        if relative == "architecture/state-manifests.json" and method_id != "P":
-            raise ProtocolError("TRANSITION_STATE_MANIFESTS_REQUIRE_P_METHOD")
         if extra_paths[relative] != role:
             raise ProtocolError(f"V3 path/role mismatch: {relative}")
         return
     from experiments.execution.tooling.p_input_export_v2 import _verify_v2_path_role
 
     _verify_v2_path_role(path, role, method_id)
-
-
-def _verify_transition_state_manifests(
-    root: Path,
-    method_manifest: Mapping[str, Any],
-    declared: Mapping[str, Mapping[str, Any]],
-) -> None:
-    """Verify optional exact state-manifest bytes bound to a V3 transition."""
-    import yaml
-
-    relative = "architecture/state-manifests.json"
-    record = declared.get(relative)
-    if not isinstance(record, Mapping) or record.get("role") != "structural_observations":
-        raise ProtocolError("TRANSITION_STATE_MANIFEST_ROLE_INVALID")
-    try:
-        payload = _read_json_object(root / relative, "transition state manifests")
-    except ProtocolError as error:
-        raise ProtocolError("TRANSITION_STATE_MANIFESTS_INVALID") from error
-    if (
-        set(payload) != {"schema_version", "transition", "manifests"}
-        or payload.get("schema_version") != "MONO_CI_B0_PSI_ARCHITECTURE_STATE_MANIFESTS_V1"
-    ):
-        raise ProtocolError("TRANSITION_STATE_MANIFESTS_INVALID")
-    transition = payload.get("transition")
-    manifests = payload.get("manifests")
-    if not isinstance(transition, Mapping) or set(transition) != {
-        "before_state",
-        "after_state",
-        "before_commit_sha",
-        "after_commit_sha",
-        "before_tree_sha",
-        "after_tree_sha",
-    }:
-        raise ProtocolError("TRANSITION_STATE_MANIFESTS_INVALID")
-    if (
-        transition.get("before_commit_sha") != method_manifest.get("architecture_before_sha")
-        or transition.get("after_commit_sha") != method_manifest.get("architecture_source_sha")
-        or transition.get("before_tree_sha") != method_manifest.get("before_tree_sha")
-        or transition.get("after_tree_sha") != method_manifest.get("after_tree_sha")
-        or not isinstance(manifests, list)
-        or len(manifests) != 2
-    ):
-        raise ProtocolError("TRANSITION_STATE_MANIFEST_SOURCE_BINDING_MISMATCH")
-    expected = (
-        ("before", "before_state", "before_commit_sha"),
-        ("after", "after_state", "after_commit_sha"),
-    )
-    for row, (state, state_key, commit_key) in zip(manifests, expected, strict=True):
-        if not isinstance(row, Mapping) or set(row) != {
-            "state",
-            "path",
-            "source_commit_sha",
-            "sha256",
-            "content",
-        }:
-            raise ProtocolError("TRANSITION_STATE_MANIFEST_ROW_INVALID")
-        content = row.get("content")
-        if (
-            row.get("state") != state
-            or row.get("source_commit_sha") != transition.get(commit_key)
-            or row.get("path") != f"architecture/states/{transition.get(state_key)}.yaml"
-            or not isinstance(content, str)
-            or sha256_bytes(content.encode("utf-8")) != row.get("sha256")
-        ):
-            raise ProtocolError("TRANSITION_STATE_MANIFEST_SOURCE_BINDING_MISMATCH")
-        try:
-            parsed = yaml.safe_load(content)
-        except yaml.YAMLError as error:
-            raise ProtocolError("TRANSITION_STATE_MANIFEST_CONTENT_INVALID") from error
-        if not isinstance(parsed, Mapping) or parsed.get("architecture_state") != transition.get(
-            state_key
-        ):
-            raise ProtocolError("TRANSITION_STATE_MANIFEST_CONTENT_INVALID")
 
 
 def _load_obligation_ids(path: Path) -> set[str]:

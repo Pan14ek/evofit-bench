@@ -212,6 +212,7 @@ def pack_psi_transition_archive(
         "source_revision_sha": source_revision,
         "execution_record_sha256": sha256_file(run_directory / "development_run.json"),
         "run_inventory_sha256": sha256_file(run_directory / "SHA256SUMS"),
+        "structural_manifest_path": run["method_input"]["structural_manifest_path"],
         "baseline": run["baseline"],
         "authorization_boundary": _transition_authorization_boundary(run),
         "transition": run["transition"],
@@ -349,6 +350,7 @@ def _verify_transition_archive_manifest_binding(
         or manifest["source_revision_sha"] != run["source_revision_sha"]
         or manifest["execution_record_sha256"] != sha256_file(run_root / "development_run.json")
         or manifest["run_inventory_sha256"] != sha256_file(run_root / "SHA256SUMS")
+        or manifest["structural_manifest_path"] != run["method_input"]["structural_manifest_path"]
         or manifest["baseline"] != run["baseline"]
         or manifest["transition"] != run["transition"]
         or manifest["authorization_boundary"] != _transition_authorization_boundary(run)
