@@ -92,6 +92,7 @@ def test_real_transition_executes_psi_and_archive_round_trips(tmp_path: Path) ->
         "A0_4_REPORT_QUERY_PORT",
     }
     assert all(row["execution_status"] == "COMPLETED" for row in record["evaluator_observations"])
+    assert all(row["inspection_scope_sha256"] for row in record["evaluator_observations"])
     assert record["adaptation_evidence"]["trust_scope"] == "TEST_ONLY"
     assert raw["evidence_trust_scope"] == "TEST_ONLY"
     assert record["evidence_ledger"]["verified_fact_ids"] == [
@@ -102,6 +103,12 @@ def test_real_transition_executes_psi_and_archive_round_trips(tmp_path: Path) ->
     ]
     assert all(row["status"] == "UNKNOWN" for row in raw["after_applicability"]["results"])
     assert all(row["status"] == "UNKNOWN" for row in raw["candidate_coverage"]["obligations"])
+    assert all(row["status"] == "UNKNOWN" for row in raw["current_pairs"])
+    assert all(row["compliance_status"] == "COMPLIANT" for row in raw["current_pairs"])
+    assert all(
+        "EVALUATOR_INSPECTION_SCOPE_UNKNOWN" not in row["reason_codes"]
+        for row in raw["current_pairs"]
+    )
 
     inventory_paths = {
         path.relative_to(run_root).as_posix() for path in run_root.rglob("*") if path.is_file()

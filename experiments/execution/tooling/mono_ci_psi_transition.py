@@ -43,6 +43,7 @@ from experiments.execution.tooling.mono_ci_psi_evidence import (
     TEST_ONLY_VERIFIER_ID,
     TestOnlyEvidenceTrustContext,
     adapt_evaluator_evidence,
+    build_inspection_scope_artifact,
     build_source_inventory_fact_ledger,
     create_test_only_sidecar,
     evaluator_source_artifacts,
@@ -895,6 +896,17 @@ def _collect_evaluator_matrix(
                             run_root / "PSI/evaluator-observations" / state / evaluator_id
                         ),
                     )
+                    inspection_scope_path = (
+                        Path(run["output_path"]).parent / "inspection-scope.json"
+                    ).as_posix()
+                    inspection_scope_bytes = pretty_json_bytes(
+                        build_inspection_scope_artifact(
+                            run["evidence"], sha256_file(run_root / run["output_path"])
+                        )
+                    )
+                    _write_new_file(run_root / inspection_scope_path, inspection_scope_bytes)
+                    run["inspection_scope_path"] = inspection_scope_path
+                    run["inspection_scope_sha256"] = sha256_bytes(inspection_scope_bytes)
                     if (
                         run["target_source_sha256"] != commit
                         or run["evaluator_source_sha256"]
@@ -932,6 +944,7 @@ def _evaluator_artifact_references(
         run["output_path"],
         run["stdout_path"],
         run["stderr_path"],
+        run["inspection_scope_path"],
     ]
     refs = []
     for relative in sorted(set(paths)):
@@ -965,6 +978,8 @@ def _evaluator_run_record(run: dict[str, Any], run_root: Path) -> dict[str, Any]
         "stdout_sha256": run["stdout_sha256"],
         "stderr_path": run["stderr_path"],
         "stderr_sha256": run["stderr_sha256"],
+        "inspection_scope_path": run["inspection_scope_path"],
+        "inspection_scope_sha256": run["inspection_scope_sha256"],
         "started_at_utc": run["started_at_utc"],
         "ended_at_utc": run["ended_at_utc"],
         "duration_ms": run["duration_ms"],
@@ -1164,10 +1179,28 @@ def _verify_evaluator_observation(
     stdout_bytes = stdout_path.read_bytes()
     stderr_bytes = stderr_path.read_bytes()
     evidence = json.loads(output_bytes)
+    inspection_scope_path = run_root / observation["inspection_scope_path"]
+    inspection_scope_bytes = inspection_scope_path.read_bytes()
+    expected_inspection_scope_path = (
+        Path("PSI/evaluator-observations")
+        / ("before" if before else "after")
+        / observation["evaluator_id"]
+        / "inspection-scope.json"
+    ).as_posix()
+    try:
+        inspection_scope_record = json.loads(inspection_scope_bytes)
+    except (json.JSONDecodeError, UnicodeDecodeError) as error:
+        raise ContractValidationError(
+            "MONO_CI_PSI_TRANSITION_EVALUATOR_INSPECTION_SCOPE_INVALID"
+        ) from error
     if (
         sha256_bytes(output_bytes) != observation["output_sha256"]
         or sha256_bytes(stdout_bytes) != observation["stdout_sha256"]
         or sha256_bytes(stderr_bytes) != observation["stderr_sha256"]
+        or observation["inspection_scope_path"] != expected_inspection_scope_path
+        or sha256_bytes(inspection_scope_bytes) != observation["inspection_scope_sha256"]
+        or inspection_scope_record
+        != build_inspection_scope_artifact(evidence, observation["output_sha256"])
         or json.loads(stdout_bytes) != evidence
         or observation["source_commit_sha"] != expected_commit
         or observation["source_tree_sha"] != expected_repo_tree

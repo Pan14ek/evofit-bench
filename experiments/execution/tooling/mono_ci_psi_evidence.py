@@ -415,14 +415,19 @@ def adapt_evaluator_evidence(
         for row in modules
         if isinstance(row, Mapping) and row.get("discovered") is True
     )
-    inspected = sorted(set(str(path) for path in source_scope.get("inspected_paths", [])))
-    diagnostics = evidence.get("diagnostics", {})
-    imports = diagnostics.get("imports", []) if isinstance(diagnostics, Mapping) else []
+    inspection_unit, inspected, measured_count, inspected_edge_count, _ = _inspection_scope_values(
+        evidence
+    )
     output_record = next(
         (item for item in artifact_refs if item["path"].endswith("evaluator-output.json")), None
     )
     if output_record is None:
         raise ContractValidationError("PSI_EVALUATOR_OUTPUT_ARTIFACT_MISSING")
+    scope_record = next(
+        (item for item in artifact_refs if item["path"].endswith("inspection-scope.json")), None
+    )
+    if scope_record is None:
+        raise ContractValidationError("PSI_EVALUATOR_INSPECTION_SCOPE_ARTIFACT_MISSING")
     return {
         "schema_version": 1,
         "representation_id": representation["id"],
@@ -436,12 +441,12 @@ def adapt_evaluator_evidence(
         "resolved_targets": sorted(f"app.modules.{name}" for name in resolved_modules),
         "inspected_subjects": inspected,
         "missing_targets": sorted(set(expected_modules) - set(resolved_modules)),
-        "inspected_edge_count": len(imports) if obligation_id == "AC_MODULE_GRAPH" else None,
+        "inspected_edge_count": inspected_edge_count,
         "inspection_scope": {
-            "unit": "file",
+            "unit": inspection_unit,
             "expected_subjects": inspected,
-            "measured_count": len(inspected),
-            "evidence_artifact": output_record,
+            "measured_count": measured_count,
+            "evidence_artifact": scope_record,
         },
         "stage_applicable": (
             representation.get("stage") == "ci_test"
@@ -473,6 +478,87 @@ def adapt_evaluator_evidence(
         if run["execution_status"] == "COMPLETED"
         else "EVALUATOR_EXECUTION_INCOMPLETE",
     }
+
+
+def build_inspection_scope_artifact(
+    evidence: Mapping[str, Any], evaluator_output_sha256: str
+) -> dict[str, Any]:
+    """Project a verified evaluator inventory into the typed inspection contract."""
+    source_scope = evidence.get("source_scope")
+    if (
+        not isinstance(source_scope, Mapping)
+        or re.fullmatch(r"[a-f0-9]{64}", evaluator_output_sha256) is None
+    ):
+        raise ContractValidationError("PSI_EVALUATOR_INSPECTION_SCOPE_UNRESOLVED")
+    unit, subjects, measured_count, _, observed_edges = _inspection_scope_values(evidence)
+    return {
+        "schema_version": 1,
+        "inspection_unit": unit,
+        "expected_subjects": subjects,
+        "inspected_subjects": subjects,
+        "measured_count": measured_count,
+        "source_evaluator_output_sha256": evaluator_output_sha256,
+        "source_scope_sha256": sha256_bytes(canonical_json_bytes(dict(source_scope))),
+        "observed_edges": observed_edges,
+    }
+
+
+def _inspection_scope_values(
+    evidence: Mapping[str, Any],
+) -> tuple[str, list[str], int, int | None, list[dict[str, Any]] | None]:
+    source_scope = evidence.get("source_scope")
+    if not isinstance(source_scope, Mapping) or source_scope.get("complete") is not True:
+        raise ContractValidationError("PSI_EVALUATOR_INSPECTION_SCOPE_UNRESOLVED")
+    inspected_paths = source_scope.get("inspected_paths")
+    file_digests = source_scope.get("source_file_digests")
+    if not isinstance(inspected_paths, list) or not isinstance(file_digests, list):
+        raise ContractValidationError("PSI_EVALUATOR_INSPECTION_SCOPE_UNRESOLVED")
+    paths = [path for path in inspected_paths if isinstance(path, str)]
+    digest_paths = [
+        row.get("path")
+        for row in file_digests
+        if isinstance(row, Mapping) and isinstance(row.get("path"), str)
+    ]
+    if (
+        len(paths) != len(inspected_paths)
+        or len(digest_paths) != len(file_digests)
+        or not paths
+        or paths != sorted(set(paths))
+        or digest_paths != paths
+        or any(
+            not isinstance(row, Mapping)
+            or re.fullmatch(r"[a-f0-9]{64}", str(row.get("sha256"))) is None
+            for row in file_digests
+        )
+    ):
+        raise ContractValidationError("PSI_EVALUATOR_INSPECTION_SCOPE_UNRESOLVED")
+
+    diagnostics = evidence.get("diagnostics")
+    edges = diagnostics.get("edges") if isinstance(diagnostics, Mapping) else None
+    if isinstance(edges, list) and edges:
+        subjects: list[str] = []
+        normalized_edges: list[dict[str, Any]] = []
+        for edge in edges:
+            if (
+                not isinstance(edge, Mapping)
+                or not isinstance(edge.get("from"), str)
+                or not isinstance(edge.get("to"), str)
+                or not isinstance(edge.get("references"), list)
+                or not edge["references"]
+            ):
+                raise ContractValidationError("PSI_EVALUATOR_INSPECTION_SCOPE_UNRESOLVED")
+            for reference in edge["references"]:
+                if not isinstance(reference, Mapping) or reference.get("source_path") not in paths:
+                    raise ContractValidationError("PSI_EVALUATOR_INSPECTION_SCOPE_UNRESOLVED")
+            subject = f"{edge['from']}->{edge['to']}"
+            if subject in subjects:
+                raise ContractValidationError("PSI_EVALUATOR_INSPECTION_SCOPE_UNRESOLVED")
+            subjects.append(subject)
+            normalized_edges.append(dict(edge))
+        if subjects != sorted(subjects):
+            raise ContractValidationError("PSI_EVALUATOR_INSPECTION_SCOPE_UNRESOLVED")
+        return "dependency_edge", subjects, len(subjects), len(subjects), normalized_edges
+    return "file", paths, len(paths), None, None
 
 
 def _undetermined_scoped_proof(
@@ -536,6 +622,7 @@ __all__ = [
     "TEST_ONLY_VERIFIER_ID",
     "TestOnlyEvidenceTrustContext",
     "adapt_evaluator_evidence",
+    "build_inspection_scope_artifact",
     "build_source_inventory_fact_ledger",
     "create_test_only_sidecar",
     "evaluator_source_artifacts",

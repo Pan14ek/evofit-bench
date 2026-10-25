@@ -59,7 +59,7 @@
       "type": "array", "minItems": 4, "maxItems": 4,
       "items": {
         "type": "object", "additionalProperties": false,
-        "required": ["architecture_state", "source_commit_sha", "source_tree_sha", "application_tree_sha", "evaluator_id", "execution_status", "compliance", "process_exit_code", "configuration_path", "configuration_sha256", "evaluator_source_sha256", "target_state_manifest_sha256", "output_path", "output_sha256", "stdout_path", "stdout_sha256", "stderr_path", "stderr_sha256", "started_at_utc", "ended_at_utc", "duration_ms"],
+        "required": ["architecture_state", "source_commit_sha", "source_tree_sha", "application_tree_sha", "evaluator_id", "execution_status", "compliance", "process_exit_code", "configuration_path", "configuration_sha256", "evaluator_source_sha256", "target_state_manifest_sha256", "output_path", "output_sha256", "stdout_path", "stdout_sha256", "stderr_path", "stderr_sha256", "inspection_scope_path", "inspection_scope_sha256", "started_at_utc", "ended_at_utc", "duration_ms"],
         "properties": {
           "architecture_state": {"enum": ["A0_3_GOVERNED_MODULE_GRAPH", "A0_4_REPORT_QUERY_PORT"]},
           "source_commit_sha": {"$ref": "#/$defs/sha1"},
@@ -79,6 +79,8 @@
           "stdout_sha256": {"$ref": "#/$defs/sha256"},
           "stderr_path": {"type": "string", "minLength": 1},
           "stderr_sha256": {"$ref": "#/$defs/sha256"},
+          "inspection_scope_path": {"type": "string", "minLength": 1},
+          "inspection_scope_sha256": {"$ref": "#/$defs/sha256"},
           "started_at_utc": {"type": "string", "format": "date-time"},
           "ended_at_utc": {"type": "string", "format": "date-time"},
           "duration_ms": {"type": "number", "minimum": 0}
