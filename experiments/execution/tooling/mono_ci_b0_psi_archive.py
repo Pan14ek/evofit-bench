@@ -28,11 +28,14 @@ from experiments.execution.tooling.mono_ci_b0_psi_execution import (
 from experiments.execution.tooling.mono_ci_b0_psi_preflight import verify_preflight
 
 ARCHIVE_SCHEMA = "mono_ci_b0_psi_development_archive_v1.schema.json"
+TRANSITION_ARCHIVE_SCHEMA = "mono_ci_psi_transition_archive_v1.schema.json"
 ARCHIVE_MANIFEST_NAME = "ARCHIVE_MANIFEST.json"
 WORKFLOW_URL_PATTERN = re.compile(
     r"^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/runs/[0-9]+$"
 )
-ARTIFACT_NAME_PATTERN = re.compile(r"^mono-ci-b0-psi-development-[A-Za-z0-9_-]+$")
+ARTIFACT_NAME_PATTERN = re.compile(
+    r"^mono-ci-(?:b0-psi-development|psi-transition)-[A-Za-z0-9_-]+$"
+)
 SOURCE_SHA_PATTERN = re.compile(r"^[a-f0-9]{40}$")
 MAX_ARCHIVE_SIZE_BYTES = 100 * 1024 * 1024
 MAX_ARCHIVE_MEMBER_SIZE_BYTES = 20 * 1024 * 1024
@@ -169,6 +172,188 @@ def pack_development_archive(
         "member_count": result["member_count"],
         "verification_status": "PASS",
     }
+
+
+def pack_psi_transition_archive(
+    run_root: Path,
+    archive_path: Path,
+    repository: Path,
+    workflow_run_url: str,
+    artifact_name: str,
+    uv_version: str,
+) -> dict[str, Any]:
+    """Pack a verified transition-level P run with the shared DEVELOPMENT archive helpers."""
+    from experiments.execution.tooling.mono_ci_psi_transition import verify_transition_run
+
+    run_directory = run_root.resolve(strict=True)
+    repo_root = repository.resolve(strict=True)
+    run = verify_transition_run(run_directory)
+    source_revision = _git_text(repo_root, "rev-parse", "HEAD")
+    if source_revision != run["source_revision_sha"]:
+        raise ProtocolError("MONO_CI_PSI_TRANSITION_ARCHIVE_SOURCE_REVISION_MISMATCH")
+    _validate_archive_metadata(workflow_run_url, artifact_name, uv_version)
+    members = [
+        {
+            "path": relative,
+            "size_bytes": (run_directory / relative).stat().st_size,
+            "sha256": sha256_file(run_directory / relative),
+        }
+        for relative in _run_member_paths(run_directory)
+    ]
+    manifest = {
+        "schema_version": "MONO_CI_PSI_TRANSITION_ARCHIVE_V1",
+        "archive_purpose": "DEVELOPMENT_METHOD_RAW_EXECUTION_ONLY",
+        "execution_id": run["execution_id"],
+        "workflow": {
+            "run_url": workflow_run_url,
+            "artifact_name": artifact_name,
+            "retention_days": 90,
+        },
+        "source_revision_sha": source_revision,
+        "execution_record_sha256": sha256_file(run_directory / "development_run.json"),
+        "run_inventory_sha256": sha256_file(run_directory / "SHA256SUMS"),
+        "baseline": run["baseline"],
+        "authorization_boundary": _transition_authorization_boundary(run),
+        "transition": run["transition"],
+        "environment": {
+            "python_version": sys.version.split()[0],
+            "operating_system": platform.platform(),
+            "architecture": platform.machine(),
+            "uv_version": uv_version,
+        },
+        "reproduction_commands": [
+            "uv sync --frozen --extra dev",
+            "make test-mono-ci-psi-transition",
+            (
+                "uv run --frozen --extra dev python -m "
+                "experiments.execution.tooling.mono_ci_psi_transition run "
+                "--repository <checkout> --output <new-path> "
+                "--execution-id DEV_PSI_TRANSITION_<unique>"
+            ),
+        ],
+        "members": members,
+    }
+    validate_payload(TRANSITION_ARCHIVE_SCHEMA, manifest)
+
+    destination = archive_path.expanduser().absolute()
+    parent = destination.parent.resolve(strict=True)
+    destination = parent / destination.name
+    sidecar_path = Path(f"{destination}.sha256")
+    if (
+        destination.exists()
+        or destination.is_symlink()
+        or sidecar_path.exists()
+        or sidecar_path.is_symlink()
+    ):
+        raise ProtocolError("MONO_CI_PSI_TRANSITION_ARCHIVE_OUTPUT_MUST_BE_NEW")
+    archive_bytes = _build_zip(run_directory, members, manifest)
+    try:
+        with destination.open("xb") as handle:
+            handle.write(archive_bytes)
+        digest = sha256_bytes(archive_bytes)
+        with sidecar_path.open("xb") as handle:
+            handle.write(f"{digest}  {destination.name}\n".encode())
+    except OSError as error:
+        raise ProtocolError("MONO_CI_PSI_TRANSITION_ARCHIVE_WRITE_FAILED") from error
+    result = verify_psi_transition_archive(destination)
+    return {
+        "archive_path": str(destination),
+        "archive_sha256": digest,
+        "execution_id": run["execution_id"],
+        "member_count": result["member_count"],
+        "verification_status": "PASS",
+    }
+
+
+def verify_psi_transition_archive(
+    archive_path: Path, *, extract_to: Path | None = None
+) -> dict[str, Any]:
+    """Verify a transition archive with the shared ZIP, sidecar, extraction and readback checks."""
+    from experiments.execution.tooling.mono_ci_psi_transition import verify_transition_run
+
+    original_archive = archive_path.expanduser().absolute()
+    if original_archive.is_symlink():
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_ARCHIVE_INVALID")
+    archive = original_archive.resolve(strict=True)
+    if not archive.is_file() or archive.stat().st_size > MAX_ARCHIVE_SIZE_BYTES:
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_ARCHIVE_INVALID")
+    sidecar = Path(f"{archive}.sha256")
+    if sidecar.is_symlink() or not sidecar.is_file():
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_ARCHIVE_SIDECAR_MISSING")
+    if sidecar.read_text(encoding="utf-8").strip() != f"{sha256_file(archive)}  {archive.name}":
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_ARCHIVE_SIDECAR_MISMATCH")
+
+    try:
+        with zipfile.ZipFile(archive, "r") as zipped:
+            infos = zipped.infolist()
+            names = [info.filename for info in infos]
+            _validate_zip_members(infos)
+            if len(names) != len(set(names)) or ARCHIVE_MANIFEST_NAME not in names:
+                raise ContractValidationError(
+                    "MONO_CI_PSI_TRANSITION_ARCHIVE_MEMBER_INVENTORY_INVALID"
+                )
+            manifest = _decode_manifest(zipped.read(ARCHIVE_MANIFEST_NAME))
+            validate_payload(TRANSITION_ARCHIVE_SCHEMA, manifest)
+            payload = {name: zipped.read(name) for name in names if name != ARCHIVE_MANIFEST_NAME}
+    except (OSError, zipfile.BadZipFile, KeyError, UnicodeDecodeError) as error:
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_ARCHIVE_READ_FAILED") from error
+
+    declared = {item["path"]: item for item in manifest["members"]}
+    if set(payload) != set(declared):
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_ARCHIVE_MEMBER_SET_MISMATCH")
+    for relative, content in payload.items():
+        _validate_archive_member_path(relative)
+        expected = declared[relative]
+        if len(content) != expected["size_bytes"] or sha256_bytes(content) != expected["sha256"]:
+            raise ContractValidationError("MONO_CI_PSI_TRANSITION_ARCHIVE_MEMBER_DIGEST_MISMATCH")
+
+    with tempfile.TemporaryDirectory(prefix="mono-ci-psi-transition-archive-") as temporary:
+        extracted_root = Path(temporary).resolve(strict=True)
+        for relative, content in payload.items():
+            _write_new_bytes(extracted_root, relative, content)
+        run = verify_transition_run(extracted_root)
+        _verify_transition_archive_manifest_binding(manifest, extracted_root, run)
+        if extract_to is not None:
+            _extract_to_new_directory(payload, extract_to)
+    return {
+        "archive_path": str(archive),
+        "archive_sha256": sha256_file(archive),
+        "execution_id": manifest["execution_id"],
+        "member_count": len(payload),
+        "verification_status": "PASS",
+        "workflow_run_url": manifest["workflow"]["run_url"],
+        "artifact_name": manifest["workflow"]["artifact_name"],
+        "retention_days": manifest["workflow"]["retention_days"],
+    }
+
+
+def _transition_authorization_boundary(run: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "study_readiness": run["study_readiness"],
+        "measurement_status": run["measurement_status"],
+        "p_algorithm_status": run["p_algorithm_status"],
+        "g1": run["g1"],
+        "g4": run["g4"],
+        "reference_gate": run["reference_gate"],
+        "psi_status": run["psi"]["status"],
+        "psi_decision": run["psi"]["decision"],
+        "scoring": run["psi"]["scoring"],
+    }
+
+
+def _verify_transition_archive_manifest_binding(
+    manifest: dict[str, Any], run_root: Path, run: dict[str, Any]
+) -> None:
+    if (
+        manifest["execution_id"] != run["execution_id"]
+        or manifest["source_revision_sha"] != run["source_revision_sha"]
+        or manifest["execution_record_sha256"] != sha256_file(run_root / "development_run.json")
+        or manifest["run_inventory_sha256"] != sha256_file(run_root / "SHA256SUMS")
+        or manifest["baseline"] != run["baseline"]
+        or manifest["transition"] != run["transition"]
+        or manifest["authorization_boundary"] != _transition_authorization_boundary(run)
+    ):
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_ARCHIVE_RUN_BINDING_MISMATCH")
 
 
 def verify_development_archive(
@@ -434,16 +619,18 @@ def _reproduction_commands() -> list[str]:
 def _cli() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
-    pack = commands.add_parser("pack")
-    pack.add_argument("--run", type=Path, required=True)
-    pack.add_argument("--archive", type=Path, required=True)
-    pack.add_argument("--repository", type=Path, required=True)
-    pack.add_argument("--workflow-run-url", required=True)
-    pack.add_argument("--artifact-name", required=True)
-    pack.add_argument("--uv-version", required=True)
-    verify = commands.add_parser("verify")
-    verify.add_argument("--archive", type=Path, required=True)
-    verify.add_argument("--extract-to", type=Path)
+    for command_name in ("pack", "transition-pack"):
+        pack = commands.add_parser(command_name)
+        pack.add_argument("--run", type=Path, required=True)
+        pack.add_argument("--archive", type=Path, required=True)
+        pack.add_argument("--repository", type=Path, required=True)
+        pack.add_argument("--workflow-run-url", required=True)
+        pack.add_argument("--artifact-name", required=True)
+        pack.add_argument("--uv-version", required=True)
+    for command_name in ("verify", "transition-verify"):
+        verify = commands.add_parser(command_name)
+        verify.add_argument("--archive", type=Path, required=True)
+        verify.add_argument("--extract-to", type=Path)
     return parser
 
 
@@ -459,6 +646,17 @@ def main(argv: list[str] | None = None) -> int:
                 args.artifact_name,
                 args.uv_version,
             )
+        elif args.command == "transition-pack":
+            result = pack_psi_transition_archive(
+                args.run,
+                args.archive,
+                args.repository,
+                args.workflow_run_url,
+                args.artifact_name,
+                args.uv_version,
+            )
+        elif args.command == "transition-verify":
+            result = verify_psi_transition_archive(args.archive, extract_to=args.extract_to)
         else:
             result = verify_development_archive(args.archive, extract_to=args.extract_to)
     except (ContractValidationError, ProtocolError) as error:
@@ -472,4 +670,10 @@ if __name__ == "__main__":
     sys.exit(main())
 
 
-__all__ = ["main", "pack_development_archive", "verify_development_archive"]
+__all__ = [
+    "main",
+    "pack_development_archive",
+    "pack_psi_transition_archive",
+    "verify_development_archive",
+    "verify_psi_transition_archive",
+]

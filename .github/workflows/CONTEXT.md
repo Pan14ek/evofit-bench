@@ -11,6 +11,7 @@ CI workflow YAML: uv, Python and disposable PostgreSQL.
 
 - `ci.yml`
 - `mono-ci-b0-psi-development.yml` — branch-scoped DEVELOPMENT quality, fresh B0 evaluator probe, deterministic archive readback, and 90-day Actions artifact upload with a private prerelease fallback when artifact storage is unavailable; no official method execution.
+- `mono-ci-psi-transition-development.yml` — separate exact-pair Method P DEVELOPMENT execution, shared archive-module readback, 90-day Actions artifact, and verified private-prerelease fallback; official research gates remain unchanged.
 
 ## Established conventions
 
@@ -25,6 +26,11 @@ fresh run ID and verifies a ZIP plus SHA-256 sidecar. It first uploads a
 stores and downloads the same files from a private DEVELOPMENT prerelease and
 repeats verification. Keep it separate from the default quality workflow and
 preserve the NO_GO/NOT_EXECUTED boundary.
+
+The transition workflow is additive and branch-scoped. It runs the actual P
+DEVELOPMENT API after the focused regressions and `make development-quality`,
+then uses the transition archive contract in the shared B0/Ψ archive module.
+Keep the existing B0 workflow and its archive contract unchanged.
 
 CI installs the optional research dashboard and figure extras so their reader, visualization, and export checks run under the frozen lockfile.
 

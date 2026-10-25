@@ -64,6 +64,14 @@ run record, bundle/source identities, dependency lock hashes, workflow run,
 and archive members while retaining `NO_GO`, `NOT_EXECUTED`, and
 `BLOCKED_NOT_EXECUTED` as required values.
 
+`mono_ci_psi_transition_run_v1.schema.json` and
+`mono_ci_psi_transition_archive_v1.schema.json` define an additive single-
+transition Method P DEVELOPMENT record and archive. They bind the exact A0.3
+and A0.4 commits/trees, mark the B0 reconstruction unapproved, preserve
+`NO_GO`, `NOT_EXECUTED`, `P_ALGORITHM_STATUS=NOT_READY`, G1/G4 and reference
+gate values, and permit only a raw HOLD/REJECT decision without prediction or
+scoring. These schemas do not authorize measured execution.
+
 ## Established conventions
 
 Validate exact contract version; maintain separate intermediate V3 profile.

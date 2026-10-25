@@ -1,0 +1,174 @@
+name: MONO CI Ψ transition DEVELOPMENT archive
+
+on:
+  push:
+    branches:
+      - codex/mono-ci-psi-real-transition-dev
+    paths:
+      - .github/workflows/mono-ci-psi-transition-development.yml
+      - Makefile
+      - pyproject.toml
+      - uv.lock
+      - architecture/acceptance/a1/**
+      - experiments/execution/tooling/mono_ci_b0_psi_*.py
+      - experiments/execution/tooling/mono_ci_psi_transition.py
+      - experiments/execution/tooling/mono_ci_b0_psi_archive.py
+      - experiments/execution/schemas/mono_ci_b0_psi_*.schema.json
+      - experiments/execution/schemas/mono_ci_psi_transition_*.schema.json
+      - experiments/execution/mono-ci-b0-psi-execution-v1/RECONSTRUCTED_B0_A03_V1.json
+      - experiments/execution/mono-ci-b0-psi-execution-v1/RECONSTRUCTED_B0_A03_V1.json.sha256
+      - tests/unit/test_mono_ci_b0_psi_*.py
+      - tests/unit/test_mono_ci_psi_transition.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  development-archive:
+    name: Development quality and raw evidence archive
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: evofit_test
+          POSTGRES_USER: evofit
+          POSTGRES_PASSWORD: evofit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U evofit -d evofit_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      ARCHITECTURE_STAGE: A0_4_REPORT_QUERY_PORT
+      DATABASE_URL: postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test
+      TEST_DATABASE_URL: postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install frozen dependencies
+        run: uv sync --frozen --extra dev
+      - name: Refresh package metadata
+        run: sudo apt-get update
+      - name: Install network namespace runner
+        run: sudo apt-get install -y bubblewrap
+      - name: Run focused B0/Ψ execution regressions
+        run: make test-mono-ci-b0-psi-execution
+      - name: Run real-transition Ψ DEVELOPMENT regression
+        run: make test-mono-ci-psi-transition
+      - name: Run development quality gates
+        run: make development-quality
+      - name: Define unique run and artifact paths
+        shell: bash
+        run: |
+          echo "EXECUTION_ID=DEV_PSI_TRANSITION_GHA_${GITHUB_RUN_ID}_${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "ARTIFACT_NAME=mono-ci-psi-transition-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "RUN_OUTPUT=${RUNNER_TEMP}/mono-ci-psi-transition-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "ARCHIVE_PATH=${RUNNER_TEMP}/mono-ci-psi-transition-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.zip" >> "$GITHUB_ENV"
+          echo "VERIFY_OUTPUT=${RUNNER_TEMP}/mono-ci-psi-transition-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-verified" >> "$GITHUB_ENV"
+          echo "RELEASE_TAG=mono-ci-psi-transition-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "RELEASE_READBACK=${RUNNER_TEMP}/mono-ci-psi-transition-release-readback-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "RELEASE_VERIFY=${RUNNER_TEMP}/mono-ci-psi-transition-release-verified-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "WORKFLOW_RUN_URL=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >> "$GITHUB_ENV"
+      - name: Run Ψ on the pinned A0.3 to A0.4 transition
+        run: >-
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_transition run
+          --repository "$GITHUB_WORKSPACE"
+          --output "$RUN_OUTPUT"
+          --execution-id "$EXECUTION_ID"
+      - name: Pack and verify transition archive
+        run: >-
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_b0_psi_archive transition-pack
+          --run "$RUN_OUTPUT"
+          --archive "$ARCHIVE_PATH"
+          --repository "$GITHUB_WORKSPACE"
+          --workflow-run-url "$WORKFLOW_RUN_URL"
+          --artifact-name "$ARTIFACT_NAME"
+          --uv-version "$(uv --version)"
+      - name: Verify archive and extracted readback
+        run: >-
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_b0_psi_archive transition-verify
+          --archive "$ARCHIVE_PATH"
+          --extract-to "$VERIFY_OUTPUT"
+      - name: Upload persistent DEVELOPMENT evidence
+        id: upload
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: |
+            ${{ env.ARCHIVE_PATH }}
+            ${{ env.ARCHIVE_PATH }}.sha256
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+      - name: Record artifact receipt
+        if: steps.upload.outcome == 'success'
+        env:
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          ARTIFACT_DIGEST: ${{ steps.upload.outputs.artifact-digest }}
+        shell: bash
+        run: |
+          echo "### Ψ transition DEVELOPMENT archive" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Execution ID: \`$EXECUTION_ID\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Artifact: \`$ARTIFACT_NAME\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Artifact URL: $ARTIFACT_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Archive SHA-256: \`$(sha256sum "$ARCHIVE_PATH" | cut -d ' ' -f 1)\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- GitHub artifact digest: \`$ARTIFACT_DIGEST\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Retention: 90 days" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Result: Ψ DEVELOPMENT execution on one pinned transition; decision is recorded in the verified archive." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Boundary: study readiness NO_GO; measurement NOT_EXECUTED; P_ALGORITHM_STATUS NOT_READY; G1 INCOMPLETE; G4 NOT_AUTHORIZED; reference gate NOT_READY; scoring NOT_EXECUTED." >> "$GITHUB_STEP_SUMMARY"
+      - name: Persist archive as a private prerelease if Actions storage is unavailable
+        if: steps.upload.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          notes_file="${RUNNER_TEMP}/${ARTIFACT_NAME}-release-notes.md"
+          cat > "$notes_file" <<EOF
+          This private prerelease stores a verified raw Method Ψ DEVELOPMENT archive because Actions artifact upload was unavailable.
+
+          - Execution ID: ${EXECUTION_ID}
+          - Source revision: ${GITHUB_SHA}
+          - Workflow run: ${WORKFLOW_RUN_URL}
+          - Archive SHA-256: $(sha256sum "$ARCHIVE_PATH" | cut -d ' ' -f 1)
+          - Study readiness: NO_GO
+          - Measurement: NOT_EXECUTED
+          - P_ALGORITHM_STATUS: NOT_READY
+          - G1: INCOMPLETE
+          - G4: NOT_AUTHORIZED
+          - Reference gate: NOT_READY
+          EOF
+          gh release create "$RELEASE_TAG" "$ARCHIVE_PATH" "$ARCHIVE_PATH.sha256" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "$ARTIFACT_NAME" \
+            --notes-file "$notes_file" \
+            --prerelease
+          mkdir -p "$RELEASE_READBACK"
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir "$RELEASE_READBACK"
+          archive_name="$(basename "$ARCHIVE_PATH")"
+          (cd "$RELEASE_READBACK" && sha256sum --check "${archive_name}.sha256")
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_b0_psi_archive transition-verify \
+            --archive "${RELEASE_READBACK}/${archive_name}" \
+            --extract-to "$RELEASE_VERIFY"
+          release_url="$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json url --jq .url)"
+          echo "### DEVELOPMENT evidence archive fallback" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Actions artifact upload was unavailable; the archive is stored on a private prerelease." >> "$GITHUB_STEP_SUMMARY"
+          echo "- Execution ID: \`$EXECUTION_ID\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Release: $release_url" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Assets: \`${archive_name}\` and \`${archive_name}.sha256\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Archive SHA-256: \`$(sha256sum "$ARCHIVE_PATH" | cut -d ' ' -f 1)\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Source revision: \`$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Boundary: study readiness NO_GO; measurement NOT_EXECUTED; P_ALGORITHM_STATUS NOT_READY; G1 INCOMPLETE; G4 NOT_AUTHORIZED; reference gate NOT_READY; scoring NOT_EXECUTED." >> "$GITHUB_STEP_SUMMARY"
