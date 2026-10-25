@@ -32,6 +32,7 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - `tooling/mono_ci_psi_coverage.py` — independent Git-tree/config/manifest inspection coverage and source-derived static module-import/cycle comparison; exact dynamic dependency completeness remains UNKNOWN.
 - `schemas/mono_ci_psi_inspection_coverage_v1.schema.json` and `schemas/mono_ci_psi_adaptation_necessity_v1.schema.json` — additive DEVELOPMENT diagnostic contracts, separate from Method P operation selection.
 - `MONO_CI_PSI_EVIDENCE_REQUIREMENT_TEST_MATRIX.md` and `MONO_CI_PSI_EVIDENCE_BACKED_DEVELOPMENT_REPORT_UK.md` — implementation-to-test traceability and the source-revision-specific DEVELOPMENT run readback; neither is a scientific approval or result claim.
+- `MONO_CI_PSI_COVERAGE_ADAPTATION_REPORT_UK.md` — readback of the verified A0.3→A0.4 source coverage, the separate adaptation-necessity diagnosis, actual Ψ HOLD, and unchanged scientific gates.
 - `MONO_CI_PSI_TRANSITION_DEVELOPMENT_REPORT_UK.md` — concise Ukrainian record of the raw DEVELOPMENT result, hashes, uncertainties, verification and unchanged research gates.
 - `MONO_A1_REFERENCE_FREEZE_CHECKLIST.md` — preserved V1 checklist; see V2 for current W0 readiness
 - `MONO_A1_REFERENCE_FREEZE_CHECKLIST_V2.md` — current W0 checklist for `G-A1-C4-REF-FROZEN`; the source-pair identity sub-item is verified, while all scientific, method, fixture, custody, freeze, and readback blockers remain
