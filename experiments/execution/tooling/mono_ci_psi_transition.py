@@ -491,6 +491,9 @@ def verify_transition_run(run_root: Path) -> dict[str, Any]:
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_OFFICIAL_GATE_PROMOTED")
     if record["p_algorithm_status"] != "NOT_READY" or record["g1"] != "INCOMPLETE":
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_METHOD_GATE_PROMOTED")
+    raw_path = root / record["psi"]["raw_result_path"]
+    if sha256_file(raw_path) != record["psi"]["raw_result_sha256"]:
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_RAW_RESULT_DIGEST_MISMATCH")
     for relative, digest in record["output_checksums"].items():
         path = root / relative
         if not path.is_file() or sha256_file(path) != digest:
@@ -503,9 +506,6 @@ def verify_transition_run(run_root: Path) -> dict[str, Any]:
         or manifest["policy_bundle_sha256"] != record["policy_source"]["bundle_sha256"]
     ):
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_METHOD_INPUT_BINDING_MISMATCH")
-    raw_path = root / record["psi"]["raw_result_path"]
-    if sha256_file(raw_path) != record["psi"]["raw_result_sha256"]:
-        raise ContractValidationError("MONO_CI_PSI_TRANSITION_RAW_RESULT_DIGEST_MISMATCH")
     raw = json.loads(raw_path.read_text(encoding="utf-8"))
     if raw.get("input_bundle_sha256") != manifest["bundle_sha256"]:
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_RAW_INPUT_BINDING_MISMATCH")
