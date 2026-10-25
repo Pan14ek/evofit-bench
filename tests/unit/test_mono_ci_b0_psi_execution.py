@@ -4,22 +4,27 @@ from __future__ import annotations
 
 import copy
 import json
+import zipfile
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
+from architecture.acceptance.a1.engine import inspect_source_scope, load_configuration
+from experiments.execution.tooling import mono_ci_b0_psi_archive as archive_module
 from experiments.execution.tooling import mono_ci_b0_psi_execution as execution_module
 from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import (
     ContractValidationError,
     MethodNotReadyError,
 )
-from experiments.execution.tooling.hashing import sha256_file
+from experiments.execution.tooling.hashing import pretty_json_bytes, sha256_bytes, sha256_file
 from experiments.execution.tooling.mono_ci_b0_psi_execution import (
     DEV_RUN_SCHEMA,
     _validate_bundle_file,
+    _validate_raw_evaluator_evidence,
     _verify_evaluator_binding,
+    _verify_execution_input_binding,
     materialize_development_inputs,
     verify_arm_input_bundle,
     verify_development_result,
@@ -72,6 +77,29 @@ def _development_record(execution_id: str, output_checksums: dict[str, str]) -> 
                 "scientific_applicability": "UNKNOWN",
                 "fitness_validity": "UNKNOWN",
                 "input_bundle_sha256": "0" * 64,
+                "execution_binding": {
+                    "workspace_kind": "GIT_CHECKOUT_BYTE_EQUIVALENT_TO_VERIFIED_BUNDLE",
+                    "checkout_commit_sha": "a" * 40,
+                    "repository_tree_sha": "b" * 40,
+                    "application_tree_sha": "c" * 40,
+                    "source_file_count": 1,
+                    "source_file_map_sha256": "1" * 64,
+                    "input_bundle_sha256": "0" * 64,
+                    "target_state_manifest_path": "architecture/state-target.yaml",
+                    "target_state_manifest_sha256": "2" * 64,
+                    "evaluator_configurations": [
+                        {
+                            "evaluator_id": "AC_PUBLIC_API",
+                            "bundle_path": "evaluators/AC_PUBLIC_API.yaml",
+                            "configuration_sha256": "e" * 64,
+                        },
+                        {
+                            "evaluator_id": "AC_MODULE_GRAPH",
+                            "bundle_path": "evaluators/AC_MODULE_GRAPH.yaml",
+                            "configuration_sha256": "e" * 64,
+                        },
+                    ],
+                },
                 "evaluators": evaluator_records,
                 "technical_duration_ns": 10,
                 "result_paths": [item["raw_output_path"] for item in evaluator_records],
@@ -135,6 +163,118 @@ def _development_record(execution_id: str, output_checksums: dict[str, str]) -> 
     }
 
 
+def _case_execution_context(
+    tmp_path: Path,
+) -> tuple[Path, Path, dict[str, Any], dict[str, Any], dict[str, Any], dict[str, Any], Path, Path]:
+    run_root = _materialize(tmp_path / "run", "DEV_MONO_CI_BINDING")
+    case_manifest = json.loads(
+        (ROOT / "experiments/execution/mono-ci-b0-psi-v1/CASE_MANIFEST_V1.json").read_text()
+    )
+    inputs = json.loads(
+        (ROOT / "experiments/execution/mono-ci-b0-psi-v1/INPUTS_V1.json").read_text()
+    )
+    source = next(row for row in inputs["case_sources"] if row["case_id"] == "CASE_01")
+    bare = tmp_path / "case-source.git"
+    execution_module._git_run(ROOT, ("clone", "--bare", "--shared", str(ROOT), str(bare)))
+    execution_module._fetch_case_bundles(ROOT, bare, case_manifest)
+    checkout = tmp_path / "CASE_01"
+    execution_module._git_run(
+        ROOT,
+        ("clone", "--quiet", "--shared", "--no-checkout", str(bare), str(checkout)),
+    )
+    execution_module._git_run(
+        ROOT,
+        ("-C", str(checkout), "checkout", "--quiet", "--detach", source["source_commit_sha"]),
+    )
+    proposal_root = ROOT / "experiments/execution/mono-ci-b0-psi-execution-v1"
+    baseline_config = json.loads((proposal_root / "RECONSTRUCTED_B0_A03_V1.json").read_text())
+    baseline = verify_execution_proposal(ROOT)
+    bundle_root = run_root / "B0/input_bundle/CASE_01"
+    manifest = verify_arm_input_bundle(bundle_root, expected_arm="B0")
+    return run_root, bundle_root, manifest, source, baseline_config, baseline, bare, checkout
+
+
+def _reseal_bundle_with_modified_target_state(bundle_root: Path) -> dict[str, Any]:
+    manifest_path = bundle_root / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    state_path = bundle_root / "architecture/state-target.yaml"
+    state_bytes = state_path.read_bytes() + b"# resealed tamper\n"
+    state_path.write_bytes(state_bytes)
+    for record in manifest["files"]:
+        if record["path"] == "architecture/state-target.yaml":
+            record["size_bytes"] = len(state_bytes)
+            record["sha256"] = sha256_bytes(state_bytes)
+            break
+    manifest["common_input_sha256"] = sha256_bytes(
+        execution_module._canonical_json(
+            {
+                "case": manifest["case"],
+                "baseline_configuration_sha256": manifest["baseline_configuration_sha256"],
+                "common_input_ids": manifest["common_input_ids"],
+                "files": manifest["files"],
+            }
+        )
+    )
+    manifest["bundle_sha256"] = execution_module._bundle_digest(manifest)
+    manifest_path.write_bytes(pretty_json_bytes(manifest))
+    (bundle_root / "SHA256SUMS").unlink()
+    execution_module._write_checksums(bundle_root, exclude={"SHA256SUMS"})
+    return cast(dict[str, Any], manifest)
+
+
+def _development_fake_evaluator(
+    baseline: dict[str, Any], received_inputs: list[tuple[Path, Path, Path]] | None = None
+) -> Any:
+    representations = {row["evaluator_id"]: row for row in baseline["representations"]}
+
+    def fake_evaluator(
+        evaluator_id: str,
+        repository: Path,
+        configuration_path: Path,
+        state_manifest_path: Path,
+        _state_id: str,
+        source_commit_sha: str,
+        _analyzer: Any,
+        *,
+        evidence_root: Path | None = None,
+    ) -> dict[str, Any]:
+        representation = representations[evaluator_id]
+        if evidence_root is None:
+            raise AssertionError("evaluator evidence root must be the arm input bundle")
+        if configuration_path != evidence_root / "evaluators" / f"{evaluator_id}.yaml":
+            raise AssertionError("evaluator configuration did not come from the arm bundle")
+        if state_manifest_path != evidence_root / "architecture/state-target.yaml":
+            raise AssertionError("evaluator state manifest did not come from the arm bundle")
+        if received_inputs is not None:
+            received_inputs.append((configuration_path, state_manifest_path, evidence_root))
+        inventory = inspect_source_scope(repository, load_configuration(configuration_path))
+        return {
+            "architecture": {
+                "target_source_sha": source_commit_sha,
+                "expected_source_sha": source_commit_sha,
+                "manifest_state_status": "MATCHED",
+                "source_sha_status": "MATCHED",
+                "manifest_root": "evidence",
+                "manifest_path": "architecture/state-target.yaml",
+                "manifest_digest": sha256_file(state_manifest_path),
+                "subject_source_dirty": False,
+            },
+            "evaluator": {
+                "id": evaluator_id,
+                "version": representation["evaluator_version"],
+                "source_digest": representation["evaluator_source_sha256"],
+                "configuration_digest": sha256_file(configuration_path),
+            },
+            "source_scope": {
+                "inspected_paths": inventory.source_files,
+                "source_file_digests": inventory.file_digests,
+            },
+            "result": {"execution_status": "COMPLETED", "compliance": "COMPLIANT"},
+        }
+
+    return fake_evaluator
+
+
 def test_reconstruction_is_explicitly_prospective_and_source_pinned() -> None:
     result = verify_execution_proposal(ROOT)
     assert result["identity_status"] == "PROSPECTIVE_RECONSTRUCTION_NOT_HISTORICAL"
@@ -150,37 +290,15 @@ def test_official_execution_stops_at_existing_readiness_and_method_guards() -> N
 def test_development_runner_records_b0_probe_and_keeps_psi_blocked(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    baseline_path = (
-        ROOT / "experiments/execution/mono-ci-b0-psi-execution-v1/RECONSTRUCTED_B0_A03_V1.json"
+    received_inputs: list[tuple[Path, Path, Path]] = []
+    baseline = json.loads(
+        (
+            ROOT / "experiments/execution/mono-ci-b0-psi-execution-v1/RECONSTRUCTED_B0_A03_V1.json"
+        ).read_text()
     )
-    baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
-    representations = {row["evaluator_id"]: row for row in baseline["representations"]}
-
-    def fake_evaluator(
-        evaluator_id: str,
-        _repository: Path,
-        configuration_path: Path,
-        _state_manifest_path: Path,
-        _state_id: str,
-        source_commit_sha: str,
-        _analyzer: Any,
-    ) -> dict[str, Any]:
-        representation = representations[evaluator_id]
-        return {
-            "architecture": {
-                "target_source_sha": source_commit_sha,
-                "expected_source_sha": source_commit_sha,
-                "manifest_state_status": "MATCHED",
-                "source_sha_status": "MATCHED",
-            },
-            "evaluator": {
-                "source_digest": representation["evaluator_source_sha256"],
-                "configuration_digest": sha256_file(configuration_path),
-            },
-            "result": {"execution_status": "COMPLETED", "compliance": "COMPLIANT"},
-        }
-
-    monkeypatch.setattr(execution_module, "run_evaluator", fake_evaluator)
+    monkeypatch.setattr(
+        execution_module, "run_evaluator", _development_fake_evaluator(baseline, received_inputs)
+    )
     output = tmp_path / "runner-output"
     result = execution_module.run_development_validation(ROOT, output, "DEV_MONO_CI_RUNNER_TEST")
     run = verify_development_result(output)
@@ -192,13 +310,144 @@ def test_development_runner_records_b0_probe_and_keeps_psi_blocked(
     assert run["arms"]["B0"]["adaptation_operation"] is None
     assert run["arms"]["B0"]["governance_decision"] is None
     assert run["arms"]["PSI"]["operation_emitted"] is False
+    assert len(received_inputs) == 8
+    assert all("B0/input_bundle/" in str(bundle) for _, _, bundle in received_inputs)
     assert len(run["arms"]["B0"]["case_results"]) == 4
     assert all(
         case["status"] == "DEVELOPMENT_ONLY_EXECUTED"
         and case["technical_duration_ns"] >= 0
         and len(case["evaluators"]) == 2
+        and case["execution_binding"]["workspace_kind"]
+        == "GIT_CHECKOUT_BYTE_EQUIVALENT_TO_VERIFIED_BUNDLE"
         for case in run["arms"]["B0"]["case_results"]
     )
+
+
+def test_execution_binding_proves_checkout_source_matches_sealed_bundle(tmp_path: Path) -> None:
+    (
+        _run_root,
+        bundle_root,
+        manifest,
+        source,
+        baseline_config,
+        baseline,
+        bare,
+        checkout,
+    ) = _case_execution_context(tmp_path)
+
+    binding = _verify_execution_input_binding(
+        bare, checkout, bundle_root, manifest, source, baseline_config, baseline
+    )
+
+    bundled_source = execution_module._bundle_application_files(bundle_root, manifest)
+    checkout_source = execution_module._checkout_application_files(checkout)
+    assert bundled_source == checkout_source
+    assert binding["source_file_count"] == len(bundled_source)
+    assert binding["source_file_map_sha256"] == sha256_bytes(
+        execution_module._canonical_json(
+            [
+                {"path": path, "sha256": sha256_bytes(content)}
+                for path, content in sorted(bundled_source.items())
+            ]
+        )
+    )
+    assert (
+        binding["target_state_manifest_sha256"]
+        == manifest["files"][
+            next(
+                index
+                for index, item in enumerate(manifest["files"])
+                if item["path"] == "architecture/state-target.yaml"
+            )
+        ]["sha256"]
+    )
+
+
+def test_runner_rejects_modified_checkout_source_before_evaluator(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    original = execution_module._verify_checkout_identity
+    changed = False
+    evaluator_called = False
+
+    def mutate_after_identity(checkout: Path, source: dict[str, Any]) -> None:
+        nonlocal changed
+        original(checkout, source)
+        if source["case_id"] == "CASE_01" and not changed:
+            source_file = next((checkout / "app").rglob("*.py"))
+            source_file.write_bytes(source_file.read_bytes() + b"# post-verification mutation\n")
+            changed = True
+
+    def forbidden_evaluator(*_args: Any, **_kwargs: Any) -> dict[str, Any]:
+        nonlocal evaluator_called
+        evaluator_called = True
+        return {}
+
+    monkeypatch.setattr(execution_module, "_verify_checkout_identity", mutate_after_identity)
+    monkeypatch.setattr(execution_module, "run_evaluator", forbidden_evaluator)
+    with pytest.raises(ContractValidationError, match="EXECUTION_SOURCE_BYTES_MISMATCH"):
+        execution_module.run_development_validation(
+            ROOT, tmp_path / "tampered-run", "DEV_MONO_CI_SOURCE_TAMPER"
+        )
+    assert changed
+    assert evaluator_called is False
+
+
+def test_execution_binding_rejects_mismatched_evaluator_configuration(
+    tmp_path: Path,
+) -> None:
+    _, bundle_root, manifest, source, baseline_config, baseline, bare, checkout = (
+        _case_execution_context(tmp_path)
+    )
+    altered = copy.deepcopy(baseline_config)
+    altered["representations"][0]["evaluator_configuration_sha256"] = "0" * 64
+
+    with pytest.raises(ContractValidationError, match="EXECUTION_CONFIG_DIGEST_MISMATCH"):
+        _verify_execution_input_binding(
+            bare, checkout, bundle_root, manifest, source, altered, baseline
+        )
+
+
+def test_execution_binding_rejects_mismatched_state_manifest(tmp_path: Path) -> None:
+    _, bundle_root, _, source, baseline_config, baseline, bare, checkout = _case_execution_context(
+        tmp_path
+    )
+    resealed_manifest = _reseal_bundle_with_modified_target_state(bundle_root)
+    assert verify_arm_input_bundle(bundle_root, expected_arm="B0") == resealed_manifest
+
+    with pytest.raises(ContractValidationError, match="EXECUTION_STATE_MANIFEST_MISMATCH"):
+        _verify_execution_input_binding(
+            bare,
+            checkout,
+            bundle_root,
+            resealed_manifest,
+            source,
+            baseline_config,
+            baseline,
+        )
+
+
+def test_execution_binding_rejects_stale_git_tree_binding(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _, bundle_root, manifest, source, baseline_config, baseline, bare, checkout = (
+        _case_execution_context(tmp_path)
+    )
+    original_git_text = execution_module._git_text
+
+    def stale_tree(repository: Path, *arguments: str) -> str:
+        if repository == bare and arguments == (
+            "rev-parse",
+            f"{source['source_commit_sha']}^{{tree}}",
+        ):
+            return "0" * 40
+        return original_git_text(repository, *arguments)
+
+    monkeypatch.setattr(execution_module, "_git_text", stale_tree)
+    with pytest.raises(ContractValidationError, match="REPOSITORY_TREE_MISMATCH"):
+        _verify_execution_input_binding(
+            bare, checkout, bundle_root, manifest, source, baseline_config, baseline
+        )
 
 
 def test_common_inputs_are_repeatable_equal_and_separate_by_arm(tmp_path: Path) -> None:
@@ -271,6 +520,17 @@ def test_method_input_rejects_oracle_markers_included_as_content() -> None:
         _validate_bundle_file("case/source.json", b'{"expected_operations": []}')
 
 
+@pytest.mark.parametrize(
+    "forbidden_field",
+    ["scorer", "scoring", "oracle", "ground_truth", "expected_outputs", "expected_operations"],
+)
+def test_raw_evaluator_evidence_rejects_forbidden_reference_fields(
+    forbidden_field: str,
+) -> None:
+    with pytest.raises(ContractValidationError, match="RAW_EVIDENCE_CONTAINS_FORBIDDEN_FIELD"):
+        _validate_raw_evaluator_evidence({forbidden_field: {"value": "forbidden"}})
+
+
 def test_evaluator_records_reject_stale_or_wrong_evaluator_bindings() -> None:
     source = {
         "source_commit_sha": "a" * 40,
@@ -312,39 +572,17 @@ def test_metric_statuses_remain_categorical_and_no_scoring_is_emitted() -> None:
         validate_payload(DEV_RUN_SCHEMA, run)
 
 
-def test_development_result_readback_rejects_changed_output(tmp_path: Path) -> None:
-    run_root = _materialize(tmp_path)
-    output_checksums: dict[str, str] = {}
-    raw_paths: list[Path] = []
-    for case_number in range(1, 5):
-        case_id = f"CASE_0{case_number}"
-        raw_root = run_root / "B0/raw" / case_id
-        raw_root.mkdir(parents=True)
-        for evaluator_id in ("AC_PUBLIC_API", "AC_MODULE_GRAPH"):
-            raw = raw_root / f"{evaluator_id}.json"
-            raw.write_text("{}\n", encoding="utf-8")
-            raw_paths.append(raw)
-            output_checksums[raw.relative_to(run_root).as_posix()] = sha256_file(raw)
-    record = _development_record("DEV_MONO_CI_READBACK", output_checksums)
-    record_path = run_root / "development_run.json"
-    record_path.write_text(json.dumps(record, sort_keys=True) + "\n", encoding="utf-8")
-    record_digest = sha256_file(record_path)
-    (run_root / "development_run.json.sha256").write_text(
-        f"{record_digest}  development_run.json\n", encoding="utf-8"
+def test_development_result_readback_rejects_changed_output(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    baseline = json.loads(
+        (
+            ROOT / "experiments/execution/mono-ci-b0-psi-execution-v1/RECONSTRUCTED_B0_A03_V1.json"
+        ).read_text()
     )
-    checksum_files = sorted(
-        path
-        for path in run_root.rglob("*")
-        if path.is_file() and path.relative_to(run_root).as_posix() != "SHA256SUMS"
-    )
-    (run_root / "SHA256SUMS").write_text(
-        "".join(
-            f"{sha256_file(path)}  {path.relative_to(run_root).as_posix()}\n"
-            for path in checksum_files
-        ),
-        encoding="utf-8",
-    )
-
+    monkeypatch.setattr(execution_module, "run_evaluator", _development_fake_evaluator(baseline))
+    run_root = tmp_path / "DEV_MONO_CI_READBACK"
+    execution_module.run_development_validation(ROOT, run_root, "DEV_MONO_CI_READBACK")
     verify_development_result(run_root)
     score_root = run_root.parent / "separate-scoring-output"
     score_record = score_development_run(run_root, score_root)
@@ -360,6 +598,138 @@ def test_development_result_readback_rejects_changed_output(tmp_path: Path) -> N
     with pytest.raises(ContractValidationError, match="validation failed"):
         verify_scoring_assessment(score_root)
 
-    raw_paths[0].write_text('{"tampered":true}\n', encoding="utf-8")
+    raw_path = run_root / "B0/raw/CASE_01/AC_PUBLIC_API.json"
+    raw_path.write_text('{"tampered":true}\n', encoding="utf-8")
     with pytest.raises(ContractValidationError, match="RAW_OUTPUT_DIGEST_MISMATCH"):
         verify_development_result(run_root)
+
+
+@pytest.fixture
+def completed_development_run(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    baseline = json.loads(
+        (
+            ROOT / "experiments/execution/mono-ci-b0-psi-execution-v1/RECONSTRUCTED_B0_A03_V1.json"
+        ).read_text()
+    )
+    monkeypatch.setattr(execution_module, "run_evaluator", _development_fake_evaluator(baseline))
+    output = tmp_path / "archive-run"
+    execution_module.run_development_validation(ROOT, output, "DEV_MONO_CI_ARCHIVE_TEST")
+    return output
+
+
+def test_development_archive_is_complete_deterministic_and_verifiable(
+    tmp_path: Path, completed_development_run: Path
+) -> None:
+    artifact_name = "mono-ci-b0-psi-development-12345-1"
+    run_url = "https://github.com/Pan14ek/evofit-bench/actions/runs/12345"
+    first_archive = tmp_path / "first.zip"
+    second_archive = tmp_path / "second.zip"
+    first = archive_module.pack_development_archive(
+        completed_development_run,
+        first_archive,
+        ROOT,
+        run_url,
+        artifact_name,
+        "uv 0.9.0",
+    )
+    second = archive_module.pack_development_archive(
+        completed_development_run,
+        second_archive,
+        ROOT,
+        run_url,
+        artifact_name,
+        "uv 0.9.0",
+    )
+    assert first["archive_sha256"] == second["archive_sha256"]
+    with zipfile.ZipFile(first_archive) as zipped:
+        names = set(zipped.namelist())
+        assert "development_run.json" in names
+        assert "development_run.json.sha256" in names
+        assert "SHA256SUMS" in names
+        assert (
+            len([name for name in names if name.startswith("B0/raw/") and name.endswith(".json")])
+            == 8
+        )
+        assert all(
+            not {part.lower() for part in Path(name).parts}.intersection(
+                {"scorer", "scoring", "oracle", "reference", "expected_outputs", ".git"}
+            )
+            for name in names
+        )
+        archive_manifest = json.loads(zipped.read(archive_module.ARCHIVE_MANIFEST_NAME))
+    run = verify_development_result(completed_development_run)
+    assert archive_manifest["execution_id"] == run["execution_id"]
+    assert archive_manifest["baseline"] == run["baseline"]
+    assert archive_manifest["authorization_boundary"] == {
+        "study_readiness": "NO_GO",
+        "measurement_status": "NOT_EXECUTED",
+        "p_algorithm_status": "NOT_READY",
+        "g1": "INCOMPLETE",
+        "g4": "NOT_AUTHORIZED",
+        "reference_gate": "NOT_READY",
+        "psi_status": "BLOCKED_NOT_EXECUTED",
+        "scoring": "NOT_EXECUTED_NO_SCORER_REFERENCE",
+    }
+    assert archive_manifest["workflow"]["retention_days"] == 90
+    assert len(archive_manifest["cases"]) == 4
+    assert (
+        archive_manifest["cases"][0]["execution_binding"]["input_bundle_sha256"]
+        == run["arms"]["B0"]["case_results"][0]["input_bundle_sha256"]
+    )
+
+    extracted = tmp_path / "archive-extracted"
+    verified = archive_module.verify_development_archive(first_archive, extract_to=extracted)
+    assert verified["verification_status"] == "PASS"
+    assert verified["execution_id"] == run["execution_id"]
+    assert verify_development_result(extracted)["execution_id"] == run["execution_id"]
+
+
+@pytest.mark.parametrize("damage", ["missing", "modified"])
+def test_development_archive_rejects_missing_or_modified_members(
+    tmp_path: Path, completed_development_run: Path, damage: str
+) -> None:
+    archive_path = tmp_path / "source.zip"
+    archive_module.pack_development_archive(
+        completed_development_run,
+        archive_path,
+        ROOT,
+        "https://github.com/Pan14ek/evofit-bench/actions/runs/12345",
+        "mono-ci-b0-psi-development-12345-1",
+        "uv 0.9.0",
+    )
+    damaged_archive = tmp_path / f"{damage}.zip"
+    with zipfile.ZipFile(archive_path) as original:
+        entries = [(info, original.read(info.filename)) for info in original.infolist()]
+    target = "B0/raw/CASE_01/AC_PUBLIC_API.json"
+    with zipfile.ZipFile(damaged_archive, "w", compression=zipfile.ZIP_STORED) as damaged:
+        for info, content in entries:
+            if damage == "missing" and info.filename == target:
+                continue
+            if damage == "modified" and info.filename == target:
+                content += b"tampered\n"
+            damaged.writestr(info, content)
+    Path(f"{damaged_archive}.sha256").write_text(
+        f"{sha256_file(damaged_archive)}  {damaged_archive.name}\n", encoding="utf-8"
+    )
+    with pytest.raises(ContractValidationError, match="ARCHIVE_MEMBER_(SET|DIGEST)_MISMATCH"):
+        archive_module.verify_development_archive(damaged_archive)
+
+
+def test_development_archive_rejects_forbidden_run_files(
+    tmp_path: Path, completed_development_run: Path
+) -> None:
+    forbidden = completed_development_run / "scorer/reference.json"
+    forbidden.parent.mkdir()
+    forbidden.write_text("{}\n", encoding="utf-8")
+    (completed_development_run / "SHA256SUMS").unlink()
+    execution_module._write_checksums(completed_development_run, exclude={"SHA256SUMS"})
+
+    with pytest.raises(ContractValidationError, match="DEVELOPMENT_RUN_FILE_FORBIDDEN"):
+        archive_module.pack_development_archive(
+            completed_development_run,
+            tmp_path / "forbidden.zip",
+            ROOT,
+            "https://github.com/Pan14ek/evofit-bench/actions/runs/12345",
+            "mono-ci-b0-psi-development-12345-1",
+            "uv 0.9.0",
+        )

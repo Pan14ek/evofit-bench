@@ -402,28 +402,48 @@ def run_development_validation(
 
             input_bundle = run_root / "B0/input_bundle" / case_id
             b0_manifest = verify_arm_input_bundle(input_bundle, expected_arm="B0")
+            input_binding = _verify_execution_input_binding(
+                bare, subject, input_bundle, b0_manifest, source, baseline_config, baseline
+            )
             raw_root = run_root / "B0/raw" / case_id
             raw_root.mkdir(parents=True, exist_ok=False)
             timer_start = time.monotonic_ns()
             evaluator_records: list[dict[str, Any]] = []
             for evaluator_id in CONTROL_IDS:
                 representation = _representation_for(baseline_config, evaluator_id)
-                config_path = root / representation["evaluator_configuration_path"]
+                config_path = input_bundle / "evaluators" / f"{evaluator_id}.yaml"
+                manifest_path = input_bundle / "architecture/state-target.yaml"
+                current_binding = _verify_execution_input_binding(
+                    bare, subject, input_bundle, b0_manifest, source, baseline_config, baseline
+                )
+                if current_binding != input_binding:
+                    raise ContractValidationError(
+                        "MONO_CI_B0_PSI_EXECUTION_INPUTS_CHANGED_BEFORE_EVALUATOR"
+                    )
                 evidence = run_evaluator(
                     evaluator_id,
                     subject,
                     config_path,
-                    subject / "architecture/states/A0_4_REPORT_QUERY_PORT.yaml",
+                    manifest_path,
                     "A0_4_REPORT_QUERY_PORT",
                     source["source_commit_sha"],
                     ANALYZERS[evaluator_id],
+                    evidence_root=input_bundle,
                 )
+                after_binding = _verify_execution_input_binding(
+                    bare, subject, input_bundle, b0_manifest, source, baseline_config, baseline
+                )
+                if after_binding != input_binding:
+                    raise ContractValidationError(
+                        "MONO_CI_B0_PSI_EXECUTION_INPUTS_CHANGED_DURING_EVALUATOR"
+                    )
                 _verify_evaluator_binding(
                     evidence,
                     source,
                     representation["evaluator_source_sha256"],
                     representation["evaluator_configuration_sha256"],
                 )
+                _verify_evaluator_input_binding(evidence, input_binding, evaluator_id, input_bundle)
                 raw_path = raw_root / f"{evaluator_id}.json"
                 raw_bytes = pretty_json_bytes(evidence)
                 _write_new_file(raw_path, raw_bytes)
@@ -454,6 +474,7 @@ def run_development_validation(
                     "scientific_applicability": "UNKNOWN",
                     "fitness_validity": "UNKNOWN",
                     "input_bundle_sha256": b0_manifest["bundle_sha256"],
+                    "execution_binding": input_binding,
                     "evaluators": evaluator_records,
                     "technical_duration_ns": timer_end - timer_start,
                     "result_paths": [item["raw_output_path"] for item in evaluator_records],
@@ -558,10 +579,104 @@ def verify_development_result(run_root: Path) -> dict[str, Any]:
         raise ContractValidationError("MONO_CI_B0_PSI_DEVELOPMENT_RESULT_PROMOTED")
     if record["arms"]["PSI"]["prediction_emitted"] or record["arms"]["PSI"]["operation_emitted"]:
         raise ContractValidationError("MONO_CI_B0_PSI_PREDICTION_EMITTED_WITHOUT_METHOD")
+    expected_cases = [f"CASE_0{number}" for number in range(1, 5)]
+    case_results = record["arms"]["B0"]["case_results"]
+    if [case["case_id"] for case in case_results] != expected_cases:
+        raise ContractValidationError("MONO_CI_B0_PSI_DEVELOPMENT_CASE_INVENTORY_MISMATCH")
+    expected_raw_paths = {
+        f"B0/raw/{case_id}/{evaluator_id}.json"
+        for case_id in expected_cases
+        for evaluator_id in CONTROL_IDS
+    }
+    if set(record["output_checksums"]) != expected_raw_paths:
+        raise ContractValidationError("MONO_CI_B0_PSI_DEVELOPMENT_RAW_OUTPUT_INVENTORY_MISMATCH")
     for relative, expected in record["output_checksums"].items():
         path = _safe_child(root, relative)
         if sha256_file(path) != expected:
             raise ContractValidationError("MONO_CI_B0_PSI_DEVELOPMENT_RAW_OUTPUT_DIGEST_MISMATCH")
+    for case in case_results:
+        case_id = case["case_id"]
+        bundle_manifests: dict[str, dict[str, Any]] = {}
+        for arm in ("B0", "PSI"):
+            bundle_root = root / arm / "input_bundle" / case_id
+            manifest = verify_arm_input_bundle(bundle_root, expected_arm=arm)
+            if manifest["execution_id"] != record["execution_id"]:
+                raise ContractValidationError("MONO_CI_B0_PSI_DEVELOPMENT_BUNDLE_RUN_MISMATCH")
+            binding = {
+                "case_id": case_id,
+                "source_commit_sha": case["source_commit_sha"],
+                "repository_tree_sha": case["repository_tree_sha"],
+                "application_tree_sha": case["application_tree_sha"],
+            }
+            if manifest["case"] != binding:
+                raise ContractValidationError("MONO_CI_B0_PSI_DEVELOPMENT_CASE_SOURCE_MISMATCH")
+            if (
+                manifest["baseline_configuration_sha256"]
+                != record["baseline"]["configuration_sha256"]
+            ):
+                raise ContractValidationError(
+                    "MONO_CI_B0_PSI_DEVELOPMENT_BASELINE_BINDING_MISMATCH"
+                )
+            bundle_manifests[arm] = manifest
+        if (
+            bundle_manifests["B0"]["common_input_sha256"]
+            != bundle_manifests["PSI"]["common_input_sha256"]
+            or case["input_bundle_sha256"] != bundle_manifests["B0"]["bundle_sha256"]
+        ):
+            raise ContractValidationError("MONO_CI_B0_PSI_DEVELOPMENT_BUNDLE_BINDING_MISMATCH")
+        expected_execution_binding = _execution_binding_from_bundle(
+            root / "B0/input_bundle" / case_id, bundle_manifests["B0"]
+        )
+        if case["execution_binding"] != expected_execution_binding:
+            raise ContractValidationError("MONO_CI_B0_PSI_DEVELOPMENT_EXECUTION_BINDING_MISMATCH")
+        evaluator_bindings = {
+            item["evaluator_id"]: item["configuration_sha256"]
+            for item in expected_execution_binding["evaluator_configurations"]
+        }
+        baseline_config = _read_json(
+            _safe_child(root / "B0/input_bundle" / case_id, "fitness/reconstructed-b0.json")
+        )
+        if {item["evaluator_id"] for item in case["evaluators"]} != set(CONTROL_IDS):
+            raise ContractValidationError("MONO_CI_B0_PSI_DEVELOPMENT_EVALUATOR_INVENTORY_MISMATCH")
+        if set(case["result_paths"]) != {item["raw_output_path"] for item in case["evaluators"]}:
+            raise ContractValidationError("MONO_CI_B0_PSI_DEVELOPMENT_RESULT_PATH_MISMATCH")
+        for evaluator in case["evaluators"]:
+            if evaluator["configuration_sha256"] != evaluator_bindings.get(
+                evaluator["evaluator_id"]
+            ):
+                raise ContractValidationError("MONO_CI_B0_PSI_DEVELOPMENT_CONFIG_BINDING_MISMATCH")
+            representation = _representation_for(baseline_config, evaluator["evaluator_id"])
+            if (
+                evaluator["source_sha256"] != representation["evaluator_source_sha256"]
+                or evaluator["configuration_sha256"]
+                != representation["evaluator_configuration_sha256"]
+                or evaluator["version"] != representation["evaluator_version"]
+            ):
+                raise ContractValidationError(
+                    "MONO_CI_B0_PSI_DEVELOPMENT_EVALUATOR_IDENTITY_MISMATCH"
+                )
+            evidence = _read_json(_safe_child(root, evaluator["raw_output_path"]))
+            _verify_evaluator_binding(
+                evidence,
+                case,
+                representation["evaluator_source_sha256"],
+                representation["evaluator_configuration_sha256"],
+            )
+            _verify_evaluator_input_binding(
+                evidence,
+                case["execution_binding"],
+                evaluator["evaluator_id"],
+                root / "B0/input_bundle" / case_id,
+            )
+            _validate_raw_evaluator_evidence(evidence)
+            if (
+                evidence["evaluator"].get("version") != evaluator["version"]
+                or evidence["result"].get("compliance") != evaluator["compliance"]
+                or _evaluator_exit_code(evidence) != evaluator["exit_code"]
+            ):
+                raise ContractValidationError(
+                    "MONO_CI_B0_PSI_DEVELOPMENT_EVALUATOR_RESULT_MISMATCH"
+                )
     expected_result = record["execution_id"]
     sidecar = (root / "development_run.json.sha256").read_text(encoding="utf-8").strip()
     if sidecar != f"{sha256_file(root / 'development_run.json')}  development_run.json":
@@ -570,6 +685,7 @@ def verify_development_result(run_root: Path) -> dict[str, Any]:
         root, exclude={"SHA256SUMS"}
     ):
         raise ContractValidationError("MONO_CI_B0_PSI_DEVELOPMENT_RUN_CHECKSUM_INVENTORY_MISMATCH")
+    _validate_development_run_inventory(root, expected_raw_paths)
     return record
 
 
@@ -613,6 +729,305 @@ def _verify_checkout_identity(checkout: Path, source: dict[str, Any]) -> None:
         source["repository_tree_sha"],
         source["application_tree_sha"],
     )
+
+
+def _verify_execution_input_binding(
+    git_repository: Path,
+    checkout: Path,
+    bundle_root: Path,
+    initial_manifest: dict[str, Any],
+    source: dict[str, Any],
+    baseline_config: dict[str, Any],
+    baseline: dict[str, Any],
+) -> dict[str, Any]:
+    """Prove that evaluator source/config/state bytes are the sealed case inputs."""
+    manifest = verify_arm_input_bundle(bundle_root, expected_arm="B0")
+    if manifest != initial_manifest:
+        raise ContractValidationError("MONO_CI_B0_PSI_EXECUTION_INPUT_BUNDLE_CHANGED")
+    expected_case = {
+        key: source[key]
+        for key in (
+            "case_id",
+            "source_commit_sha",
+            "repository_tree_sha",
+            "application_tree_sha",
+        )
+    }
+    if manifest["case"] != expected_case:
+        raise ContractValidationError("MONO_CI_B0_PSI_EXECUTION_INPUT_CASE_BINDING_MISMATCH")
+    if manifest["baseline_configuration_sha256"] != baseline["baseline_configuration_sha256"]:
+        raise ContractValidationError("MONO_CI_B0_PSI_EXECUTION_INPUT_BASELINE_MISMATCH")
+
+    _verify_git_commit(
+        git_repository,
+        source["source_commit_sha"],
+        source["repository_tree_sha"],
+        source["application_tree_sha"],
+    )
+    _verify_checkout_identity(checkout, source)
+    bundled_source = _bundle_application_files(bundle_root, manifest)
+    git_source = _git_archive_application(git_repository, source["source_commit_sha"])
+    checkout_source = _checkout_application_files(checkout)
+    if bundled_source != git_source or bundled_source != checkout_source:
+        raise ContractValidationError("MONO_CI_B0_PSI_EXECUTION_SOURCE_BYTES_MISMATCH")
+
+    state_path = "architecture/state-target.yaml"
+    state_record = _bundle_file_record(manifest, state_path, "architecture_state_manifest")
+    state_bytes = _safe_child(bundle_root, state_path).read_bytes()
+    pinned_state = _git_bytes(
+        git_repository,
+        source["source_commit_sha"],
+        "architecture/states/A0_4_REPORT_QUERY_PORT.yaml",
+    )
+    if state_bytes != pinned_state or sha256_bytes(state_bytes) != state_record["sha256"]:
+        raise ContractValidationError("MONO_CI_B0_PSI_EXECUTION_STATE_MANIFEST_MISMATCH")
+
+    evaluator_configurations: list[dict[str, str]] = []
+    for evaluator_id in CONTROL_IDS:
+        representation = _representation_for(baseline_config, evaluator_id)
+        config_path = f"evaluators/{evaluator_id}.yaml"
+        config_record = _bundle_file_record(manifest, config_path, "evaluator_configuration")
+        config_bytes = _safe_child(bundle_root, config_path).read_bytes()
+        expected_digest = representation["evaluator_configuration_sha256"]
+        if (
+            sha256_bytes(config_bytes) != expected_digest
+            or config_record["sha256"] != expected_digest
+        ):
+            raise ContractValidationError(
+                f"MONO_CI_B0_PSI_EXECUTION_CONFIG_DIGEST_MISMATCH:{evaluator_id}"
+            )
+        evaluator_configurations.append(
+            {
+                "evaluator_id": evaluator_id,
+                "bundle_path": config_path,
+                "configuration_sha256": expected_digest,
+            }
+        )
+
+    source_file_digests = [
+        {"path": path, "sha256": sha256_bytes(content)}
+        for path, content in sorted(bundled_source.items())
+    ]
+    return {
+        "workspace_kind": "GIT_CHECKOUT_BYTE_EQUIVALENT_TO_VERIFIED_BUNDLE",
+        "checkout_commit_sha": source["source_commit_sha"],
+        "repository_tree_sha": source["repository_tree_sha"],
+        "application_tree_sha": source["application_tree_sha"],
+        "source_file_count": len(source_file_digests),
+        "source_file_map_sha256": sha256_bytes(_canonical_json(source_file_digests)),
+        "input_bundle_sha256": manifest["bundle_sha256"],
+        "target_state_manifest_path": state_path,
+        "target_state_manifest_sha256": sha256_bytes(state_bytes),
+        "evaluator_configurations": evaluator_configurations,
+    }
+
+
+def _bundle_application_files(bundle_root: Path, manifest: dict[str, Any]) -> dict[str, bytes]:
+    prefix = "architecture/case/"
+    files: dict[str, bytes] = {}
+    for record in manifest["files"]:
+        relative = record["path"]
+        if not relative.startswith(prefix):
+            continue
+        if record["role"] != "architecture_case_source":
+            raise ContractValidationError("MONO_CI_B0_PSI_EXECUTION_SOURCE_ROLE_MISMATCH")
+        app_relative = f"app/{relative.removeprefix(prefix)}"
+        _validate_relative_path(app_relative)
+        files[app_relative] = _safe_child(bundle_root, relative).read_bytes()
+    if not files:
+        raise ContractValidationError("MONO_CI_B0_PSI_EXECUTION_SOURCE_BUNDLE_EMPTY")
+    return files
+
+
+def _execution_binding_from_bundle(bundle_root: Path, manifest: dict[str, Any]) -> dict[str, Any]:
+    source_files = _bundle_application_files(bundle_root, manifest)
+    source_file_digests = [
+        {"path": path, "sha256": sha256_bytes(content)}
+        for path, content in sorted(source_files.items())
+    ]
+    case = manifest["case"]
+    state_path = "architecture/state-target.yaml"
+    state_record = _bundle_file_record(manifest, state_path, "architecture_state_manifest")
+    evaluator_configurations = []
+    for evaluator_id in CONTROL_IDS:
+        config_path = f"evaluators/{evaluator_id}.yaml"
+        config_record = _bundle_file_record(manifest, config_path, "evaluator_configuration")
+        evaluator_configurations.append(
+            {
+                "evaluator_id": evaluator_id,
+                "bundle_path": config_path,
+                "configuration_sha256": config_record["sha256"],
+            }
+        )
+    return {
+        "workspace_kind": "GIT_CHECKOUT_BYTE_EQUIVALENT_TO_VERIFIED_BUNDLE",
+        "checkout_commit_sha": case["source_commit_sha"],
+        "repository_tree_sha": case["repository_tree_sha"],
+        "application_tree_sha": case["application_tree_sha"],
+        "source_file_count": len(source_file_digests),
+        "source_file_map_sha256": sha256_bytes(_canonical_json(source_file_digests)),
+        "input_bundle_sha256": manifest["bundle_sha256"],
+        "target_state_manifest_path": state_path,
+        "target_state_manifest_sha256": state_record["sha256"],
+        "evaluator_configurations": evaluator_configurations,
+    }
+
+
+def _validate_development_run_inventory(root: Path, expected_raw_paths: set[str]) -> None:
+    allowed_exact = {"development_run.json", "development_run.json.sha256", "SHA256SUMS"}
+    actual: set[str] = set()
+    for path in root.rglob("*"):
+        if path.is_symlink():
+            raise ContractValidationError("MONO_CI_B0_PSI_DEVELOPMENT_RUN_SYMLINK_FORBIDDEN")
+        if not path.is_file():
+            continue
+        relative = path.relative_to(root).as_posix()
+        actual.add(relative)
+        if relative in allowed_exact:
+            continue
+        if relative.startswith(("B0/input_bundle/", "PSI/input_bundle/")):
+            continue
+        if relative.startswith("B0/raw/") and (
+            relative in expected_raw_paths or relative.endswith("/SHA256SUMS")
+        ):
+            continue
+        raise ContractValidationError("MONO_CI_B0_PSI_DEVELOPMENT_RUN_FILE_FORBIDDEN")
+    for case_number in range(1, 5):
+        case_id = f"CASE_0{case_number}"
+        for arm in ("B0", "PSI"):
+            prefix = f"{arm}/input_bundle/{case_id}/"
+            if not any(path.startswith(prefix) for path in actual):
+                raise ContractValidationError("MONO_CI_B0_PSI_DEVELOPMENT_BUNDLE_MISSING")
+        expected_case_raw = {
+            f"B0/raw/{case_id}/{evaluator_id}.json" for evaluator_id in CONTROL_IDS
+        }
+        expected_case_raw.add(f"B0/raw/{case_id}/SHA256SUMS")
+        actual_case_raw = {path for path in actual if path.startswith(f"B0/raw/{case_id}/")}
+        if actual_case_raw != expected_case_raw:
+            raise ContractValidationError("MONO_CI_B0_PSI_DEVELOPMENT_RAW_CASE_INVENTORY_MISMATCH")
+        raw_root = root / "B0/raw" / case_id
+        if _read_checksums(raw_root / "SHA256SUMS") != _directory_checksums(
+            raw_root, exclude={"SHA256SUMS"}
+        ):
+            raise ContractValidationError("MONO_CI_B0_PSI_DEVELOPMENT_RAW_CASE_CHECKSUM_MISMATCH")
+
+
+def _validate_raw_evaluator_evidence(evidence: dict[str, Any]) -> None:
+    forbidden_keys = {
+        "scorer",
+        "scoring",
+        "oracle",
+        "ground_truth",
+        "groundtruth",
+        "expected_outputs",
+        "expected_operations",
+        "predicted_operations",
+        "reference_answer",
+        "reference_result",
+        "score",
+        "scores",
+    }
+
+    def inspect(value: Any) -> None:
+        if isinstance(value, dict):
+            if any(str(key).lower() in forbidden_keys for key in value):
+                raise ContractValidationError(
+                    "MONO_CI_B0_PSI_RAW_EVIDENCE_CONTAINS_FORBIDDEN_FIELD"
+                )
+            for item in value.values():
+                inspect(item)
+        elif isinstance(value, list):
+            for item in value:
+                inspect(item)
+        elif isinstance(value, str):
+            lowered = value.lower().replace("\\", "/")
+            if any(
+                marker in lowered
+                for marker in (
+                    "scorer/reference",
+                    "expected_outputs/",
+                    "expected_operations",
+                    "ground_truth",
+                    "groundtruth",
+                    "oracle/",
+                )
+            ):
+                raise ContractValidationError(
+                    "MONO_CI_B0_PSI_RAW_EVIDENCE_CONTAINS_FORBIDDEN_CONTENT"
+                )
+
+    inspect(evidence)
+
+
+def _checkout_application_files(checkout: Path) -> dict[str, bytes]:
+    app_root = checkout / "app"
+    if not app_root.is_dir() or app_root.is_symlink():
+        raise ContractValidationError("MONO_CI_B0_PSI_EXECUTION_CHECKOUT_APP_MISSING")
+    files: dict[str, bytes] = {}
+    for path in app_root.rglob("*"):
+        if path.is_symlink():
+            raise ContractValidationError("MONO_CI_B0_PSI_EXECUTION_CHECKOUT_SYMLINK_FORBIDDEN")
+        if path.is_file():
+            relative = path.relative_to(checkout).as_posix()
+            _validate_relative_path(relative)
+            files[relative] = path.read_bytes()
+    return files
+
+
+def _bundle_file_record(
+    manifest: dict[str, Any], relative: str, expected_role: str
+) -> dict[str, Any]:
+    matches = [item for item in manifest["files"] if item["path"] == relative]
+    if len(matches) != 1 or matches[0]["role"] != expected_role:
+        raise ContractValidationError("MONO_CI_B0_PSI_EXECUTION_BUNDLE_ROLE_OR_PATH_MISMATCH")
+    return matches[0]
+
+
+def _verify_evaluator_input_binding(
+    evidence: dict[str, Any],
+    input_binding: dict[str, Any],
+    evaluator_id: str,
+    bundle_root: Path,
+) -> None:
+    manifest = verify_arm_input_bundle(bundle_root, expected_arm="B0")
+    state_record = _bundle_file_record(
+        manifest, input_binding["target_state_manifest_path"], "architecture_state_manifest"
+    )
+    architecture = evidence.get("architecture", {})
+    evaluator = evidence.get("evaluator", {})
+    source_scope = evidence.get("source_scope", {})
+    if (
+        architecture.get("manifest_root") != "evidence"
+        or architecture.get("manifest_path") != input_binding["target_state_manifest_path"]
+        or architecture.get("manifest_digest") != state_record["sha256"]
+        or evaluator.get("id") != evaluator_id
+        or evaluator.get("configuration_digest")
+        != _configuration_binding(input_binding, evaluator_id)
+        or architecture.get("subject_source_dirty") is not False
+    ):
+        raise ContractValidationError("MONO_CI_B0_PSI_EVALUATOR_INPUT_BINDING_MISMATCH")
+
+    expected_source = _bundle_application_files(bundle_root, manifest)
+    reported = source_scope.get("source_file_digests", [])
+    reported_paths = [item.get("path") for item in reported]
+    if not reported or sorted(reported_paths) != sorted(set(reported_paths)):
+        raise ContractValidationError("MONO_CI_B0_PSI_EVALUATOR_SOURCE_DIGEST_INVENTORY_INVALID")
+    if sorted(source_scope.get("inspected_paths", [])) != sorted(reported_paths):
+        raise ContractValidationError("MONO_CI_B0_PSI_EVALUATOR_SOURCE_DIGEST_SCOPE_MISMATCH")
+    for item in reported:
+        if item["path"] not in expected_source or sha256_bytes(
+            expected_source[item["path"]]
+        ) != item.get("sha256"):
+            raise ContractValidationError("MONO_CI_B0_PSI_EVALUATOR_SOURCE_BYTES_MISMATCH")
+
+
+def _configuration_binding(input_binding: dict[str, Any], evaluator_id: str) -> str | None:
+    matches = [
+        item
+        for item in input_binding["evaluator_configurations"]
+        if item["evaluator_id"] == evaluator_id
+    ]
+    return matches[0]["configuration_sha256"] if len(matches) == 1 else None
 
 
 def _fetch_case_bundles(repository: Path, bare: Path, case_manifest: dict[str, Any]) -> None:
