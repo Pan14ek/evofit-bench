@@ -52,6 +52,7 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `mono_ci_b0_psi_dev_run_v1.schema.json` — DEVELOPMENT evaluator-probe record with NO_GO, nonmeasurement, nonnumeric-status, and per-case source/configuration/state input bindings.
 - `mono_ci_b0_psi_development_archive_v1.schema.json` — persistent archive provenance, environment, reproduction commands, authorization boundary, and per-member integrity contract.
 - `mono_ci_b0_psi_score_v1.schema.json` — scorer-side categorical status record that forbids numeric outputs while the separate reference is unresolved.
+- `mono_ci_psi_transition_run_v2.schema.json` and `mono_ci_psi_transition_archive_v2.schema.json` — additive evidence-backed transition records with evaluator matrix and TEST_ONLY evidence bindings; allow decision values HOLD/REJECT/ACCEPT, require predictions only for ACCEPT, and preserve all scientific NO_GO/NOT_READY gates. V1 schemas remain supported for readback.
 
 This is a selected list, not a complete source inventory.
 
@@ -64,13 +65,13 @@ run record, bundle/source identities, dependency lock hashes, workflow run,
 and archive members while retaining `NO_GO`, `NOT_EXECUTED`, and
 `BLOCKED_NOT_EXECUTED` as required values.
 
-`mono_ci_psi_transition_run_v1.schema.json` and
-`mono_ci_psi_transition_archive_v1.schema.json` define an additive single-
-transition Method P DEVELOPMENT record and archive. They bind the exact A0.3
-and A0.4 commits/trees, mark the B0 reconstruction unapproved, preserve
-`NO_GO`, `NOT_EXECUTED`, `P_ALGORITHM_STATUS=NOT_READY`, G1/G4 and reference
-gate values, and permit only a raw HOLD/REJECT decision without prediction or
-scoring. These schemas do not authorize measured execution.
+The transition V1 schemas preserve the original readback contract. V2 adds
+fresh evaluator observations, run-local TEST_ONLY evidence and an evidence
+digest summary to the archive. The run binds exact A0.3/A0.4 commits and trees,
+marks reconstructed B0 unapproved, and preserves `NO_GO`, `NOT_EXECUTED`,
+`P_ALGORITHM_STATUS=NOT_READY`, G1/G4 and reference-gate values. ACCEPT is a
+method DEVELOPMENT decision contract only and does not advance scientific
+authorization or permit scoring.
 
 ## Established conventions
 

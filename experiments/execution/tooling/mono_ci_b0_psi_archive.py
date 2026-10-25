@@ -28,7 +28,8 @@ from experiments.execution.tooling.mono_ci_b0_psi_execution import (
 from experiments.execution.tooling.mono_ci_b0_psi_preflight import verify_preflight
 
 ARCHIVE_SCHEMA = "mono_ci_b0_psi_development_archive_v1.schema.json"
-TRANSITION_ARCHIVE_SCHEMA = "mono_ci_psi_transition_archive_v1.schema.json"
+TRANSITION_ARCHIVE_SCHEMA_V1 = "mono_ci_psi_transition_archive_v1.schema.json"
+TRANSITION_ARCHIVE_SCHEMA_V2 = "mono_ci_psi_transition_archive_v2.schema.json"
 ARCHIVE_MANIFEST_NAME = "ARCHIVE_MANIFEST.json"
 WORKFLOW_URL_PATTERN = re.compile(
     r"^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/runs/[0-9]+$"
@@ -201,7 +202,7 @@ def pack_psi_transition_archive(
         for relative in _run_member_paths(run_directory)
     ]
     manifest = {
-        "schema_version": "MONO_CI_PSI_TRANSITION_ARCHIVE_V1",
+        "schema_version": "MONO_CI_PSI_TRANSITION_ARCHIVE_V2",
         "archive_purpose": "DEVELOPMENT_METHOD_RAW_EXECUTION_ONLY",
         "execution_id": run["execution_id"],
         "workflow": {
@@ -216,6 +217,15 @@ def pack_psi_transition_archive(
         "baseline": run["baseline"],
         "authorization_boundary": _transition_authorization_boundary(run),
         "transition": run["transition"],
+        "evidence": {
+            "input_bundle_sha256": run["method_input"]["bundle_sha256"],
+            "method_implementation_sha256": run["method_implementation"]["sha256"],
+            "evaluator_source_sha256": sorted(
+                {row["evaluator_source_sha256"] for row in run["evaluator_observations"]}
+            ),
+            "adaptation_sidecar_sha256": run["adaptation_evidence"]["sha256"],
+            "adaptation_trust_scope": run["adaptation_evidence"]["trust_scope"],
+        },
         "environment": {
             "python_version": sys.version.split()[0],
             "operating_system": platform.platform(),
@@ -234,7 +244,7 @@ def pack_psi_transition_archive(
         ],
         "members": members,
     }
-    validate_payload(TRANSITION_ARCHIVE_SCHEMA, manifest)
+    validate_payload(TRANSITION_ARCHIVE_SCHEMA_V2, manifest)
 
     destination = archive_path.expanduser().absolute()
     parent = destination.parent.resolve(strict=True)
@@ -294,7 +304,7 @@ def verify_psi_transition_archive(
                     "MONO_CI_PSI_TRANSITION_ARCHIVE_MEMBER_INVENTORY_INVALID"
                 )
             manifest = _decode_manifest(zipped.read(ARCHIVE_MANIFEST_NAME))
-            validate_payload(TRANSITION_ARCHIVE_SCHEMA, manifest)
+            validate_payload(_transition_archive_schema(manifest), manifest)
             payload = {name: zipped.read(name) for name in names if name != ARCHIVE_MANIFEST_NAME}
     except (OSError, zipfile.BadZipFile, KeyError, UnicodeDecodeError) as error:
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_ARCHIVE_READ_FAILED") from error
@@ -342,6 +352,15 @@ def _transition_authorization_boundary(run: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _transition_archive_schema(manifest: dict[str, Any]) -> str:
+    version = manifest.get("schema_version")
+    if version == "MONO_CI_PSI_TRANSITION_ARCHIVE_V1":
+        return TRANSITION_ARCHIVE_SCHEMA_V1
+    if version == "MONO_CI_PSI_TRANSITION_ARCHIVE_V2":
+        return TRANSITION_ARCHIVE_SCHEMA_V2
+    raise ContractValidationError("MONO_CI_PSI_TRANSITION_ARCHIVE_SCHEMA_UNSUPPORTED")
+
+
 def _verify_transition_archive_manifest_binding(
     manifest: dict[str, Any], run_root: Path, run: dict[str, Any]
 ) -> None:
@@ -354,6 +373,19 @@ def _verify_transition_archive_manifest_binding(
         or manifest["baseline"] != run["baseline"]
         or manifest["transition"] != run["transition"]
         or manifest["authorization_boundary"] != _transition_authorization_boundary(run)
+        or (
+            manifest.get("schema_version") == "MONO_CI_PSI_TRANSITION_ARCHIVE_V2"
+            and manifest.get("evidence")
+            != {
+                "input_bundle_sha256": run["method_input"]["bundle_sha256"],
+                "method_implementation_sha256": run["method_implementation"]["sha256"],
+                "evaluator_source_sha256": sorted(
+                    {row["evaluator_source_sha256"] for row in run["evaluator_observations"]}
+                ),
+                "adaptation_sidecar_sha256": run["adaptation_evidence"]["sha256"],
+                "adaptation_trust_scope": run["adaptation_evidence"]["trust_scope"],
+            }
+        )
     ):
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_ARCHIVE_RUN_BINDING_MISMATCH")
 

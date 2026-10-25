@@ -25,6 +25,7 @@ DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_mono_policy_review_inventory.py \
 	tests/unit/test_mono_e1_preflight.py \
 	tests/unit/test_mono_ci_b0_psi_preflight.py \
+	tests/unit/test_mono_ci_psi_evidence.py \
 	tests/unit/test_mono_e1_a03_fitness_candidate.py \
 	tests/unit/test_mono_e1_a03_dev_fitness_config.py \
 	tests/unit/test_architecture_stage_checks.py \
@@ -82,7 +83,7 @@ test-mono-ci-b0-psi-execution:
 	$(UV) run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_b0_psi_preflight
 
 test-mono-ci-psi-transition:
-	$(UV) run --frozen --extra dev python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_mono_ci_psi_transition.py
+	$(UV) run --frozen --extra dev python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_mono_ci_psi_transition.py tests/unit/test_mono_ci_psi_evidence.py
 
 test:
 	$(UV) run python -m pytest --cov=app --cov-report=term-missing --cov-report=xml
