@@ -494,10 +494,6 @@ def verify_transition_run(run_root: Path) -> dict[str, Any]:
     raw_path = root / record["psi"]["raw_result_path"]
     if sha256_file(raw_path) != record["psi"]["raw_result_sha256"]:
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_RAW_RESULT_DIGEST_MISMATCH")
-    for relative, digest in record["output_checksums"].items():
-        path = root / relative
-        if not path.is_file() or sha256_file(path) != digest:
-            raise ContractValidationError("MONO_CI_PSI_TRANSITION_OUTPUT_CHECKSUM_MISMATCH")
     bundle_root = root / record["method_input"]["path"]
     manifest = verify_method_bundle_v3(bundle_root, expected_method_id="P")
     if (
@@ -524,6 +520,12 @@ def verify_transition_run(run_root: Path) -> dict[str, Any]:
         if raw.get("evidence_trust_scope") != "TEST_ONLY":
             raise ContractValidationError("MONO_CI_PSI_TRANSITION_EVIDENCE_TRUST_SCOPE_MISMATCH")
         _verify_evidence_backed_run(root, record, bundle_root, manifest, raw)
+    for relative, digest in record["output_checksums"].items():
+        path = root / relative
+        if not path.is_file() or sha256_file(path) != digest:
+            raise ContractValidationError("MONO_CI_PSI_TRANSITION_OUTPUT_CHECKSUM_MISMATCH")
+    if record["schema_version"] == "MONO_CI_PSI_TRANSITION_RUN_V2":
+        _verify_adaptation_necessity_report(root, record, raw)
     if (
         record["other_arms_or_case_outputs_used"] is not False
         or record["metrics"] != "NOT_MEASURED"
@@ -1722,63 +1724,70 @@ def _verify_evidence_backed_run(
         ):
             raise ContractValidationError("MONO_CI_PSI_TRANSITION_PAIR_PROOF_AUTHORITY_INVALID")
 
-    if all(
+
+
+def _verify_adaptation_necessity_report(
+    run_root: Path, record: dict[str, Any], method_result: dict[str, Any]
+) -> None:
+    """Recompute the optional post-method diagnostic after member checksums pass."""
+    if not all(
         json.loads((run_root / row["inspection_scope_path"]).read_text(encoding="utf-8")).get(
             "schema_version"
         )
         == 2
-        for row in observation_index.values()
+        for row in record["evaluator_observations"]
     ):
-        required_diagnostic_outputs = {
-            _coverage_assessment_path(state, evaluator_id).as_posix()
-            for state in (BEFORE_STATE, AFTER_STATE)
-            for evaluator_id in EVALUATOR_IDS
-        } | {"diagnostics/adaptation-necessity-assessment.json"}
-        if not required_diagnostic_outputs.issubset(record.get("output_checksums", {})):
-            raise ContractValidationError(
-                "MONO_CI_PSI_TRANSITION_DIAGNOSTIC_OUTPUT_CHECKSUMS_INCOMPLETE"
-            )
-        coverage_assessments = {
-            (state, evaluator_id): json.loads(
-                (run_root / _coverage_assessment_path(state, evaluator_id)).read_text(
-                    encoding="utf-8"
-                )
-            )
-            for state in (BEFORE_STATE, AFTER_STATE)
-            for evaluator_id in EVALUATOR_IDS
-        }
-        evaluator_runs = []
-        for observation in observation_index.values():
-            row = dict(observation)
-            row["evidence"] = json.loads(
-                (run_root / observation["output_path"]).read_text(encoding="utf-8")
-            )
-            evaluator_runs.append(row)
-        assessment_path = run_root / "diagnostics/adaptation-necessity-assessment.json"
-        try:
-            actual_assessment = json.loads(assessment_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
-            raise ContractValidationError(
-                "MONO_CI_PSI_TRANSITION_ADAPTATION_ASSESSMENT_MISSING"
-            ) from error
-        validate_payload(ADAPTATION_NECESSITY_SCHEMA, actual_assessment)
-        expected_assessment = _build_adaptation_necessity_report(
-            repo=REPOSITORY_ROOT,
-            run_root=run_root,
-            execution_id=record["execution_id"],
-            baseline=record["baseline"],
-            evaluator_runs=evaluator_runs,
-            coverage_assessments=coverage_assessments,
-            method_result=method_result,
-            method_result_sha256=record["psi"]["raw_result_sha256"],
-            state_manifest_sidecar=json.loads(
-                (run_root / record["transition"]["state_manifest_path"]).read_text(encoding="utf-8")
-            ),
+        return
+    required_diagnostic_outputs = {
+        _coverage_assessment_path(state, evaluator_id).as_posix()
+        for state in (BEFORE_STATE, AFTER_STATE)
+        for evaluator_id in EVALUATOR_IDS
+    } | {"diagnostics/adaptation-necessity-assessment.json"}
+    if not required_diagnostic_outputs.issubset(record.get("output_checksums", {})):
+        raise ContractValidationError(
+            "MONO_CI_PSI_TRANSITION_DIAGNOSTIC_OUTPUT_CHECKSUMS_INCOMPLETE"
         )
-        if canonical_json_bytes(actual_assessment) != canonical_json_bytes(expected_assessment):
-            raise ContractValidationError(
-                "MONO_CI_PSI_TRANSITION_ADAPTATION_ASSESSMENT_READBACK_MISMATCH"
+    coverage_assessments = {
+        (state, evaluator_id): json.loads(
+            (run_root / _coverage_assessment_path(state, evaluator_id)).read_text(
+                encoding="utf-8"
             )
+        )
+        for state in (BEFORE_STATE, AFTER_STATE)
+        for evaluator_id in EVALUATOR_IDS
+    }
+    evaluator_runs = []
+    for observation in record["evaluator_observations"]:
+        row = dict(observation)
+        row["evidence"] = json.loads(
+            (run_root / observation["output_path"]).read_text(encoding="utf-8")
+        )
+        evaluator_runs.append(row)
+    assessment_path = run_root / "diagnostics/adaptation-necessity-assessment.json"
+    try:
+        actual_assessment = json.loads(assessment_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
+        raise ContractValidationError(
+            "MONO_CI_PSI_TRANSITION_ADAPTATION_ASSESSMENT_MISSING"
+        ) from error
+    validate_payload(ADAPTATION_NECESSITY_SCHEMA, actual_assessment)
+    expected_assessment = _build_adaptation_necessity_report(
+        repo=REPOSITORY_ROOT,
+        run_root=run_root,
+        execution_id=record["execution_id"],
+        baseline=record["baseline"],
+        evaluator_runs=evaluator_runs,
+        coverage_assessments=coverage_assessments,
+        method_result=method_result,
+        method_result_sha256=record["psi"]["raw_result_sha256"],
+        state_manifest_sidecar=json.loads(
+            (run_root / record["transition"]["state_manifest_path"]).read_text(encoding="utf-8")
+        ),
+    )
+    if canonical_json_bytes(actual_assessment) != canonical_json_bytes(expected_assessment):
+        raise ContractValidationError(
+            "MONO_CI_PSI_TRANSITION_ADAPTATION_ASSESSMENT_READBACK_MISMATCH"
+        )
 
 
 def _verify_evaluator_observation(
