@@ -4,7 +4,7 @@
   "title": "Single-transition Method P DEVELOPMENT run",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "execution_id", "source_revision_sha", "study_id", "mode", "unit_of_analysis", "study_readiness", "measurement_status", "p_algorithm_status", "g1", "g4", "reference_gate", "baseline", "transition", "policy_source", "method_input", "runtime", "execution_engine", "psi", "other_arms_or_case_outputs_used", "metrics", "output_checksums"],
+  "required": ["schema_version", "execution_id", "source_revision_sha", "study_id", "mode", "unit_of_analysis", "study_readiness", "measurement_status", "p_algorithm_status", "g1", "g4", "reference_gate", "method_implementation", "baseline", "transition", "policy_source", "method_input", "runtime", "execution_engine", "psi", "other_arms_or_case_outputs_used", "metrics", "output_checksums"],
   "properties": {
     "schema_version": {"const": "MONO_CI_PSI_TRANSITION_RUN_V1"},
     "execution_id": {"type": "string", "pattern": "^DEV_PSI_TRANSITION_[A-Za-z0-9_-]{1,48}$"},
@@ -18,6 +18,11 @@
     "g1": {"const": "INCOMPLETE"},
     "g4": {"const": "NOT_AUTHORIZED"},
     "reference_gate": {"const": "NOT_READY"},
+    "method_implementation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["identity", "source_path", "sha256"],
+      "properties": {"identity": {"const": "P_GOVERNED_ADAPTATION_DEVELOPMENT_V1"}, "source_path": {"const": "experiments/execution/tooling/p_adaptation.py"}, "sha256": {"$ref": "#/$defs/sha256"}}
+    },
     "baseline": {
       "type": "object", "additionalProperties": false,
       "required": ["configuration_id", "configuration_sha256", "identity_status", "approval_status", "method_input_authorized"],
@@ -64,7 +69,7 @@
     "execution_engine": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"const": "provenance/transition-runner.py"}, "sha256": {"$ref": "#/$defs/sha256"}}},
     "psi": {
       "type": "object", "additionalProperties": false,
-      "required": ["status", "decision", "raw_result_path", "raw_result_sha256", "operation_emitted", "governance_decision_emitted", "prediction_emitted", "scoring"],
+      "required": ["status", "decision", "raw_result_path", "raw_result_sha256", "operation_emitted", "governance_decision_emitted", "prediction_emitted", "scoring", "execution_duration_ms"],
       "properties": {
         "status": {"const": "DEVELOPMENT_METHOD_EXECUTED"},
         "decision": {"enum": ["HOLD", "REJECT"]},
@@ -73,7 +78,8 @@
         "operation_emitted": {"const": true},
         "governance_decision_emitted": {"const": true},
         "prediction_emitted": {"const": false},
-        "scoring": {"const": "NOT_EXECUTED"}
+        "scoring": {"const": "NOT_EXECUTED"},
+        "execution_duration_ms": {"type": "number", "minimum": 0}
       }
     },
     "other_arms_or_case_outputs_used": {"const": false},

@@ -52,6 +52,7 @@ official measurement and cannot change the measured-P or study gates.
 | MONO-PSI-TRANS-04 | Runtime contains only P modules, required schemas/catalog/vocabulary/dependencies; network and repository roots are denied, with no Git/scorer/oracle/other-arm input | Same test; runtime inventory verification | Runtime isolation/readback |
 | MONO-PSI-TRANS-05 | Archive sidecar, full run inventory, source/runtime/input/output hashes, and extracted archive read back; tampering fails | Same test | Archive integrity |
 | MONO-PSI-TRANS-06 | `NO_GO`, `NOT_EXECUTED`, `P_ALGORITHM_STATUS=NOT_READY`, G1 incomplete, G4 unauthorized and reference gate not ready remain fixed | Same test; strict run schema | Gate-preservation check |
+| MONO-PSI-TRANS-07 | Record the exact `p_adaptation.py` runtime digest and measured technical execution duration | Same test; strict run schema | Execution identity and timing |
 
 Focused command: `make test-mono-ci-psi-transition`. Hosted archival is performed by `.github/workflows/mono-ci-psi-transition-development.yml` through the shared archive module, with a 90-day Actions artifact and verified private prerelease fallback. Passing this test does not establish scientific measurement, approved B0, semantic coverage, or G1/G4 authorization.
 

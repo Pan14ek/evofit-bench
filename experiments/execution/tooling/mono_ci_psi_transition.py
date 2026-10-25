@@ -11,6 +11,7 @@ import re
 import shutil
 import subprocess  # nosec B404 - fixed interpreter and generated runtime script
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -189,12 +190,18 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
         _write_new_file(
             root / "provenance/runtime-inventory.json", pretty_json_bytes(runtime_inventory)
         )
+        adaptation_path = "experiments/execution/tooling/p_adaptation.py"
+        adaptation_digest = _runtime_module_sha256(runtime_inventory, adaptation_path)
         raw_root = psi / "raw"
         raw_root.mkdir()
         result_path = raw_root / "method-result.json"
+        execution_started = time.perf_counter()
         _execute_isolated_method(repo, runtime_root, bundle_root, result_path)
+        execution_duration_ms = round((time.perf_counter() - execution_started) * 1000, 3)
         result_digest = sha256_file(result_path)
         method_result = json.loads(result_path.read_text(encoding="utf-8"))
+        if method_result.get("method_version") != "P_GOVERNED_ADAPTATION_DEVELOPMENT_V1":
+            raise ProtocolError("MONO_CI_PSI_TRANSITION_METHOD_IDENTITY_MISMATCH")
         decision = _governance_decision(method_result)
         if decision not in {"HOLD", "REJECT"} or method_result.get("prediction_v1") is not None:
             raise ProtocolError("MONO_CI_PSI_TRANSITION_UNEXPECTED_METHOD_DECISION")
@@ -211,6 +218,11 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
             "g1": "INCOMPLETE",
             "g4": "NOT_AUTHORIZED",
             "reference_gate": "NOT_READY",
+            "method_implementation": {
+                "identity": method_result["method_version"],
+                "source_path": adaptation_path,
+                "sha256": adaptation_digest,
+            },
             "baseline": {
                 "configuration_id": baseline["baseline_id"],
                 "configuration_sha256": baseline["baseline_configuration_sha256"],
@@ -249,6 +261,7 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
                 "governance_decision_emitted": True,
                 "prediction_emitted": method_result.get("prediction_v1") is not None,
                 "scoring": "NOT_EXECUTED",
+                "execution_duration_ms": execution_duration_ms,
             },
             "other_arms_or_case_outputs_used": False,
             "metrics": "NOT_MEASURED",
@@ -374,6 +387,14 @@ def verify_transition_run(run_root: Path) -> dict[str, Any]:
         (root / "provenance/runtime-inventory.json").read_text(encoding="utf-8")
     )
     _verify_runtime_inventory(root / "PSI/method-runtime", runtime_inventory)
+    implementation = record["method_implementation"]
+    if (
+        implementation["identity"] != raw.get("method_version")
+        or implementation["source_path"] != "experiments/execution/tooling/p_adaptation.py"
+        or implementation["sha256"]
+        != _runtime_module_sha256(runtime_inventory, implementation["source_path"])
+    ):
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_METHOD_IDENTITY_MISMATCH")
     if runtime_inventory["inventory_sha256"] != record["runtime"]["inventory_sha256"]:
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_RUNTIME_BINDING_MISMATCH")
     if (
@@ -714,6 +735,15 @@ def _verify_runtime_inventory(runtime_root: Path, inventory: dict[str, Any]) -> 
     for relative, row in declared.items():
         if sha256_file(runtime_root / relative) != row["sha256"]:
             raise ContractValidationError("MONO_CI_PSI_TRANSITION_RUNTIME_DIGEST_MISMATCH")
+
+
+def _runtime_module_sha256(inventory: dict[str, Any], relative_path: str) -> str:
+    for row in inventory.get("files", []):
+        if isinstance(row, dict) and row.get("path") == relative_path:
+            digest = row.get("sha256")
+            if isinstance(digest, str):
+                return digest
+    raise ProtocolError("MONO_CI_PSI_TRANSITION_METHOD_IDENTITY_MISSING")
 
 
 def _execute_isolated_method(

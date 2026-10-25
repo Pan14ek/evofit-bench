@@ -31,6 +31,12 @@ def test_real_transition_executes_psi_and_archive_round_trips(tmp_path: Path) ->
     method_manifest = json.loads(
         (run_root / record["method_input"]["path"] / "method_input_v3.json").read_text()
     )
+    runtime_inventory = json.loads((run_root / "provenance/runtime-inventory.json").read_text())
+    adaptation_runtime_row = next(
+        row
+        for row in runtime_inventory["files"]
+        if row["path"] == "experiments/execution/tooling/p_adaptation.py"
+    )
     assert state_manifest_path.is_relative_to(run_root / "provenance")
     assert (
         state_manifest["manifests"][0]["sha256"]
@@ -50,6 +56,9 @@ def test_real_transition_executes_psi_and_archive_round_trips(tmp_path: Path) ->
     )
     assert observation["source_commit_sha"] == record["transition"]["after_commit_sha"]
     assert observation["source_state"] == "after"
+    assert raw["method_version"] == record["method_implementation"]["identity"]
+    assert record["method_implementation"]["sha256"] == adaptation_runtime_row["sha256"]
+    assert record["psi"]["execution_duration_ms"] >= 0
     assert all(row["path"] != state_manifest_path.name for row in method_manifest["files"])
     assert result["psi_decision"] == record["psi"]["decision"] == "HOLD"
     assert record["transition"]["before_commit_sha"] == "26a9bb667da7d0938e38aca15d2bf29fd1de4829"
