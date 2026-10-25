@@ -1725,7 +1725,6 @@ def _verify_evidence_backed_run(
             raise ContractValidationError("MONO_CI_PSI_TRANSITION_PAIR_PROOF_AUTHORITY_INVALID")
 
 
-
 def _verify_adaptation_necessity_report(
     run_root: Path, record: dict[str, Any], method_result: dict[str, Any]
 ) -> None:
@@ -1749,9 +1748,7 @@ def _verify_adaptation_necessity_report(
         )
     coverage_assessments = {
         (state, evaluator_id): json.loads(
-            (run_root / _coverage_assessment_path(state, evaluator_id)).read_text(
-                encoding="utf-8"
-            )
+            (run_root / _coverage_assessment_path(state, evaluator_id)).read_text(encoding="utf-8")
         )
         for state in (BEFORE_STATE, AFTER_STATE)
         for evaluator_id in EVALUATOR_IDS
