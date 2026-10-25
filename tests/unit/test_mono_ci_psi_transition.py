@@ -10,6 +10,7 @@ import pytest
 from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError, ProtocolError
 from experiments.execution.tooling.mono_ci_psi_transition import (
+    _validate_method_result_v2,
     pack_transition_archive,
     run_transition,
     verify_transition_archive,
@@ -59,8 +60,9 @@ def test_real_transition_executes_psi_and_archive_round_trips(tmp_path: Path) ->
     assert raw["method_version"] == record["method_implementation"]["identity"]
     assert record["method_implementation"]["sha256"] == adaptation_runtime_row["sha256"]
     assert record["psi"]["execution_duration_ms"] >= 0
+    assert record["psi"]["decision"] in {"HOLD", "REJECT", "ACCEPT"}
     assert all(row["path"] != state_manifest_path.name for row in method_manifest["files"])
-    assert result["psi_decision"] == record["psi"]["decision"] == "HOLD"
+    assert result["psi_decision"] == record["psi"]["decision"]
     assert record["transition"]["before_commit_sha"] == "26a9bb667da7d0938e38aca15d2bf29fd1de4829"
     assert record["transition"]["after_commit_sha"] == "d3101c0d3aa9b7b709253b6ec7518416f05f65b9"
     assert record["study_readiness"] == "NO_GO"
@@ -75,14 +77,38 @@ def test_real_transition_executes_psi_and_archive_round_trips(tmp_path: Path) ->
     assert record["other_arms_or_case_outputs_used"] is False
     assert record["metrics"] == "NOT_MEASURED"
     assert record["psi"]["scoring"] == "NOT_EXECUTED"
-    assert record["psi"]["prediction_emitted"] is False
-    assert raw["prediction_v1"] is None
-    assert raw["governance"]["result"] == "HOLD"
-    assert raw["operation_plan"]["operations"] == []
-    assert raw["operation_plan"]["reject_reasons"] == []
-    assert "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED" in raw["governance"]["reason_codes"]
+    assert record["psi"]["prediction_emitted"] is (raw.get("prediction_v1") is not None)
+    assert raw["result_contract_version"] == "MONO_CI_PSI_METHOD_RESULT_V2"
+    assert raw["governance"]["result"] in {"HOLD", "REJECT", "ACCEPT"}
+    if raw["governance"]["result"] == "ACCEPT":
+        assert isinstance(raw.get("prediction_v1"), dict)
+        assert isinstance(raw.get("candidate_v1"), dict)
+    else:
+        assert raw.get("prediction_v1") is None
+        assert raw.get("candidate_v1") is None
+    assert len(record["evaluator_observations"]) == 4
+    assert {row["architecture_state"] for row in record["evaluator_observations"]} == {
+        "A0_3_GOVERNED_MODULE_GRAPH",
+        "A0_4_REPORT_QUERY_PORT",
+    }
+    assert all(row["execution_status"] == "COMPLETED" for row in record["evaluator_observations"])
+    assert all(row["inspection_scope_sha256"] for row in record["evaluator_observations"])
+    assert record["adaptation_evidence"]["trust_scope"] == "TEST_ONLY"
+    assert raw["evidence_trust_scope"] == "TEST_ONLY"
+    assert record["evidence_ledger"]["verified_fact_ids"] == [
+        "FV01_AFTER",
+        "FV01_BEFORE",
+        "FV02_MODULES_ADDED",
+        "FV03_MODULES_REMOVED",
+    ]
     assert all(row["status"] == "UNKNOWN" for row in raw["after_applicability"]["results"])
     assert all(row["status"] == "UNKNOWN" for row in raw["candidate_coverage"]["obligations"])
+    assert all(row["status"] == "UNKNOWN" for row in raw["current_pairs"])
+    assert all(row["compliance_status"] == "COMPLIANT" for row in raw["current_pairs"])
+    assert all(
+        "EVALUATOR_INSPECTION_SCOPE_UNKNOWN" not in row["reason_codes"]
+        for row in raw["current_pairs"]
+    )
 
     inventory_paths = {
         path.relative_to(run_root).as_posix() for path in run_root.rglob("*") if path.is_file()
@@ -117,6 +143,14 @@ def test_real_transition_executes_psi_and_archive_round_trips(tmp_path: Path) ->
     raw_path.write_bytes(raw_path.read_bytes() + b" ")
     with pytest.raises(ContractValidationError, match="RAW_RESULT_DIGEST_MISMATCH"):
         verify_transition_run(run_root)
+    raw_path.write_bytes(raw_path.read_bytes()[:-1])
+
+    evidence_path = run_root / record["adaptation_evidence"]["path"]
+    evidence_bytes = evidence_path.read_bytes()
+    evidence_path.write_bytes(evidence_bytes + b" ")
+    with pytest.raises(ContractValidationError, match="ADAPTATION_EVIDENCE_DIGEST_MISMATCH"):
+        verify_transition_run(run_root)
+    evidence_path.write_bytes(evidence_bytes)
 
 
 def test_transition_contract_rejects_official_status_promotion(tmp_path: Path) -> None:
@@ -139,3 +173,32 @@ def test_transition_contract_rejects_official_status_promotion(tmp_path: Path) -
     }
     with pytest.raises(ContractValidationError, match="validation failed"):
         validate_payload("mono_ci_psi_transition_run_v1.schema.json", invalid)
+
+
+def test_v2_method_result_allows_each_decision_with_bounded_prediction_shape() -> None:
+    _validate_method_result_v2(
+        {"governance": {"result": "HOLD"}, "prediction_v1": None, "candidate_v1": None}
+    )
+    _validate_method_result_v2(
+        {"governance": {"result": "REJECT"}, "prediction_v1": None, "candidate_v1": None}
+    )
+    _validate_method_result_v2(
+        {
+            "governance": {"result": "ACCEPT"},
+            "prediction_v1": {"prediction_id": "synthetic"},
+            "candidate_v1": {"candidate_id": "synthetic"},
+        }
+    )
+
+    with pytest.raises(ProtocolError, match="ACCEPT_OUTPUT_MISSING"):
+        _validate_method_result_v2(
+            {"governance": {"result": "ACCEPT"}, "prediction_v1": None, "candidate_v1": None}
+        )
+    with pytest.raises(ProtocolError, match="NONACCEPT_PREDICTION_PRESENT"):
+        _validate_method_result_v2(
+            {
+                "governance": {"result": "HOLD"},
+                "prediction_v1": {"prediction_id": "synthetic"},
+                "candidate_v1": {"candidate_id": "synthetic"},
+            }
+        )

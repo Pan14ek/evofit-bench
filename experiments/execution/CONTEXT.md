@@ -28,6 +28,8 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - `mono-ci-b0-psi-v1/` and `tooling/mono_ci_b0_psi_preflight.py` — separate, read-only preparation for a bounded monograph CI comparison; current NO_GO, historical observations excluded from methods/current case status, metric statuses defined by arm, and no method bundles or measured execution.
 - `mono-ci-b0-psi-execution-v1/` and `tooling/mono_ci_b0_psi_execution.py` — separately versioned baseline-reconstruction proposal and DEVELOPMENT-only input/evaluator runner; preserves NO_GO and does not score.
 - `tooling/mono_ci_psi_transition.py` — additive one-transition A0.3→A0.4 Method P DEVELOPMENT execution and verified archive; keeps method runtime isolated from repository/Git/network access and leaves official NO_GO/NOT_READY gates intact.
+- `tooling/mono_ci_psi_evidence.py` — fresh A1 evaluator observations, source-inventory fact readback, and a run-local TEST_ONLY evidence trust context; it does not supply normative authority or semantic adequacy.
+- `MONO_CI_PSI_EVIDENCE_REQUIREMENT_TEST_MATRIX.md` and `MONO_CI_PSI_EVIDENCE_BACKED_DEVELOPMENT_REPORT_UK.md` — implementation-to-test traceability and the source-revision-specific DEVELOPMENT run readback; neither is a scientific approval or result claim.
 - `MONO_CI_PSI_TRANSITION_DEVELOPMENT_REPORT_UK.md` — concise Ukrainian record of the raw DEVELOPMENT result, hashes, uncertainties, verification and unchanged research gates.
 - `MONO_A1_REFERENCE_FREEZE_CHECKLIST.md` — preserved V1 checklist; see V2 for current W0 readiness
 - `MONO_A1_REFERENCE_FREEZE_CHECKLIST_V2.md` — current W0 checklist for `G-A1-C4-REF-FROZEN`; the source-pair identity sub-item is verified, while all scientific, method, fixture, custody, freeze, and readback blockers remain
@@ -80,6 +82,18 @@ inventory fields. Its status remains `PREPARED_NOT_EXECUTED`; it does not
 create predictions, open the scorer, assert pair coverage, or change G1/G4.
 The selected A0-to-A0.1 transition is `CALIBRATION_EXPOSED`. Readiness and
 exact blockers are recorded in `docs/g1/B0P_READINESS_V1.md`.
+
+The additive A0.3→A0.4 Ψ execution path binds fresh A1 evaluator processes to
+both exact source revisions, while only fresh A0.4 observations enter the
+adaptation sidecar. Each evaluator output has a digest-bound typed inspection
+scope (file or dependency edge), reconstructed and checked against the raw
+output during readback. Sidecar verification is explicitly `TEST_ONLY`; pair
+adequacy and normative mapping remain `UNDETERMINED`, and source-inventory
+readback recomputes only four module facts from digest-pinned inventory paths.
+The runtime remains network-isolated and cannot read the source repositories
+or A0.3 evaluator observations. The run/archive schemas retain NO_GO,
+NOT_READY, G1/G4 and reference-gate boundaries; no scoring or cross-arm
+comparison is performed.
 
 The additive E1 execution contract is separate from the generic continuation
 schema. It may consume an exact-run PILOT-02 TEST_ONLY sidecar, copies the
@@ -142,4 +156,11 @@ positive adaptation case is created.
 
 ## Verification and further reading
 
-Consult the original source files and nearest relevant tests, then `docs/README.md` for repository-wide architecture, experiment, stack and verification references. The DEVELOPMENT validation workflow uses `make development-quality` with a **disposable** PostgreSQL database and excludes the two protected DA01 test modules from discovery. When a context summary conflicts with source code, a reviewed manifest or a frozen scientific protocol, **report the conflict**; do not silently reinterpret research rules.
+For the evidence-backed A0.3→A0.4 path, `make test-mono-ci-psi-transition`
+runs the real isolated transition integration test and its adapter/verifier
+unit tests. The hosted workflow also runs `make test-mono-ci-b0-psi-execution`,
+`make development-quality` with a **disposable** PostgreSQL database, then
+packs and verifies the fresh transition archive. Development quality excludes
+the two protected DA01 test modules from discovery. When a context summary
+conflicts with source code, a reviewed manifest or a frozen scientific
+protocol, **report the conflict**; do not silently reinterpret research rules.

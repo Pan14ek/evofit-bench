@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - codex/mono-ci-psi-real-transition-dev
+      - codex/psi-evidence-backed-adaptation
     paths:
       - .github/workflows/mono-ci-psi-transition-development.yml
       - Makefile
@@ -12,13 +13,20 @@ on:
       - architecture/acceptance/a1/**
       - experiments/execution/tooling/mono_ci_b0_psi_*.py
       - experiments/execution/tooling/mono_ci_psi_transition.py
+      - experiments/execution/tooling/mono_ci_psi_evidence.py
       - experiments/execution/tooling/mono_ci_b0_psi_archive.py
       - experiments/execution/schemas/mono_ci_b0_psi_*.schema.json
       - experiments/execution/schemas/mono_ci_psi_transition_*.schema.json
+      - experiments/execution/MONO_CI_PSI_EVIDENCE_REQUIREMENT_TEST_MATRIX.md
+      - experiments/execution/CONTEXT.md
+      - experiments/execution/tooling/CONTEXT.md
+      - experiments/execution/schemas/CONTEXT.md
       - experiments/execution/mono-ci-b0-psi-execution-v1/RECONSTRUCTED_B0_A03_V1.json
       - experiments/execution/mono-ci-b0-psi-execution-v1/RECONSTRUCTED_B0_A03_V1.json.sha256
       - tests/unit/test_mono_ci_b0_psi_*.py
       - tests/unit/test_mono_ci_psi_transition.py
+      - tests/unit/test_mono_ci_psi_evidence.py
+      - tests/unit/CONTEXT.md
   workflow_dispatch:
 
 permissions:
