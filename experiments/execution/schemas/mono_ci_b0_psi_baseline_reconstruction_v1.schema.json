@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_b0_psi_baseline_reconstruction_v1.schema.json",
+  "title": "MONO CI B0 baseline reconstruction review proposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "status", "baseline_id", "configuration_path", "configuration_sha256", "prepared_before_comparative_results", "historical_configuration_search", "derivation", "assumptions_requiring_review", "claim_boundary", "required_review", "authorization_statuses_preserved"],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_B0_PSI_BASELINE_RECONSTRUCTION_V1"},
+    "status": {"const": "PROPOSAL_FOR_INDEPENDENT_REVIEW_NOT_APPROVED"},
+    "baseline_id": {"const": "MONO_CI_RECONSTRUCTED_B0_A03_V1"},
+    "configuration_path": {"const": "experiments/execution/mono-ci-b0-psi-execution-v1/RECONSTRUCTED_B0_A03_V1.json"},
+    "configuration_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "prepared_before_comparative_results": {"const": true},
+    "historical_configuration_search": {"type": "object", "required": ["canonical_source_commit_sha", "searched_paths", "result", "later_B0_DEV_A03_is_historical"], "properties": {"canonical_source_commit_sha": {"const": "26a9bb667da7d0938e38aca15d2bf29fd1de4829"}, "searched_paths": {"type": "array", "minItems": 1, "items": {"type": "string"}}, "result": {"const": "NO_VERSIONED_A03_FITNESS_CONFIGURATION_OR_REPRESENTATION_BINDING_FOUND"}, "later_B0_DEV_A03_is_historical": {"const": false}}, "additionalProperties": false},
+    "derivation": {"type": "object", "required": ["source_of_control_inventory", "selected_controls", "evaluator_bindings", "excluded"], "properties": {"source_of_control_inventory": {"type": "string"}, "selected_controls": {"const": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]}, "evaluator_bindings": {"type": "string"}, "excluded": {"type": "array", "minItems": 1, "items": {"type": "string"}}}, "additionalProperties": false},
+    "assumptions_requiring_review": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "claim_boundary": {"type": "object", "required": ["may_support_after_review", "cannot_support"], "properties": {"may_support_after_review": {"type": "array", "items": {"type": "string"}}, "cannot_support": {"type": "array", "minItems": 1, "items": {"type": "string"}}}, "additionalProperties": false},
+    "required_review": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "authorization_statuses_preserved": {"type": "object", "required": ["study_readiness", "P_ALGORITHM_STATUS", "G1", "G4", "G_A1_C4_REF_FROZEN"], "properties": {"study_readiness": {"const": "NO_GO"}, "P_ALGORITHM_STATUS": {"const": "NOT_READY"}, "G1": {"const": "INCOMPLETE"}, "G4": {"const": "NOT_AUTHORIZED"}, "G_A1_C4_REF_FROZEN": {"const": "NOT_READY"}}, "additionalProperties": false}
+  }
+}

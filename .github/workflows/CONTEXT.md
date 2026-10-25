@@ -10,10 +10,21 @@ CI workflow YAML: uv, Python and disposable PostgreSQL.
 ## Local landmarks
 
 - `ci.yml`
+- `mono-ci-b0-psi-development.yml` — branch-scoped DEVELOPMENT quality, fresh B0 evaluator probe, deterministic archive readback, and 90-day Actions artifact upload with a private prerelease fallback when artifact storage is unavailable; no official method execution.
 
 ## Established conventions
 
 Keep actions aligned with Makefile and pyproject.toml.
+
+The B0/Ψ archive workflow runs only for the existing corrective branch's
+relevant source, schema, dependency, or workflow changes, plus manual
+dispatch. It provisions the same disposable PostgreSQL service as `ci.yml`,
+runs both the focused harness and `make development-quality`, then creates a
+fresh run ID and verifies a ZIP plus SHA-256 sidecar. It first uploads a
+90-day Actions artifact; if repository artifact storage is unavailable, it
+stores and downloads the same files from a private DEVELOPMENT prerelease and
+repeats verification. Keep it separate from the default quality workflow and
+preserve the NO_GO/NOT_EXECUTED boundary.
 
 CI installs the optional research dashboard and figure extras so their reader, visualization, and export checks run under the frozen lockfile.
 

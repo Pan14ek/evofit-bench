@@ -84,6 +84,9 @@ tracked in `docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`.
 - `mono_a1.py` — separate MONO-E1/E2 reference custody, prediction-scoring gates, exact-pair RQ2, W2 A1 readback, runtime prerequisites, and checksum archives
 - `mono_e1_preflight.py` — read-only MONO-E1 comparability verifier; reuses source revision, method-bundle, image-provenance, and timing validators without executing either method
 - `mono_ci_b0_psi_preflight.py` — read-only source/archive/package verifier for a separate monograph-specific CI comparison; hard-fails on provenance drift, rejects historical observations as current-case evidence, validates arm-specific metric statuses, and preserves NO_GO without invoking evaluators, methods or scorer.
+- `mono_ci_b0_psi_execution.py` — exact-source materialization, separate DEVELOPMENT common-input bundles, B0 evaluator-only technical validation, checksummed result readback, and preserved NO_GO/Ψ guards.
+- `mono_ci_b0_psi_archive.py` — deterministic archive pack/readback for verified DEVELOPMENT raw outputs; embeds the run/bundle provenance, exact execution boundary, dependency/environment identities, reproduction commands, and member hashes, then writes a detached SHA-256 sidecar.
+- `mono_ci_b0_psi_scoring.py` — separate post-run scorer gate; verifies sealed DEVELOPMENT results and emits categorical NOT_EVALUABLE statuses until a separate approved reference exists. The execution runner does not import it.
 - `mono_e1_a03_fitness_config.py` — read-only schema, digest, canonical-source, frozen-A0, and evaluator-archive verifier for proposed B0_DEV_A03; it neither runs Method P nor changes readiness
 - `mono_policy_review_inventory.py` — read-only structural validator for the public MONO-E1 proposal inventory; compares copied rows to the pinned catalog and reports unresolved decision dimensions without certifying approval
 - `b0p_execution.py` — common immutable container preparation and evaluator helpers; P accepts a read-only evidence sidecar mount only when the caller supplies one
@@ -218,6 +221,27 @@ proposal against its schema, pinned source/evaluator artifacts, preserved A0
 baseline bytes, and archived EVAL-01/EVAL-02 evidence. It fails closed on
 missing or contradictory evidence, reports semantic validity as UNKNOWN, and
 does not produce a Method P input bundle or invoke Method P.
+
+`mono_ci_b0_psi_execution.py` keeps PR #51's package unchanged and uses a
+separate review proposal. It verifies A0.3/A0.4 source and evaluator identities,
+materializes app-only case trees from pinned Git objects/bundles, and writes
+separate B0/Ψ common-input bundles with no `.git`, EVAL archive, expectations,
+scorer, or arm outputs. The B0 DEVELOPMENT evaluator reads configuration and
+state manifests directly from its verified arm bundle. Because the evaluator
+uses Git metadata, its checkout's complete `app/` byte map is compared with
+both the bundle and the pinned Git tree before and after each evaluator; the
+evaluator-reported source/config/state digests are checked against those same
+bundle files before raw evidence is sealed. Run records persist this binding.
+The probe records only raw evaluator outputs; applicability and semantic
+validity stay UNKNOWN, no metrics/operations/governance are emitted, and Ψ is
+BLOCKED_NOT_EXECUTED through the measured-method guard.
+
+`mono_ci_b0_psi_archive.py` accepts only a fully verified run directory with
+the four B0 raw-output pairs and the separate common-input bundles. It rejects
+unexpected paths, validates bundle parity and run provenance, emits a
+fixed-metadata ZIP and SHA-256 sidecar, and can safely extract and re-verify
+that archive without a source checkout. The workflow publishes these files as
+a DEVELOPMENT-only GitHub Actions artifact with 90-day retention.
 
 ## Verification and further reading
 

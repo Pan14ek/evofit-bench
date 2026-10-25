@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_b0_psi_score_v1.schema.json",
+  "title": "MONO CI B0/Ψ separate scorer assessment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "study_id", "execution_id", "source_execution_sha256", "scoring_status", "reference_status", "reason", "metric_statuses", "numeric_results"],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_B0_PSI_SCORE_V1"},
+    "study_id": {"const": "MONO_CI_B0_PSI_DEVELOPMENT_TECHNICAL_VALIDATION"},
+    "execution_id": {"type": "string", "pattern": "^DEV_MONO_CI_[A-Za-z0-9_-]{1,48}$"},
+    "source_execution_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "scoring_status": {"const": "NOT_EVALUABLE"},
+    "reference_status": {"const": "NOT_ESTABLISHED"},
+    "reason": {"const": "NO_SEPARATE_APPROVED_SCORER_REFERENCE"},
+    "metric_statuses": {"type": "object", "const": {"operation_selection_correctness": {"B0": "N/A", "PSI": "NOT_EVALUABLE"}, "governance_decision_correctness": {"B0": "N/A", "PSI": "NOT_EVALUABLE"}, "current_configuration_verified_coverage": {"B0": "NOT_EVALUABLE", "PSI": "NOT_EVALUABLE"}, "controlled_violation_detection": {"B0": "NOT_MEASURED", "PSI": "NOT_MEASURED"}, "stale_or_semantically_invalid_representations": {"B0": "NOT_EVALUABLE", "PSI": "NOT_EVALUABLE"}, "assessed_candidate_coverage": {"B0": "N/A", "PSI": "NOT_MEASURED"}, "actual_post_adaptation_coverage": {"B0": "N/A", "PSI": "NOT_MEASURED"}, "end_to_end_case_execution_duration": {"B0": "NOT_MEASURED", "PSI": "NOT_MEASURED"}}},
+    "numeric_results": {"type": "object", "const": {}}
+  }
+}

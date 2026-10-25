@@ -1,0 +1,70 @@
+{
+  "schema_version": "MONO_CI_RECONSTRUCTED_B0_A03_V1",
+  "configuration_id": "MONO_CI_RECONSTRUCTED_B0_A03_V1",
+  "status": "RECONSTRUCTION_PROPOSAL_NOT_APPROVED",
+  "historical_identity": "NOT_FOUND",
+  "architecture_state": "A0_3_GOVERNED_MODULE_GRAPH",
+  "target_state": "A0_4_REPORT_QUERY_PORT",
+  "scope": "CI_ONLY_TWO_ENGINEERING_CONTROLS",
+  "derivation": {
+    "source_commit_sha": "26a9bb667da7d0938e38aca15d2bf29fd1de4829",
+    "source_repository_tree_sha": "7b951421395f532ca403dab09d76902ff08a807d",
+    "source_application_tree_sha": "b147b8961ea9e76c966663d4832e4c303581151a",
+    "state_manifest_path": "architecture/states/A0_3_GOVERNED_MODULE_GRAPH.yaml",
+    "state_manifest_sha256": "cdb85e758647b0590d954e013079d51d0060fefd8425da87e35335f89b722f32",
+    "basis": "The canonical A0.3 state manifest requires AC_PUBLIC_API and AC_MODULE_GRAPH engineering checks. No versioned A0.3 fitness configuration or evaluator binding was found in the canonical A0.3 tree; this file prospectively reconstructs only those two CI controls for review."
+  },
+  "criteria": [
+    {
+      "criterion_id": "architecture_compliance",
+      "status": "PROPOSED_UNREVIEWED",
+      "intent": "Retain source-level control over public module access and the bounded capability dependency graph."
+    }
+  ],
+  "representations": [
+    {
+      "representation_id": "REP_RECON_B0_A03_PUBLIC_API_CI_V1",
+      "criterion_id": "architecture_compliance",
+      "obligation_id": "AC_PUBLIC_API",
+      "stage": "ci_test",
+      "evaluator_id": "AC_PUBLIC_API",
+      "evaluator_version": "1.0.0",
+      "evaluator_source_sha256": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
+      "evaluator_configuration_path": "architecture/acceptance/a1/public_api_v1.yaml",
+      "evaluator_configuration_sha256": "8853c3a933b23f698c7ba7c5b6e511f292e8d9285dc0de4378741c53e466f7bb",
+      "mapping_status": "PROPOSED_UNREVIEWED",
+      "applicability": "UNKNOWN",
+      "semantic_validity": "UNKNOWN"
+    },
+    {
+      "representation_id": "REP_RECON_B0_A03_MODULE_GRAPH_CI_V1",
+      "criterion_id": "architecture_compliance",
+      "obligation_id": "AC_MODULE_GRAPH",
+      "stage": "ci_test",
+      "evaluator_id": "AC_MODULE_GRAPH",
+      "evaluator_version": "1.0.0",
+      "evaluator_source_sha256": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
+      "evaluator_configuration_path": "architecture/acceptance/a1/module_graph_v1.yaml",
+      "evaluator_configuration_sha256": "1abae6871a477ff2a07685ad645a70defa2f1ac6745598ae4cdc35aab4e95bf6",
+      "mapping_status": "PROPOSED_UNREVIEWED",
+      "applicability": "UNKNOWN",
+      "semantic_validity": "UNKNOWN"
+    }
+  ],
+  "limitations": [
+    "This is a prospective reconstruction, not a historical configuration or proof of historical intent.",
+    "The two controls are a bounded subset, not a complete approved applicability or mandatory-obligation denominator.",
+    "The evaluator source and configuration identities are later engineering artifacts used to make this proposal technically testable; their historical presence at A0.3 is not claimed.",
+    "No operation, governance decision, coverage score, or adaptation-benefit claim is implied."
+  ],
+  "authorization": {
+    "baseline_approval": false,
+    "method_input_authorized": false,
+    "scientific_measurement_authorized": false,
+    "study_readiness": "NO_GO",
+    "P_ALGORITHM_STATUS": "NOT_READY",
+    "G1": "INCOMPLETE",
+    "G4": "NOT_AUTHORIZED",
+    "G_A1_C4_REF_FROZEN": "NOT_READY"
+  }
+}
