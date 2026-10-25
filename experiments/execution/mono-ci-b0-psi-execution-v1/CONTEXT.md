@@ -14,13 +14,14 @@ Holds a separately versioned reconstruction proposal and DEVELOPMENT-only techni
 - `TRANSITION_ASSESSMENT_V1.json` — source-bounded analysis of unchanged controls, the A0.3 exception, and adaptation uncertainty.
 - `REQUIREMENT_TEST_MATRIX.md` — implementation-to-test traceability.
 - `DEVELOPMENT_VALIDATION.md` — exact local technical validation evidence, when run.
-- GitHub Actions workflow `.github/workflows/mono-ci-b0-psi-development.yml` — fresh DEVELOPMENT-only run and uploaded archive receipt.
+- GitHub Actions workflow `.github/workflows/mono-ci-b0-psi-development.yml` — fresh DEVELOPMENT-only run and archive receipt (90-day Actions artifact, or private prerelease fallback if artifact storage is unavailable).
 - `SHA256SUMS` — digest inventory for this proposal package.
 
 The runner is `experiments/execution/tooling/mono_ci_b0_psi_execution.py`; execution and result schemas are under `experiments/execution/schemas/`.
 `experiments/execution/tooling/mono_ci_b0_psi_archive.py` packs and verifies
-the raw run ZIP and detached SHA-256 sidecar. The workflow archive is
-retrievable by repository users for its explicit 90-day retention window.
+the raw run ZIP and detached SHA-256 sidecar. A successful Actions artifact is
+retrievable for 90 days; the workflow falls back to a private prerelease and
+downloads/verifies that copy when Actions artifact storage is unavailable.
 
 ## Constraints
 
