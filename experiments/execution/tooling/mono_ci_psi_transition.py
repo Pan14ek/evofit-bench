@@ -37,13 +37,20 @@ from experiments.execution.tooling.mono_ci_b0_psi_execution import (
     _write_new_file,
     verify_execution_proposal,
 )
+from experiments.execution.tooling.mono_ci_psi_coverage import (
+    _manifest_requires_evaluator,
+    assess_adaptation_necessity,
+    verify_inspection_coverage,
+)
 from experiments.execution.tooling.mono_ci_psi_evidence import (
     EVALUATOR_CONFIGS,
     EVALUATOR_IDS,
     TEST_ONLY_VERIFIER_ID,
     TestOnlyEvidenceTrustContext,
     adapt_evaluator_evidence,
+    adapt_legacy_evaluator_evidence,
     build_inspection_scope_artifact,
+    build_legacy_inspection_scope_artifact,
     build_source_inventory_fact_ledger,
     create_test_only_sidecar,
     evaluator_source_artifacts,
@@ -75,6 +82,8 @@ AFTER_STATE = "A0_4_REPORT_QUERY_PORT"
 STATE_MANIFESTS_PATH = "provenance/transition-state-manifests.json"
 TRANSITION_SCHEMA_V1 = "mono_ci_psi_transition_run_v1.schema.json"
 TRANSITION_SCHEMA_V2 = "mono_ci_psi_transition_run_v2.schema.json"
+INSPECTION_COVERAGE_SCHEMA = "mono_ci_psi_inspection_coverage_v1.schema.json"
+ADAPTATION_NECESSITY_SCHEMA = "mono_ci_psi_adaptation_necessity_v1.schema.json"
 RUN_ID_PATTERN = re.compile(r"^DEV_PSI_TRANSITION_[A-Za-z0-9_-]{1,48}$")
 RUNTIME_MODULES = (
     "contracts.py",
@@ -194,8 +203,8 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
     try:
         psi = root / "PSI"
         psi.mkdir()
-        evaluator_runs, evaluator_bindings, evaluator_artifacts = _collect_evaluator_matrix(
-            repo, root
+        evaluator_runs, evaluator_bindings, evaluator_artifacts, coverage_assessments = (
+            _collect_evaluator_matrix(repo, root)
         )
         proposal_path = repo / PROPOSAL_RELATIVE / BASELINE_NAME
         proposal_bytes = proposal_path.read_bytes()
@@ -254,6 +263,7 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
                 obligation_id=obligation_id,
                 run=run,
                 artifact_refs=[{"path": path, "sha256": digest} for path, digest in artifact_refs],
+                coverage_verification=coverage_assessments[(AFTER_STATE, evaluator_id)],
             )
             pair_evidence.append(
                 {
@@ -332,6 +342,26 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
             raise ProtocolError("MONO_CI_PSI_TRANSITION_METHOD_IDENTITY_MISMATCH")
         decision = _governance_decision(method_result)
         _validate_method_result_v2(method_result)
+        adaptation_assessment = _build_adaptation_necessity_report(
+            repo=repo,
+            run_root=root,
+            execution_id=execution_id,
+            baseline={
+                "configuration_id": baseline["baseline_id"],
+                "configuration_sha256": baseline["baseline_configuration_sha256"],
+                "identity_status": baseline["identity_status"],
+                "approval_status": baseline["approval_status"],
+            },
+            evaluator_runs=evaluator_runs,
+            coverage_assessments=coverage_assessments,
+            method_result=method_result,
+            method_result_sha256=result_digest,
+            state_manifest_sidecar=json.loads(
+                (root / STATE_MANIFESTS_PATH).read_text(encoding="utf-8")
+            ),
+        )
+        adaptation_assessment_path = root / "diagnostics/adaptation-necessity-assessment.json"
+        _write_new_file(adaptation_assessment_path, pretty_json_bytes(adaptation_assessment))
         record = {
             "schema_version": "MONO_CI_PSI_TRANSITION_RUN_V2",
             "execution_id": execution_id,
@@ -412,6 +442,16 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
                 ),
                 STATE_MANIFESTS_PATH: sha256_file(root / STATE_MANIFESTS_PATH),
                 "PSI/method-evidence/adaptation-evidence.json": sha256_file(evidence_path),
+                **{
+                    _coverage_assessment_path(state, evaluator_id).as_posix(): sha256_file(
+                        root / _coverage_assessment_path(state, evaluator_id)
+                    )
+                    for state in (BEFORE_STATE, AFTER_STATE)
+                    for evaluator_id in EVALUATOR_IDS
+                },
+                "diagnostics/adaptation-necessity-assessment.json": sha256_file(
+                    adaptation_assessment_path
+                ),
             },
         }
         _write_new_file(root / "development_run.json", pretty_json_bytes(record))
@@ -425,6 +465,7 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
             "psi_decision": record["psi"]["decision"],
             "method_input_bundle_sha256": method_manifest["bundle_sha256"],
             "raw_result_sha256": result_digest,
+            "adaptation_assessment_sha256": sha256_file(adaptation_assessment_path),
             "result_path": str(root / "development_run.json"),
             "inventory_sha256": sha256_file(root / "SHA256SUMS"),
         }
@@ -760,7 +801,12 @@ def _add_state_manifest_sidecar(repository: Path, run_root: Path, binding: dict[
 
 def _collect_evaluator_matrix(
     repository: Path, run_root: Path
-) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]], dict[str, dict[str, bytes]]]:
+) -> tuple[
+    list[dict[str, Any]],
+    dict[str, dict[str, Any]],
+    dict[str, dict[str, bytes]],
+    dict[tuple[str, str], dict[str, Any]],
+]:
     proposal = json.loads(
         (repository / PROPOSAL_RELATIVE / BASELINE_NAME).read_text(encoding="utf-8")
     )
@@ -875,6 +921,7 @@ def _collect_evaluator_matrix(
 
     runs: list[dict[str, Any]] = []
     source_binding = _source_binding(repository)
+    coverage_assessments: dict[tuple[str, str], dict[str, Any]] = {}
     for state, commit, architecture_state in (
         ("before", BEFORE_COMMIT, BEFORE_STATE),
         ("after", AFTER_COMMIT, AFTER_STATE),
@@ -896,12 +943,38 @@ def _collect_evaluator_matrix(
                             run_root / "PSI/evaluator-observations" / state / evaluator_id
                         ),
                     )
+                    output_bytes = (run_root / run["output_path"]).read_bytes()
+                    configuration_bytes = (
+                        repository / EVALUATOR_CONFIGS[evaluator_id]
+                    ).read_bytes()
+                    state_manifest_bytes = _git_bytes(
+                        repository,
+                        commit,
+                        f"architecture/states/{architecture_state}.yaml",
+                    )
+                    coverage = verify_inspection_coverage(
+                        repository=repository,
+                        source_commit_sha=commit,
+                        source_tree_sha=run["source_tree_sha"],
+                        architecture_state=architecture_state,
+                        evaluator_id=evaluator_id,
+                        evaluator_configuration_bytes=configuration_bytes,
+                        state_manifest_bytes=state_manifest_bytes,
+                        evaluator_output_bytes=output_bytes,
+                        evaluator_evidence=run["evidence"],
+                    )
+                    coverage_relative = _coverage_assessment_path(architecture_state, evaluator_id)
+                    coverage_bytes = pretty_json_bytes(coverage)
+                    _write_new_file(run_root / coverage_relative, coverage_bytes)
+                    coverage_assessments[(architecture_state, evaluator_id)] = coverage
                     inspection_scope_path = (
                         Path(run["output_path"]).parent / "inspection-scope.json"
                     ).as_posix()
                     inspection_scope_bytes = pretty_json_bytes(
                         build_inspection_scope_artifact(
-                            run["evidence"], sha256_file(run_root / run["output_path"])
+                            run["evidence"],
+                            sha256_file(run_root / run["output_path"]),
+                            coverage,
                         )
                     )
                     _write_new_file(run_root / inspection_scope_path, inspection_scope_bytes)
@@ -930,7 +1003,488 @@ def _collect_evaluator_matrix(
                     runs.append(run)
             finally:
                 _git_worktree(repository, "remove", "--force", str(checkout), check=False)
-    return runs, bindings, artifact_content
+    return runs, bindings, artifact_content, coverage_assessments
+
+
+def _coverage_assessment_path(state: str, evaluator_id: str) -> Path:
+    label = "before" if state == BEFORE_STATE else "after"
+    return Path("PSI/evaluator-observations") / label / evaluator_id / "inspection-coverage.json"
+
+
+def _build_adaptation_necessity_report(
+    *,
+    repo: Path,
+    run_root: Path,
+    execution_id: str,
+    baseline: dict[str, Any],
+    evaluator_runs: list[dict[str, Any]],
+    coverage_assessments: dict[tuple[str, str], dict[str, Any]],
+    method_result: dict[str, Any],
+    method_result_sha256: str,
+    state_manifest_sidecar: dict[str, Any],
+) -> dict[str, Any]:
+    """Build a source-bound diagnostic separate from Method P inputs and outputs."""
+    proposal_path = run_root / "provenance/reconstructed-b0-proposal.json"
+    proposal = json.loads(proposal_path.read_text(encoding="utf-8"))
+    proposal_rows = {row["evaluator_id"]: row for row in proposal["representations"]}
+    manifest_rows = {
+        row["state"]: yaml.safe_load(row["content"]) for row in state_manifest_sidecar["manifests"]
+    }
+    run_index = {(row["architecture_state"], row["evaluator_id"]): row for row in evaluator_runs}
+    manifest_by_state = {
+        "before": manifest_rows["before"],
+        "after": manifest_rows["after"],
+    }
+    changed_paths = _git_text(
+        repo,
+        "diff-tree",
+        "--no-commit-id",
+        "--name-only",
+        "-r",
+        BEFORE_COMMIT,
+        AFTER_COMMIT,
+        "--",
+        "app",
+    ).splitlines()
+    changed_application_files = []
+    for path in sorted(path for path in changed_paths if path):
+        before_bytes = _git_bytes(repo, BEFORE_COMMIT, path)
+        after_bytes = _git_bytes(repo, AFTER_COMMIT, path)
+        changed_application_files.append(
+            {
+                "path": path,
+                "before_sha256": sha256_bytes(before_bytes),
+                "after_sha256": sha256_bytes(after_bytes),
+            }
+        )
+
+    before_manifest = manifest_by_state["before"]
+    after_manifest = manifest_by_state["after"]
+    before_invariants = before_manifest.get("invariants", {})
+    after_invariants = after_manifest.get("invariants", {})
+    invariant_names = (
+        "deployment_units",
+        "application_processes",
+        "database_instances",
+        "database_product",
+        "internal_communication",
+        "message_broker",
+        "rest_behavior",
+        "transaction_ownership",
+    )
+    unchanged_invariants = [
+        f"{name}={before_invariants[name]}"
+        for name in invariant_names
+        if name in before_invariants and before_invariants.get(name) == after_invariants.get(name)
+    ]
+    before_allowed = before_manifest.get("allowed_dependencies", [])
+    after_allowed = after_manifest.get("allowed_dependencies", [])
+    if before_allowed == after_allowed:
+        unchanged_invariants.append(f"allowed_dependencies={len(before_allowed)} edges")
+
+    source_change_summary = list(after_manifest.get("implementation_scope", []))
+    before_exceptions = before_manifest.get("temporary_exceptions", [])
+    after_exceptions = after_manifest.get("temporary_exceptions", [])
+    if before_exceptions != after_exceptions:
+        before_ids = sorted(row.get("id", "") for row in before_exceptions if isinstance(row, dict))
+        after_ids = sorted(row.get("id", "") for row in after_exceptions if isinstance(row, dict))
+        source_change_summary.append(
+            "Temporary exception identifiers changed from "
+            f"{before_ids!r} to {after_ids!r} across the pinned state manifests."
+        )
+    if before_manifest.get("governance_requirements") != after_manifest.get(
+        "governance_requirements"
+    ):
+        source_change_summary.append(
+            "State-manifest governance requirements differ; per-control details are recorded below."
+        )
+
+    assessments: list[dict[str, Any]] = []
+    for evaluator_id in EVALUATOR_IDS:
+        proposal_row = proposal_rows[evaluator_id]
+        config_path = EVALUATOR_CONFIGS[evaluator_id]
+        implementation_root = run_root / "PSI/evaluator-observations/implementation" / evaluator_id
+        config_bytes = (implementation_root / Path(config_path).name).read_bytes()
+        config = yaml.safe_load(config_bytes)
+        configuration_sha = sha256_bytes(config_bytes)
+        bound_representation = (
+            proposal_row.get("evaluator_id") == evaluator_id
+            and proposal_row.get("evaluator_configuration_sha256") == configuration_sha
+            and proposal_row.get("evaluator_source_sha256")
+            == run_index[(AFTER_STATE, evaluator_id)]["evaluator_source_sha256"]
+        )
+        before_run = run_index[(BEFORE_STATE, evaluator_id)]
+        after_run = run_index[(AFTER_STATE, evaluator_id)]
+        before_coverage = coverage_assessments[(BEFORE_STATE, evaluator_id)]
+        after_coverage = coverage_assessments[(AFTER_STATE, evaluator_id)]
+        before_state_name = BEFORE_STATE
+        after_state_name = AFTER_STATE
+        before_config_state = config.get("states", {}).get(before_state_name, {})
+        after_config_state = config.get("states", {}).get(after_state_name, {})
+        before_scope = before_coverage["source_inspection_status"]
+        after_scope = after_coverage["source_inspection_status"]
+        before_compliance = before_run["evidence"]["result"]["compliance"]
+        after_compliance = after_run["evidence"]["result"]["compliance"]
+        before_manifest_required = _manifest_requires_evaluator(before_manifest, evaluator_id)
+        after_manifest_required = _manifest_requires_evaluator(after_manifest, evaluator_id)
+        rule_scope_before = (
+            before_scope == "COMPLETE"
+            and before_manifest_required
+            and before_config_state.get("applicability") == "ACTIVE"
+        )
+        rule_scope_after = (
+            after_scope == "COMPLETE"
+            and after_manifest_required
+            and after_config_state.get("applicability") == "ACTIVE"
+            and (
+                after_coverage.get("dependency_analysis") is None
+                or (
+                    after_coverage["dependency_analysis"].get("static_relationship_comparison")
+                    == "MATCHED"
+                    and after_coverage["dependency_analysis"].get("cycle_comparison") == "MATCHED"
+                )
+            )
+        )
+        before_controls = _configured_control_tokens(
+            evaluator_id, config, before_manifest, before_state_name
+        )
+        after_controls = _configured_control_tokens(
+            evaluator_id, config, after_manifest, after_state_name
+        )
+        represented_before = before_controls if bound_representation else []
+        represented_after = after_controls if bound_representation else []
+        pair = next(
+            (
+                row
+                for row in method_result.get("current_pairs", [])
+                if row.get("representation_id") == proposal_row["representation_id"]
+                and row.get("obligation_id") == evaluator_id
+            ),
+            None,
+        )
+        pair_semantic_status = pair.get("status") if isinstance(pair, dict) else None
+        pair_semantic_validity = (
+            pair_semantic_status
+            if pair_semantic_status in {"VALID", "INVALID", "UNKNOWN"}
+            else "NOT_AVAILABLE"
+        )
+        applicability = next(
+            (
+                row.get("status")
+                for row in method_result.get("after_applicability", {}).get("results", [])
+                if row.get("obligation_id") == evaluator_id
+            ),
+            "UNKNOWN",
+        )
+        case = {
+            "configuration_sha256_before": configuration_sha,
+            "configuration_sha256_after": configuration_sha,
+            "evaluator_identity_verified": bound_representation,
+            "architecture_identity_verified": (
+                before_run["source_commit_sha"] == BEFORE_COMMIT
+                and after_run["source_commit_sha"] == AFTER_COMMIT
+            ),
+            "configuration_identity_verified": (
+                proposal_row.get("evaluator_configuration_sha256") == configuration_sha
+            ),
+            "source_inspection_before": before_scope,
+            "source_inspection_after": after_scope,
+            "evaluator_compliance_before": before_compliance,
+            "evaluator_compliance_after": after_compliance,
+            "rule_scope_match_before": rule_scope_before,
+            "rule_scope_match_after": rule_scope_after,
+            "required_controls_before": before_controls,
+            "required_controls_after": after_controls,
+            "represented_controls_before": represented_before,
+            "represented_controls_after": represented_after,
+            "pair_semantic_validity": pair_semantic_validity,
+            "normative_applicability": applicability,
+            "baseline_identity": baseline["identity_status"],
+            "independent_review": False,
+        }
+        diagnosis = assess_adaptation_necessity(case)
+        relevant_changes = _control_transition_summary(
+            evaluator_id,
+            config,
+            before_manifest,
+            after_manifest,
+            before_coverage,
+            after_coverage,
+        )
+        evidence_refs = []
+        for state in (BEFORE_STATE, AFTER_STATE):
+            run = run_index[(state, evaluator_id)]
+            coverage_path = _coverage_assessment_path(state, evaluator_id).as_posix()
+            evidence_refs.extend(
+                [
+                    {
+                        "path": run["output_path"],
+                        "sha256": sha256_file(run_root / run["output_path"]),
+                    },
+                    {"path": coverage_path, "sha256": sha256_file(run_root / coverage_path)},
+                ]
+            )
+        evidence_refs.extend(
+            [
+                {
+                    "path": (
+                        f"PSI/evaluator-observations/implementation/{evaluator_id}/"
+                        f"{Path(config_path).name}"
+                    ),
+                    "sha256": configuration_sha,
+                },
+                {
+                    "path": STATE_MANIFESTS_PATH,
+                    "sha256": sha256_file(run_root / STATE_MANIFESTS_PATH),
+                },
+                {
+                    "path": "PSI/raw/method-result.json",
+                    "sha256": method_result_sha256,
+                },
+            ]
+        )
+        inspection = {
+            "before_status": before_scope,
+            "after_status": after_scope,
+            "before_expected_count": before_coverage["counts"]["expected_count"],
+            "before_inspected_count": before_coverage["counts"]["inspected_count"],
+            "after_expected_count": after_coverage["counts"]["expected_count"],
+            "after_inspected_count": after_coverage["counts"]["inspected_count"],
+            "static_relationship_comparison_after": (
+                after_coverage["dependency_analysis"]["static_relationship_comparison"]
+                if after_coverage.get("dependency_analysis") is not None
+                else "NOT_APPLICABLE"
+            ),
+            "cycle_comparison_after": (
+                after_coverage["dependency_analysis"]["cycle_comparison"]
+                if after_coverage.get("dependency_analysis") is not None
+                else "NOT_APPLICABLE"
+            ),
+            "exact_dependency_edge_completeness_after": (
+                after_coverage["dependency_analysis"]["exact_dependency_edge_completeness"]
+                if after_coverage.get("dependency_analysis") is not None
+                else "NOT_APPLICABLE"
+            ),
+        }
+        compliance = {
+            "before": before_compliance,
+            "after": after_compliance,
+            "before_execution_status": before_run["evidence"]["result"]["execution_status"],
+            "after_execution_status": after_run["evidence"]["result"]["execution_status"],
+        }
+        missing_proofs = list(diagnosis["missing_proofs"])
+        if (
+            after_coverage.get("dependency_analysis") is not None
+            and after_coverage["dependency_analysis"].get("exact_dependency_edge_completeness")
+            == "UNKNOWN"
+        ):
+            missing_proofs.append("DYNAMIC_DEPENDENCY_EDGE_COMPLETENESS_UNKNOWN")
+        if diagnosis["assessment_status"] == "ADAPTATION_NEEDED":
+            change_necessity = "REQUIRED"
+        elif diagnosis["assessment_status"] == "RETAIN_CANDIDATE":
+            change_necessity = "NOT_DEMONSTRATED_WITHIN_VERIFIED_SCOPE"
+        else:
+            change_necessity = "NOT_EVALUABLE"
+        assessments.append(
+            {
+                "control_id": evaluator_id,
+                "assessment_status": diagnosis["assessment_status"],
+                "configuration_change_necessity": change_necessity,
+                "relevant_architecture_changes": relevant_changes,
+                "previous_representation_identity": {
+                    "representation_id": proposal_row["representation_id"],
+                    "criterion_id": proposal_row["criterion_id"],
+                    "obligation_id": proposal_row["obligation_id"],
+                    "evaluator_version": proposal_row["evaluator_version"],
+                    "mapping_status": proposal_row["mapping_status"],
+                    "applicability": proposal_row["applicability"],
+                    "semantic_validity": proposal_row["semantic_validity"],
+                    "historical_identity": baseline["identity_status"],
+                },
+                "evaluator_identity": {
+                    "evaluator_id": evaluator_id,
+                    "version": proposal_row["evaluator_version"],
+                    "source_sha256": proposal_row["evaluator_source_sha256"],
+                    "configuration_sha256": configuration_sha,
+                    "identity_matches_proposal": bound_representation,
+                },
+                "configuration_identity": {
+                    "before_sha256": configuration_sha,
+                    "after_sha256": configuration_sha,
+                    "unchanged": True,
+                    "state_scope_before": before_config_state.get("applicability", "UNKNOWN"),
+                    "state_scope_after": after_config_state.get("applicability", "UNKNOWN"),
+                },
+                "inspection_completeness": inspection,
+                "compliance_observations": compliance,
+                "rule_semantics": {
+                    "required_controls_before": before_controls,
+                    "required_controls_after": after_controls,
+                    "represented_controls_before": represented_before,
+                    "represented_controls_after": represented_after,
+                    "scope_limitations": sorted(
+                        set(config.get("coverage_limits", []))
+                        | set(after_coverage.get("uncertainties", []))
+                        | (
+                            {"Exact dynamic dependency-edge completeness remains UNKNOWN."}
+                            if after_coverage.get("dependency_analysis") is not None
+                            else set()
+                        )
+                    ),
+                },
+                "pair_semantic_validity": pair_semantic_validity,
+                "reason_codes": sorted(
+                    set(diagnosis["reason_codes"])
+                    | (
+                        {"DYNAMIC_DEPENDENCY_EDGE_COMPLETENESS_UNKNOWN"}
+                        if "DYNAMIC_DEPENDENCY_EDGE_COMPLETENESS_UNKNOWN" in missing_proofs
+                        else set()
+                    )
+                ),
+                "evidence_refs": evidence_refs,
+                "missing_proofs": sorted(set(missing_proofs)),
+                "operation_justification": diagnosis["operation_justification"],
+            }
+        )
+
+    method_operations = method_result.get("operation_plan", {}).get("operations", [])
+    governance = method_result.get("governance", {})
+    return {
+        "schema_version": "MONO_CI_PSI_ADAPTATION_NECESSITY_V1",
+        "execution_id": execution_id,
+        "assessment_scope": "SOURCE_BOUND_DEVELOPMENT_DIAGNOSTIC_NOT_INDEPENDENTLY_REVIEWED",
+        "transition": {
+            "before_state": BEFORE_STATE,
+            "after_state": AFTER_STATE,
+            "before_commit_sha": BEFORE_COMMIT,
+            "after_commit_sha": AFTER_COMMIT,
+            "changed_application_files": changed_application_files,
+            "source_change_summary": source_change_summary,
+            "unchanged_architecture_invariants": sorted(unchanged_invariants),
+        },
+        "baseline": {
+            "configuration_id": baseline["configuration_id"],
+            "configuration_sha256": baseline["configuration_sha256"],
+            "identity_status": baseline["identity_status"],
+            "approval_status": baseline["approval_status"],
+        },
+        "method_result": {
+            "path": "PSI/raw/method-result.json",
+            "sha256": method_result_sha256,
+            "governance_decision": governance.get("result", _governance_decision(method_result)),
+            "operation_count": len(method_operations),
+            "candidate_status": (
+                "MATERIALIZED" if method_result.get("candidate") is not None else "NOT_MATERIALIZED"
+            ),
+            "prediction_status": (
+                "EMITTED" if method_result.get("prediction_v1") is not None else "NOT_EMITTED"
+            ),
+        },
+        "assessments": assessments,
+        "scientific_boundary": {
+            "is_independent_reference": False,
+            "is_human_review": False,
+            "official_comparison": "NOT_EXECUTED",
+            "study_readiness": "NO_GO",
+            "p_algorithm_status": "NOT_READY",
+            "g1": "INCOMPLETE",
+            "g4": "NOT_AUTHORIZED",
+            "reference_gate": "NOT_READY",
+        },
+    }
+
+
+def _configured_control_tokens(
+    evaluator_id: str,
+    config: dict[str, Any],
+    state_manifest: dict[str, Any],
+    state: str,
+) -> list[str]:
+    tokens = [f"required-evaluator:{evaluator_id}"]
+    governance = state_manifest.get("governance_requirements", {})
+    fail_closed = governance.get("fail_closed", {}) if isinstance(governance, dict) else {}
+    tokens.extend(
+        f"fail-closed:{key}" for key, enabled in sorted(fail_closed.items()) if enabled is True
+    )
+    scope = config.get("source_scope", {})
+    tokens.extend(f"module:{name}" for name in sorted(scope.get("expected_modules", [])))
+    semantics = config.get("public_api" if evaluator_id == "AC_PUBLIC_API" else "module_graph", {})
+    if evaluator_id == "AC_PUBLIC_API":
+        tokens.append(f"public-module-pattern:{semantics.get('public_module_pattern', '')}")
+        if semantics.get("require_public_module_per_capability") is True:
+            tokens.append("public-module-per-capability:required")
+        for capability, interface in sorted(semantics.get("interfaces_by_capability", {}).items()):
+            for name, kind in sorted(interface.items()):
+                tokens.append(f"public-interface:{capability}.{name}:{kind}")
+        for type_name, fields in sorted(semantics.get("typed_dict_fields", {}).items()):
+            tokens.extend(f"typed-dict-field:{type_name}.{field}" for field in fields)
+        exception = semantics.get("legacy_exception", {})
+        if state in exception.get("allowed_architecture_states", []):
+            tokens.append(f"legacy-exception:{exception.get('id', '')}")
+    else:
+        tokens.extend(
+            f"allowed-dependency:{edge.get('from')}->{edge.get('to')}"
+            for edge in semantics.get("allowed_dependencies_by_state", {}).get(state, [])
+        )
+        tokens.extend(
+            f"forbidden-dependency:{edge.get('from')}->{edge.get('to')}"
+            for edge in semantics.get("forbidden_dependencies_by_state", {}).get(state, [])
+        )
+        tokens.extend(
+            f"strict-local-import-root:{root}"
+            for root in semantics.get("strict_local_import_roots", [])
+        )
+        tokens.extend(
+            f"shared-infrastructure-root:{root}"
+            for root in semantics.get("shared_infrastructure_roots", [])
+        )
+    return sorted(set(tokens))
+
+
+def _control_transition_summary(
+    evaluator_id: str,
+    config: dict[str, Any],
+    before_manifest: dict[str, Any],
+    after_manifest: dict[str, Any],
+    before_coverage: dict[str, Any],
+    after_coverage: dict[str, Any],
+) -> list[str]:
+    changes: list[str] = []
+    if evaluator_id == "AC_PUBLIC_API":
+        before_exception = config.get("public_api", {}).get("legacy_exception", {})
+        before_states = before_exception.get("allowed_architecture_states", [])
+        before_manifest_exceptions = before_manifest.get("temporary_exceptions", [])
+        after_manifest_exceptions = after_manifest.get("temporary_exceptions", [])
+        if before_manifest_exceptions != after_manifest_exceptions:
+            changes.append(
+                "The A0.3 Reporting-to-Tasks.service exception is absent from the A0.4 manifest; "
+                "the bound configuration limits it to its listed A0.2/A0.3 states."
+            )
+        if AFTER_STATE not in before_states and BEFORE_STATE in before_states:
+            changes.append("The configuration's legacy exception does not apply to the A0.4 state.")
+    else:
+        before_allowed = before_manifest.get("allowed_dependencies", [])
+        after_allowed = after_manifest.get("allowed_dependencies", [])
+        if before_allowed == after_allowed:
+            changes.append(
+                f"Both manifests retain {len(after_allowed)} module-level allowed dependency edges."
+            )
+        before_edges = (before_coverage.get("dependency_analysis") or {}).get(
+            "expected_edge_subjects", []
+        )
+        after_edges = (after_coverage.get("dependency_analysis") or {}).get(
+            "expected_edge_subjects", []
+        )
+        if before_edges != after_edges:
+            changes.append(
+                "Source-derived module dependency edge subjects changed from "
+                f"{before_edges!r} to {after_edges!r}; policy edges remained separately defined."
+            )
+        else:
+            changes.append("Source-derived module dependency edge subjects are unchanged.")
+    if not changes:
+        changes.append("No evaluator-specific control-scope change was identified.")
+    return changes
 
 
 def _evaluator_artifact_references(
@@ -1110,12 +1664,25 @@ def _verify_evidence_backed_run(
             "ended_at_utc": observation["ended_at_utc"],
             "evidence": json.loads((run_root / observation["output_path"]).read_text()),
         }
-        expected_evidence = adapt_evaluator_evidence(
-            representation=representations[row["representation_id"]],
-            obligation_id=row["obligation_id"],
-            run=run_view,
-            artifact_refs=refs,
-        )
+        if evidence.get("schema_version") == 1:
+            expected_evidence = adapt_legacy_evaluator_evidence(
+                representation=representations[row["representation_id"]],
+                obligation_id=row["obligation_id"],
+                run=run_view,
+                artifact_refs=refs,
+            )
+        elif evidence.get("schema_version") == 2:
+            coverage_path = _coverage_assessment_path(AFTER_STATE, row["obligation_id"])
+            coverage = json.loads((run_root / coverage_path).read_text(encoding="utf-8"))
+            expected_evidence = adapt_evaluator_evidence(
+                representation=representations[row["representation_id"]],
+                obligation_id=row["obligation_id"],
+                run=run_view,
+                artifact_refs=refs,
+                coverage_verification=coverage,
+            )
+        else:
+            raise ContractValidationError("MONO_CI_PSI_TRANSITION_ADAPTER_SCHEMA_UNSUPPORTED")
         if canonical_json_bytes(expected_evidence) != canonical_json_bytes(evidence):
             raise ContractValidationError("MONO_CI_PSI_TRANSITION_ADAPTER_READBACK_MISMATCH")
         if (
@@ -1155,6 +1722,64 @@ def _verify_evidence_backed_run(
         ):
             raise ContractValidationError("MONO_CI_PSI_TRANSITION_PAIR_PROOF_AUTHORITY_INVALID")
 
+    if all(
+        json.loads((run_root / row["inspection_scope_path"]).read_text(encoding="utf-8")).get(
+            "schema_version"
+        )
+        == 2
+        for row in observation_index.values()
+    ):
+        required_diagnostic_outputs = {
+            _coverage_assessment_path(state, evaluator_id).as_posix()
+            for state in (BEFORE_STATE, AFTER_STATE)
+            for evaluator_id in EVALUATOR_IDS
+        } | {"diagnostics/adaptation-necessity-assessment.json"}
+        if not required_diagnostic_outputs.issubset(record.get("output_checksums", {})):
+            raise ContractValidationError(
+                "MONO_CI_PSI_TRANSITION_DIAGNOSTIC_OUTPUT_CHECKSUMS_INCOMPLETE"
+            )
+        coverage_assessments = {
+            (state, evaluator_id): json.loads(
+                (run_root / _coverage_assessment_path(state, evaluator_id)).read_text(
+                    encoding="utf-8"
+                )
+            )
+            for state in (BEFORE_STATE, AFTER_STATE)
+            for evaluator_id in EVALUATOR_IDS
+        }
+        evaluator_runs = []
+        for observation in observation_index.values():
+            row = dict(observation)
+            row["evidence"] = json.loads(
+                (run_root / observation["output_path"]).read_text(encoding="utf-8")
+            )
+            evaluator_runs.append(row)
+        assessment_path = run_root / "diagnostics/adaptation-necessity-assessment.json"
+        try:
+            actual_assessment = json.loads(assessment_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
+            raise ContractValidationError(
+                "MONO_CI_PSI_TRANSITION_ADAPTATION_ASSESSMENT_MISSING"
+            ) from error
+        validate_payload(ADAPTATION_NECESSITY_SCHEMA, actual_assessment)
+        expected_assessment = _build_adaptation_necessity_report(
+            repo=REPOSITORY_ROOT,
+            run_root=run_root,
+            execution_id=record["execution_id"],
+            baseline=record["baseline"],
+            evaluator_runs=evaluator_runs,
+            coverage_assessments=coverage_assessments,
+            method_result=method_result,
+            method_result_sha256=record["psi"]["raw_result_sha256"],
+            state_manifest_sidecar=json.loads(
+                (run_root / record["transition"]["state_manifest_path"]).read_text(encoding="utf-8")
+            ),
+        )
+        if canonical_json_bytes(actual_assessment) != canonical_json_bytes(expected_assessment):
+            raise ContractValidationError(
+                "MONO_CI_PSI_TRANSITION_ADAPTATION_ASSESSMENT_READBACK_MISMATCH"
+            )
+
 
 def _verify_evaluator_observation(
     run_root: Path,
@@ -1193,14 +1818,58 @@ def _verify_evaluator_observation(
         raise ContractValidationError(
             "MONO_CI_PSI_TRANSITION_EVALUATOR_INSPECTION_SCOPE_INVALID"
         ) from error
+    if inspection_scope_record.get("schema_version") == 1:
+        expected_inspection_scope = build_legacy_inspection_scope_artifact(
+            evidence, observation["output_sha256"]
+        )
+    elif inspection_scope_record.get("schema_version") == 2:
+        coverage_path = _coverage_assessment_path(state, observation["evaluator_id"])
+        try:
+            coverage_record = json.loads((run_root / coverage_path).read_text(encoding="utf-8"))
+            validate_payload(INSPECTION_COVERAGE_SCHEMA, coverage_record)
+        except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
+            raise ContractValidationError(
+                "MONO_CI_PSI_TRANSITION_INSPECTION_COVERAGE_MISSING"
+            ) from error
+        implementation_root = (
+            run_root / "PSI/evaluator-observations/implementation" / observation["evaluator_id"]
+        )
+        config_path = implementation_root / Path(observation["configuration_path"]).name
+        config_bytes = config_path.read_bytes()
+        state_sidecar = json.loads(
+            (run_root / run_record["transition"]["state_manifest_path"]).read_text(encoding="utf-8")
+        )
+        manifest_label = "before" if before else "after"
+        manifest_row = next(
+            row for row in state_sidecar["manifests"] if row["state"] == manifest_label
+        )
+        expected_coverage = verify_inspection_coverage(
+            repository=REPOSITORY_ROOT,
+            source_commit_sha=expected_commit,
+            source_tree_sha=expected_repo_tree,
+            architecture_state=state,
+            evaluator_id=observation["evaluator_id"],
+            evaluator_configuration_bytes=config_bytes,
+            state_manifest_bytes=manifest_row["content"].encode("utf-8"),
+            evaluator_output_bytes=output_bytes,
+            evaluator_evidence=evidence,
+        )
+        if canonical_json_bytes(coverage_record) != canonical_json_bytes(expected_coverage):
+            raise ContractValidationError(
+                "MONO_CI_PSI_TRANSITION_INSPECTION_COVERAGE_READBACK_MISMATCH"
+            )
+        expected_inspection_scope = build_inspection_scope_artifact(
+            evidence, observation["output_sha256"], coverage_record
+        )
+    else:
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_INSPECTION_SCOPE_SCHEMA_UNSUPPORTED")
     if (
         sha256_bytes(output_bytes) != observation["output_sha256"]
         or sha256_bytes(stdout_bytes) != observation["stdout_sha256"]
         or sha256_bytes(stderr_bytes) != observation["stderr_sha256"]
         or observation["inspection_scope_path"] != expected_inspection_scope_path
         or sha256_bytes(inspection_scope_bytes) != observation["inspection_scope_sha256"]
-        or inspection_scope_record
-        != build_inspection_scope_artifact(evidence, observation["output_sha256"])
+        or inspection_scope_record != expected_inspection_scope
         or json.loads(stdout_bytes) != evidence
         or observation["source_commit_sha"] != expected_commit
         or observation["source_tree_sha"] != expected_repo_tree

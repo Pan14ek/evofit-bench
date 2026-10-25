@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_psi_adaptation_necessity_v1.schema.json",
+  "title": "Independent DEVELOPMENT diagnostic for fitness configuration adaptation necessity",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "execution_id", "assessment_scope", "transition", "baseline", "method_result", "assessments", "scientific_boundary"],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_PSI_ADAPTATION_NECESSITY_V1"},
+    "execution_id": {"type": "string", "pattern": "^DEV_PSI_TRANSITION_[A-Za-z0-9_-]{1,48}$"},
+    "assessment_scope": {"const": "SOURCE_BOUND_DEVELOPMENT_DIAGNOSTIC_NOT_INDEPENDENTLY_REVIEWED"},
+    "transition": {
+      "type": "object", "additionalProperties": false,
+      "required": ["before_state", "after_state", "before_commit_sha", "after_commit_sha", "changed_application_files", "source_change_summary", "unchanged_architecture_invariants"],
+      "properties": {
+        "before_state": {"const": "A0_3_GOVERNED_MODULE_GRAPH"},
+        "after_state": {"const": "A0_4_REPORT_QUERY_PORT"},
+        "before_commit_sha": {"$ref": "#/$defs/sha1"},
+        "after_commit_sha": {"$ref": "#/$defs/sha1"},
+        "changed_application_files": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "before_sha256", "after_sha256"], "properties": {"path": {"type": "string"}, "before_sha256": {"$ref": "#/$defs/sha256"}, "after_sha256": {"$ref": "#/$defs/sha256"}}}},
+        "source_change_summary": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "unchanged_architecture_invariants": {"$ref": "#/$defs/strings"}
+      }
+    },
+    "baseline": {
+      "type": "object", "additionalProperties": false,
+      "required": ["configuration_id", "configuration_sha256", "identity_status", "approval_status"],
+      "properties": {
+        "configuration_id": {"type": "string", "minLength": 1},
+        "configuration_sha256": {"$ref": "#/$defs/sha256"},
+        "identity_status": {"const": "PROSPECTIVE_RECONSTRUCTION_NOT_HISTORICAL"},
+        "approval_status": {"const": "NOT_APPROVED"}
+      }
+    },
+    "method_result": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256", "governance_decision", "operation_count", "candidate_status", "prediction_status"],
+      "properties": {
+        "path": {"const": "PSI/raw/method-result.json"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "governance_decision": {"enum": ["HOLD", "REJECT", "ACCEPT"]},
+        "operation_count": {"type": "integer", "minimum": 0},
+        "candidate_status": {"enum": ["NOT_MATERIALIZED", "MATERIALIZED"]},
+        "prediction_status": {"enum": ["NOT_EMITTED", "EMITTED"]}
+      }
+    },
+    "assessments": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/assessment"}},
+    "scientific_boundary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["is_independent_reference", "is_human_review", "official_comparison", "study_readiness", "p_algorithm_status", "g1", "g4", "reference_gate"],
+      "properties": {
+        "is_independent_reference": {"const": false},
+        "is_human_review": {"const": false},
+        "official_comparison": {"const": "NOT_EXECUTED"},
+        "study_readiness": {"const": "NO_GO"},
+        "p_algorithm_status": {"const": "NOT_READY"},
+        "g1": {"const": "INCOMPLETE"},
+        "g4": {"const": "NOT_AUTHORIZED"},
+        "reference_gate": {"const": "NOT_READY"}
+      }
+    }
+  },
+  "$defs": {
+    "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "strings": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "assessment": {
+      "type": "object", "additionalProperties": false,
+        "required": ["control_id", "assessment_status", "configuration_change_necessity", "relevant_architecture_changes", "previous_representation_identity", "evaluator_identity", "configuration_identity", "inspection_completeness", "compliance_observations", "rule_semantics", "pair_semantic_validity", "reason_codes", "evidence_refs", "missing_proofs", "operation_justification"],
+      "properties": {
+        "control_id": {"type": "string", "minLength": 1},
+        "assessment_status": {"enum": ["RETAIN_CANDIDATE", "ADAPTATION_NEEDED", "NOT_EVALUABLE", "MISMATCH_DETECTED"]},
+          "configuration_change_necessity": {"enum": ["REQUIRED", "NOT_DEMONSTRATED_WITHIN_VERIFIED_SCOPE", "NOT_EVALUABLE"]},
+        "relevant_architecture_changes": {"$ref": "#/$defs/strings"},
+        "previous_representation_identity": {"type": "object", "additionalProperties": {"type": ["string", "boolean", "null"]}, "minProperties": 1},
+        "evaluator_identity": {"type": "object", "additionalProperties": {"type": ["string", "boolean", "null"]}, "minProperties": 1},
+        "configuration_identity": {"type": "object", "additionalProperties": {"type": ["string", "boolean", "null"]}, "minProperties": 1},
+        "inspection_completeness": {"type": "object", "additionalProperties": {"type": ["string", "integer", "boolean", "null"]}, "minProperties": 1},
+        "compliance_observations": {"type": "object", "additionalProperties": {"type": ["string", "integer", "boolean", "null"]}, "minProperties": 1},
+          "rule_semantics": {
+            "type": "object", "additionalProperties": false,
+            "required": ["required_controls_before", "required_controls_after", "represented_controls_before", "represented_controls_after", "scope_limitations"],
+            "properties": {
+              "required_controls_before": {"$ref": "#/$defs/strings"},
+              "required_controls_after": {"$ref": "#/$defs/strings"},
+              "represented_controls_before": {"$ref": "#/$defs/strings"},
+              "represented_controls_after": {"$ref": "#/$defs/strings"},
+              "scope_limitations": {"$ref": "#/$defs/strings"}
+            }
+          },
+        "pair_semantic_validity": {"enum": ["VALID", "INVALID", "UNKNOWN", "UNDETERMINED", "NOT_AVAILABLE"]},
+        "reason_codes": {"$ref": "#/$defs/strings"},
+        "evidence_refs": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"$ref": "#/$defs/sha256"}}}},
+        "missing_proofs": {"$ref": "#/$defs/strings"},
+        "operation_justification": {
+          "type": "object", "additionalProperties": false,
+          "required": ["ADD", "REPLACE", "RETAIN", "HOLD"],
+          "properties": {
+            "ADD": {"type": "string"}, "REPLACE": {"type": "string"},
+            "RETAIN": {"type": "string"}, "HOLD": {"type": "string"}
+          }
+        }
+      }
+    }
+  }
+}

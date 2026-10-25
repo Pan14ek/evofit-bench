@@ -397,8 +397,121 @@ def adapt_evaluator_evidence(
     obligation_id: str,
     run: Mapping[str, Any],
     artifact_refs: list[dict[str, str]],
+    coverage_verification: Mapping[str, Any],
 ) -> dict[str, Any]:
     """Map only observed evaluator output and explicit unknown semantic fields."""
+    evidence = run["evidence"]
+    architecture = evidence["architecture"]
+    source_scope = evidence["source_scope"]
+    evaluator = evidence["evaluator"]
+    result = evidence["result"]
+    modules = source_scope.get("modules", [])
+    expected_modules = sorted(
+        str(row["name"])
+        for row in modules
+        if isinstance(row, Mapping) and row.get("expected") is True
+    )
+    resolved_modules = sorted(
+        str(row["name"])
+        for row in modules
+        if isinstance(row, Mapping) and row.get("discovered") is True
+    )
+    _, _, _, reported_edge_count, _ = _inspection_scope_values(evidence)
+    coverage_counts = coverage_verification.get("counts")
+    if (
+        coverage_verification.get("evaluator_id") != evaluator.get("id")
+        or coverage_verification.get("architecture_state") != architecture.get("state")
+        or not isinstance(coverage_counts, Mapping)
+        or not isinstance(coverage_verification.get("expected_subjects"), list)
+        or not isinstance(coverage_verification.get("inspected_subjects"), list)
+    ):
+        raise ContractValidationError("PSI_ADAPTER_INDEPENDENT_SCOPE_MISMATCH")
+    expected_subjects = coverage_verification["expected_subjects"]
+    inspected_subjects = coverage_verification["inspected_subjects"]
+    measured_count = coverage_counts.get("inspected_count")
+    if type(measured_count) is not int:
+        raise ContractValidationError("PSI_ADAPTER_INDEPENDENT_SCOPE_MISMATCH")
+    inspection_unit = str(coverage_verification.get("inspection_unit"))
+    # V2 file-scope evidence records dependency edges in the bound inspection
+    # artifact; this legacy scalar remains meaningful only for edge scope.
+    inspected_edge_count = reported_edge_count if inspection_unit == "dependency_edge" else None
+    output_record = next(
+        (item for item in artifact_refs if item["path"].endswith("evaluator-output.json")), None
+    )
+    if output_record is None:
+        raise ContractValidationError("PSI_EVALUATOR_OUTPUT_ARTIFACT_MISSING")
+    scope_record = next(
+        (item for item in artifact_refs if item["path"].endswith("inspection-scope.json")), None
+    )
+    if scope_record is None:
+        raise ContractValidationError("PSI_EVALUATOR_INSPECTION_SCOPE_ARTIFACT_MISSING")
+    return {
+        "schema_version": 2,
+        "representation_id": representation["id"],
+        "architecture_source_sha": architecture["target_source_sha"],
+        "evaluator_id": evaluator["id"],
+        "infrastructure_status": "completed"
+        if run["execution_status"] == "COMPLETED"
+        else "infrastructure_failure",
+        "process_exit_code": run["process_exit_code"],
+        "configured_targets": sorted(f"app.modules.{name}" for name in expected_modules),
+        "resolved_targets": sorted(f"app.modules.{name}" for name in resolved_modules),
+        "inspected_subjects": inspected_subjects,
+        "missing_targets": sorted(set(expected_modules) - set(resolved_modules)),
+        "inspected_edge_count": inspected_edge_count,
+        "inspection_scope": {
+            "unit": inspection_unit,
+            "expected_subjects": expected_subjects,
+            "measured_count": measured_count,
+            "evidence_artifact": scope_record,
+        },
+        "stage_applicable": (
+            representation.get("stage") == "ci_test"
+            and architecture.get("state") == run["architecture_state"]
+            and architecture.get("source_sha_status") == "MATCHED"
+            and evidence.get("applicability") == "ACTIVE"
+        ),
+        "semantic_compatible": None,
+        "mapping_resolved": (
+            evaluator.get("id") == obligation_id
+            and evaluator.get("obligation_id") == obligation_id
+            and obligation_id in representation.get("covers", [])
+        ),
+        "evidence_contract_satisfied": (
+            result.get("execution_status") == "COMPLETED"
+            and architecture.get("manifest_state_status") == "MATCHED"
+            and architecture.get("source_sha_status") == "MATCHED"
+            and coverage_verification.get("source_inspection_status") == "COMPLETE"
+            and (
+                coverage_verification.get("dependency_analysis") is None
+                or coverage_verification["dependency_analysis"].get(
+                    "static_relationship_comparison"
+                )
+                == "MATCHED"
+            )
+            and bool(inspected_subjects)
+            and len(artifact_refs) >= 3
+        ),
+        "adequacy_proven": False,
+        "evidence_artifacts": artifact_refs,
+        "stdout_sha256": run["stdout_sha256"],
+        "stderr_sha256": run["stderr_sha256"],
+        "started_at_utc": run["started_at_utc"],
+        "ended_at_utc": run["ended_at_utc"],
+        "failure_reason_code": None
+        if run["execution_status"] == "COMPLETED"
+        else "EVALUATOR_EXECUTION_INCOMPLETE",
+    }
+
+
+def adapt_legacy_evaluator_evidence(
+    *,
+    representation: Mapping[str, Any],
+    obligation_id: str,
+    run: Mapping[str, Any],
+    artifact_refs: list[dict[str, str]],
+) -> dict[str, Any]:
+    """Reconstruct the original evidence projection for existing run archives."""
     evidence = run["evidence"]
     architecture = evidence["architecture"]
     source_scope = evidence["source_scope"]
@@ -418,11 +531,6 @@ def adapt_evaluator_evidence(
     inspection_unit, inspected, measured_count, inspected_edge_count, _ = _inspection_scope_values(
         evidence
     )
-    output_record = next(
-        (item for item in artifact_refs if item["path"].endswith("evaluator-output.json")), None
-    )
-    if output_record is None:
-        raise ContractValidationError("PSI_EVALUATOR_OUTPUT_ARTIFACT_MISSING")
     scope_record = next(
         (item for item in artifact_refs if item["path"].endswith("inspection-scope.json")), None
     )
@@ -481,9 +589,44 @@ def adapt_evaluator_evidence(
 
 
 def build_inspection_scope_artifact(
+    evidence: Mapping[str, Any],
+    evaluator_output_sha256: str,
+    coverage_verification: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Project the independently verified source scope into the typed contract."""
+    source_scope = evidence.get("source_scope")
+    source_bindings = coverage_verification.get("evidence_sources")
+    if (
+        not isinstance(source_scope, Mapping)
+        or not isinstance(source_bindings, Mapping)
+        or re.fullmatch(r"[a-f0-9]{64}", evaluator_output_sha256) is None
+        or coverage_verification.get("evaluator_id") != evidence.get("evaluator", {}).get("id")
+        or source_bindings.get("evaluator_output_sha256") != evaluator_output_sha256
+        or source_bindings.get("source_scope_sha256")
+        != sha256_bytes(canonical_json_bytes(dict(source_scope)))
+    ):
+        raise ContractValidationError("PSI_EVALUATOR_INSPECTION_SCOPE_UNRESOLVED")
+    counts = coverage_verification.get("counts")
+    if not isinstance(counts, Mapping) or type(counts.get("inspected_count")) is not int:
+        raise ContractValidationError("PSI_EVALUATOR_INSPECTION_SCOPE_UNRESOLVED")
+    diagnostics = evidence.get("diagnostics")
+    edges = diagnostics.get("edges") if isinstance(diagnostics, Mapping) else None
+    return {
+        "schema_version": 2,
+        "inspection_unit": "file",
+        "expected_subjects": coverage_verification["expected_subjects"],
+        "inspected_subjects": coverage_verification["inspected_subjects"],
+        "measured_count": counts["inspected_count"],
+        "source_evaluator_output_sha256": evaluator_output_sha256,
+        "source_scope_sha256": source_bindings["source_scope_sha256"],
+        "observed_edges": edges if isinstance(edges, list) else None,
+    }
+
+
+def build_legacy_inspection_scope_artifact(
     evidence: Mapping[str, Any], evaluator_output_sha256: str
 ) -> dict[str, Any]:
-    """Project a verified evaluator inventory into the typed inspection contract."""
+    """Reconstruct the original V1 projection for historical V1/V2 readback."""
     source_scope = evidence.get("source_scope")
     if (
         not isinstance(source_scope, Mapping)
@@ -622,6 +765,7 @@ __all__ = [
     "TEST_ONLY_VERIFIER_ID",
     "TestOnlyEvidenceTrustContext",
     "adapt_evaluator_evidence",
+    "build_legacy_inspection_scope_artifact",
     "build_inspection_scope_artifact",
     "build_source_inventory_fact_ledger",
     "create_test_only_sidecar",

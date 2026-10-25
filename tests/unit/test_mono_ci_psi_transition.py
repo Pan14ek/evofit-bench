@@ -6,10 +6,12 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 
 from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError, ProtocolError
 from experiments.execution.tooling.mono_ci_psi_transition import (
+    _configured_control_tokens,
     _validate_method_result_v2,
     pack_transition_archive,
     run_transition,
@@ -18,6 +20,39 @@ from experiments.execution.tooling.mono_ci_psi_transition import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_state_scoped_public_api_exception_and_graph_policy_are_derived_from_config() -> None:
+    public_config = yaml.safe_load(
+        (ROOT / "architecture/acceptance/a1/public_api_v1.yaml").read_text(encoding="utf-8")
+    )
+    graph_config = yaml.safe_load(
+        (ROOT / "architecture/acceptance/a1/module_graph_v1.yaml").read_text(encoding="utf-8")
+    )
+    manifest = {
+        "governance_requirements": {
+            "required_evaluators": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"],
+            "fail_closed": {},
+        }
+    }
+
+    public_before = _configured_control_tokens(
+        "AC_PUBLIC_API", public_config, manifest, "A0_3_GOVERNED_MODULE_GRAPH"
+    )
+    public_after = _configured_control_tokens(
+        "AC_PUBLIC_API", public_config, manifest, "A0_4_REPORT_QUERY_PORT"
+    )
+    graph_before = _configured_control_tokens(
+        "AC_MODULE_GRAPH", graph_config, manifest, "A0_3_GOVERNED_MODULE_GRAPH"
+    )
+    graph_after = _configured_control_tokens(
+        "AC_MODULE_GRAPH", graph_config, manifest, "A0_4_REPORT_QUERY_PORT"
+    )
+
+    assert "legacy-exception:reporting_tasks_query_intermediate_v1" in public_before
+    assert "legacy-exception:reporting_tasks_query_intermediate_v1" not in public_after
+    assert "public-interface:reporting.get_task_summary:function" in public_after
+    assert graph_before == graph_after
 
 
 def test_real_transition_executes_psi_and_archive_round_trips(tmp_path: Path) -> None:
@@ -32,6 +67,38 @@ def test_real_transition_executes_psi_and_archive_round_trips(tmp_path: Path) ->
     method_manifest = json.loads(
         (run_root / record["method_input"]["path"] / "method_input_v3.json").read_text()
     )
+    adaptation_assessment_path = run_root / "diagnostics/adaptation-necessity-assessment.json"
+    adaptation_assessment = json.loads(adaptation_assessment_path.read_text(encoding="utf-8"))
+    assert adaptation_assessment["execution_id"] == record["execution_id"]
+    assert adaptation_assessment["assessment_scope"] == (
+        "SOURCE_BOUND_DEVELOPMENT_DIAGNOSTIC_NOT_INDEPENDENTLY_REVIEWED"
+    )
+    assert adaptation_assessment["method_result"]["sha256"] == record["psi"]["raw_result_sha256"]
+    assert (
+        adaptation_assessment["method_result"]["governance_decision"] == raw["governance"]["result"]
+    )
+    assert adaptation_assessment["method_result"]["operation_count"] == len(
+        raw["operation_plan"]["operations"]
+    )
+    assert adaptation_assessment["scientific_boundary"]["official_comparison"] == ("NOT_EXECUTED")
+    assert not any(
+        "adaptation-necessity" in item["path"] or "inspection-coverage" in item["path"]
+        for item in method_manifest["files"]
+    )
+    for observation in record["evaluator_observations"]:
+        state_label = "before" if observation["architecture_state"].startswith("A0_3") else "after"
+        coverage_path = (
+            run_root
+            / "PSI/evaluator-observations"
+            / state_label
+            / observation["evaluator_id"]
+            / "inspection-coverage.json"
+        )
+        coverage = json.loads(coverage_path.read_text(encoding="utf-8"))
+        assert coverage["counts"]["expected_count"] == coverage["counts"]["verified_matching_count"]
+        assert coverage["source_inspection_status"] == "COMPLETE"
+        assert coverage_path.relative_to(run_root).as_posix() in record["output_checksums"]
+    assert adaptation_assessment_path.relative_to(run_root).as_posix() in record["output_checksums"]
     runtime_inventory = json.loads((run_root / "provenance/runtime-inventory.json").read_text())
     adaptation_runtime_row = next(
         row
