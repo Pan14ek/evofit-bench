@@ -35,6 +35,27 @@ uv run pytest --no-cov tests/unit/test_context_documents.py
 
 Focused command: `make test-mono-ci-b0-psi`. This does not satisfy independent B0 execution, method readiness, input-isolation probes, scorer custody, protocol review, G1, G4, or the ΔA4 reference gate. Those remain explicit prerequisites, not skipped passes.
 
+## One-transition Method P DEVELOPMENT execution
+
+The additive `mono_ci_psi_transition.py` path executes the actual P
+DEVELOPMENT API once on the exact A0.3→A0.4 source pair. It uses the
+nonhistorical, unapproved B0 reconstruction as input provenance, denies the
+method process access to repository/Git roots and network, and archives the
+complete P input/runtime/raw result with digest readback. The run is not an
+official measurement and cannot change the measured-P or study gates.
+
+| Requirement | Expected behavior | Test owner | Status |
+| --- | --- | --- | --- |
+| MONO-PSI-TRANS-01 | Exact A0.3/A0.4 commits, repository/application trees, and both original state manifests are bound to run provenance; the A0.4 projection is verified inside the V3 P input | `tests/unit/test_mono_ci_psi_transition.py::test_real_transition_executes_psi_and_archive_round_trips` | Source-bound DEVELOPMENT run |
+| MONO-PSI-TRANS-02 | P calls the public V3 verifier and adaptation API once; preserve the observed HOLD/REJECT, operation plan, candidate diagnostics, and UNKNOWN assessments without scoring | Same test | Actual DEVELOPMENT method execution |
+| MONO-PSI-TRANS-03 | Reconstructed B0 remains unapproved/nonhistorical and is never represented as an authorized measurement input | Same test; baseline schema and proposal verifier | Provenance only |
+| MONO-PSI-TRANS-04 | Runtime contains only P modules, required schemas/catalog/vocabulary/dependencies; network and repository roots are denied, with no Git/scorer/oracle/other-arm input | Same test; runtime inventory verification | Runtime isolation/readback |
+| MONO-PSI-TRANS-05 | Archive sidecar, full run inventory, source/runtime/input/output hashes, and extracted archive read back; tampering fails | Same test | Archive integrity |
+| MONO-PSI-TRANS-06 | `NO_GO`, `NOT_EXECUTED`, `P_ALGORITHM_STATUS=NOT_READY`, G1 incomplete, G4 unauthorized and reference gate not ready remain fixed | Same test; strict run schema | Gate-preservation check |
+| MONO-PSI-TRANS-07 | Record the exact `p_adaptation.py` runtime digest and measured technical execution duration | Same test; strict run schema | Execution identity and timing |
+
+Focused command: `make test-mono-ci-psi-transition`. Hosted archival is performed by `.github/workflows/mono-ci-psi-transition-development.yml` through the shared archive module, with a 90-day Actions artifact and verified private prerelease fallback. Passing this test does not establish scientific measurement, approved B0, semantic coverage, or G1/G4 authorization.
+
 ## Research dashboard traceability
 
 The Method P research dashboard is a read-only view over the retained

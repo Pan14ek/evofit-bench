@@ -86,6 +86,8 @@ tracked in `docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`.
 - `mono_ci_b0_psi_preflight.py` — read-only source/archive/package verifier for a separate monograph-specific CI comparison; hard-fails on provenance drift, rejects historical observations as current-case evidence, validates arm-specific metric statuses, and preserves NO_GO without invoking evaluators, methods or scorer.
 - `mono_ci_b0_psi_execution.py` — exact-source materialization, separate DEVELOPMENT common-input bundles, B0 evaluator-only technical validation, checksummed result readback, and preserved NO_GO/Ψ guards.
 - `mono_ci_b0_psi_archive.py` — deterministic archive pack/readback for verified DEVELOPMENT raw outputs; embeds the run/bundle provenance, exact execution boundary, dependency/environment identities, reproduction commands, and member hashes, then writes a detached SHA-256 sidecar.
+- `mono_ci_psi_transition.py` — one exact A0.3→A0.4 Method P DEVELOPMENT execution using the public V3 verifier/adaptation API and a source-denying network-isolated runtime. It configures the identity-pinned V3 exporter for the A0.4 endpoint manifest, verifies that projection in the P bundle, and stores both exact state manifests as run-level provenance outside the method input; archive packing/readback delegates to `mono_ci_b0_psi_archive.py`.
+- `mono_ci_b0_psi_archive.py transition-pack/transition-verify` — additive transition-level archive contract using the existing deterministic ZIP, SHA-256 sidecar, member checks, extraction and readback helpers; the original B0 archive contract and CLI remain unchanged.
 - `mono_ci_b0_psi_scoring.py` — separate post-run scorer gate; verifies sealed DEVELOPMENT results and emits categorical NOT_EVALUABLE statuses until a separate approved reference exists. The execution runner does not import it.
 - `mono_e1_a03_fitness_config.py` — read-only schema, digest, canonical-source, frozen-A0, and evaluator-archive verifier for proposed B0_DEV_A03; it neither runs Method P nor changes readiness
 - `mono_policy_review_inventory.py` — read-only structural validator for the public MONO-E1 proposal inventory; compares copied rows to the pinned catalog and reports unresolved decision dimensions without certifying approval
@@ -242,6 +244,17 @@ unexpected paths, validates bundle parity and run provenance, emits a
 fixed-metadata ZIP and SHA-256 sidecar, and can safely extract and re-verify
 that archive without a source checkout. The workflow publishes these files as
 a DEVELOPMENT-only GitHub Actions artifact with 90-day retention.
+
+`mono_ci_psi_transition.py` is a separate DEVELOPMENT supplement. It binds the
+canonical A0.3/A0.4 commits, repository/application trees and original state
+manifest bytes, carries the explicitly unapproved reconstructed B0 proposal as
+the parent representation source, and invokes `verify_v3_p_bundle()` followed
+by `run_adaptation()` once in an isolated runtime. Its result archive preserves
+the raw HOLD/REJECT decision and UNKNOWN values without scoring. The archive
+contains no B0 evaluator outputs, case outputs, scorer, oracle, Git metadata or
+repository checkout. Packing and readback extend the existing B0/Ψ archive
+module without changing its original contract. This does not change
+`P_ALGORITHM_STATUS`, study readiness, G1/G4, or the reference-freeze gate.
 
 ## Verification and further reading
 
