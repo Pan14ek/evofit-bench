@@ -85,13 +85,15 @@ exact blockers are recorded in `docs/g1/B0P_READINESS_V1.md`.
 
 The additive A0.3→A0.4 Ψ execution path binds fresh A1 evaluator processes to
 both exact source revisions, while only fresh A0.4 observations enter the
-adaptation sidecar. Sidecar verification is explicitly `TEST_ONLY`; pair
+adaptation sidecar. Each evaluator output has a digest-bound typed inspection
+scope (file or dependency edge), reconstructed and checked against the raw
+output during readback. Sidecar verification is explicitly `TEST_ONLY`; pair
 adequacy and normative mapping remain `UNDETERMINED`, and source-inventory
 readback recomputes only four module facts from digest-pinned inventory paths.
-The runtime remains
-network-isolated and cannot read the source repositories or A0.3 evaluator
-observations. The run/archive schemas retain NO_GO, NOT_READY, G1/G4 and
-reference-gate boundaries; no scoring or cross-arm comparison is performed.
+The runtime remains network-isolated and cannot read the source repositories
+or A0.3 evaluator observations. The run/archive schemas retain NO_GO,
+NOT_READY, G1/G4 and reference-gate boundaries; no scoring or cross-arm
+comparison is performed.
 
 The additive E1 execution contract is separate from the generic continuation
 schema. It may consume an exact-run PILOT-02 TEST_ONLY sidecar, copies the
