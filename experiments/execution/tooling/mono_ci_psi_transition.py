@@ -1108,9 +1108,16 @@ def _verify_evidence_backed_run(
             or evidence.get("adequacy_proven") is not False
         ):
             raise ContractValidationError("MONO_CI_PSI_TRANSITION_SEMANTIC_CLAIM_UNSUPPORTED")
-    if set(evidence_index) != {
-        (str(row["id"]), str(row["id"])) for row in verified.representations
-    }:
+    expected_pairs = {
+        (str(row["id"]), str(row["evaluator"]))
+        for row in verified.representations
+        if str(row.get("evaluator")) in EVALUATOR_IDS
+    }
+    if (
+        len(expected_pairs) != len(EVALUATOR_IDS)
+        or {obligation_id for _, obligation_id in expected_pairs} != set(EVALUATOR_IDS)
+        or set(evidence_index) != expected_pairs
+    ):
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_SELECTED_PAIR_SET_MISMATCH")
 
     proof_index = {(row["representation_id"], row["obligation_id"]): row for row in proof_rows}
