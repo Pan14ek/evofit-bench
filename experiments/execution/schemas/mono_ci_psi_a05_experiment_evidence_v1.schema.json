@@ -377,6 +377,10 @@
               "items": {
                 "type": "string"
               }
+            },
+            "duration_ms": {
+              "type": "number",
+              "minimum": 0
             }
           }
         }
@@ -498,6 +502,10 @@
                 "items": {
                   "type": "string"
                 }
+              },
+              "duration_ms": {
+                "type": "number",
+                "minimum": 0
               }
             }
           }
@@ -577,8 +585,93 @@
         "reason": {
           "type": "string",
           "minLength": 1
+        },
+        "candidate_configuration_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "materialized_candidate_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "materialized_candidate_file_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "configuration_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "method_candidate_validation_status": {
+          "enum": ["valid", "invalid", "failed"]
+        },
+        "active_representations": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/candidate_representation_binding"}
+        },
+        "target_obligation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["obligation_id", "coverage_status", "representation_ids", "adequacy_status"],
+          "properties": {
+            "obligation_id": {"const": "AC_DATA_OWNERSHIP"},
+            "coverage_status": {"enum": ["COVERED", "NOT_COVERED"]},
+            "representation_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+            "adequacy_status": {"enum": ["NOT_COVERED", "NOT_ESTABLISHED_BY_STATIC_EXECUTION"]}
+          }
+        },
+        "positive_evaluations": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/candidate_evaluator_run"}
+        },
+        "negative_evaluations": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/candidate_evaluator_run"}
+        },
+        "outcome_comparisons": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/candidate_outcome_comparison"}
+        },
+        "reconstructed_b0_comparison": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["baseline_identity", "baseline_active_representation_ids", "candidate_active_representation_ids", "added_representation_ids", "removed_representation_ids", "changed_representation_ids", "active_control_set_unchanged", "matching_control_outcomes_equal"],
+          "properties": {
+            "baseline_identity": {"const": "PROSPECTIVE_RECONSTRUCTION_NOT_HISTORICAL"},
+            "baseline_active_representation_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+            "candidate_active_representation_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+            "added_representation_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+            "removed_representation_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+            "changed_representation_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+            "active_control_set_unchanged": {"type": "boolean"},
+            "matching_control_outcomes_equal": {"type": "boolean"}
+          }
+        },
+        "execution_cost": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["measurement", "candidate_positive_total_ms", "candidate_negative_total_ms", "candidate_validation_total_ms", "additional_active_representations_per_ci_build", "estimated_additional_ci_execution_ms_per_build", "estimate_scope"],
+          "properties": {
+            "measurement": {"type": "string", "minLength": 1},
+            "candidate_positive_total_ms": {"type": "number", "minimum": 0},
+            "candidate_negative_total_ms": {"type": "number", "minimum": 0},
+            "candidate_validation_total_ms": {"type": "number", "minimum": 0},
+            "additional_active_representations_per_ci_build": {"type": "integer", "minimum": 0},
+            "estimated_additional_ci_execution_ms_per_build": {"type": "number", "minimum": 0},
+            "estimate_scope": {"type": "string", "minLength": 1}
+          }
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"candidate_present": {"const": true}}, "required": ["candidate_present"]},
+          "then": {"required": ["candidate_configuration_sha256", "materialized_candidate_path", "materialized_candidate_file_sha256", "configuration_version", "method_candidate_validation_status", "active_representations", "target_obligation", "positive_evaluations", "negative_evaluations", "outcome_comparisons", "reconstructed_b0_comparison", "execution_cost"]}
+        },
+        {
+          "if": {"properties": {"candidate_present": {"const": false}}, "required": ["candidate_present"]},
+          "then": {"properties": {"status": {"const": "NOT_EXECUTED"}}}
+        }
+      ]
     },
     "scientific_boundary": {
       "type": "object",
@@ -636,6 +729,72 @@
         "scoring": {
           "const": "NOT_EXECUTED"
         }
+      }
+    }
+  },
+  "$defs": {
+    "candidate_representation_binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["representation_id", "evaluator_id", "covers", "configuration_path", "configuration_sha256", "evaluator_source_sha256", "evaluator_artifact_path", "evaluator_artifact_sha256"],
+      "properties": {
+        "representation_id": {"type": "string", "minLength": 1},
+        "evaluator_id": {"enum": ["AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP"]},
+        "covers": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "configuration_path": {"type": "string", "minLength": 1},
+        "configuration_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "evaluator_source_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "evaluator_artifact_path": {"type": "string", "minLength": 1},
+        "evaluator_artifact_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "candidate_evaluator_run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["representation_id", "source_commit_sha", "source_tree_sha", "application_tree_sha", "evaluator_id", "execution_status", "compliance", "configuration_sha256", "evaluator_source_sha256", "output_path", "output_sha256", "coverage_path", "coverage_sha256", "inspection_status", "finding_codes", "duration_ms"],
+      "properties": {
+        "representation_id": {"type": "string", "minLength": 1},
+        "source_commit_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+        "source_tree_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+        "application_tree_sha": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+        "evaluator_id": {"enum": ["AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP"]},
+        "execution_status": {"enum": ["COMPLETED", "FAILED"]},
+        "compliance": {"enum": ["COMPLIANT", "NON_COMPLIANT", "NOT_EVALUABLE", "NOT_APPLICABLE", "UNKNOWN"]},
+        "configuration_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "evaluator_source_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "output_path": {"type": "string", "minLength": 1},
+        "output_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "coverage_path": {"type": "string", "minLength": 1},
+        "coverage_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "inspection_status": {"enum": ["COMPLETE", "INCOMPLETE"]},
+        "finding_codes": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
+        "duration_ms": {"type": "number", "minimum": 0}
+      }
+    },
+    "candidate_outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evaluator_id", "execution_status", "compliance", "finding_codes"],
+      "properties": {
+        "evaluator_id": {"enum": ["AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP"]},
+        "execution_status": {"enum": ["COMPLETED", "FAILED"]},
+        "compliance": {"enum": ["COMPLIANT", "NON_COMPLIANT", "NOT_EVALUABLE", "NOT_APPLICABLE", "UNKNOWN"]},
+        "finding_codes": {"type": "array", "uniqueItems": true, "items": {"type": "string"}}
+      }
+    },
+    "candidate_outcome_comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["representation_id", "baseline_binding_matches", "candidate_positive_outcome", "reconstructed_b0_positive_outcome", "positive_outcome_parity", "candidate_negative_outcome", "reconstructed_b0_negative_outcome", "negative_outcome_parity"],
+      "properties": {
+        "representation_id": {"type": "string", "minLength": 1},
+        "baseline_binding_matches": {"type": "boolean"},
+        "candidate_positive_outcome": {"$ref": "#/$defs/candidate_outcome"},
+        "reconstructed_b0_positive_outcome": {"anyOf": [{"$ref": "#/$defs/candidate_outcome"}, {"type": "null"}]},
+        "positive_outcome_parity": {"type": ["boolean", "null"]},
+        "candidate_negative_outcome": {"$ref": "#/$defs/candidate_outcome"},
+        "reconstructed_b0_negative_outcome": {"anyOf": [{"$ref": "#/$defs/candidate_outcome"}, {"type": "null"}]},
+        "negative_outcome_parity": {"type": ["boolean", "null"]}
       }
     }
   }

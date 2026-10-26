@@ -15,6 +15,7 @@ from experiments.execution.tooling.mono_ci_psi_a05 import (
     BEFORE_STATE,
     PROBE_PATH,
     PROBE_SOURCE,
+    _candidate_obligation_coverage,
     _validate_a04_proposal,
 )
 from experiments.execution.tooling.mono_ci_psi_coverage import (
@@ -81,3 +82,31 @@ def test_negative_probe_is_isolated_and_uses_a_static_table_access_the_evaluator
     assert "session.execute(select(foreign_table))" in PROBE_SOURCE
     assert "expected_operations" not in PROBE_SOURCE
     assert "ground_truth" not in PROBE_SOURCE
+
+
+def test_materialized_candidate_coverage_is_derived_from_its_active_rows() -> None:
+    candidate_rows = [
+        {
+            "id": "REP_RECON_B0_A04_MODULE_GRAPH_CI_V1",
+            "active": True,
+            "covers": ["AC_MODULE_GRAPH"],
+        },
+        {
+            "id": "REP_INACTIVE_OWNERSHIP",
+            "active": False,
+            "covers": ["AC_DATA_OWNERSHIP"],
+        },
+    ]
+
+    assert _candidate_obligation_coverage(candidate_rows, "AC_DATA_OWNERSHIP") == []
+
+    candidate_rows.append(
+        {
+            "id": "REP_CANDIDATE_OWNERSHIP",
+            "active": True,
+            "covers": ["AC_DATA_OWNERSHIP"],
+        }
+    )
+    assert _candidate_obligation_coverage(candidate_rows, "AC_DATA_OWNERSHIP") == [
+        "REP_CANDIDATE_OWNERSHIP"
+    ]

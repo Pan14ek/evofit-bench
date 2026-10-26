@@ -59,6 +59,7 @@ from experiments.execution.tooling.mono_ci_psi_evidence import (
 )
 from experiments.execution.tooling.p_adaptation import verify_v3_p_bundle
 from experiments.execution.tooling.p_adaptation_evidence import verify_adaptation_evidence
+from experiments.execution.tooling.p_candidate import candidate_sha256
 from experiments.execution.tooling.p_input_export_v2 import (
     STRUCTURAL_SOURCE_PATH,
     _project_structural_manifest,
@@ -737,6 +738,324 @@ def _verify_a05_experiment_extension(run_root: Path, record: dict[str, Any]) -> 
             or row["inspection_status"] != "COMPLETE"
         ):
             raise ContractValidationError("MONO_CI_PSI_A05_PROBE_EVIDENCE_BINDING_MISMATCH")
+    _verify_a05_candidate_extension(run_root, record, extension)
+
+
+def _verify_a05_candidate_extension(
+    run_root: Path, record: dict[str, Any], extension: dict[str, Any]
+) -> None:
+    """Read back the exact materialized candidate and both independent executions."""
+    report = extension["candidate_verification"]
+    method_result = json.loads(
+        (run_root / record["psi"]["raw_result_path"]).read_text(encoding="utf-8")
+    )
+    candidate = method_result.get("candidate")
+    if candidate is None:
+        if report["candidate_present"] or report["status"] != "NOT_EXECUTED":
+            raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_ABSENCE_MISMATCH")
+        return
+    validate_payload("p_candidate_configuration_v1.schema.json", candidate)
+    candidate_path = run_root / report["materialized_candidate_path"]
+    if (
+        report["candidate_present"] is not True
+        or report["materialized_candidate_path"] != "diagnostics/materialized-method-candidate.json"
+        or candidate_path.is_symlink()
+        or not candidate_path.is_file()
+        or sha256_file(candidate_path) != report["materialized_candidate_file_sha256"]
+        or json.loads(candidate_path.read_text(encoding="utf-8")) != candidate
+        or report["candidate_configuration_sha256"] != candidate_sha256(candidate)
+        or report["candidate_configuration_sha256"]
+        != method_result.get("governance", {}).get("candidate_configuration_sha256")
+        or candidate.get("architecture_source_sha") != record["transition"]["after_commit_sha"]
+        or candidate.get("input_bundle_sha256") != record["method_input"]["bundle_sha256"]
+        or report["configuration_version"] != candidate.get("configuration_version")
+        or report["method_candidate_validation_status"]
+        != candidate.get("candidate_validation", {}).get("status")
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_MATERIALIZATION_MISMATCH")
+
+    parent = candidate.get("parent_configuration", {})
+    parent_file = run_root / "PSI/method-input" / str(parent.get("path", ""))
+    if (
+        parent_file.is_symlink()
+        or not parent_file.is_file()
+        or sha256_file(parent_file) != parent.get("sha256")
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_PARENT_BINDING_MISMATCH")
+
+    active_rows = [
+        row
+        for row in candidate.get("representations", [])
+        if isinstance(row, dict) and row.get("active") is True
+    ]
+    expected_bindings = []
+    for row in active_rows:
+        evaluator_id = row.get("evaluator")
+        contract = row.get("evidence_contract", {})
+        artifact = row.get("evaluator_artifact", {})
+        binding = {
+            "representation_id": row.get("id"),
+            "evaluator_id": evaluator_id,
+            "covers": row.get("covers", []),
+            "configuration_path": contract.get("configuration_path"),
+            "configuration_sha256": contract.get("configuration_sha256"),
+            "evaluator_source_sha256": contract.get("evaluator_source_sha256"),
+            "evaluator_artifact_path": artifact.get("path"),
+            "evaluator_artifact_sha256": artifact.get("sha256"),
+        }
+        expected_bindings.append(binding)
+        evaluator_root = run_root / "PSI/evaluator-observations/implementation" / str(evaluator_id)
+        config_copy = evaluator_root / Path(str(contract.get("configuration_path"))).name
+        source_manifest = evaluator_root / "source-manifest.json"
+        artifact_copy = run_root / str(artifact.get("path", ""))
+        if (
+            config_copy.is_symlink()
+            or not config_copy.is_file()
+            or sha256_file(config_copy) != contract.get("configuration_sha256")
+            or artifact_copy.is_symlink()
+            or not artifact_copy.is_file()
+            or sha256_file(artifact_copy) != artifact.get("sha256")
+            or artifact.get("path") != source_manifest.relative_to(run_root).as_posix()
+            or artifact.get("sha256") != contract.get("evaluator_source_sha256")
+        ):
+            raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_ACTIVE_BINDING_MISMATCH")
+    if expected_bindings != report["active_representations"]:
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_ACTIVE_BINDING_MISMATCH")
+
+    ownership_representation_ids = sorted(
+        str(row["id"])
+        for row in active_rows
+        if isinstance(row.get("covers"), list) and "AC_DATA_OWNERSHIP" in row["covers"]
+    )
+    target = report["target_obligation"]
+    if (
+        target["obligation_id"] != "AC_DATA_OWNERSHIP"
+        or target["representation_ids"] != ownership_representation_ids
+        or target["coverage_status"]
+        != ("COVERED" if ownership_representation_ids else "NOT_COVERED")
+        or target["adequacy_status"]
+        != (
+            "NOT_ESTABLISHED_BY_STATIC_EXECUTION" if ownership_representation_ids else "NOT_COVERED"
+        )
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_OBLIGATION_BINDING_MISMATCH")
+
+    positive_rows = report["positive_evaluations"]
+    negative_rows = report["negative_evaluations"]
+    representation_ids = sorted(row["representation_id"] for row in expected_bindings)
+    if (
+        sorted(row["representation_id"] for row in positive_rows) != representation_ids
+        or sorted(row["representation_id"] for row in negative_rows) != representation_ids
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_EVALUATION_SET_MISMATCH")
+
+    conditions = (
+        (
+            positive_rows,
+            record["transition"]["after_commit_sha"],
+            record["transition"]["after_repository_tree_sha"],
+            record["transition"]["after_application_tree_sha"],
+        ),
+        (
+            negative_rows,
+            record["transition"]["probe_commit_sha"],
+            record["transition"]["probe_repository_tree_sha"],
+            record["transition"]["probe_application_tree_sha"],
+        ),
+    )
+    for condition_rows, commit_sha, tree_sha, application_tree_sha in conditions:
+        for row in condition_rows:
+            binding = next(
+                item
+                for item in expected_bindings
+                if item["representation_id"] == row["representation_id"]
+            )
+            output_path = run_root / row["output_path"]
+            coverage_path = run_root / row["coverage_path"]
+            if (
+                row["source_commit_sha"] != commit_sha
+                or row["source_tree_sha"] != tree_sha
+                or row["application_tree_sha"] != application_tree_sha
+                or row["evaluator_id"] != binding["evaluator_id"]
+                or row["configuration_sha256"] != binding["configuration_sha256"]
+                or row["evaluator_source_sha256"] != binding["evaluator_source_sha256"]
+                or row["execution_status"] != "COMPLETED"
+                or row["inspection_status"] != "COMPLETE"
+                or not output_path.is_file()
+                or sha256_file(output_path) != row["output_sha256"]
+                or not coverage_path.is_file()
+                or sha256_file(coverage_path) != row["coverage_sha256"]
+            ):
+                raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_EVIDENCE_BINDING_MISMATCH")
+            evidence = json.loads(output_path.read_text(encoding="utf-8"))
+            coverage = json.loads(coverage_path.read_text(encoding="utf-8"))
+            if (
+                evidence.get("architecture", {}).get("target_source_sha") != commit_sha
+                or evidence.get("evaluator", {}).get("configuration_digest")
+                != binding["configuration_sha256"]
+                or evidence.get("evaluator", {}).get("source_digest")
+                != binding["evaluator_source_sha256"]
+                or coverage.get("source_inspection_status") != "COMPLETE"
+                or coverage.get("architecture_state") != AFTER_STATE
+            ):
+                raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_RAW_EVIDENCE_MISMATCH")
+
+    baseline = json.loads(
+        (run_root / "provenance/reconstructed-b0-proposal.json").read_text(encoding="utf-8")
+    )
+    baseline_by_id = {row["representation_id"]: row for row in baseline["representations"]}
+    candidate_by_id = {row["representation_id"]: row for row in expected_bindings}
+    baseline_ids = sorted(baseline_by_id)
+    added = sorted(set(candidate_by_id) - set(baseline_by_id))
+    removed = sorted(set(baseline_by_id) - set(candidate_by_id))
+    changed = sorted(
+        identity
+        for identity in set(candidate_by_id) & set(baseline_by_id)
+        if candidate_by_id[identity]["evaluator_id"] != baseline_by_id[identity]["evaluator_id"]
+        or candidate_by_id[identity]["configuration_sha256"]
+        != baseline_by_id[identity]["evaluator_configuration_sha256"]
+        or candidate_by_id[identity]["evaluator_source_sha256"]
+        != baseline_by_id[identity]["evaluator_source_sha256"]
+    )
+    prior_positive = {
+        row["evaluator_id"]: row
+        for row in record["evaluator_observations"]
+        if row["architecture_state"] == AFTER_STATE
+    }
+    prior_negative = {
+        row["evaluator_id"]: row for row in extension["negative_condition"]["evaluators"]
+    }
+    candidate_positive = {row["representation_id"]: row for row in positive_rows}
+    candidate_negative = {row["representation_id"]: row for row in negative_rows}
+    comparisons = []
+    for identity in sorted(candidate_by_id):
+        binding = candidate_by_id[identity]
+        baseline_row = baseline_by_id.get(identity)
+        binding_matches = bool(
+            baseline_row is not None
+            and baseline_row["evaluator_id"] == binding["evaluator_id"]
+            and baseline_row["evaluator_configuration_sha256"] == binding["configuration_sha256"]
+            and baseline_row["evaluator_source_sha256"] == binding["evaluator_source_sha256"]
+        )
+        old_positive = prior_positive.get(binding["evaluator_id"])
+        old_negative = prior_negative.get(binding["evaluator_id"])
+        new_positive = candidate_positive[identity]
+        new_negative = candidate_negative[identity]
+        positive_outcome = _a05_evaluator_outcome(run_root, new_positive)
+        negative_outcome = _a05_evaluator_outcome(run_root, new_negative)
+        old_positive_outcome = (
+            _a05_evaluator_outcome(run_root, old_positive)
+            if binding_matches and old_positive is not None
+            else None
+        )
+        old_negative_outcome = (
+            _a05_evaluator_outcome(run_root, old_negative)
+            if binding_matches and old_negative is not None
+            else None
+        )
+        comparisons.append(
+            {
+                "representation_id": identity,
+                "baseline_binding_matches": binding_matches,
+                "candidate_positive_outcome": positive_outcome,
+                "reconstructed_b0_positive_outcome": old_positive_outcome,
+                "positive_outcome_parity": (
+                    positive_outcome == old_positive_outcome
+                    if old_positive_outcome is not None
+                    else None
+                ),
+                "candidate_negative_outcome": negative_outcome,
+                "reconstructed_b0_negative_outcome": old_negative_outcome,
+                "negative_outcome_parity": (
+                    negative_outcome == old_negative_outcome
+                    if old_negative_outcome is not None
+                    else None
+                ),
+            }
+        )
+    comparable = [item for item in comparisons if item["baseline_binding_matches"]]
+    parity = all(
+        item["positive_outcome_parity"] is True and item["negative_outcome_parity"] is True
+        for item in comparable
+    )
+    baseline_comparison = report["reconstructed_b0_comparison"]
+    if (
+        report["outcome_comparisons"] != comparisons
+        or baseline_comparison["baseline_identity"] != "PROSPECTIVE_RECONSTRUCTION_NOT_HISTORICAL"
+        or baseline_comparison["baseline_active_representation_ids"] != baseline_ids
+        or baseline_comparison["candidate_active_representation_ids"] != representation_ids
+        or baseline_comparison["added_representation_ids"] != added
+        or baseline_comparison["removed_representation_ids"] != removed
+        or baseline_comparison["changed_representation_ids"] != changed
+        or baseline_comparison["active_control_set_unchanged"]
+        != (not (added or removed or changed))
+        or baseline_comparison["matching_control_outcomes_equal"] != parity
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_BASELINE_COMPARISON_MISMATCH")
+
+    positive_cost = round(sum(float(row["duration_ms"]) for row in positive_rows), 3)
+    negative_cost = round(sum(float(row["duration_ms"]) for row in negative_rows), 3)
+    additional_cost = round(
+        sum(
+            float(row["duration_ms"]) for row in positive_rows if row["representation_id"] in added
+        ),
+        3,
+    )
+    cost = report["execution_cost"]
+    if (
+        cost["candidate_positive_total_ms"] != positive_cost
+        or cost["candidate_negative_total_ms"] != negative_cost
+        or cost["candidate_validation_total_ms"] != round(positive_cost + negative_cost, 3)
+        or cost["additional_active_representations_per_ci_build"] != len(added)
+        or cost["estimated_additional_ci_execution_ms_per_build"] != additional_cost
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_COST_BINDING_MISMATCH")
+
+    runs_complete = bool(expected_bindings) and all(
+        row["execution_status"] == "COMPLETED" and row["inspection_status"] == "COMPLETE"
+        for row in [*positive_rows, *negative_rows]
+    )
+    positive_controls_compliant = all(
+        _a05_evaluator_outcome(run_root, row)["compliance"] == "COMPLIANT" for row in positive_rows
+    )
+    expected_status = (
+        "PASS"
+        if candidate.get("candidate_validation", {}).get("status") == "valid"
+        and runs_complete
+        and positive_controls_compliant
+        and parity
+        else "FAIL"
+    )
+    if report["status"] != expected_status:
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_STATUS_MISMATCH")
+
+
+def _a05_evaluator_outcome(run_root: Path, row: dict[str, Any]) -> dict[str, Any]:
+    evidence = json.loads((run_root / row["output_path"]).read_text(encoding="utf-8"))
+    diagnostics = evidence.get("diagnostics", {})
+    codes = sorted(
+        {
+            item["code"]
+            for item in diagnostics.get("policy_findings", [])
+            if isinstance(item, dict) and isinstance(item.get("code"), str)
+        }
+    )
+    if not codes:
+        codes = sorted(
+            {
+                item["code"]
+                for values in diagnostics.values()
+                if isinstance(values, list)
+                for item in values
+                if isinstance(item, dict) and isinstance(item.get("code"), str)
+            }
+        )
+    return {
+        "evaluator_id": row["evaluator_id"],
+        "execution_status": evidence.get("result", {}).get("execution_status"),
+        "compliance": evidence.get("result", {}).get("compliance"),
+        "finding_codes": codes,
+    }
 
 
 def pack_transition_archive(

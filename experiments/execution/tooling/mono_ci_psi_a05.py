@@ -35,6 +35,7 @@ from experiments.execution.tooling.mono_ci_psi_evidence import (
     evaluator_source_artifacts,
     run_fresh_evaluator,
 )
+from experiments.execution.tooling.p_candidate import candidate_sha256
 
 BEFORE_COMMIT = "d3101c0d3aa9b7b709253b6ec7518416f05f65b9"
 BEFORE_REPOSITORY_TREE = "2b436e0aaf09403ea516d73d20a466a122f86592"
@@ -126,6 +127,143 @@ def _validate_a04_proposal(repository: Path) -> dict[str, Any]:
         "identity_status": "PROSPECTIVE_RECONSTRUCTION_NOT_HISTORICAL",
         "approval_status": "NOT_APPROVED",
     }
+
+
+def _candidate_obligation_coverage(
+    representations: list[dict[str, Any]], obligation_id: str
+) -> list[str]:
+    """Return active candidate representation IDs that explicitly cover an obligation."""
+    return sorted(
+        str(row["id"])
+        for row in representations
+        if row.get("active") is True
+        and isinstance(row.get("covers"), list)
+        and obligation_id in row["covers"]
+    )
+
+
+def _prepare_candidate_bindings(
+    *,
+    candidate_value: Any,
+    repository: Path,
+    run_root: Path,
+    after_commit: str,
+    method_input_bundle_sha256: str,
+    evaluator_source_manifest_bytes: bytes,
+    evaluator_source_sha256: str,
+) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+    """Materialize the exact Method Ψ candidate and independently check active bindings."""
+    if candidate_value is None:
+        return None, []
+    if not isinstance(candidate_value, dict):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_SHAPE_INVALID")
+    validate_payload("p_candidate_configuration_v1.schema.json", candidate_value)
+    candidate_digest = candidate_sha256(candidate_value)
+    if (
+        candidate_value.get("architecture_source_sha") != after_commit
+        or candidate_value.get("input_bundle_sha256") != method_input_bundle_sha256
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_SOURCE_BINDING_MISMATCH")
+    parent = candidate_value.get("parent_configuration")
+    if not isinstance(parent, dict):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_PARENT_BINDING_INVALID")
+    parent_path = parent.get("path")
+    parent_sha256 = parent.get("sha256")
+    parent_bytes = (
+        run_root / "PSI/method-input" / str(parent_path) if isinstance(parent_path, str) else None
+    )
+    if (
+        parent_bytes is None
+        or parent_bytes.is_symlink()
+        or not parent_bytes.is_file()
+        or sha256_file(parent_bytes) != parent_sha256
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_PARENT_BINDING_MISMATCH")
+
+    candidate_path = run_root / "diagnostics/materialized-method-candidate.json"
+    candidate_bytes = pretty_json_bytes(candidate_value)
+    transition._write_new_file(candidate_path, candidate_bytes)
+    if candidate_sha256(json.loads(candidate_path.read_text(encoding="utf-8"))) != candidate_digest:
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_MATERIALIZATION_MISMATCH")
+
+    active_bindings: list[dict[str, Any]] = []
+    representation_rows = candidate_value.get("representations")
+    if not isinstance(representation_rows, list):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_REPRESENTATIONS_INVALID")
+    for representation in representation_rows:
+        if not isinstance(representation, dict):
+            raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_REPRESENTATIONS_INVALID")
+        if representation.get("active") is not True:
+            continue
+        evaluator_id = representation.get("evaluator")
+        evidence_contract = representation.get("evidence_contract")
+        evaluator_artifact = representation.get("evaluator_artifact")
+        if (
+            not isinstance(evaluator_id, str)
+            or not isinstance(evidence_contract, dict)
+            or not isinstance(evaluator_artifact, dict)
+        ):
+            raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_ACTIVE_BINDING_INVALID")
+        expected_config_path = transition.EVALUATOR_CONFIGS.get(
+            evaluator_id,
+            "architecture/acceptance/a1/data_ownership_v1.yaml"
+            if evaluator_id == OWNERSHIP_EVALUATOR
+            else None,
+        )
+        config_path = evidence_contract.get("configuration_path")
+        config_sha256 = evidence_contract.get("configuration_sha256")
+        source_sha256 = evidence_contract.get("evaluator_source_sha256")
+        artifact_path = evaluator_artifact.get("path")
+        artifact_sha256 = evaluator_artifact.get("sha256")
+        if (
+            expected_config_path is None
+            or config_path != expected_config_path
+            or not isinstance(config_sha256, str)
+            or not isinstance(source_sha256, str)
+            or not isinstance(artifact_path, str)
+            or not isinstance(artifact_sha256, str)
+            or config_sha256 != sha256_file(repository / expected_config_path)
+            or source_sha256 != evaluator_source_sha256
+            or artifact_sha256 != evaluator_source_sha256
+        ):
+            raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_EVALUATOR_BINDING_MISMATCH")
+        artifact_file = run_root / artifact_path
+        if (
+            artifact_file.is_symlink()
+            or not artifact_file.is_file()
+            or sha256_file(artifact_file) != artifact_sha256
+            or artifact_file.read_bytes() != evaluator_source_manifest_bytes
+        ):
+            raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_EVALUATOR_ARTIFACT_MISMATCH")
+        config_bytes = (repository / expected_config_path).read_bytes()
+        active_bindings.append(
+            {
+                "representation_id": representation.get("id"),
+                "evaluator_id": evaluator_id,
+                "covers": list(representation.get("covers", [])),
+                "configuration_path": expected_config_path,
+                "configuration_sha256": config_sha256,
+                "evaluator_source_sha256": source_sha256,
+                "evaluator_artifact_path": artifact_file.relative_to(run_root).as_posix(),
+                "evaluator_artifact_sha256": artifact_sha256,
+                "configuration_bytes": config_bytes,
+            }
+        )
+    return (
+        {
+            "path": candidate_path.relative_to(run_root).as_posix(),
+            "file_sha256": sha256_file(candidate_path),
+            "candidate_sha256": candidate_digest,
+            "configuration_version": candidate_value.get("configuration_version"),
+            "validation_status": candidate_value.get("candidate_validation", {}).get("status"),
+            "active_representations": [
+                {key: value for key, value in binding.items() if key != "configuration_bytes"}
+                for binding in active_bindings
+            ],
+            "representation_rows": representation_rows,
+        },
+        active_bindings,
+    )
 
 
 @contextmanager
@@ -233,6 +371,44 @@ def _build_a05_extension(
         state_manifest_bytes=manifest_bytes,
     )
 
+    baseline_bytes = (run_root / "provenance/reconstructed-b0-proposal.json").read_bytes()
+    baseline = json.loads(baseline_bytes)
+    method_result = json.loads(
+        (run_root / run_record["psi"]["raw_result_path"]).read_text(encoding="utf-8")
+    )
+    candidate_info, candidate_bindings = _prepare_candidate_bindings(
+        candidate_value=method_result.get("candidate"),
+        repository=repo,
+        run_root=run_root,
+        after_commit=after_commit,
+        method_input_bundle_sha256=run_record["method_input"]["bundle_sha256"],
+        evaluator_source_manifest_bytes=source_manifest_bytes,
+        evaluator_source_sha256=evaluator_source_sha256,
+    )
+    if candidate_info is not None and candidate_info["candidate_sha256"] != method_result.get(
+        "governance", {}
+    ).get("candidate_configuration_sha256"):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_GOVERNANCE_DIGEST_MISMATCH")
+
+    candidate_positive_rows = []
+    for binding in candidate_bindings:
+        _candidate_run, candidate_row = _run_bound_evaluator(
+            repository=repo,
+            source_checkout=repo,
+            source_commit=after_commit,
+            architecture_state=AFTER_STATE,
+            evaluator_id=binding["evaluator_id"],
+            output_directory=(
+                run_root
+                / "PSI/evaluator-observations/candidate-positive"
+                / binding["representation_id"]
+            ),
+            configuration_bytes=binding["configuration_bytes"],
+            state_manifest_bytes=manifest_bytes,
+        )
+        candidate_row["representation_id"] = binding["representation_id"]
+        candidate_positive_rows.append(candidate_row)
+
     probe_dir: Path | None = None
     temporary: tempfile.TemporaryDirectory[str] | None = None
     try:
@@ -268,6 +444,7 @@ def _build_a05_extension(
         probe_tree = _git_text(probe_dir, "rev-parse", "HEAD^{tree}")
         probe_app_tree = _git_text(probe_dir, "rev-parse", "HEAD:app")
         negative_rows = []
+        candidate_negative_rows = []
         negative_ids = ("AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP")
         for evaluator_id in negative_ids:
             config_path = transition.EVALUATOR_CONFIGS.get(
@@ -287,6 +464,23 @@ def _build_a05_extension(
                 state_manifest_bytes=manifest_bytes,
             )
             negative_rows.append(row)
+        for binding in candidate_bindings:
+            _candidate_run, candidate_row = _run_bound_evaluator(
+                repository=repo,
+                source_checkout=probe_dir,
+                source_commit=probe_commit,
+                architecture_state=AFTER_STATE,
+                evaluator_id=binding["evaluator_id"],
+                output_directory=(
+                    run_root
+                    / "PSI/evaluator-observations/candidate-negative"
+                    / binding["representation_id"]
+                ),
+                configuration_bytes=binding["configuration_bytes"],
+                state_manifest_bytes=manifest_bytes,
+            )
+            candidate_row["representation_id"] = binding["representation_id"]
+            candidate_negative_rows.append(candidate_row)
         if _git_text(probe_dir, "status", "--porcelain"):
             raise ContractValidationError("MONO_CI_PSI_A05_PROBE_WORKTREE_DIRTY")
     finally:
@@ -295,8 +489,6 @@ def _build_a05_extension(
         if temporary is not None:
             temporary.cleanup()
 
-    baseline_bytes = (run_root / "provenance/reconstructed-b0-proposal.json").read_bytes()
-    baseline = json.loads(baseline_bytes)
     requirement = {
         "control_id": "architecture.data_ownership.persistence_ownership",
         "requirement_type": "architecture.data_ownership.persistence_ownership",
@@ -359,8 +551,15 @@ def _build_a05_extension(
             "independent_review": False,
         }
     )
-    method_result = json.loads(
-        (run_root / run_record["psi"]["raw_result_path"]).read_text(encoding="utf-8")
+    candidate_verification = _build_candidate_verification(
+        candidate_info=candidate_info,
+        candidate_bindings=candidate_bindings,
+        positive_rows=candidate_positive_rows,
+        negative_rows=candidate_negative_rows,
+        original_positive_rows=run_record["evaluator_observations"],
+        original_negative_rows=negative_rows,
+        baseline=baseline,
+        run_root=run_root,
     )
     positive = {
         "condition_status": "COMPLIANT_A05_SOURCE",
@@ -442,16 +641,7 @@ def _build_a05_extension(
                 "adequacy beyond the recorded detector scope.",
             ],
         },
-        "candidate_verification": {
-            "status": "NOT_EXECUTED",
-            "candidate_present": method_result.get("candidate") is not None,
-            "reason": (
-                "No candidate was materialized by Method Ψ."
-                if method_result.get("candidate") is None
-                else "A candidate was materialized; independent candidate execution requires "
-                "a separate candidate-verification pass."
-            ),
-        },
+        "candidate_verification": candidate_verification,
         "scientific_boundary": {
             "method_decision": run_record["psi"]["decision"],
             "operation_plan": method_result.get("operation_plan", {}).get("operations", []),
@@ -558,8 +748,226 @@ def _run_bound_evaluator(
         "coverage_sha256": coverage_sha,
         "inspection_status": coverage["source_inspection_status"],
         "finding_codes": finding_codes,
+        "duration_ms": run["duration_ms"],
     }
     return run, row
+
+
+def _observation_outcome(run_root: Path, row: dict[str, Any]) -> dict[str, Any]:
+    evidence = json.loads((run_root / row["output_path"]).read_text(encoding="utf-8"))
+    diagnostics = evidence.get("diagnostics", {})
+    codes = sorted(
+        {
+            item["code"]
+            for item in diagnostics.get("policy_findings", [])
+            if isinstance(item, dict) and isinstance(item.get("code"), str)
+        }
+    )
+    if not codes:
+        codes = sorted(
+            {
+                item["code"]
+                for value in diagnostics.values()
+                if isinstance(value, list)
+                for item in value
+                if isinstance(item, dict) and isinstance(item.get("code"), str)
+            }
+        )
+    return {
+        "evaluator_id": row["evaluator_id"],
+        "execution_status": evidence.get("result", {}).get("execution_status"),
+        "compliance": evidence.get("result", {}).get("compliance"),
+        "finding_codes": codes,
+    }
+
+
+def _build_candidate_verification(
+    *,
+    candidate_info: dict[str, Any] | None,
+    candidate_bindings: list[dict[str, Any]],
+    positive_rows: list[dict[str, Any]],
+    negative_rows: list[dict[str, Any]],
+    original_positive_rows: list[dict[str, Any]],
+    original_negative_rows: list[dict[str, Any]],
+    baseline: dict[str, Any],
+    run_root: Path,
+) -> dict[str, Any]:
+    if candidate_info is None:
+        return {
+            "status": "NOT_EXECUTED",
+            "candidate_present": False,
+            "reason": "Method Ψ did not materialize a candidate configuration.",
+        }
+
+    by_positive = {row["representation_id"]: row for row in positive_rows}
+    by_negative = {row["representation_id"]: row for row in negative_rows}
+    baseline_representations = {
+        row["representation_id"]: row for row in baseline["representations"]
+    }
+    candidate_representation_ids = sorted(
+        binding["representation_id"] for binding in candidate_bindings
+    )
+    baseline_representation_ids = sorted(baseline_representations)
+    added = sorted(set(candidate_representation_ids) - set(baseline_representation_ids))
+    removed = sorted(set(baseline_representation_ids) - set(candidate_representation_ids))
+    changed = sorted(
+        representation_id
+        for representation_id in set(candidate_representation_ids)
+        & set(baseline_representation_ids)
+        if (
+            next(
+                binding
+                for binding in candidate_bindings
+                if binding["representation_id"] == representation_id
+            )["evaluator_id"]
+            != baseline_representations[representation_id]["evaluator_id"]
+            or next(
+                binding
+                for binding in candidate_bindings
+                if binding["representation_id"] == representation_id
+            )["configuration_sha256"]
+            != baseline_representations[representation_id]["evaluator_configuration_sha256"]
+        )
+    )
+    baseline_positive_by_id = {
+        row["evaluator_id"]: row
+        for row in original_positive_rows
+        if row["architecture_state"] == AFTER_STATE
+    }
+    baseline_negative_by_id = {row["evaluator_id"]: row for row in original_negative_rows}
+    outcome_comparisons = []
+    for binding in candidate_bindings:
+        representation_id = binding["representation_id"]
+        candidate_positive = by_positive[representation_id]
+        candidate_negative = by_negative[representation_id]
+        baseline_representation = baseline_representations.get(representation_id)
+        baseline_binding_matches = bool(
+            baseline_representation is not None
+            and baseline_representation["evaluator_id"] == binding["evaluator_id"]
+            and baseline_representation["evaluator_configuration_sha256"]
+            == binding["configuration_sha256"]
+            and baseline_representation["evaluator_source_sha256"]
+            == binding["evaluator_source_sha256"]
+        )
+        original_positive = baseline_positive_by_id.get(binding["evaluator_id"])
+        original_negative = baseline_negative_by_id.get(binding["evaluator_id"])
+        positive_outcome = _observation_outcome(run_root, candidate_positive)
+        negative_outcome = _observation_outcome(run_root, candidate_negative)
+        positive_reference = (
+            _observation_outcome(run_root, original_positive)
+            if baseline_binding_matches and original_positive is not None
+            else None
+        )
+        negative_reference = (
+            _observation_outcome(run_root, original_negative)
+            if baseline_binding_matches and original_negative is not None
+            else None
+        )
+        outcome_comparisons.append(
+            {
+                "representation_id": representation_id,
+                "baseline_binding_matches": baseline_binding_matches,
+                "candidate_positive_outcome": positive_outcome,
+                "reconstructed_b0_positive_outcome": positive_reference,
+                "positive_outcome_parity": (
+                    positive_outcome == positive_reference
+                    if positive_reference is not None
+                    else None
+                ),
+                "candidate_negative_outcome": negative_outcome,
+                "reconstructed_b0_negative_outcome": negative_reference,
+                "negative_outcome_parity": (
+                    negative_outcome == negative_reference
+                    if negative_reference is not None
+                    else None
+                ),
+            }
+        )
+
+    all_candidate_rows = [*positive_rows, *negative_rows]
+    runs_complete = bool(candidate_bindings) and all(
+        row["execution_status"] == "COMPLETED" and row["inspection_status"] == "COMPLETE"
+        for row in all_candidate_rows
+    )
+    positive_controls_compliant = all(
+        _observation_outcome(run_root, row)["compliance"] == "COMPLIANT" for row in positive_rows
+    )
+    comparable = [row for row in outcome_comparisons if row["baseline_binding_matches"]]
+    parity = all(
+        row["positive_outcome_parity"] is True and row["negative_outcome_parity"] is True
+        for row in comparable
+    )
+    changed_control_set = bool(added or removed or changed)
+    uncovered_ids = _candidate_obligation_coverage(
+        candidate_info["representation_rows"], "AC_DATA_OWNERSHIP"
+    )
+    positive_cost = round(sum(float(row["duration_ms"]) for row in positive_rows), 3)
+    negative_cost = round(sum(float(row["duration_ms"]) for row in negative_rows), 3)
+    added_cost = round(
+        sum(
+            float(row["duration_ms"])
+            for binding, row in zip(candidate_bindings, positive_rows, strict=True)
+            if binding["representation_id"] in added
+        ),
+        3,
+    )
+    status = (
+        "PASS"
+        if candidate_info["validation_status"] == "valid"
+        and runs_complete
+        and positive_controls_compliant
+        and parity
+        else "FAIL"
+    )
+    return {
+        "status": status,
+        "candidate_present": True,
+        "reason": "The exact Method Ψ candidate passed source/configuration readback and its "
+        "active controls were independently executed on both source conditions."
+        if status == "PASS"
+        else (
+            "Candidate validation, independent execution, or reconstructed-baseline parity failed."
+        ),
+        "candidate_configuration_sha256": candidate_info["candidate_sha256"],
+        "materialized_candidate_path": candidate_info["path"],
+        "materialized_candidate_file_sha256": candidate_info["file_sha256"],
+        "configuration_version": candidate_info["configuration_version"],
+        "method_candidate_validation_status": candidate_info["validation_status"],
+        "active_representations": candidate_info["active_representations"],
+        "target_obligation": {
+            "obligation_id": "AC_DATA_OWNERSHIP",
+            "coverage_status": "COVERED" if uncovered_ids else "NOT_COVERED",
+            "representation_ids": uncovered_ids,
+            "adequacy_status": (
+                "NOT_ESTABLISHED_BY_STATIC_EXECUTION" if uncovered_ids else "NOT_COVERED"
+            ),
+        },
+        "positive_evaluations": positive_rows,
+        "negative_evaluations": negative_rows,
+        "outcome_comparisons": outcome_comparisons,
+        "reconstructed_b0_comparison": {
+            "baseline_identity": "PROSPECTIVE_RECONSTRUCTION_NOT_HISTORICAL",
+            "baseline_active_representation_ids": baseline_representation_ids,
+            "candidate_active_representation_ids": candidate_representation_ids,
+            "added_representation_ids": added,
+            "removed_representation_ids": removed,
+            "changed_representation_ids": changed,
+            "active_control_set_unchanged": not changed_control_set,
+            "matching_control_outcomes_equal": parity,
+        },
+        "execution_cost": {
+            "measurement": "single-run evaluator subprocess wall-clock samples",
+            "candidate_positive_total_ms": positive_cost,
+            "candidate_negative_total_ms": negative_cost,
+            "candidate_validation_total_ms": round(positive_cost + negative_cost, 3),
+            "additional_active_representations_per_ci_build": len(added),
+            "estimated_additional_ci_execution_ms_per_build": added_cost,
+            "estimate_scope": (
+                "New candidate controls only; one positive-source execution per build. "
+                "Single-run samples are not a performance benchmark."
+            ),
+        },
+    }
 
 
 def _git_run(repository: Path, *args: str) -> None:
