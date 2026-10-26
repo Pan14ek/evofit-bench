@@ -36,6 +36,7 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - `MONO_CI_PSI_EVIDENCE_REQUIREMENT_TEST_MATRIX.md` and `MONO_CI_PSI_EVIDENCE_BACKED_DEVELOPMENT_REPORT_UK.md` — implementation-to-test traceability and the source-revision-specific DEVELOPMENT run readback; neither is a scientific approval or result claim.
 - `MONO_CI_PSI_COVERAGE_ADAPTATION_REPORT_UK.md` — readback of the verified A0.3→A0.4 source coverage, the separate adaptation-necessity diagnosis, actual Ψ HOLD, and unchanged scientific gates.
 - `MONO_CI_PSI_TRANSITION_DEVELOPMENT_REPORT_UK.md` — concise Ukrainian record of the raw DEVELOPMENT result, hashes, uncertainties, verification and unchanged research gates.
+- `MONO_CI_PSI_A05_DEVELOPMENT_REPORT_UK.md` — source-bound A0.4→A0.5 ownership probes and actual Ψ HOLD/candidate readback; reports the PARTIAL engineering finding, private archive verification, and billing-blocked hosted run without advancing research gates.
 - `MONO_A1_REFERENCE_FREEZE_CHECKLIST.md` — preserved V1 checklist; see V2 for current W0 readiness
 - `MONO_A1_REFERENCE_FREEZE_CHECKLIST_V2.md` — current W0 checklist for `G-A1-C4-REF-FROZEN`; the source-pair identity sub-item is verified, while all scientific, method, fixture, custody, freeze, and readback blockers remain
 - `../../docs/MONO_E1_W0_READINESS_RESOLUTION.md` — W3 finding dispositions, authority boundary, complete-Q process, pair/P/input/custody blockers, and dependency-ordered plan; contains no scorer labels

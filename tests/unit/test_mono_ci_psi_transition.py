@@ -47,8 +47,7 @@ def test_archive_metadata_accepts_a05_namespace_and_preserves_transition_names()
 def test_a05_archive_schema_pins_the_prospective_a04_baseline() -> None:
     schema = json.loads(
         (
-            ROOT
-            / "experiments/execution/schemas/mono_ci_psi_transition_archive_v3.schema.json"
+            ROOT / "experiments/execution/schemas/mono_ci_psi_transition_archive_v3.schema.json"
         ).read_text(encoding="utf-8")
     )
 
