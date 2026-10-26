@@ -44,6 +44,20 @@ def test_archive_metadata_accepts_a05_namespace_and_preserves_transition_names()
         _validate_archive_metadata(workflow_url, "mono-ci-psi-a05-bad/tag", "uv 0.9.0")
 
 
+def test_a05_archive_schema_pins_the_prospective_a04_baseline() -> None:
+    schema = json.loads(
+        (
+            ROOT
+            / "experiments/execution/schemas/mono_ci_psi_transition_archive_v3.schema.json"
+        ).read_text(encoding="utf-8")
+    )
+
+    assert (
+        schema["$defs"]["baseline"]["properties"]["configuration_id"]["const"]
+        == "MONO_CI_RECONSTRUCTED_B0_A04_V1"
+    )
+
+
 def _evaluator_capability_case(tmp_path: Path, evaluator_id: str) -> dict[str, Any]:
     config_path = ROOT / EVALUATOR_CONFIGS[evaluator_id]
     config_bytes = config_path.read_bytes()

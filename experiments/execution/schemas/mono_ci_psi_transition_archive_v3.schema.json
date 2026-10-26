@@ -201,7 +201,7 @@
       ],
       "properties": {
         "configuration_id": {
-          "const": "MONO_CI_RECONSTRUCTED_B0_A03_V1"
+          "const": "MONO_CI_RECONSTRUCTED_B0_A04_V1"
         },
         "configuration_sha256": {
           "$ref": "#/$defs/sha256"

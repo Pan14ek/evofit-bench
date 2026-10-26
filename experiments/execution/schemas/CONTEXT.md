@@ -56,6 +56,7 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `mono_ci_b0_psi_development_archive_v1.schema.json` — persistent archive provenance, environment, reproduction commands, authorization boundary, and per-member integrity contract.
 - `mono_ci_b0_psi_score_v1.schema.json` — scorer-side categorical status record that forbids numeric outputs while the separate reference is unresolved.
 - `mono_ci_psi_transition_run_v2.schema.json` and `mono_ci_psi_transition_archive_v2.schema.json` — additive evidence-backed transition records with raw-output-bound inspection coverage, checksummed post-method necessity diagnostics and TEST_ONLY evidence bindings; allow decision values HOLD/REJECT/ACCEPT, require predictions only for ACCEPT, and preserve all scientific NO_GO/NOT_READY gates. V1 schemas remain supported for readback.
+- `mono_ci_psi_transition_archive_v3.schema.json` — A0.5 archive contract pinned to the prospective A0.4 baseline, while V1/V2 archive readback remains unchanged.
 - `mono_ci_psi_a05_experiment_evidence_v1.schema.json` — binds the A0.5 ownership positive/negative probes and, when Method Ψ materializes a candidate, its exact serialized candidate, independent evaluator runs, baseline comparison, obligation coverage, and measured incremental control cost.
 
 This is a selected list, not a complete source inventory.
