@@ -29,8 +29,8 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - `mono-ci-b0-psi-execution-v1/` and `tooling/mono_ci_b0_psi_execution.py` — separately versioned baseline-reconstruction proposal and DEVELOPMENT-only input/evaluator runner; preserves NO_GO and does not score.
 - `tooling/mono_ci_psi_transition.py` — additive one-transition A0.3→A0.4 Method P DEVELOPMENT execution and verified archive; keeps method runtime isolated from repository/Git/network access and leaves official NO_GO/NOT_READY gates intact.
 - `tooling/mono_ci_psi_evidence.py` — fresh A1 evaluator observations, V1-compatible / V2 source-scope evidence projection, source-inventory fact readback, and a run-local TEST_ONLY evidence trust context; it does not supply normative authority or semantic adequacy.
-- `tooling/mono_ci_psi_coverage.py` — independent Git-tree/config/manifest inspection coverage and source-derived static module-import/cycle comparison; exact dynamic dependency completeness remains UNKNOWN.
-- `schemas/mono_ci_psi_inspection_coverage_v1.schema.json` and `schemas/mono_ci_psi_adaptation_necessity_v1.schema.json` — additive DEVELOPMENT diagnostic contracts, separate from Method P operation selection.
+- `tooling/mono_ci_psi_coverage.py` — independent Git-tree/config/manifest inspection coverage and source-derived static module-import/cycle comparison; typed adaptation comparison keeps exact dynamic dependency completeness UNKNOWN.
+- `schemas/mono_ci_psi_inspection_coverage_v1.schema.json` and `schemas/mono_ci_psi_adaptation_necessity_v1.schema.json`/`v2` — additive DEVELOPMENT diagnostic contracts, separate from Method P operation selection; V2 records independent requirement provenance/completeness and separately verified evaluator capabilities, while V1 remains readable without reinterpretation.
 - `MONO_CI_PSI_EVIDENCE_REQUIREMENT_TEST_MATRIX.md` and `MONO_CI_PSI_EVIDENCE_BACKED_DEVELOPMENT_REPORT_UK.md` — implementation-to-test traceability and the source-revision-specific DEVELOPMENT run readback; neither is a scientific approval or result claim.
 - `MONO_CI_PSI_COVERAGE_ADAPTATION_REPORT_UK.md` — readback of the verified A0.3→A0.4 source coverage, the separate adaptation-necessity diagnosis, actual Ψ HOLD, and unchanged scientific gates.
 - `MONO_CI_PSI_TRANSITION_DEVELOPMENT_REPORT_UK.md` — concise Ukrainian record of the raw DEVELOPMENT result, hashes, uncertainties, verification and unchanged research gates.
@@ -92,7 +92,12 @@ adaptation sidecar. Independent coverage derives expected files from pinned Git
 trees, state manifests, and evaluator configuration, then compares output paths
 and source digests. The graph check compares static imports and cycles while
 leaving dynamic dependency completeness UNKNOWN. A separate adaptation
-diagnostic runs after Method P and is not supplied as a method input. Sidecar
+diagnostic runs after Method P and is not supplied as a method input. Its V2
+contract separates requirements extracted from pinned architecture manifests
+and catalog/authority uncertainty from typed capabilities extracted from
+evaluator configuration and raw observations. It compares them only through
+documented structured mappings; historical V1 reports retain schema and
+checksum readback without reinterpretation. Sidecar
 verification is explicitly `TEST_ONLY`; pair adequacy and normative mapping
 remain `UNDETERMINED`, and source-inventory readback recomputes only four module
 facts from digest-pinned inventory paths.

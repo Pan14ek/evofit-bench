@@ -28,6 +28,30 @@ _STATE_NAMES = {"A0_3_GOVERNED_MODULE_GRAPH", "A0_4_REPORT_QUERY_PORT"}
 _SHA1 = re.compile(r"^[a-f0-9]{40}$")
 _SHA256 = re.compile(r"^[a-f0-9]{64}$")
 
+_REQUIREMENT_CAPABILITY_MAPPINGS = {
+    "architecture.module_graph.allowed_dependency": {
+        "capability_type": "evaluator.module_graph.allowed_dependency_policy",
+        "mapping_id": "MAP-MODULE-DEPENDENCY-TO-A1-ALLOWED-EDGE-V1",
+        "comparison_rule": "EXACT_STRUCTURED_EDGE_MEMBERSHIP",
+    },
+    "architecture.public_api.reporting_query_port": {
+        "capability_type": "evaluator.public_api.reporting_query_port_boundary",
+        "mapping_id": "MAP-REPORTING-QUERY-PORT-TO-A1-PUBLIC-API-V1",
+        "comparison_rule": "SOURCE_TARGET_EXPORT_AND_FORBIDDEN_IMPORT_CHECK",
+    },
+    "architecture.public_api.temporary_exception": {
+        "capability_type": "evaluator.public_api.temporary_exception_scope",
+        "mapping_id": "MAP-TEMPORARY-EXCEPTION-TO-A1-STATE-SCOPE-V1",
+        "comparison_rule": "EXACT_EXCEPTION_AND_STATE_MEMBERSHIP",
+    },
+}
+
+_INDEPENDENT_REQUIREMENT_SOURCE_KINDS = {
+    "VERSIONED_ARCHITECTURE_STATE_MANIFEST",
+    "APPROVED_ARCHITECTURE_POLICY",
+    "APPROVED_GOVERNANCE_REQUIREMENT",
+}
+
 
 def verify_inspection_coverage(
     *,
@@ -345,21 +369,14 @@ def verify_inspection_coverage(
 
 
 def assess_adaptation_necessity(case: Mapping[str, Any]) -> dict[str, Any]:
-    """Classify whether a versioned fitness representation needs adaptation.
+    """Compare independent architecture requirements with typed evaluator capabilities.
 
-    The decision is intentionally generic: it compares verified before/after
-    control requirements with the control semantics represented by the exact
-    evaluator configuration. It does not emit or alter Method Ψ operations.
+    Requirement records must name a source kind that is independent of the
+    evaluator configuration. Matching labels are never evidence of semantic
+    coverage: only the versioned, structured mappings below can compare a
+    requirement to a capability. This DEVELOPMENT diagnostic does not emit or
+    alter Method Ψ operations.
     """
-    required = case.get("required_controls_after")
-    represented = case.get("represented_controls_after")
-    if not isinstance(required, list) or not isinstance(represented, list):
-        raise ContractValidationError("PSI_ADAPTATION_ASSESSMENT_CONTROL_SET_INVALID")
-    required_set = {item for item in required if isinstance(item, str)}
-    represented_set = {item for item in represented if isinstance(item, str)}
-    if len(required_set) != len(required) or len(represented_set) != len(represented):
-        raise ContractValidationError("PSI_ADAPTATION_ASSESSMENT_CONTROL_SET_INVALID")
-
     before_sha = case.get("configuration_sha256_before")
     after_sha = case.get("configuration_sha256_after")
     if not isinstance(before_sha, str) or not _SHA256.fullmatch(before_sha):
@@ -367,7 +384,25 @@ def assess_adaptation_necessity(case: Mapping[str, Any]) -> dict[str, Any]:
     if not isinstance(after_sha, str) or not _SHA256.fullmatch(after_sha):
         raise ContractValidationError("PSI_ADAPTATION_ASSESSMENT_CONFIG_IDENTITY_INVALID")
 
-    missing_controls = sorted(required_set - represented_set)
+    requirements = case.get("requirements_after")
+    capabilities = case.get("capabilities_after")
+    mappings = case.get("requirement_capability_mappings")
+    unresolved_requirements = case.get("unresolved_requirements_after")
+    if (
+        not isinstance(requirements, list)
+        or not isinstance(capabilities, list)
+        or not isinstance(mappings, list)
+        or not isinstance(unresolved_requirements, list)
+    ):
+        raise ContractValidationError("PSI_ADAPTATION_ASSESSMENT_INVENTORY_INVALID")
+
+    comparisons, missing_controls, comparison_reasons = _compare_requirement_capabilities(
+        requirements=requirements,
+        capabilities=capabilities,
+        mappings=mappings,
+        state=str(case.get("architecture_state_after", "")),
+    )
+
     mismatches: list[str] = []
     if case.get("evaluator_identity_verified") is not True:
         mismatches.append("EVALUATOR_IDENTITY_MISMATCH")
@@ -375,30 +410,48 @@ def assess_adaptation_necessity(case: Mapping[str, Any]) -> dict[str, Any]:
         mismatches.append("ARCHITECTURE_IDENTITY_MISMATCH")
     if case.get("configuration_identity_verified") is not True:
         mismatches.append("CONFIGURATION_IDENTITY_MISMATCH")
+
+    evidence_ready = (
+        case.get("source_inspection_before") == "COMPLETE"
+        and case.get("source_inspection_after") == "COMPLETE"
+        and case.get("evaluator_compliance_before") == "COMPLIANT"
+        and case.get("evaluator_compliance_after") == "COMPLIANT"
+        and case.get("rule_scope_match_before") is True
+        and case.get("rule_scope_match_after") is True
+    )
+    inventory_reasons: list[str] = []
+    if case.get("requirement_inventory_status_after") != "COMPLETE_FOR_DECLARED_MANIFEST_TYPES":
+        inventory_reasons.append("REQUIREMENT_INVENTORY_INCOMPLETE_WITHIN_DECLARED_SCOPE")
+    if case.get("requirement_universe_completeness_after") != "COMPLETE_WITHIN_DECLARED_SCOPE":
+        inventory_reasons.append("REQUIREMENT_UNIVERSE_COMPLETENESS_UNKNOWN")
+    if case.get("capability_inventory_status_after") != "VERIFIED_FOR_DECLARED_STATIC_SCOPE":
+        inventory_reasons.append("EVALUATOR_CAPABILITY_INVENTORY_NOT_VERIFIED")
+    if unresolved_requirements:
+        inventory_reasons.append("INDEPENDENT_REQUIREMENTS_REMAIN_UNRESOLVED")
+    if case.get("normative_applicability") != "APPROVED":
+        inventory_reasons.append("NORMATIVE_APPLICABILITY_NOT_APPROVED")
+
     if mismatches:
         status = "MISMATCH_DETECTED"
         reason_codes = mismatches
+    elif not evidence_ready:
+        status = "NOT_EVALUABLE"
+        reason_codes = ["INSUFFICIENT_VERIFIED_SCOPE_OR_COMPLIANCE_EVIDENCE"]
+    elif before_sha != after_sha:
+        status = "NOT_EVALUABLE"
+        reason_codes = ["BEFORE_AFTER_CONFIGURATION_IDENTITY_CHANGED"]
+    elif missing_controls and not inventory_reasons and not comparison_reasons:
+        status = "ADAPTATION_NEEDED"
+        reason_codes = ["REQUIRED_POST_TRANSITION_CONTROLS_UNREPRESENTED"]
+    elif comparison_reasons or inventory_reasons:
+        status = "NOT_EVALUABLE"
+        reason_codes = sorted(set(comparison_reasons + inventory_reasons))
+    elif missing_controls:
+        status = "NOT_EVALUABLE"
+        reason_codes = ["UNREPRESENTED_CONTROL_WITH_UNRESOLVED_EVIDENCE"]
     else:
-        evidence_ready = (
-            case.get("source_inspection_before") == "COMPLETE"
-            and case.get("source_inspection_after") == "COMPLETE"
-            and case.get("evaluator_compliance_before") == "COMPLIANT"
-            and case.get("evaluator_compliance_after") == "COMPLIANT"
-            and case.get("rule_scope_match_before") is True
-            and case.get("rule_scope_match_after") is True
-        )
-        if not evidence_ready:
-            status = "NOT_EVALUABLE"
-            reason_codes = ["INSUFFICIENT_VERIFIED_SCOPE_OR_COMPLIANCE_EVIDENCE"]
-        elif missing_controls:
-            status = "ADAPTATION_NEEDED"
-            reason_codes = ["REQUIRED_POST_TRANSITION_CONTROLS_UNREPRESENTED"]
-        elif before_sha == after_sha:
-            status = "RETAIN_CANDIDATE"
-            reason_codes = ["EXISTING_CONFIGURATION_COVERS_VERIFIED_POST_TRANSITION_SCOPE"]
-        else:
-            status = "NOT_EVALUABLE"
-            reason_codes = ["BEFORE_AFTER_CONFIGURATION_IDENTITY_CHANGED"]
+        status = "RETAIN_CANDIDATE"
+        reason_codes = ["EXISTING_CONFIGURATION_COVERS_VERIFIED_POST_TRANSITION_SCOPE"]
 
     pair_semantic = case.get("pair_semantic_validity")
     missing_proofs = sorted(
@@ -411,6 +464,8 @@ def assess_adaptation_necessity(case: Mapping[str, Any]) -> dict[str, Any]:
             ),
             (case.get("baseline_identity") != "HISTORICAL", "BASELINE_NOT_HISTORICALLY_IDENTIFIED"),
             (case.get("independent_review") is not True, "INDEPENDENT_REVIEW_NOT_PERFORMED"),
+            *[(reason in inventory_reasons, reason) for reason in inventory_reasons],
+            *[(reason in comparison_reasons, reason) for reason in comparison_reasons],
         )
         if condition
     )
@@ -426,9 +481,235 @@ def assess_adaptation_necessity(case: Mapping[str, Any]) -> dict[str, Any]:
         "assessment_status": status,
         "reason_codes": sorted(set(reason_codes)),
         "missing_post_transition_controls": missing_controls,
+        "requirement_capability_comparison": comparisons,
         "missing_proofs": missing_proofs,
         "operation_justification": operation_justification,
     }
+
+
+def _compare_requirement_capabilities(
+    *,
+    requirements: list[Any],
+    capabilities: list[Any],
+    mappings: list[Any],
+    state: str,
+) -> tuple[list[dict[str, Any]], list[str], list[str]]:
+    requirement_ids: set[str] = set()
+    capability_by_type: dict[str, Mapping[str, Any]] = {}
+    mapping_by_type: dict[str, Mapping[str, Any]] = {}
+    for capability in capabilities:
+        if not isinstance(capability, Mapping):
+            raise ContractValidationError("PSI_ADAPTATION_ASSESSMENT_CAPABILITY_INVALID")
+        capability_type = capability.get("capability_type")
+        if not isinstance(capability_type, str) or capability_type in capability_by_type:
+            raise ContractValidationError("PSI_ADAPTATION_ASSESSMENT_CAPABILITY_INVALID")
+        capability_by_type[capability_type] = capability
+    for mapping in mappings:
+        if not isinstance(mapping, Mapping):
+            raise ContractValidationError("PSI_ADAPTATION_ASSESSMENT_MAPPING_INVALID")
+        requirement_type = mapping.get("requirement_type")
+        if not isinstance(requirement_type, str) or requirement_type in mapping_by_type:
+            raise ContractValidationError("PSI_ADAPTATION_ASSESSMENT_MAPPING_INVALID")
+        mapping_by_type[requirement_type] = mapping
+
+    comparisons: list[dict[str, Any]] = []
+    missing_controls: list[str] = []
+    unresolved_reasons: set[str] = set()
+    for requirement in requirements:
+        if not isinstance(requirement, Mapping):
+            raise ContractValidationError("PSI_ADAPTATION_ASSESSMENT_REQUIREMENT_INVALID")
+        control_id = requirement.get("control_id")
+        requirement_type = requirement.get("requirement_type")
+        if (
+            not isinstance(control_id, str)
+            or not control_id
+            or control_id in requirement_ids
+            or not isinstance(requirement_type, str)
+        ):
+            raise ContractValidationError("PSI_ADAPTATION_ASSESSMENT_REQUIREMENT_INVALID")
+        requirement_ids.add(control_id)
+        source_ref = requirement.get("source_ref")
+        independent_source = (
+            requirement.get("source_kind") in _INDEPENDENT_REQUIREMENT_SOURCE_KINDS
+            and isinstance(source_ref, Mapping)
+            and isinstance(source_ref.get("path"), str)
+            and bool(source_ref.get("path"))
+            and isinstance(source_ref.get("sha256"), str)
+            and _SHA256.fullmatch(source_ref["sha256"]) is not None
+        )
+        mapping_spec = _REQUIREMENT_CAPABILITY_MAPPINGS.get(requirement_type)
+        mapping = mapping_by_type.get(requirement_type)
+        capability: Mapping[str, Any] | None = None
+        mapping_id: str | None = None
+        capability_id: str | None = None
+        if mapping_spec is not None and mapping is not None:
+            capability = capability_by_type.get(mapping_spec["capability_type"])
+            raw_id = mapping.get("mapping_id")
+            if isinstance(raw_id, str):
+                mapping_id = raw_id
+            if capability is not None and isinstance(capability.get("capability_id"), str):
+                capability_id = str(capability["capability_id"])
+
+        result = "UNRESOLVED"
+        reason: str | None = None
+        if not independent_source:
+            reason = "REQUIREMENT_SOURCE_NOT_INDEPENDENT_OR_NOT_DIGEST_BOUND"
+            unresolved_reasons.add("REQUIREMENT_SOURCE_NOT_INDEPENDENT_OR_NOT_DIGEST_BOUND")
+        elif requirement.get("detail_status") != "SPECIFIED":
+            reason = "INDEPENDENT_REQUIREMENT_DETAIL_UNRESOLVED"
+            unresolved_reasons.add("INDEPENDENT_REQUIREMENT_DETAIL_UNRESOLVED")
+        elif mapping_spec is None or mapping is None:
+            reason = "REQUIREMENT_CAPABILITY_MAPPING_UNVERIFIED"
+            unresolved_reasons.add("REQUIREMENT_CAPABILITY_MAPPING_UNVERIFIED")
+        elif (
+            mapping.get("mapping_id") != mapping_spec["mapping_id"]
+            or mapping.get("status") != "VERIFIED_RULE_IMPLEMENTATION"
+            or mapping.get("comparison_rule") != mapping_spec["comparison_rule"]
+            or mapping.get("capability_type") != mapping_spec["capability_type"]
+        ):
+            reason = "REQUIREMENT_CAPABILITY_MAPPING_UNVERIFIED"
+            unresolved_reasons.add("REQUIREMENT_CAPABILITY_MAPPING_UNVERIFIED")
+        elif capability is None:
+            result = "NOT_COVERED"
+            reason = "MAPPED_EVALUATOR_CAPABILITY_NOT_DECLARED"
+            missing_controls.append(control_id)
+        elif capability.get("verification_status") != "VERIFIED_STATIC_SCOPE":
+            reason = "EVALUATOR_CAPABILITY_NOT_VERIFIED"
+            unresolved_reasons.add("EVALUATOR_CAPABILITY_NOT_VERIFIED")
+        else:
+            matched = _mapped_requirement_is_covered(
+                requirement_type=requirement_type,
+                requirement_value=requirement.get("value"),
+                capability_value=capability.get("value"),
+                state=state,
+            )
+            if matched is None:
+                reason = "REQUIREMENT_CAPABILITY_SEMANTICS_UNRESOLVED"
+                unresolved_reasons.add("REQUIREMENT_CAPABILITY_SEMANTICS_UNRESOLVED")
+            elif matched:
+                result = "COVERED"
+            else:
+                result = "NOT_COVERED"
+                reason = "REQUIRED_CONTROL_NOT_REPRESENTED_BY_VERIFIED_CAPABILITY"
+                missing_controls.append(control_id)
+        comparisons.append(
+            {
+                "control_id": control_id,
+                "requirement_type": requirement_type,
+                "capability_id": capability_id,
+                "mapping_id": mapping_id,
+                "mapping_status": (
+                    "VERIFIED_RULE_IMPLEMENTATION"
+                    if mapping_spec is not None
+                    and mapping is not None
+                    and mapping.get("mapping_id") == mapping_spec["mapping_id"]
+                    and mapping.get("status") == "VERIFIED_RULE_IMPLEMENTATION"
+                    and mapping.get("comparison_rule") == mapping_spec["comparison_rule"]
+                    and mapping.get("capability_type") == mapping_spec["capability_type"]
+                    else "UNVERIFIED"
+                ),
+                "comparison_result": result,
+                "reason": reason,
+            }
+        )
+    return (
+        sorted(comparisons, key=lambda row: row["control_id"]),
+        sorted(set(missing_controls)),
+        sorted(unresolved_reasons),
+    )
+
+
+def _mapped_requirement_is_covered(
+    *,
+    requirement_type: str,
+    requirement_value: Any,
+    capability_value: Any,
+    state: str,
+) -> bool | None:
+    if not isinstance(requirement_value, Mapping) or not isinstance(capability_value, Mapping):
+        return None
+    if requirement_type == "architecture.module_graph.allowed_dependency":
+        edges = capability_value.get("edges")
+        if not isinstance(edges, list):
+            return None
+        return any(edge == dict(requirement_value) for edge in edges if isinstance(edge, Mapping))
+    if requirement_type == "architecture.public_api.reporting_query_port":
+        required_fields = (
+            "source_module",
+            "public_target_module",
+            "public_imported_name",
+            "forbidden_target_module",
+            "forbidden_imported_name",
+        )
+        if any(not isinstance(requirement_value.get(key), str) for key in required_fields):
+            return None
+        target_module = str(requirement_value["public_target_module"])
+        target_parts = target_module.split(".")
+        if len(target_parts) < 4 or target_parts[:2] != ["app", "modules"]:
+            return None
+        capability_name = target_parts[2]
+        public_pattern = capability_value.get("public_module_pattern")
+        interfaces = capability_value.get("interfaces_by_capability")
+        exports = capability_value.get("exports_by_capability")
+        imports = capability_value.get("cross_capability_imports")
+        exception = capability_value.get("legacy_exception")
+        if (
+            not isinstance(public_pattern, str)
+            or not isinstance(interfaces, Mapping)
+            or not isinstance(exports, Mapping)
+            or not isinstance(imports, list)
+        ):
+            return None
+        expected_pattern = public_pattern.replace("{capability}", capability_name)
+        public_name = str(requirement_value["public_imported_name"])
+        declared = interfaces.get(capability_name)
+        exported = exports.get(capability_name)
+        observed_public_import = any(
+            isinstance(row, Mapping)
+            and row.get("source_module") == requirement_value["source_module"]
+            and row.get("target_module") == target_module
+            and row.get("imported_name") == public_name
+            and row.get("classification") == "declared_public_interface"
+            for row in imports
+        )
+        observed_forbidden_import = any(
+            isinstance(row, Mapping)
+            and row.get("source_module") == requirement_value["source_module"]
+            and row.get("target_module") == requirement_value["forbidden_target_module"]
+            and row.get("imported_name") == requirement_value["forbidden_imported_name"]
+            for row in imports
+        )
+        exception_active = (
+            isinstance(exception, Mapping)
+            and state in exception.get("allowed_architecture_states", [])
+            and exception.get("source_module") == requirement_value["source_module"]
+            and exception.get("target_module") == requirement_value["forbidden_target_module"]
+            and requirement_value["forbidden_imported_name"] in exception.get("imported_names", [])
+        )
+        return (
+            expected_pattern == target_module
+            and isinstance(declared, Mapping)
+            and declared.get(public_name) == "function"
+            and isinstance(exported, Mapping)
+            and exported.get(public_name) == "function"
+            and observed_public_import
+            and not observed_forbidden_import
+            and not exception_active
+        )
+    if requirement_type == "architecture.public_api.temporary_exception":
+        configured = capability_value.get("legacy_exception")
+        if not isinstance(configured, Mapping):
+            return False
+        return (
+            configured.get("id") == requirement_value.get("id")
+            and configured.get("source_module") == requirement_value.get("source_module")
+            and configured.get("target_module") == requirement_value.get("target_module")
+            and set(configured.get("imported_names", []))
+            == set(requirement_value.get("imported_names", []))
+            and state in configured.get("allowed_architecture_states", [])
+            and state in requirement_value.get("allowed_architecture_states", [])
+        )
+    return None
 
 
 def _manifest_requires_evaluator(manifest: Mapping[str, Any], evaluator_id: str) -> bool:

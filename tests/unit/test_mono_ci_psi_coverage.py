@@ -309,6 +309,33 @@ def test_graph_cycle_scope_is_reconstructed_from_source_imports(tmp_path: Path) 
 
 
 def _adaptation_case(**updates: Any) -> dict[str, Any]:
+    requirement_source = {
+        "source_kind": "VERSIONED_ARCHITECTURE_STATE_MANIFEST",
+        "source_ref": {
+            "path": "architecture/states/A0_4_REPORT_QUERY_PORT.yaml",
+            "sha256": "b" * 64,
+        },
+    }
+    requirement = {
+        "control_id": "architecture.module_graph.allowed_dependency:alpha->beta",
+        "requirement_type": "architecture.module_graph.allowed_dependency",
+        "detail_status": "SPECIFIED",
+        "value": {"from": "alpha", "to": "beta"},
+        **requirement_source,
+    }
+    capability = {
+        "capability_id": "evaluator.module_graph.allowed_dependency_policy",
+        "capability_type": "evaluator.module_graph.allowed_dependency_policy",
+        "verification_status": "VERIFIED_STATIC_SCOPE",
+        "value": {"edges": [{"from": "alpha", "to": "beta"}]},
+    }
+    mapping = {
+        "requirement_type": "architecture.module_graph.allowed_dependency",
+        "capability_type": "evaluator.module_graph.allowed_dependency_policy",
+        "mapping_id": "MAP-MODULE-DEPENDENCY-TO-A1-ALLOWED-EDGE-V1",
+        "comparison_rule": "EXACT_STRUCTURED_EDGE_MEMBERSHIP",
+        "status": "VERIFIED_RULE_IMPLEMENTATION",
+    }
     result: dict[str, Any] = {
         "configuration_sha256_before": "a" * 64,
         "configuration_sha256_after": "a" * 64,
@@ -321,12 +348,16 @@ def _adaptation_case(**updates: Any) -> dict[str, Any]:
         "evaluator_compliance_after": "COMPLIANT",
         "rule_scope_match_before": True,
         "rule_scope_match_after": True,
-        "required_controls_before": ["control:a"],
-        "required_controls_after": ["control:a"],
-        "represented_controls_before": ["control:a"],
-        "represented_controls_after": ["control:a"],
+        "architecture_state_after": "A0_4_REPORT_QUERY_PORT",
+        "requirements_after": [requirement],
+        "capabilities_after": [capability],
+        "requirement_capability_mappings": [mapping],
+        "unresolved_requirements_after": [],
+        "requirement_inventory_status_after": "COMPLETE_FOR_DECLARED_MANIFEST_TYPES",
+        "requirement_universe_completeness_after": "COMPLETE_WITHIN_DECLARED_SCOPE",
+        "capability_inventory_status_after": "VERIFIED_FOR_DECLARED_STATIC_SCOPE",
         "pair_semantic_validity": "UNKNOWN",
-        "normative_applicability": "UNKNOWN",
+        "normative_applicability": "APPROVED",
         "baseline_identity": "PROSPECTIVE_RECONSTRUCTION_NOT_HISTORICAL",
         "independent_review": False,
     }
@@ -334,30 +365,101 @@ def _adaptation_case(**updates: Any) -> dict[str, Any]:
     return result
 
 
-def test_existing_representation_can_be_a_retain_candidate_with_open_authority() -> None:
+def test_genuinely_covered_independent_requirement_is_retain_candidate() -> None:
     assessment = assess_adaptation_necessity(_adaptation_case())
 
     assert assessment["assessment_status"] == "RETAIN_CANDIDATE"
+    assert assessment["requirement_capability_comparison"] == [
+        {
+            "control_id": "architecture.module_graph.allowed_dependency:alpha->beta",
+            "requirement_type": "architecture.module_graph.allowed_dependency",
+            "capability_id": "evaluator.module_graph.allowed_dependency_policy",
+            "mapping_id": "MAP-MODULE-DEPENDENCY-TO-A1-ALLOWED-EDGE-V1",
+            "mapping_status": "VERIFIED_RULE_IMPLEMENTATION",
+            "comparison_result": "COVERED",
+            "reason": None,
+        }
+    ]
     assert "INDEPENDENT_PAIR_SEMANTIC_VALIDITY_NOT_ESTABLISHED" in assessment["missing_proofs"]
     assert assessment["operation_justification"]["RETAIN"] == "TECHNICAL_CANDIDATE_ONLY"
     assert assessment["operation_justification"]["HOLD"].startswith("REQUIRED")
 
 
-def test_demonstrably_stale_representation_is_diagnosed_generically() -> None:
+def test_new_independent_requirement_missing_from_unchanged_evaluator_is_detected() -> None:
+    case = _adaptation_case()
+    case["requirements_after"] = [
+        case["requirements_after"][0],
+        {
+            "control_id": "architecture.module_graph.allowed_dependency:beta->gamma",
+            "requirement_type": "architecture.module_graph.allowed_dependency",
+            "detail_status": "SPECIFIED",
+            "value": {"from": "beta", "to": "gamma"},
+            "source_kind": "VERSIONED_ARCHITECTURE_STATE_MANIFEST",
+            "source_ref": {
+                "path": "architecture/states/A0_4_REPORT_QUERY_PORT.yaml",
+                "sha256": "c" * 64,
+            },
+        },
+    ]
+
+    assessment = assess_adaptation_necessity(case)
+
+    assert assessment["assessment_status"] == "ADAPTATION_NEEDED"
+    assert assessment["missing_post_transition_controls"] == [
+        "architecture.module_graph.allowed_dependency:beta->gamma"
+    ]
+    assert assessment["requirement_capability_comparison"][1]["comparison_result"] == (
+        "NOT_COVERED"
+    )
+
+
+def test_incomplete_or_unresolved_requirement_inventory_is_not_evaluable() -> None:
     assessment = assess_adaptation_necessity(
         _adaptation_case(
-            required_controls_after=["control:a", "control:b"],
-            represented_controls_after=["control:a"],
+            requirement_inventory_status_after="INCOMPLETE",
+            requirement_universe_completeness_after="UNKNOWN",
+            unresolved_requirements_after=[{"control_id": "catalog.AC_MODULE_GRAPH"}],
+            normative_applicability="UNKNOWN",
         )
     )
 
-    assert assessment["assessment_status"] == "ADAPTATION_NEEDED"
-    assert assessment["missing_post_transition_controls"] == ["control:b"]
+    assert assessment["assessment_status"] == "NOT_EVALUABLE"
+    assert "INDEPENDENT_REQUIREMENTS_REMAIN_UNRESOLVED" in assessment["reason_codes"]
+    assert "REQUIREMENT_UNIVERSE_COMPLETENESS_UNKNOWN" in assessment["reason_codes"]
+    assert "NORMATIVE_APPLICABILITY_NOT_APPROVED" in assessment["reason_codes"]
+
+
+def test_evaluator_configuration_cannot_substitute_for_independent_requirement_source() -> None:
+    case = _adaptation_case()
+    case["requirements_after"][0]["source_kind"] = "EVALUATOR_CONFIGURATION"
+    assessment = assess_adaptation_necessity(case)
+
+    assert assessment["assessment_status"] == "NOT_EVALUABLE"
+    assert "REQUIREMENT_SOURCE_NOT_INDEPENDENT_OR_NOT_DIGEST_BOUND" in assessment["reason_codes"]
+    assert assessment["requirement_capability_comparison"][0]["comparison_result"] == ("UNRESOLVED")
+
+
+def test_same_label_does_not_prove_an_unverified_semantic_mapping() -> None:
+    case = _adaptation_case()
+    case["requirement_capability_mappings"][0]["mapping_id"] = "same-label"
+    case["requirement_capability_mappings"][0]["status"] = "UNVERIFIED"
+    case["capabilities_after"][0]["capability_id"] = (
+        "architecture.module_graph.allowed_dependency:alpha->beta"
+    )
+    assessment = assess_adaptation_necessity(case)
+
+    assert assessment["assessment_status"] == "NOT_EVALUABLE"
+    assert "REQUIREMENT_CAPABILITY_MAPPING_UNVERIFIED" in assessment["reason_codes"]
+    assert assessment["requirement_capability_comparison"][0]["comparison_result"] == ("UNRESOLVED")
 
 
 def test_missing_scope_or_semantic_basis_produces_not_evaluable() -> None:
     assessment = assess_adaptation_necessity(
-        _adaptation_case(rule_scope_match_after=None, source_inspection_after="INCOMPLETE")
+        _adaptation_case(
+            rule_scope_match_after=None,
+            source_inspection_after="INCOMPLETE",
+            requirement_universe_completeness_after="UNKNOWN",
+        )
     )
 
     assert assessment["assessment_status"] == "NOT_EVALUABLE"

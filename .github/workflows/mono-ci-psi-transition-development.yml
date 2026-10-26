@@ -21,6 +21,7 @@ on:
       - experiments/execution/schemas/mono_ci_psi_transition_*.schema.json
       - experiments/execution/schemas/mono_ci_psi_inspection_coverage_v1.schema.json
       - experiments/execution/schemas/mono_ci_psi_adaptation_necessity_v1.schema.json
+      - experiments/execution/schemas/mono_ci_psi_adaptation_necessity_v2.schema.json
       - experiments/execution/MONO_CI_PSI_EVIDENCE_REQUIREMENT_TEST_MATRIX.md
       - experiments/execution/CONTEXT.md
       - experiments/execution/tooling/CONTEXT.md

@@ -38,6 +38,7 @@ from experiments.execution.tooling.mono_ci_b0_psi_execution import (
     verify_execution_proposal,
 )
 from experiments.execution.tooling.mono_ci_psi_coverage import (
+    _REQUIREMENT_CAPABILITY_MAPPINGS,
     _manifest_requires_evaluator,
     assess_adaptation_necessity,
     verify_inspection_coverage,
@@ -83,7 +84,8 @@ STATE_MANIFESTS_PATH = "provenance/transition-state-manifests.json"
 TRANSITION_SCHEMA_V1 = "mono_ci_psi_transition_run_v1.schema.json"
 TRANSITION_SCHEMA_V2 = "mono_ci_psi_transition_run_v2.schema.json"
 INSPECTION_COVERAGE_SCHEMA = "mono_ci_psi_inspection_coverage_v1.schema.json"
-ADAPTATION_NECESSITY_SCHEMA = "mono_ci_psi_adaptation_necessity_v1.schema.json"
+ADAPTATION_NECESSITY_SCHEMA_V1 = "mono_ci_psi_adaptation_necessity_v1.schema.json"
+ADAPTATION_NECESSITY_SCHEMA_V2 = "mono_ci_psi_adaptation_necessity_v2.schema.json"
 RUN_ID_PATTERN = re.compile(r"^DEV_PSI_TRANSITION_[A-Za-z0-9_-]{1,48}$")
 RUNTIME_MODULES = (
     "contracts.py",
@@ -1029,6 +1031,7 @@ def _build_adaptation_necessity_report(
     proposal_path = run_root / "provenance/reconstructed-b0-proposal.json"
     proposal = json.loads(proposal_path.read_text(encoding="utf-8"))
     proposal_rows = {row["evaluator_id"]: row for row in proposal["representations"]}
+    manifest_source_rows = {row["state"]: row for row in state_manifest_sidecar["manifests"]}
     manifest_rows = {
         row["state"]: yaml.safe_load(row["content"]) for row in state_manifest_sidecar["manifests"]
     }
@@ -1037,6 +1040,17 @@ def _build_adaptation_necessity_report(
         "before": manifest_rows["before"],
         "after": manifest_rows["after"],
     }
+    requirement_sources = _transition_requirement_sources(repo, run_root)
+    requirement_mappings = [
+        {
+            "requirement_type": requirement_type,
+            "capability_type": mapping["capability_type"],
+            "mapping_id": mapping["mapping_id"],
+            "comparison_rule": mapping["comparison_rule"],
+            "status": "VERIFIED_RULE_IMPLEMENTATION",
+        }
+        for requirement_type, mapping in sorted(_REQUIREMENT_CAPABILITY_MAPPINGS.items())
+    ]
     changed_paths = _git_text(
         repo,
         "diff-tree",
@@ -1147,14 +1161,46 @@ def _build_adaptation_necessity_report(
                 )
             )
         )
-        before_controls = _configured_control_tokens(
-            evaluator_id, config, before_manifest, before_state_name
+        requirements_before = _manifest_requirements_for_evaluator(
+            evaluator_id,
+            before_manifest,
+            before_state_name,
+            manifest_source_rows["before"],
         )
-        after_controls = _configured_control_tokens(
-            evaluator_id, config, after_manifest, after_state_name
+        requirements_after = _manifest_requirements_for_evaluator(
+            evaluator_id,
+            after_manifest,
+            after_state_name,
+            manifest_source_rows["after"],
         )
-        represented_before = before_controls if bound_representation else []
-        represented_after = after_controls if bound_representation else []
+        unresolved_requirements = _unresolved_architecture_requirements(
+            evaluator_id=evaluator_id,
+            manifest=after_manifest,
+            manifest_source=manifest_source_rows["after"],
+            sources=requirement_sources,
+        )
+        capability_inventory_before = _evaluator_capabilities(
+            evaluator_id=evaluator_id,
+            state=before_state_name,
+            config=config,
+            run=before_run,
+            coverage=before_coverage,
+            representation_bound=bound_representation,
+            configuration_sha256=configuration_sha,
+            run_root=run_root,
+            config_path=config_path,
+        )
+        capability_inventory_after = _evaluator_capabilities(
+            evaluator_id=evaluator_id,
+            state=after_state_name,
+            config=config,
+            run=after_run,
+            coverage=after_coverage,
+            representation_bound=bound_representation,
+            configuration_sha256=configuration_sha,
+            run_root=run_root,
+            config_path=config_path,
+        )
         pair = next(
             (
                 row
@@ -1195,10 +1241,14 @@ def _build_adaptation_necessity_report(
             "evaluator_compliance_after": after_compliance,
             "rule_scope_match_before": rule_scope_before,
             "rule_scope_match_after": rule_scope_after,
-            "required_controls_before": before_controls,
-            "required_controls_after": after_controls,
-            "represented_controls_before": represented_before,
-            "represented_controls_after": represented_after,
+            "architecture_state_after": after_state_name,
+            "requirements_after": requirements_after,
+            "capabilities_after": capability_inventory_after["capabilities"],
+            "requirement_capability_mappings": requirement_mappings,
+            "unresolved_requirements_after": unresolved_requirements,
+            "requirement_inventory_status_after": ("COMPLETE_FOR_DECLARED_MANIFEST_TYPES"),
+            "requirement_universe_completeness_after": "UNKNOWN",
+            "capability_inventory_status_after": capability_inventory_after["status"],
             "pair_semantic_validity": pair_semantic_validity,
             "normative_applicability": applicability,
             "baseline_identity": baseline["identity_status"],
@@ -1320,10 +1370,14 @@ def _build_adaptation_necessity_report(
                 "inspection_completeness": inspection,
                 "compliance_observations": compliance,
                 "rule_semantics": {
-                    "required_controls_before": before_controls,
-                    "required_controls_after": after_controls,
-                    "represented_controls_before": represented_before,
-                    "represented_controls_after": represented_after,
+                    "required_controls_before": [row["control_id"] for row in requirements_before],
+                    "required_controls_after": [row["control_id"] for row in requirements_after],
+                    "represented_controls_before": [
+                        row["capability_id"] for row in capability_inventory_before["capabilities"]
+                    ],
+                    "represented_controls_after": [
+                        row["capability_id"] for row in capability_inventory_after["capabilities"]
+                    ],
                     "scope_limitations": sorted(
                         set(config.get("coverage_limits", []))
                         | set(after_coverage.get("uncertainties", []))
@@ -1334,6 +1388,50 @@ def _build_adaptation_necessity_report(
                         )
                     ),
                 },
+                "requirement_inventory": {
+                    "declared_scope": (
+                        "VERSIONED_STATE_MANIFEST_ALLOWED_DEPENDENCIES_QUERY_PORTS_AND_EXCEPTIONS"
+                    ),
+                    "completeness_within_declared_scope": ("COMPLETE_FOR_DECLARED_MANIFEST_TYPES"),
+                    "universe_completeness": "UNKNOWN",
+                    "authority_status": (
+                        "VERSIONED_MANIFESTS_SOURCE_BOUND; "
+                        "CATALOG_DETAIL_AND_POLICY_APPROVAL_UNRESOLVED"
+                    ),
+                    "requirements_before": requirements_before,
+                    "requirements_after": requirements_after,
+                    "unresolved_requirements": unresolved_requirements,
+                    "governance_requirements_before": _manifest_governance_requirements(
+                        before_manifest, manifest_source_rows["before"]
+                    ),
+                    "governance_requirements_after": _manifest_governance_requirements(
+                        after_manifest, manifest_source_rows["after"]
+                    ),
+                    "source_refs": requirement_sources["source_refs"]
+                    + [
+                        {
+                            "path": manifest_source_rows["before"]["path"],
+                            "sha256": manifest_source_rows["before"]["sha256"],
+                            "source_kind": "VERSIONED_ARCHITECTURE_STATE_MANIFEST",
+                        },
+                        {
+                            "path": manifest_source_rows["after"]["path"],
+                            "sha256": manifest_source_rows["after"]["sha256"],
+                            "source_kind": "VERSIONED_ARCHITECTURE_STATE_MANIFEST",
+                        },
+                    ],
+                },
+                "capability_inventory": {
+                    "before_status": capability_inventory_before["status"],
+                    "after_status": capability_inventory_after["status"],
+                    "capabilities_before": capability_inventory_before["capabilities"],
+                    "capabilities_after": capability_inventory_after["capabilities"],
+                    "mapping_catalog_id": "A1_ARCHITECTURE_REQUIREMENT_TO_CAPABILITY_V1",
+                    "mapping_authority": (
+                        "VERIFIED_RULE_IMPLEMENTATION_NOT_INDEPENDENT_SEMANTIC_APPROVAL"
+                    ),
+                },
+                "requirement_capability_comparison": diagnosis["requirement_capability_comparison"],
                 "pair_semantic_validity": pair_semantic_validity,
                 "reason_codes": sorted(
                     set(diagnosis["reason_codes"])
@@ -1352,7 +1450,7 @@ def _build_adaptation_necessity_report(
     method_operations = method_result.get("operation_plan", {}).get("operations", [])
     governance = method_result.get("governance", {})
     return {
-        "schema_version": "MONO_CI_PSI_ADAPTATION_NECESSITY_V1",
+        "schema_version": "MONO_CI_PSI_ADAPTATION_NECESSITY_V2",
         "execution_id": execution_id,
         "assessment_scope": "SOURCE_BOUND_DEVELOPMENT_DIAGNOSTIC_NOT_INDEPENDENTLY_REVIEWED",
         "transition": {
@@ -1396,51 +1494,367 @@ def _build_adaptation_necessity_report(
     }
 
 
-def _configured_control_tokens(
-    evaluator_id: str,
-    config: dict[str, Any],
-    state_manifest: dict[str, Any],
-    state: str,
-) -> list[str]:
-    tokens = [f"required-evaluator:{evaluator_id}"]
-    governance = state_manifest.get("governance_requirements", {})
-    fail_closed = governance.get("fail_closed", {}) if isinstance(governance, dict) else {}
-    tokens.extend(
-        f"fail-closed:{key}" for key, enabled in sorted(fail_closed.items()) if enabled is True
+def _transition_requirement_sources(repo: Path, run_root: Path) -> dict[str, Any]:
+    catalog_path = "fitness/catalog/architectural-obligations.yaml"
+    runtime_catalog_path = run_root / "PSI/method-runtime" / catalog_path
+    runtime_inventory = json.loads(
+        (run_root / "provenance/runtime-inventory.json").read_text(encoding="utf-8")
     )
-    scope = config.get("source_scope", {})
-    tokens.extend(f"module:{name}" for name in sorted(scope.get("expected_modules", [])))
-    semantics = config.get("public_api" if evaluator_id == "AC_PUBLIC_API" else "module_graph", {})
+    runtime_rows = {
+        row["path"]: row for row in runtime_inventory.get("files", []) if isinstance(row, dict)
+    }
+    catalog_bytes = _git_bytes(repo, AFTER_COMMIT, catalog_path)
+    catalog_sha = sha256_bytes(catalog_bytes)
+    if (
+        not runtime_catalog_path.is_file()
+        or sha256_file(runtime_catalog_path) != catalog_sha
+        or runtime_rows.get(catalog_path, {}).get("sha256") != catalog_sha
+    ):
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_REQUIREMENT_CATALOG_BINDING_INVALID")
+
+    registry_path = "experiments/execution/policy-pilot/v1/source/fitness/policy/registry.json"
+    registry_bytes = _git_bytes(repo, AFTER_COMMIT, registry_path)
+    try:
+        catalog = yaml.safe_load(catalog_bytes)
+        registry = json.loads(registry_bytes)
+    except (json.JSONDecodeError, UnicodeDecodeError, yaml.YAMLError) as error:
+        raise ContractValidationError(
+            "MONO_CI_PSI_TRANSITION_REQUIREMENT_SOURCE_INVALID"
+        ) from error
+    if not isinstance(catalog, dict) or not isinstance(registry, dict):
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_REQUIREMENT_SOURCE_INVALID")
+    return {
+        "catalog": catalog,
+        "policy_registry": registry,
+        "source_refs": [
+            {
+                "path": catalog_path,
+                "sha256": catalog_sha,
+                "source_kind": "ARCHITECTURAL_OBLIGATION_CATALOG",
+            },
+            {
+                "path": registry_path,
+                "sha256": sha256_bytes(registry_bytes),
+                "source_kind": "DRAFT_POLICY_REGISTRY",
+            },
+        ],
+    }
+
+
+def _requirement_record(
+    *,
+    control_id: str,
+    requirement_type: str,
+    detail_status: str,
+    value: Any,
+    source_kind: str,
+    source: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "control_id": control_id,
+        "requirement_type": requirement_type,
+        "detail_status": detail_status,
+        "value": value,
+        "source_kind": source_kind,
+        "source_ref": {"path": source["path"], "sha256": source["sha256"]},
+    }
+
+
+def _manifest_requirements_for_evaluator(
+    evaluator_id: str,
+    manifest: dict[str, Any],
+    state: str,
+    source: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Extract only structured controls from architecture-side state sources."""
+    requirements: list[dict[str, Any]] = []
+    if evaluator_id == "AC_MODULE_GRAPH":
+        for edge in manifest.get("allowed_dependencies", []):
+            if (
+                not isinstance(edge, dict)
+                or not isinstance(edge.get("from"), str)
+                or not isinstance(edge.get("to"), str)
+            ):
+                raise ContractValidationError(
+                    "MONO_CI_PSI_TRANSITION_ARCHITECTURE_REQUIREMENT_INVALID"
+                )
+            requirements.append(
+                _requirement_record(
+                    control_id=(
+                        f"architecture.module_graph.allowed_dependency:{edge['from']}->{edge['to']}"
+                    ),
+                    requirement_type="architecture.module_graph.allowed_dependency",
+                    detail_status="SPECIFIED",
+                    value={"from": edge["from"], "to": edge["to"]},
+                    source_kind="VERSIONED_ARCHITECTURE_STATE_MANIFEST",
+                    source=source,
+                )
+            )
     if evaluator_id == "AC_PUBLIC_API":
-        tokens.append(f"public-module-pattern:{semantics.get('public_module_pattern', '')}")
-        if semantics.get("require_public_module_per_capability") is True:
-            tokens.append("public-module-per-capability:required")
-        for capability, interface in sorted(semantics.get("interfaces_by_capability", {}).items()):
-            for name, kind in sorted(interface.items()):
-                tokens.append(f"public-interface:{capability}.{name}:{kind}")
-        for type_name, fields in sorted(semantics.get("typed_dict_fields", {}).items()):
-            tokens.extend(f"typed-dict-field:{type_name}.{field}" for field in fields)
-        exception = semantics.get("legacy_exception", {})
-        if state in exception.get("allowed_architecture_states", []):
-            tokens.append(f"legacy-exception:{exception.get('id', '')}")
+        query_port = manifest.get("reporting_query_port")
+        if isinstance(query_port, dict):
+            requirements.append(
+                _requirement_record(
+                    control_id="architecture.public_api.reporting_query_port",
+                    requirement_type="architecture.public_api.reporting_query_port",
+                    detail_status="SPECIFIED",
+                    value=query_port,
+                    source_kind="VERSIONED_ARCHITECTURE_STATE_MANIFEST",
+                    source=source,
+                )
+            )
+        for exception in manifest.get("temporary_exceptions", []):
+            if not isinstance(exception, dict) or not isinstance(exception.get("id"), str):
+                raise ContractValidationError(
+                    "MONO_CI_PSI_TRANSITION_ARCHITECTURE_REQUIREMENT_INVALID"
+                )
+            requirements.append(
+                _requirement_record(
+                    control_id=f"architecture.public_api.temporary_exception:{exception['id']}",
+                    requirement_type="architecture.public_api.temporary_exception",
+                    detail_status="SPECIFIED",
+                    value=exception,
+                    source_kind="VERSIONED_ARCHITECTURE_STATE_MANIFEST",
+                    source=source,
+                )
+            )
+    return sorted(requirements, key=lambda row: row["control_id"])
+
+
+def _manifest_governance_requirements(
+    manifest: dict[str, Any], source: dict[str, Any]
+) -> list[dict[str, Any]]:
+    governance = manifest.get("governance_requirements", {})
+    if not isinstance(governance, dict):
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_GOVERNANCE_REQUIREMENTS_INVALID")
+    return [
+        {
+            "control_id": "architecture.governance_requirements",
+            "classification": "EVIDENCE_GOVERNANCE_NOT_FITNESS_CONTROL",
+            "value": governance,
+            "source_ref": {"path": source["path"], "sha256": source["sha256"]},
+        }
+    ]
+
+
+def _unresolved_architecture_requirements(
+    *,
+    evaluator_id: str,
+    manifest: dict[str, Any],
+    manifest_source: dict[str, Any],
+    sources: dict[str, Any],
+) -> list[dict[str, Any]]:
+    unresolved: list[dict[str, Any]] = []
+    obligation = next(
+        (
+            row
+            for row in sources["catalog"].get("obligations", [])
+            if isinstance(row, dict) and row.get("id") == evaluator_id
+        ),
+        None,
+    )
+    if isinstance(obligation, dict):
+        catalog_source = next(
+            row
+            for row in sources["source_refs"]
+            if row["source_kind"] == "ARCHITECTURAL_OBLIGATION_CATALOG"
+        )
+        unresolved.append(
+            _requirement_record(
+                control_id=f"catalog.{evaluator_id}",
+                requirement_type="catalog.architectural_obligation",
+                detail_status="PARTIAL",
+                value={
+                    "criterion": obligation.get("criterion"),
+                    "intent": obligation.get("intent"),
+                },
+                source_kind="ARCHITECTURAL_OBLIGATION_CATALOG",
+                source=catalog_source,
+            )
+        )
+    registry = sources["policy_registry"]
+    registry_source = next(
+        row for row in sources["source_refs"] if row["source_kind"] == "DRAFT_POLICY_REGISTRY"
+    )
+    policies = registry.get("policies", [])
+    matched_policies = [
+        row
+        for row in policies
+        if isinstance(row, dict) and evaluator_id in row.get("obligation_ids", [])
+    ]
+    for policy in matched_policies:
+        unresolved.append(
+            _requirement_record(
+                control_id=f"policy_authority.{policy.get('id', evaluator_id)}",
+                requirement_type="policy.authority_status",
+                detail_status="UNRESOLVED",
+                value={
+                    "policy_id": policy.get("id"),
+                    "normative_status": policy.get("normative_status"),
+                    "approval_source_id": policy.get("approval_source_id"),
+                    "registry_closure": registry.get("closure"),
+                },
+                source_kind="DRAFT_POLICY_REGISTRY",
+                source=registry_source,
+            )
+        )
+    invariants = manifest.get("invariants", {})
+    if isinstance(invariants, dict) and invariants:
+        unresolved.append(
+            _requirement_record(
+                control_id="manifest.architecture_invariants_outside_selected_evaluator_scope",
+                requirement_type="architecture.invariants_without_selected_mapping",
+                detail_status="UNRESOLVED",
+                value=invariants,
+                source_kind="VERSIONED_ARCHITECTURE_STATE_MANIFEST",
+                source=manifest_source,
+            )
+        )
+    return sorted(unresolved, key=lambda row: row["control_id"])
+
+
+def _evaluator_capabilities(
+    *,
+    evaluator_id: str,
+    state: str,
+    config: dict[str, Any],
+    run: dict[str, Any],
+    coverage: dict[str, Any],
+    representation_bound: bool,
+    configuration_sha256: str,
+    run_root: Path,
+    config_path: str,
+) -> dict[str, Any]:
+    result = run.get("evidence", {}).get("result", {})
+    diagnostics = run.get("evidence", {}).get("diagnostics", {})
+    expected_commit = BEFORE_COMMIT if state == BEFORE_STATE else AFTER_COMMIT
+    config_relpath = (
+        f"PSI/evaluator-observations/implementation/{evaluator_id}/{Path(config_path).name}"
+    )
+    source_manifest_relpath = (
+        f"PSI/evaluator-observations/implementation/{evaluator_id}/source-manifest.json"
+    )
+    output_path = run.get("output_path")
+    coverage_path = _coverage_assessment_path(state, evaluator_id).as_posix()
+    source_refs = [
+        {"path": config_relpath, "sha256": configuration_sha256},
+        {
+            "path": source_manifest_relpath,
+            "sha256": sha256_file(run_root / source_manifest_relpath),
+        },
+        {"path": str(output_path), "sha256": sha256_file(run_root / str(output_path))},
+        {"path": coverage_path, "sha256": sha256_file(run_root / coverage_path)},
+    ]
+    base_verified = (
+        representation_bound
+        and run.get("source_commit_sha") == expected_commit
+        and run.get("evaluator_configuration_sha256") == configuration_sha256
+        and coverage.get("source_inspection_status") == "COMPLETE"
+        and result.get("execution_status") == "COMPLETED"
+        and result.get("compliance") == "COMPLIANT"
+        and run.get("evidence", {}).get("architecture", {}).get("source_sha_status") == "MATCHED"
+        and run.get("evidence", {}).get("architecture", {}).get("manifest_state_status")
+        == "MATCHED"
+    )
+    capabilities: list[dict[str, Any]] = []
+
+    def add_capability(
+        capability_id: str, capability_type: str, verified: bool, value: dict[str, Any]
+    ) -> None:
+        capabilities.append(
+            {
+                "capability_id": capability_id,
+                "capability_type": capability_type,
+                "verification_status": "VERIFIED_STATIC_SCOPE" if verified else "UNVERIFIED",
+                "value": value,
+                "source_refs": source_refs,
+            }
+        )
+
+    if evaluator_id == "AC_MODULE_GRAPH":
+        graph_config = config.get("module_graph", {})
+        configured_edges = graph_config.get("allowed_dependencies_by_state", {}).get(state, [])
+        configured_edges = sorted(
+            (dict(edge) for edge in configured_edges if isinstance(edge, dict)),
+            key=lambda edge: (edge.get("from", ""), edge.get("to", "")),
+        )
+        analysis = coverage.get("dependency_analysis") or {}
+        graph_verified = (
+            base_verified
+            and isinstance(diagnostics, dict)
+            and diagnostics.get("allowed_edges") == configured_edges
+            and analysis.get("static_relationship_comparison") == "MATCHED"
+            and analysis.get("cycle_comparison") == "MATCHED"
+        )
+        add_capability(
+            "evaluator.module_graph.allowed_dependency_policy",
+            "evaluator.module_graph.allowed_dependency_policy",
+            graph_verified,
+            {"edges": configured_edges},
+        )
+        add_capability(
+            "evaluator.module_graph.acyclicity",
+            "evaluator.module_graph.acyclicity",
+            graph_verified,
+            {
+                "reported_cycles": diagnostics.get("cycles", [])
+                if isinstance(diagnostics, dict)
+                else []
+            },
+        )
     else:
-        tokens.extend(
-            f"allowed-dependency:{edge.get('from')}->{edge.get('to')}"
-            for edge in semantics.get("allowed_dependencies_by_state", {}).get(state, [])
+        public_config = config.get("public_api", {})
+        public_verified = (
+            base_verified
+            and isinstance(diagnostics, dict)
+            and diagnostics.get("public_module_pattern")
+            == public_config.get("public_module_pattern")
+            and diagnostics.get("interfaces_by_capability")
+            == public_config.get("interfaces_by_capability")
+            and diagnostics.get("legacy_exception") == public_config.get("legacy_exception")
+            and isinstance(diagnostics.get("exports_by_capability"), dict)
+            and isinstance(diagnostics.get("cross_capability_imports"), list)
         )
-        tokens.extend(
-            f"forbidden-dependency:{edge.get('from')}->{edge.get('to')}"
-            for edge in semantics.get("forbidden_dependencies_by_state", {}).get(state, [])
+        public_value = {
+            "state": state,
+            "public_module_pattern": diagnostics.get("public_module_pattern")
+            if isinstance(diagnostics, dict)
+            else None,
+            "interfaces_by_capability": diagnostics.get("interfaces_by_capability", {})
+            if isinstance(diagnostics, dict)
+            else {},
+            "exports_by_capability": diagnostics.get("exports_by_capability", {})
+            if isinstance(diagnostics, dict)
+            else {},
+            "cross_capability_imports": diagnostics.get("cross_capability_imports", [])
+            if isinstance(diagnostics, dict)
+            else [],
+            "legacy_exception": diagnostics.get("legacy_exception")
+            if isinstance(diagnostics, dict)
+            else None,
+        }
+        add_capability(
+            "evaluator.public_api.reporting_query_port_boundary",
+            "evaluator.public_api.reporting_query_port_boundary",
+            public_verified,
+            public_value,
         )
-        tokens.extend(
-            f"strict-local-import-root:{root}"
-            for root in semantics.get("strict_local_import_roots", [])
+        add_capability(
+            "evaluator.public_api.temporary_exception_scope",
+            "evaluator.public_api.temporary_exception_scope",
+            public_verified,
+            {"state": state, "legacy_exception": public_value["legacy_exception"]},
         )
-        tokens.extend(
-            f"shared-infrastructure-root:{root}"
-            for root in semantics.get("shared_infrastructure_roots", [])
-        )
-    return sorted(set(tokens))
+
+    all_verified = bool(capabilities) and all(
+        row["verification_status"] == "VERIFIED_STATIC_SCOPE" for row in capabilities
+    )
+    return {
+        "status": (
+            "VERIFIED_FOR_DECLARED_STATIC_SCOPE" if all_verified else "INCOMPLETE_OR_UNVERIFIED"
+        ),
+        "capabilities": sorted(capabilities, key=lambda row: row["capability_id"]),
+    }
 
 
 def _control_transition_summary(
@@ -1737,6 +2151,24 @@ def _verify_adaptation_necessity_report(
         for row in record["evaluator_observations"]
     ):
         return
+    assessment_path = run_root / "diagnostics/adaptation-necessity-assessment.json"
+    try:
+        actual_assessment = json.loads(assessment_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
+        raise ContractValidationError(
+            "MONO_CI_PSI_TRANSITION_ADAPTATION_ASSESSMENT_MISSING"
+        ) from error
+    if not isinstance(actual_assessment, dict):
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_ADAPTATION_ASSESSMENT_SCHEMA_INVALID")
+    schema_version = actual_assessment.get("schema_version")
+    if schema_version == "MONO_CI_PSI_ADAPTATION_NECESSITY_V1":
+        # Historical V1 reports were produced by the circular token-set rule.
+        # Keep their strict schema/checksum readback, but never reinterpret them
+        # with the corrected V2 requirement-to-capability semantics.
+        validate_payload(ADAPTATION_NECESSITY_SCHEMA_V1, actual_assessment)
+        return
+    if schema_version != "MONO_CI_PSI_ADAPTATION_NECESSITY_V2":
+        raise ContractValidationError("MONO_CI_PSI_TRANSITION_ADAPTATION_ASSESSMENT_SCHEMA_INVALID")
     required_diagnostic_outputs = {
         _coverage_assessment_path(state, evaluator_id).as_posix()
         for state in (BEFORE_STATE, AFTER_STATE)
@@ -1760,14 +2192,7 @@ def _verify_adaptation_necessity_report(
             (run_root / observation["output_path"]).read_text(encoding="utf-8")
         )
         evaluator_runs.append(row)
-    assessment_path = run_root / "diagnostics/adaptation-necessity-assessment.json"
-    try:
-        actual_assessment = json.loads(assessment_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
-        raise ContractValidationError(
-            "MONO_CI_PSI_TRANSITION_ADAPTATION_ASSESSMENT_MISSING"
-        ) from error
-    validate_payload(ADAPTATION_NECESSITY_SCHEMA, actual_assessment)
+    validate_payload(ADAPTATION_NECESSITY_SCHEMA_V2, actual_assessment)
     expected_assessment = _build_adaptation_necessity_report(
         repo=REPOSITORY_ROOT,
         run_root=run_root,

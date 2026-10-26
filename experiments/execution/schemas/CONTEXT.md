@@ -18,6 +18,7 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `evaluator_evidence.schema.json` — includes backward-compatible typed inspection scope (`dependency_edge`, `module`, or `file`) with digest-bound inventory evidence; version 2 may also record independently verified expected and inspected file counts.
 - `mono_ci_psi_inspection_coverage_v1.schema.json` — strict report of independently derived file scope and source-bound static module graph/cycle comparison; dynamic edge completeness is explicit.
 - `mono_ci_psi_adaptation_necessity_v1.schema.json` — strict post-method DEVELOPMENT diagnostic with bounded conclusion states, evidence references, and unresolved-proof fields; it is not method input or scientific approval.
+- `mono_ci_psi_adaptation_necessity_v2.schema.json` — additive strict diagnostic with independent requirement provenance/completeness, verified evaluator capabilities, and explicit typed comparisons; old V1 archive records keep their original schema/checksum readback and are not reinterpreted.
 - `ground_truth_hash.schema.json`
 - `p_traceability_graph_v1.schema.json`
 - `p_impact_assessment_v1.schema.json`

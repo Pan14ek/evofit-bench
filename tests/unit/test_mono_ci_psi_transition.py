@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -11,8 +12,9 @@ import yaml
 from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError, ProtocolError
 from experiments.execution.tooling.mono_ci_psi_transition import (
-    _configured_control_tokens,
+    _manifest_requirements_for_evaluator,
     _validate_method_result_v2,
+    _verify_adaptation_necessity_report,
     pack_transition_archive,
     run_transition,
     verify_transition_archive,
@@ -22,37 +24,123 @@ from experiments.execution.tooling.mono_ci_psi_transition import (
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_state_scoped_public_api_exception_and_graph_policy_are_derived_from_config() -> None:
-    public_config = yaml.safe_load(
-        (ROOT / "architecture/acceptance/a1/public_api_v1.yaml").read_text(encoding="utf-8")
-    )
-    graph_config = yaml.safe_load(
-        (ROOT / "architecture/acceptance/a1/module_graph_v1.yaml").read_text(encoding="utf-8")
-    )
-    manifest = {
-        "governance_requirements": {
-            "required_evaluators": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"],
-            "fail_closed": {},
-        }
+def test_architecture_requirements_are_derived_from_versioned_state_manifests() -> None:
+    before_path = ROOT / "architecture/states/A0_3_GOVERNED_MODULE_GRAPH.yaml"
+    after_path = ROOT / "architecture/states/A0_4_REPORT_QUERY_PORT.yaml"
+    before = yaml.safe_load(before_path.read_text(encoding="utf-8"))
+    after = yaml.safe_load(after_path.read_text(encoding="utf-8"))
+    before_source = {
+        "path": before_path.relative_to(ROOT).as_posix(),
+        "sha256": hashlib.sha256(before_path.read_bytes()).hexdigest(),
+    }
+    after_source = {
+        "path": after_path.relative_to(ROOT).as_posix(),
+        "sha256": hashlib.sha256(after_path.read_bytes()).hexdigest(),
     }
 
-    public_before = _configured_control_tokens(
-        "AC_PUBLIC_API", public_config, manifest, "A0_3_GOVERNED_MODULE_GRAPH"
+    public_before = _manifest_requirements_for_evaluator(
+        "AC_PUBLIC_API", before, "A0_3_GOVERNED_MODULE_GRAPH", before_source
     )
-    public_after = _configured_control_tokens(
-        "AC_PUBLIC_API", public_config, manifest, "A0_4_REPORT_QUERY_PORT"
+    public_after = _manifest_requirements_for_evaluator(
+        "AC_PUBLIC_API", after, "A0_4_REPORT_QUERY_PORT", after_source
     )
-    graph_before = _configured_control_tokens(
-        "AC_MODULE_GRAPH", graph_config, manifest, "A0_3_GOVERNED_MODULE_GRAPH"
+    graph_before = _manifest_requirements_for_evaluator(
+        "AC_MODULE_GRAPH", before, "A0_3_GOVERNED_MODULE_GRAPH", before_source
     )
-    graph_after = _configured_control_tokens(
-        "AC_MODULE_GRAPH", graph_config, manifest, "A0_4_REPORT_QUERY_PORT"
+    graph_after = _manifest_requirements_for_evaluator(
+        "AC_MODULE_GRAPH", after, "A0_4_REPORT_QUERY_PORT", after_source
     )
 
-    assert "legacy-exception:reporting_tasks_query_intermediate_v1" in public_before
-    assert "legacy-exception:reporting_tasks_query_intermediate_v1" not in public_after
-    assert "public-interface:reporting.get_task_summary:function" in public_after
-    assert graph_before == graph_after
+    assert public_before[0]["control_id"] == (
+        "architecture.public_api.temporary_exception:reporting_tasks_query_intermediate_v1"
+    )
+    assert public_after[0]["control_id"] == "architecture.public_api.reporting_query_port"
+    assert public_after[0]["value"] == after["reporting_query_port"]
+    assert [row["control_id"] for row in graph_before] == [row["control_id"] for row in graph_after]
+
+
+def test_historical_v1_adaptation_report_is_schema_readable_without_reinterpretation(
+    tmp_path: Path,
+) -> None:
+    report = {
+        "schema_version": "MONO_CI_PSI_ADAPTATION_NECESSITY_V1",
+        "execution_id": "DEV_PSI_TRANSITION_HISTORICAL_V1",
+        "assessment_scope": "SOURCE_BOUND_DEVELOPMENT_DIAGNOSTIC_NOT_INDEPENDENTLY_REVIEWED",
+        "transition": {
+            "before_state": "A0_3_GOVERNED_MODULE_GRAPH",
+            "after_state": "A0_4_REPORT_QUERY_PORT",
+            "before_commit_sha": "a" * 40,
+            "after_commit_sha": "b" * 40,
+            "changed_application_files": [],
+            "source_change_summary": ["Historical archive fixture."],
+            "unchanged_architecture_invariants": [],
+        },
+        "baseline": {
+            "configuration_id": "HISTORICAL_FIXTURE",
+            "configuration_sha256": "c" * 64,
+            "identity_status": "PROSPECTIVE_RECONSTRUCTION_NOT_HISTORICAL",
+            "approval_status": "NOT_APPROVED",
+        },
+        "method_result": {
+            "path": "PSI/raw/method-result.json",
+            "sha256": "d" * 64,
+            "governance_decision": "HOLD",
+            "operation_count": 0,
+            "candidate_status": "NOT_MATERIALIZED",
+            "prediction_status": "NOT_EMITTED",
+        },
+        "assessments": [
+            {
+                "control_id": "AC_MODULE_GRAPH",
+                "assessment_status": "RETAIN_CANDIDATE",
+                "configuration_change_necessity": "NOT_DEMONSTRATED_WITHIN_VERIFIED_SCOPE",
+                "relevant_architecture_changes": [],
+                "previous_representation_identity": {"representation_id": "REP_FIXTURE"},
+                "evaluator_identity": {"evaluator_id": "AC_MODULE_GRAPH"},
+                "configuration_identity": {"before_sha256": "e" * 64},
+                "inspection_completeness": {"after_status": "COMPLETE"},
+                "compliance_observations": {"after": "COMPLIANT"},
+                "rule_semantics": {
+                    "required_controls_before": ["legacy-control"],
+                    "required_controls_after": ["legacy-control"],
+                    "represented_controls_before": ["legacy-control"],
+                    "represented_controls_after": ["legacy-control"],
+                    "scope_limitations": [],
+                },
+                "pair_semantic_validity": "UNKNOWN",
+                "reason_codes": ["HISTORICAL_V1"],
+                "evidence_refs": [],
+                "missing_proofs": [],
+                "operation_justification": {
+                    "ADD": "UNSUPPORTED",
+                    "REPLACE": "UNSUPPORTED",
+                    "RETAIN": "TECHNICAL_CANDIDATE_ONLY",
+                    "HOLD": "REQUIRED",
+                },
+            }
+        ],
+        "scientific_boundary": {
+            "is_independent_reference": False,
+            "is_human_review": False,
+            "official_comparison": "NOT_EXECUTED",
+            "study_readiness": "NO_GO",
+            "p_algorithm_status": "NOT_READY",
+            "g1": "INCOMPLETE",
+            "g4": "NOT_AUTHORIZED",
+            "reference_gate": "NOT_READY",
+        },
+    }
+    diagnostic_path = tmp_path / "diagnostics/adaptation-necessity-assessment.json"
+    diagnostic_path.parent.mkdir(parents=True)
+    diagnostic_path.write_text(json.dumps(report), encoding="utf-8")
+    scope_path = tmp_path / "inspection-scope.json"
+    scope_path.write_text(json.dumps({"schema_version": 2}), encoding="utf-8")
+
+    _verify_adaptation_necessity_report(
+        tmp_path,
+        {"evaluator_observations": [{"inspection_scope_path": "inspection-scope.json"}]},
+        {},
+    )
 
 
 def test_real_transition_executes_psi_and_archive_round_trips(tmp_path: Path) -> None:
@@ -70,6 +158,7 @@ def test_real_transition_executes_psi_and_archive_round_trips(tmp_path: Path) ->
     adaptation_assessment_path = run_root / "diagnostics/adaptation-necessity-assessment.json"
     adaptation_assessment = json.loads(adaptation_assessment_path.read_text(encoding="utf-8"))
     assert adaptation_assessment["execution_id"] == record["execution_id"]
+    assert adaptation_assessment["schema_version"] == "MONO_CI_PSI_ADAPTATION_NECESSITY_V2"
     assert adaptation_assessment["assessment_scope"] == (
         "SOURCE_BOUND_DEVELOPMENT_DIAGNOSTIC_NOT_INDEPENDENTLY_REVIEWED"
     )
@@ -81,6 +170,21 @@ def test_real_transition_executes_psi_and_archive_round_trips(tmp_path: Path) ->
         raw["operation_plan"]["operations"]
     )
     assert adaptation_assessment["scientific_boundary"]["official_comparison"] == ("NOT_EXECUTED")
+    assert {row["assessment_status"] for row in adaptation_assessment["assessments"]} <= {
+        "RETAIN_CANDIDATE",
+        "ADAPTATION_NEEDED",
+        "NOT_EVALUABLE",
+        "MISMATCH_DETECTED",
+    }
+    assert all(
+        row["requirement_inventory"]["universe_completeness"] == "UNKNOWN"
+        for row in adaptation_assessment["assessments"]
+    )
+    assert all(
+        "fitness/catalog/architectural-obligations.yaml"
+        in {source["path"] for source in row["requirement_inventory"]["source_refs"]}
+        for row in adaptation_assessment["assessments"]
+    )
     assert not any(
         "adaptation-necessity" in item["path"] or "inspection-coverage" in item["path"]
         for item in method_manifest["files"]
