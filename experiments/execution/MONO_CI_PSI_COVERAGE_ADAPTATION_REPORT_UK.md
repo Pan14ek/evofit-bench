@@ -1,73 +1,83 @@
 # Діагностичний звіт: покриття fitness та потреба в адаптації A0.3 → A0.4
 
-> **Статус:** свіжий source-bound DEVELOPMENT-запуск після виправлення незалежності вимог і evaluator capabilities. Діагноз `NOT_EVALUABLE` є технічним висновком про недостатність доказів; він не є схваленням або виміряним результатом Method P.
+> **Поточний статус:** source-bound DEVELOPMENT-запуск після виправлення binding SHA-256 evaluator configuration. Обидва evaluator capability inventories верифіковані у заявленому static scope, а п’ять graph-edge mappings і Reporting query-port mapping мають `COVERED`. Загальна адаптаційна діагностика лишається `NOT_EVALUABLE` через незалежні невирішені вимоги та нормативні обмеження. Це не формальне схвалення і не виміряний результат Method P.
 
-## Ідентичність запуску та архів
+## Поточний запуск та архів
 
 - База PR: `main` `9cd4d3560c3cc32e38ecfccfd834a5f15a06055d`.
-- Код виправлення та source revision запуску: `8cf4ebc983c9b434e087c853bd317d96ff3645bf`.
+- Код запуску: `1d48249a98429058ae7bbf724250b518a843eafb`.
 - Перехід: A0.3 `26a9bb667da7d0938e38aca15d2bf29fd1de4829` (`7b951421395f532ca403dab09d76902ff08a807d`) → A0.4 `d3101c0d3aa9b7b709253b6ec7518416f05f65b9` (`2b436e0aaf09403ea516d73d20a466a122f86592`).
-- Виконання: `DEV_PSI_TRANSITION_GHA_40282986322_1`, режим `DEVELOPMENT_METHOD_EXECUTION_ONLY`; [успішний GitHub Actions run](https://github.com/Pan14ek/evofit-bench/actions/runs/40282986322).
-- [Новий приватний prerelease з архівом](https://github.com/Pan14ek/evofit-bench/releases/tag/mono-ci-psi-transition-40282986322-1). ZIP SHA-256: `d79f53a11a9d60f71c791de74248a55d04fe8dce28df3497af4e9cfd8d8d1cb1`; release sidecar збігся. Завантажений архів пройшов `transition-verify` (`PASS`, 445 учасників). Actions artifact storage було заповнене, тож workflow зберіг архів у новому приватному prerelease, не перезаписуючи попередній.
-- Ключові внутрішні digest-и: `development_run.json` — `c6af8a0c6a85664bcd3ec5ef940fa2c7dd4fffbffb975d0bff90b48edc5be8b6`; `PSI/raw/method-result.json` — `4eb185a168584f5f7f85b4362f32dd61e12ada87a87e4de491a6684ac391169c`; `diagnostics/adaptation-necessity-assessment.json` — `c5e850c9c548b9e1b97d6add07b2436dd1fc10994daa56326e547fd1245070d3`.
+- Виконання: `DEV_PSI_TRANSITION_GHA_40306427232_1`, режим `DEVELOPMENT_METHOD_EXECUTION_ONLY`; [успішний GitHub Actions run](https://github.com/Pan14ek/evofit-bench/actions/runs/40306427232).
+- [Новий приватний prerelease з архівом](https://github.com/Pan14ek/evofit-bench/releases/tag/mono-ci-psi-transition-40306427232-1). ZIP SHA-256: `9557934af144f6c8bdb1e5007222c1e5a41396363a1862d9e7ffc04de52f5a54`. Завантажений sidecar збігся; `transition-verify` повернув `PASS`, 445 учасників. Actions artifact storage було заповнене, тому workflow використав prerelease fallback і не перезаписував попередній release.
+- Ключові digest-и архіву: `development_run.json` — `972ffaa489a24dcd153ebf89938a524da4f13f1f685d0100df5235a771e1fae1`; `PSI/raw/method-result.json` — `77d2db46fde7f003a089a1b09417e04fe8de004c9e602af838cf859cbdcf55d2`; `diagnostics/adaptation-necessity-assessment.json` — `eef3bee1756dce0de062b249c1e0edb2e99e8089bb70ef29f4aed98fa7e463fc`.
 
-Попередній запуск `40236384716` і його V1-діагноз `RETAIN_CANDIDATE` залишаються незміненими історичними доказами. Через спільне походження required і represented controls той V1 висновок не використовується для обґрунтування поточного висновку. Новий запуск створено з виправленим кодом і V2-діагностикою; попередній архів не переписувався.
+## Виправлений integration defect
 
-## Незалежні вимоги та evaluator capabilities
+У `_evaluator_capabilities()` файл `experiments/execution/tooling/mono_ci_psi_transition.py` читав `run["evaluator_configuration_sha256"]`. `run_fresh_evaluator()` у `mono_ci_psi_evidence.py` записує ту саму ідентичність у поле `configuration_sha256`, тому попередня перевірка отримувала `None` і позначала допустимі capabilities як `UNVERIFIED`.
 
-Вимоги отримані з versioned architecture state manifests. Governance requirements з маніфестів збережені окремо як вимоги до доказового процесу, а не fitness controls. Evaluator capabilities отримані окремо з evaluator configuration та фактичних evaluator outputs. Збіг назв сам по собі не доводить семантичного покриття: застосовано окремі типізовані mapping rules і перевірку структурованих значень.
+Верифікатор тепер читає саме `configuration_sha256` і приймає його лише як lowercase 64-символьний SHA-256, рівний незалежно обчисленому digest copied configuration artifact. Він також звіряє digest із `evidence.evaluator.configuration_digest`. Missing, malformed та mismatched digests fail closed. Інші перевірки — source revision, повнота inspection, execution/compliance, конфігураційна відповідність evaluator diagnostics і representation binding — збережено. Нового alias і ослаблення digest contract немає.
 
-| Control | Маніфестні вимоги до переходу | Вимоги після переходу | Capability IDs до/після | Результат зіставлення після переходу |
-|---|---|---|---|---|
-| `AC_PUBLIC_API` | `architecture.public_api.temporary_exception:reporting_tasks_query_intermediate_v1` | `architecture.public_api.reporting_query_port` | `evaluator.public_api.reporting_query_port_boundary`; `evaluator.public_api.temporary_exception_scope` | Mapping `MAP-REPORTING-QUERY-PORT-TO-A1-PUBLIC-API-V1`; `UNRESOLVED` — capability не верифіковано |
-| `AC_MODULE_GRAPH` | П’ять `architecture.module_graph.allowed_dependency` controls: `reporting→tasks`, `tasks→audit`, `tasks→notifications`, `tasks→users`, `users→audit` | Ті самі п’ять дозволених напрямків | `evaluator.module_graph.acyclicity`; `evaluator.module_graph.allowed_dependency_policy` | Усі п’ять зіставлень `MAP-MODULE-DEPENDENCY-TO-A1-ALLOWED-EDGE-V1` мають результат `UNRESOLVED` — capability не верифіковано |
+## Before/after діагностика
 
-У таблиці capabilities означають те, що evaluator конфігурує або заявляє перевіряти; у цьому запуску обидва capability inventories мають статус `INCOMPLETE_OR_UNVERIFIED`, а кожна capability має `verification_status=UNVERIFIED`. Реальні evaluator outputs водночас показують `COMPLIANT`, а незалежний source inspection є повним. Ці факти не замінюють окремого доказу повноти capability inventory чи його семантичної придатності для вимоги.
+| Dimension | До виправлення — run `40282986322` | Після виправлення — run `40306427232` |
+|---|---|---|
+| Configuration digest binding | Consumer шукав `evaluator_configuration_sha256`, runner повертав `configuration_sha256` | Поле runner використано напряму; record, evaluator evidence і copied config digest збігаються |
+| `AC_PUBLIC_API` capabilities | `INCOMPLETE_OR_UNVERIFIED`; усі capability statuses `UNVERIFIED` | До/після: `VERIFIED_FOR_DECLARED_STATIC_SCOPE`; обидві capabilities `VERIFIED_STATIC_SCOPE` |
+| `AC_MODULE_GRAPH` capabilities | `INCOMPLETE_OR_UNVERIFIED`; усі capability statuses `UNVERIFIED` | До/після: `VERIFIED_FOR_DECLARED_STATIC_SCOPE`; обидві capabilities `VERIFIED_STATIC_SCOPE` |
+| Requirement-capability comparison | Query port та всі п’ять edges — `UNRESOLVED` через неперевірені capabilities | Query port і всі п’ять edges — `COVERED` за типізованими mapping rules |
+| Adaptation necessity | Обидва controls `NOT_EVALUABLE` | Обидва controls залишилися `NOT_EVALUABLE`, але без digest-binding reason codes |
+| Method Ψ | `HOLD`; 0 операцій | `HOLD`; 0 операцій |
 
-Після переходу A0.4 вимагає Reporting query port (`app.modules.reporting.service` → `app.modules.tasks.public.get_task_summary`) і забороняє попередній приватний імпорт `task_summary`. В A0.3 існував тимчасовий виняток для приватного імпорту, обмежений станами A0.2/A0.3. Module-level allowed edge set не змінився. Кожна вимога та її джерело прив’язані до digest відповідного state manifest.
+У всіх чотирьох реальних evaluator observation records configuration digests збігаються з відповідними implementation artifacts:
 
-Інвентар повний лише для оголошених типів manifest-вимог (`COMPLETE_FOR_DECLARED_MANIFEST_TYPES`); повнота всього нормативного requirement universe — `UNKNOWN`. Для обох controls залишилися нерозв’язаними: частковий широкий catalog obligation; інваріанти маніфеста поза scope вибраного evaluator; а також authority status відповідної policy (`DRAFT`, registry `OPEN`, approval source відсутній). Тому декларація policy не використовується як незалежно схвалена вимога, а відсутність додаткового запису не трактується як відсутність вимоги.
+- `AC_PUBLIC_API`: `8853c3a933b23f698c7ba7c5b6e511f292e8d9285dc0de4378741c53e466f7bb`.
+- `AC_MODULE_GRAPH`: `1abae6871a477ff2a07685ad645a70defa2f1ac6745598ae4cdc35aab4e95bf6`.
 
-## Незалежна перевірка inspection coverage
+## Вимоги та mappings
 
-Verifier відновив очікуваний source scope із точного Git tree, state manifest та окремо pinned evaluator configuration; фактичний scope перевірив за digest-bound evaluator output. У кожному з чотирьох запусків — два evaluators у двох станах — перевірено `31/31` файлів: `missing=0`, `unexpected=0`, `altered=0`, `verified_matching=31`. `AC_PUBLIC_API` має `COMPLETE`; `AC_MODULE_GRAPH` має збіжність статичних relationships і відсутність знайдених циклів, але повнота динамічних edges залишається `UNKNOWN`.
+Вимоги й надалі походять незалежно від evaluator configuration — із digest-bound A0.3/A0.4 state manifests. Governance requirements маніфестів лишаються вимогами до доказового процесу, а не fitness controls. Capability values походять з evaluator configuration та її реальних outputs. Технічне `COVERED` нижче підтверджує лише mapping у визначеному static scope; воно не підтверджує нормативну authority чи повну семантичну достатність.
 
-Для `AC_MODULE_GRAPH` реконструйовані статичні imports змінилися з 6 до 7 і збіглися зі спостереженнями. П’ять дозволених module-level edges залишилися незмінними. Статичний аналіз не охоплює dynamic imports, reflection і runtime dependency injection; star-import symbols та imports із composition roots поза `app/modules` також залишаються поза доведеним scope.
+| Control | A0.3 вимога → A0.4 вимога | Verified capability | A0.4 mapping |
+|---|---|---|---|
+| `AC_PUBLIC_API` | Тимчасовий exception `reporting_tasks_query_intermediate_v1` → `architecture.public_api.reporting_query_port` | `evaluator.public_api.reporting_query_port_boundary` і `evaluator.public_api.temporary_exception_scope` | `MAP-REPORTING-QUERY-PORT-TO-A1-PUBLIC-API-V1`: `COVERED` |
+| `AC_MODULE_GRAPH` | П’ять дозволених edges; набір не змінився: `reporting→tasks`, `tasks→audit`, `tasks→notifications`, `tasks→users`, `users→audit` | `evaluator.module_graph.allowed_dependency_policy` і `evaluator.module_graph.acyclicity` | `MAP-MODULE-DEPENDENCY-TO-A1-ALLOWED-EDGE-V1`: кожен із п’яти mappings `COVERED` |
 
-## Фактична діагностика адаптації
+Requirement inventory повний лише для оголошених типів manifest (`COMPLETE_FOR_DECLARED_MANIFEST_TYPES`); повнота всього requirement universe лишається `UNKNOWN`. Невирішеними залишаються partial catalog obligations, manifest invariants поза вибраним evaluator scope та authority відповідної policy (`DRAFT`, registry `OPEN`, approval source відсутній). Ці причини залишилися в діагностиці після усунення digest defect.
 
-Обидві оцінки повернули `NOT_EVALUABLE`, `configuration_change_necessity=NOT_EVALUABLE` і `pair_semantic_validity=UNKNOWN`.
+## Результат adaptation-necessity assessment
 
-- `AC_PUBLIC_API`: `EVALUATOR_CAPABILITY_INVENTORY_NOT_VERIFIED`, `EVALUATOR_CAPABILITY_NOT_VERIFIED`, `INDEPENDENT_REQUIREMENTS_REMAIN_UNRESOLVED`, `NORMATIVE_APPLICABILITY_NOT_APPROVED`, `REQUIREMENT_UNIVERSE_COMPLETENESS_UNKNOWN`.
-- `AC_MODULE_GRAPH`: ті самі причини та додатково `DYNAMIC_DEPENDENCY_EDGE_COMPLETENESS_UNKNOWN`.
+Обидва controls повернули `assessment_status=NOT_EVALUABLE`, `configuration_change_necessity=NOT_EVALUABLE`, `pair_semantic_validity=UNKNOWN`.
 
-Отже, цей реальний перехід не підтверджує ані достатність наявних representations (`RETAIN_CANDIDATE`), ані необхідність конкретної зміни конфігурації (`ADAPTATION_NEEDED`). Відсутні докази не дозволяють вибрати дію; це відрізняється від виявленого, але ще не класифікованого mismatch (`MISMATCH_DETECTED`).
+- `AC_PUBLIC_API`: `INDEPENDENT_REQUIREMENTS_REMAIN_UNRESOLVED`, `NORMATIVE_APPLICABILITY_NOT_APPROVED`, `REQUIREMENT_UNIVERSE_COMPLETENESS_UNKNOWN`.
+- `AC_MODULE_GRAPH`: ті самі три причини та `DYNAMIC_DEPENDENCY_EDGE_COMPLETENESS_UNKNOWN`.
 
-## Методичні негативні та регресійні перевірки
+Отже, digest defect було технічно усунуто: обидва verified capability inventories й усі задекларовані manifest-to-capability mappings тепер проходять перевірку. Цього недостатньо, щоб зробити `RETAIN_CANDIDATE` або `ADAPTATION_NEEDED` обґрунтованими за повного requirement universe та схваленої applicability. Результат не був заданий наперед.
 
-- **A — нова незалежна вимога, якої немає в незміненому evaluator:** `test_new_independent_requirement_missing_from_unchanged_evaluator_is_detected` додає source-bound edge `beta→gamma`; діагноз знаходить його в `missing_post_transition_controls`, повертає `NOT_COVERED` для цього mapping і `ADAPTATION_NEEDED`.
-- **B — справжнє покриття:** повна незалежна вимога з верифікованою capability дає `RETAIN_CANDIDATE` — лише технічного кандидата.
-- **C — неповний інвентар / невирішена authority:** повертається `NOT_EVALUABLE` з точними uncertainty reason codes.
-- **D — однакові рядки з evaluator configuration:** вони не можуть підмінити independent requirement source; результат — `NOT_EVALUABLE`.
-- **E — невстановлена семантична відповідність:** збіг label не приймається за mapping; результат — `UNRESOLVED` і `NOT_EVALUABLE`.
-- **F — регресія реального A0.3 → A0.4:** запускаються справжні observations і поточна класифікація обчислюється заново; код не закріплює `RETAIN_CANDIDATE` як очікуваний результат.
+## Method Ψ та дослідницькі межі
 
-## Метод Ψ, gates та межі висновку
+Method Ψ виконався без змін у `p_adaptation.py`, Method Ψ selection logic або method inputs. Фактичний governance result — `HOLD`; operation plan порожній (`0` операцій), prediction не видано, scoring і measurement — `NOT_EXECUTED`. Hold reasons: `COST_MODEL_UNRESOLVED`, `MANDATORY_APPLICABILITY_UNKNOWN`, `UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION`. Raw result SHA-256: `77d2db46fde7f003a089a1b09417e04fe8de004c9e602af838cf859cbdcf55d2`.
 
-Method Ψ виконався на свіжих A0.4 observations без змін у його коді чи method inputs. Його фактичне рішення — `HOLD`; operation plan містить 0 операцій, prediction не видано, scoring та measurement не виконувалися. `HOLD` містить причини `COST_MODEL_UNRESOLVED`, `MANDATORY_APPLICABILITY_UNKNOWN`, `UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION`. Усі 18 applicability лишилися `UNKNOWN`.
+Залишаються невирішеними повнота requirement universe, normative applicability та policy authority, semantic adequacy/independent review, історична ідентичність і схвалення baseline, а для module graph — completeness dynamic dependencies. Baseline лишається `PROSPECTIVE_RECONSTRUCTION_NOT_HISTORICAL`/`NOT_APPROVED`; policy — `DRAFT_OPEN_UNAPPROVED`; evidence trust scope — `TEST_ONLY`. Статуси `NO_GO`, `P_ALGORITHM_STATUS=NOT_READY`, `G1=INCOMPLETE`, `G4=NOT_AUTHORIZED` та `G-A1-C4-REF-FROZEN=NOT_READY` не змінювалися. Frozen scenarios, B0 configuration, policy definitions та попередні архіви не змінювалися.
 
-Baseline залишається `PROSPECTIVE_RECONSTRUCTION_NOT_HISTORICAL` і `NOT_APPROVED`; policy — `DRAFT_OPEN_UNAPPROVED`; trust scope доказового verifier — `TEST_ONLY`. Залишено без змін `NO_GO`, `P_ALGORITHM_STATUS=NOT_READY`, `G1=INCOMPLETE`, `G4=NOT_AUTHORIZED`, `G-A1-C4-REF-FROZEN=NOT_READY`. Це DEVELOPMENT-валідація реалізації, а не виміряний B0/Ψ результат, approval, незалежний semantic review чи доказ повноти нормативних вимог. Frozen research artifacts та authorization gates не змінювалися.
+Попередній run `40236384716` з V1-діагнозом `RETAIN_CANDIDATE` лишається незмінним історичним архівом; circular V1 результат не використовується як підстава для висновків у цій V2 діагностиці. Безпосередньо попередній run `40282986322` також лишається незміненим: його `UNVERIFIED` capability результат був наслідком integration mismatch, а не доказом відсутньої нормативної вимоги.
 
-Архів містить сирі результати, source/config identities, input/output digests та transition readback. Перевірка завантаженого release asset:
+## Регресійні перевірки
+
+- **A — коректний digest:** обидва evaluator inventories стають `VERIFIED_FOR_DECLARED_STATIC_SCOPE`, коли digest збігається і решта доказів валідна.
+- **B/C — неправильний або відсутній digest:** capability statuses лишаються `UNVERIFIED`.
+- **D — недостатні інші докази:** malformed digest, неправильний source commit, incomplete inspection, inconsistent diagnostics, mismatched evidence digest або відсутній representation binding не проходять тільки на підставі matching configuration SHA.
+- **E — реальна execution regression:** A0.3 → A0.4 records із `run_fresh_evaluator()` читаються capability verifier без перейменування; integration перевіряє digests against copied configuration artifacts, capability statuses та `COVERED` mappings.
+
+Перевірено detached checksum і локальний archive readback:
 
 ```text
-shasum -a 256 mono-ci-psi-transition-40282986322-1.zip
-d79f53a11a9d60f71c791de74248a55d04fe8dce28df3497af4e9cfd8d8d1cb1
+shasum -a 256 mono-ci-psi-transition-40306427232-1.zip
+9557934af144f6c8bdb1e5007222c1e5a41396363a1862d9e7ffc04de52f5a54
 
 uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_b0_psi_archive \
-  transition-verify --archive mono-ci-psi-transition-40282986322-1.zip \
+  transition-verify --archive mono-ci-psi-transition-40306427232-1.zip \
   --extract-to <readback-directory>
 verification_status: PASS; member_count: 445
 ```
 
-Наступна межа — незалежно верифікувати evaluator capability inventory у заявленому scope та окремо закрити нормативну authority, applicability, requirement-universe completeness і semantic review. Цей звіт сам по собі їх не встановлює й не просуває жоден research gate.
+Наступна межа — незалежні докази нормативної authority та completeness, semantic review і достатності динамічної graph інспекції. Поточне технічне виправлення і цей звіт їх не встановлюють та не просувають жоден research gate.
