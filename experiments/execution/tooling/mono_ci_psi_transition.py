@@ -87,6 +87,7 @@ INSPECTION_COVERAGE_SCHEMA = "mono_ci_psi_inspection_coverage_v1.schema.json"
 ADAPTATION_NECESSITY_SCHEMA_V1 = "mono_ci_psi_adaptation_necessity_v1.schema.json"
 ADAPTATION_NECESSITY_SCHEMA_V2 = "mono_ci_psi_adaptation_necessity_v2.schema.json"
 RUN_ID_PATTERN = re.compile(r"^DEV_PSI_TRANSITION_[A-Za-z0-9_-]{1,48}$")
+SHA256_PATTERN = re.compile(r"^[a-f0-9]{64}$")
 RUNTIME_MODULES = (
     "contracts.py",
     "errors.py",
@@ -1725,8 +1726,10 @@ def _evaluator_capabilities(
     run_root: Path,
     config_path: str,
 ) -> dict[str, Any]:
-    result = run.get("evidence", {}).get("result", {})
-    diagnostics = run.get("evidence", {}).get("diagnostics", {})
+    evidence = run.get("evidence", {})
+    result = evidence.get("result", {})
+    diagnostics = evidence.get("diagnostics", {})
+    evaluator_evidence = evidence.get("evaluator", {})
     expected_commit = BEFORE_COMMIT if state == BEFORE_STATE else AFTER_COMMIT
     config_relpath = (
         f"PSI/evaluator-observations/implementation/{evaluator_id}/{Path(config_path).name}"
@@ -1745,10 +1748,20 @@ def _evaluator_capabilities(
         {"path": str(output_path), "sha256": sha256_file(run_root / str(output_path))},
         {"path": coverage_path, "sha256": sha256_file(run_root / coverage_path)},
     ]
+    run_configuration_sha256 = run.get("configuration_sha256")
+    configuration_digest_verified = (
+        isinstance(configuration_sha256, str)
+        and SHA256_PATTERN.fullmatch(configuration_sha256) is not None
+        and isinstance(run_configuration_sha256, str)
+        and SHA256_PATTERN.fullmatch(run_configuration_sha256) is not None
+        and run_configuration_sha256 == configuration_sha256
+        and isinstance(evaluator_evidence, dict)
+        and evaluator_evidence.get("configuration_digest") == configuration_sha256
+    )
     base_verified = (
         representation_bound
         and run.get("source_commit_sha") == expected_commit
-        and run.get("evaluator_configuration_sha256") == configuration_sha256
+        and configuration_digest_verified
         and coverage.get("source_inspection_status") == "COMPLETE"
         and result.get("execution_status") == "COMPLETED"
         and result.get("compliance") == "COMPLIANT"

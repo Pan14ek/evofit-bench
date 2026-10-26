@@ -276,6 +276,11 @@ dynamic dependency completeness remains UNKNOWN. V2 evidence binds expected
 and inspected file scope, while archive verification can reconstruct the
 historical V1 projection. The diagnostic label does not replace exact-pair,
 normative, historical-baseline, independent-review or authorization evidence.
+Evaluator execution records expose the configuration identity as
+`configuration_sha256`; capability verification must consume that exact
+digest, validate its SHA-256 shape, and retain the other source, scope,
+execution, diagnostics and representation checks. Archive readback binds the
+same field to the copied evaluator configuration artifact.
 
 ## Verification and further reading
 
