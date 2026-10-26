@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_psi_inspection_coverage_v1.schema.json",
+  "title": "Independent source-bound evaluator inspection coverage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "architecture_state", "evaluator_id", "inspection_unit", "expected_subjects", "inspected_subjects", "missing_subjects", "unexpected_subjects", "altered_subjects", "verified_matching_subjects", "counts", "source_inspection_status", "overall_completeness", "uncertainties", "source_inventory", "dependency_analysis", "evidence_sources"],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_PSI_INSPECTION_COVERAGE_V1"},
+    "architecture_state": {"enum": ["A0_3_GOVERNED_MODULE_GRAPH", "A0_4_REPORT_QUERY_PORT"]},
+    "evaluator_id": {"enum": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]},
+    "inspection_unit": {"const": "file"},
+    "expected_subjects": {"$ref": "#/$defs/paths"},
+    "inspected_subjects": {"$ref": "#/$defs/paths"},
+    "missing_subjects": {"$ref": "#/$defs/paths"},
+    "unexpected_subjects": {"$ref": "#/$defs/paths"},
+    "altered_subjects": {"$ref": "#/$defs/paths"},
+    "verified_matching_subjects": {"$ref": "#/$defs/paths"},
+    "counts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["expected_count", "inspected_count", "missing_count", "unexpected_count", "altered_count", "verified_matching_count"],
+      "properties": {
+        "expected_count": {"type": "integer", "minimum": 0},
+        "inspected_count": {"type": "integer", "minimum": 0},
+        "missing_count": {"type": "integer", "minimum": 0},
+        "unexpected_count": {"type": "integer", "minimum": 0},
+        "altered_count": {"type": "integer", "minimum": 0},
+        "verified_matching_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "source_inspection_status": {"enum": ["COMPLETE", "INCOMPLETE"]},
+    "overall_completeness": {"enum": ["COMPLETE_FOR_DECLARED_STATIC_SOURCE_SCOPE", "STATIC_SCOPE_MATCHED_DYNAMIC_EDGE_COMPLETENESS_UNKNOWN", "INCOMPLETE_OR_UNRESOLVED"]},
+    "uncertainties": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "source_inventory": {
+      "type": "array", "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["path", "git_blob_sha1", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "git_blob_sha1": {"$ref": "#/$defs/sha1"},
+          "sha256": {"$ref": "#/$defs/sha256"}
+        }
+      }
+    },
+    "dependency_analysis": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["basis", "expected_static_relationships", "observed_static_relationships", "missing_static_relationships", "unexpected_static_relationships", "expected_edge_subjects", "observed_edge_subjects", "expected_static_cycles", "observed_cycles", "cycle_comparison", "allowed_policy_edges", "static_relationship_comparison", "exact_dependency_edge_completeness", "reason_codes"],
+          "properties": {
+            "basis": {"const": "SOURCE_DERIVED_STATIC_IMPORTS; allowed policy edges are separate"},
+            "expected_static_relationships": {"type": "array", "items": {"$ref": "#/$defs/relationship"}},
+            "observed_static_relationships": {"type": "array", "items": {"$ref": "#/$defs/relationship"}},
+            "missing_static_relationships": {"type": "array", "items": {"$ref": "#/$defs/relationship"}},
+            "unexpected_static_relationships": {"type": "array", "items": {"$ref": "#/$defs/relationship"}},
+            "expected_edge_subjects": {"$ref": "#/$defs/strings"},
+            "observed_edge_subjects": {"$ref": "#/$defs/strings"},
+            "expected_static_cycles": {"type": "array", "items": {"$ref": "#/$defs/cycle"}},
+            "observed_cycles": {"type": "array", "items": {"$ref": "#/$defs/cycle"}},
+            "cycle_comparison": {"enum": ["MATCHED", "MISMATCH"]},
+            "allowed_policy_edges": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["from", "to"], "properties": {"from": {"type": "string"}, "to": {"type": "string"}}}},
+            "static_relationship_comparison": {"enum": ["MATCHED", "MISMATCH"]},
+            "exact_dependency_edge_completeness": {"const": "UNKNOWN"},
+            "reason_codes": {"$ref": "#/$defs/strings"}
+          }
+        }
+      ]
+    },
+    "evidence_sources": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_commit_sha", "source_tree_sha", "evaluator_configuration_sha256", "state_manifest_sha256", "evaluator_output_sha256", "source_scope_sha256"],
+      "properties": {
+        "source_commit_sha": {"$ref": "#/$defs/sha1"},
+        "source_tree_sha": {"$ref": "#/$defs/sha1"},
+        "evaluator_configuration_sha256": {"$ref": "#/$defs/sha256"},
+        "state_manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "evaluator_output_sha256": {"$ref": "#/$defs/sha256"},
+        "source_scope_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  },
+  "$defs": {
+    "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "strings": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "cycle": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 1}},
+    "paths": {"$ref": "#/$defs/strings"},
+    "relationship": {
+      "type": "object", "additionalProperties": false,
+      "required": ["from", "to", "source_path", "line", "source_module", "target_module", "imported_name"],
+      "properties": {
+        "from": {"type": "string"}, "to": {"type": "string"},
+        "source_path": {"type": "string"}, "line": {"type": "integer", "minimum": 0},
+        "source_module": {"type": "string"}, "target_module": {"type": "string"},
+        "imported_name": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

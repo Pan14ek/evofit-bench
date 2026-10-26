@@ -28,8 +28,11 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - `mono-ci-b0-psi-v1/` and `tooling/mono_ci_b0_psi_preflight.py` — separate, read-only preparation for a bounded monograph CI comparison; current NO_GO, historical observations excluded from methods/current case status, metric statuses defined by arm, and no method bundles or measured execution.
 - `mono-ci-b0-psi-execution-v1/` and `tooling/mono_ci_b0_psi_execution.py` — separately versioned baseline-reconstruction proposal and DEVELOPMENT-only input/evaluator runner; preserves NO_GO and does not score.
 - `tooling/mono_ci_psi_transition.py` — additive one-transition A0.3→A0.4 Method P DEVELOPMENT execution and verified archive; keeps method runtime isolated from repository/Git/network access and leaves official NO_GO/NOT_READY gates intact.
-- `tooling/mono_ci_psi_evidence.py` — fresh A1 evaluator observations, source-inventory fact readback, and a run-local TEST_ONLY evidence trust context; it does not supply normative authority or semantic adequacy.
+- `tooling/mono_ci_psi_evidence.py` — fresh A1 evaluator observations, V1-compatible / V2 source-scope evidence projection, source-inventory fact readback, and a run-local TEST_ONLY evidence trust context; it does not supply normative authority or semantic adequacy.
+- `tooling/mono_ci_psi_coverage.py` — independent Git-tree/config/manifest inspection coverage and source-derived static module-import/cycle comparison; typed adaptation comparison keeps exact dynamic dependency completeness UNKNOWN.
+- `schemas/mono_ci_psi_inspection_coverage_v1.schema.json` and `schemas/mono_ci_psi_adaptation_necessity_v1.schema.json`/`v2` — additive DEVELOPMENT diagnostic contracts, separate from Method P operation selection; V2 records independent requirement provenance/completeness and separately verified evaluator capabilities, while V1 remains readable without reinterpretation.
 - `MONO_CI_PSI_EVIDENCE_REQUIREMENT_TEST_MATRIX.md` and `MONO_CI_PSI_EVIDENCE_BACKED_DEVELOPMENT_REPORT_UK.md` — implementation-to-test traceability and the source-revision-specific DEVELOPMENT run readback; neither is a scientific approval or result claim.
+- `MONO_CI_PSI_COVERAGE_ADAPTATION_REPORT_UK.md` — readback of the verified A0.3→A0.4 source coverage, the separate adaptation-necessity diagnosis, actual Ψ HOLD, and unchanged scientific gates.
 - `MONO_CI_PSI_TRANSITION_DEVELOPMENT_REPORT_UK.md` — concise Ukrainian record of the raw DEVELOPMENT result, hashes, uncertainties, verification and unchanged research gates.
 - `MONO_A1_REFERENCE_FREEZE_CHECKLIST.md` — preserved V1 checklist; see V2 for current W0 readiness
 - `MONO_A1_REFERENCE_FREEZE_CHECKLIST_V2.md` — current W0 checklist for `G-A1-C4-REF-FROZEN`; the source-pair identity sub-item is verified, while all scientific, method, fixture, custody, freeze, and readback blockers remain
@@ -85,11 +88,19 @@ exact blockers are recorded in `docs/g1/B0P_READINESS_V1.md`.
 
 The additive A0.3→A0.4 Ψ execution path binds fresh A1 evaluator processes to
 both exact source revisions, while only fresh A0.4 observations enter the
-adaptation sidecar. Each evaluator output has a digest-bound typed inspection
-scope (file or dependency edge), reconstructed and checked against the raw
-output during readback. Sidecar verification is explicitly `TEST_ONLY`; pair
-adequacy and normative mapping remain `UNDETERMINED`, and source-inventory
-readback recomputes only four module facts from digest-pinned inventory paths.
+adaptation sidecar. Independent coverage derives expected files from pinned Git
+trees, state manifests, and evaluator configuration, then compares output paths
+and source digests. The graph check compares static imports and cycles while
+leaving dynamic dependency completeness UNKNOWN. A separate adaptation
+diagnostic runs after Method P and is not supplied as a method input. Its V2
+contract separates requirements extracted from pinned architecture manifests
+and catalog/authority uncertainty from typed capabilities extracted from
+evaluator configuration and raw observations. It compares them only through
+documented structured mappings; historical V1 reports retain schema and
+checksum readback without reinterpretation. Sidecar
+verification is explicitly `TEST_ONLY`; pair adequacy and normative mapping
+remain `UNDETERMINED`, and source-inventory readback recomputes only four module
+facts from digest-pinned inventory paths.
 The runtime remains network-isolated and cannot read the source repositories
 or A0.3 evaluator observations. The run/archive schemas retain NO_GO,
 NOT_READY, G1/G4 and reference-gate boundaries; no scoring or cross-arm
