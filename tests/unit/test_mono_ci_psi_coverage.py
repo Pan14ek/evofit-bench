@@ -213,6 +213,16 @@ def test_expected_subjects_are_derived_independently_from_git_and_config(tmp_pat
     assert result["source_inspection_status"] == "INCOMPLETE"
 
 
+def test_inspection_coverage_schema_accepts_a05_state_without_changing_report_shape(
+    tmp_path: Path,
+) -> None:
+    fixture = _coverage_fixture(tmp_path)
+    result = _verify(fixture)
+    result["architecture_state"] = "A0_5_MODULE_DATA_OWNERSHIP"
+
+    validate_payload("mono_ci_psi_inspection_coverage_v1.schema.json", result)
+
+
 def test_additional_unconfigured_subject_is_reported_as_unexpected(tmp_path: Path) -> None:
     fixture = _coverage_fixture(tmp_path)
     _write(fixture["repository"], "app/main.py", "# outside configured modules\n")
