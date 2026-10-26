@@ -182,7 +182,7 @@
         },
         "artifact_name": {
           "type": "string",
-          "pattern": "^mono-ci-psi-transition-[A-Za-z0-9_-]+$"
+          "pattern": "^mono-ci-(?:psi-transition|psi-a05)-[A-Za-z0-9_-]+$"
         },
         "retention_days": {
           "const": 90

@@ -12,6 +12,7 @@ import yaml
 
 from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError, ProtocolError
+from experiments.execution.tooling.mono_ci_b0_psi_archive import _validate_archive_metadata
 from experiments.execution.tooling.mono_ci_psi_evidence import (
     EVALUATOR_CONFIGS,
     evaluator_source_artifacts,
@@ -31,6 +32,16 @@ from experiments.execution.tooling.mono_ci_psi_transition import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_archive_metadata_accepts_a05_namespace_and_preserves_transition_names() -> None:
+    workflow_url = "https://github.com/Pan14ek/evofit-bench/actions/runs/123456"
+
+    _validate_archive_metadata(workflow_url, "mono-ci-psi-a05-123456-1", "uv 0.9.0")
+    _validate_archive_metadata(workflow_url, "mono-ci-psi-transition-test-1", "uv 0.9.0")
+
+    with pytest.raises(ProtocolError, match="ARCHIVE_ARTIFACT_NAME_INVALID"):
+        _validate_archive_metadata(workflow_url, "mono-ci-psi-a05-bad/tag", "uv 0.9.0")
 
 
 def _evaluator_capability_case(tmp_path: Path, evaluator_id: str) -> dict[str, Any]:

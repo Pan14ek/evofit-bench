@@ -36,7 +36,7 @@ WORKFLOW_URL_PATTERN = re.compile(
     r"^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/runs/[0-9]+$"
 )
 ARTIFACT_NAME_PATTERN = re.compile(
-    r"^mono-ci-(?:b0-psi-development|psi-transition)-[A-Za-z0-9_-]+$"
+    r"^mono-ci-(?:b0-psi-development|psi-transition|psi-a05)-[A-Za-z0-9_-]+$"
 )
 SOURCE_SHA_PATTERN = re.compile(r"^[a-f0-9]{40}$")
 MAX_ARCHIVE_SIZE_BYTES = 100 * 1024 * 1024
