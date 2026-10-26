@@ -114,6 +114,7 @@ jobs:
         run: >-
           uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_b0_psi_archive transition-verify
           --archive "$ARCHIVE_PATH"
+          --repository "$GITHUB_WORKSPACE"
           --extract-to "$VERIFY_OUTPUT"
       - name: Upload persistent DEVELOPMENT evidence
         id: upload
@@ -175,6 +176,7 @@ jobs:
           (cd "$RELEASE_READBACK" && sha256sum --check "${archive_name}.sha256")
           uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_b0_psi_archive transition-verify \
             --archive "${RELEASE_READBACK}/${archive_name}" \
+            --repository "$GITHUB_WORKSPACE" \
             --extract-to "$RELEASE_VERIFY"
           release_url="$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json url --jq .url)"
           echo "### ΔA5 DEVELOPMENT evidence archive fallback" >> "$GITHUB_STEP_SUMMARY"

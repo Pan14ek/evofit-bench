@@ -29,7 +29,7 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - `mono-ci-b0-psi-execution-v1/` and `tooling/mono_ci_b0_psi_execution.py` — separately versioned baseline-reconstruction proposal and DEVELOPMENT-only input/evaluator runner; preserves NO_GO and does not score.
 - `mono-ci-b0-psi-execution-a05-v1/` and `tooling/mono_ci_psi_a05.py` — separate prospective A0.4 two-control baseline and bounded A0.4→A0.5 adapter; fresh ownership probes, raw evidence, and Method Ψ DEVELOPMENT result preserve NO_GO and do not score.
 - `tooling/mono_ci_psi_transition.py` — additive one-transition A0.3→A0.4 Method P DEVELOPMENT execution and verified archive; keeps method runtime isolated from repository/Git/network access and leaves official NO_GO/NOT_READY gates intact.
-- `tooling/mono_ci_psi_a05.py` — transition-specific adapter over the existing isolated runner; it leaves A0.3→A0.4 defaults unchanged and records an independently source-bound ownership positive/negative probe.
+- `tooling/mono_ci_psi_a05.py` — transition-specific adapter over the existing isolated runner; V4 bundles include a replayable negative source patch, exact modified bytes, deterministic local-only probe identity, raw evaluator streams, and outcome-neutral three-state detection readback. V1/V2/V3 archive contracts remain readable.
 - `tooling/mono_ci_psi_evidence.py` — fresh A1 evaluator observations, V1-compatible / V2 source-scope evidence projection, source-inventory fact readback, and a run-local TEST_ONLY evidence trust context; it does not supply normative authority or semantic adequacy.
 - `tooling/mono_ci_psi_coverage.py` — independent Git-tree/config/manifest inspection coverage and source-derived static module-import/cycle comparison; typed adaptation comparison keeps exact dynamic dependency completeness UNKNOWN.
 - `schemas/mono_ci_psi_inspection_coverage_v1.schema.json` and `schemas/mono_ci_psi_adaptation_necessity_v1.schema.json`/`v2` — additive DEVELOPMENT diagnostic contracts, separate from Method P operation selection; V2 records independent requirement provenance/completeness and separately verified evaluator capabilities, while V1 remains readable without reinterpretation.
@@ -109,14 +109,17 @@ or A0.3 evaluator observations. The run/archive schemas retain NO_GO,
 NOT_READY, G1/G4 and reference-gate boundaries; no scoring or cross-arm
 comparison is performed.
 
-The A0.4→A0.5 adapter is a separate V3 run identity. Its prospective baseline
+The A0.4→A0.5 adapter uses a separate V4 run identity. Its prospective baseline
 contains only the two A0.4 active controls. A0.5's static persistence ownership
 requirement is independently extracted from the versioned state manifest and
 compared after Method Ψ; AC_DATA_OWNERSHIP is a separately executed, available
 evaluator rather than a preloaded baseline representation. A clean A0.5 source
 and an isolated Tasks→Notifications foreign-table probe bind to exact commits,
 configuration digests, raw outputs, and independent inspection coverage. The
-probe demonstrates only the recorded static detector scope. Method input remains
+probe source is replayed from the pinned A0.5 parent using archived patch and
+file bytes; its deterministic commit is explicitly local-only. Detection is
+recomputed as DETECTED, NOT_DETECTED, or NOT_EVALUABLE from the raw result and
+verified scope. The probe demonstrates only the recorded static detector scope. Method input remains
 governed by the existing V3 projection and DRAFT/OPEN policy source; the run's
 actual decision and any candidate status are preserved without inserting
 preregistered expected operations. All official readiness and authorization

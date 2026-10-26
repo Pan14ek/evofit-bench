@@ -33,11 +33,14 @@ DEVELOPMENT API after the focused regressions and `make development-quality`,
 then uses the transition archive contract in the shared B0/Ψ archive module.
 Keep the existing B0 workflow and its archive contract unchanged.
 
-The ΔA5 workflow is a separate branch-scoped V3 transition identity. It runs
+The ΔA5 workflow is a separate branch-scoped V4 transition identity. It runs
 the focused A0.5 ownership tests, the prior A0.3→A0.4 transition regression,
 and development quality before executing Ψ against the canonical A0.4 source
-and committed A0.5 source. It verifies the raw archive before artifact upload;
-its private prerelease fallback repeats checksum and extracted-run readback.
+and committed A0.5 source. It verifies the raw archive before artifact upload
+with the source checkout available for negative-probe replay; its private
+prerelease fallback repeats checksum and extracted-run readback. V4 preserves
+patch/source bytes and recomputes outcome-neutral detection, while V3 archives
+retain their original verifier behavior.
 The workflow preserves NO_GO, NOT_READY, INCOMPLETE, and NOT_AUTHORIZED gates.
 
 CI installs the optional research dashboard and figure extras so their reader, visualization, and export checks run under the frozen lockfile.

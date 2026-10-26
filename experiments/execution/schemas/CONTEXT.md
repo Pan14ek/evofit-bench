@@ -58,6 +58,8 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `mono_ci_psi_transition_run_v2.schema.json` and `mono_ci_psi_transition_archive_v2.schema.json` — additive evidence-backed transition records with raw-output-bound inspection coverage, checksummed post-method necessity diagnostics and TEST_ONLY evidence bindings; allow decision values HOLD/REJECT/ACCEPT, require predictions only for ACCEPT, and preserve all scientific NO_GO/NOT_READY gates. V1 schemas remain supported for readback.
 - `mono_ci_psi_transition_archive_v3.schema.json` — A0.5 archive contract pinned to the prospective A0.4 baseline, while V1/V2 archive readback remains unchanged.
 - `mono_ci_psi_a05_experiment_evidence_v1.schema.json` — binds the A0.5 ownership positive/negative probes and, when Method Ψ materializes a candidate, its exact serialized candidate, independent evaluator runs, baseline comparison, obligation coverage, and measured incremental control cost.
+- `mono_ci_psi_transition_run_v4.schema.json` and `mono_ci_psi_transition_archive_v4.schema.json` — additive outcome-neutral ΔA5 DEVELOPMENT contracts; V4 archive verification requires replay against the pinned source checkout, while V1/V2/V3 semantics remain unchanged.
+- `mono_ci_psi_a05_experiment_evidence_v2.schema.json` and `mono_ci_psi_a05_probe_manifest_v1.schema.json` — bind exact negative-probe patch and source bytes, local-only deterministic source identity, evaluator/process/raw-stream identities, and DETECTED/NOT_DETECTED/NOT_EVALUABLE diagnostics without fixing evaluator outcomes.
 
 This is a selected list, not a complete source inventory.
 

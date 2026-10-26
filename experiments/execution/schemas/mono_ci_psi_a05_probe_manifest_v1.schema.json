@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_psi_a05_probe_manifest_v1.schema.json",
+  "title": "Replayable A0.5 negative probe source manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_provenance",
+    "remote_commit_required",
+    "parent_commit_sha",
+    "parent_repository_tree_sha",
+    "parent_application_tree_sha",
+    "probe_commit_sha",
+    "probe_repository_tree_sha",
+    "probe_application_tree_sha",
+    "probe_commit_provenance",
+    "changed_paths",
+    "changed_sources",
+    "patch_path",
+    "patch_sha256",
+    "evaluator_configurations",
+    "evaluator_evidence_bindings"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "MONO_CI_PSI_A05_PROBE_MANIFEST_V1"
+    },
+    "source_provenance": {
+      "const": "DETERMINISTIC_LOCAL_PROBE_COMMIT_RECONSTRUCTED_FROM_ARCHIVED_PATCH"
+    },
+    "remote_commit_required": {
+      "const": false
+    },
+    "parent_commit_sha": {
+      "$ref": "#/$defs/sha1"
+    },
+    "parent_repository_tree_sha": {
+      "$ref": "#/$defs/sha1"
+    },
+    "parent_application_tree_sha": {
+      "$ref": "#/$defs/sha1"
+    },
+    "probe_commit_sha": {
+      "$ref": "#/$defs/sha1"
+    },
+    "probe_repository_tree_sha": {
+      "$ref": "#/$defs/sha1"
+    },
+    "probe_application_tree_sha": {
+      "$ref": "#/$defs/sha1"
+    },
+    "probe_commit_provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "availability",
+        "author",
+        "email",
+        "commit_date",
+        "message"
+      ],
+      "properties": {
+        "availability": {
+          "const": "LOCAL_ONLY_RECREATED_FROM_PATCH"
+        },
+        "author": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "commit_date": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "changed_paths": {
+      "const": [
+        "app/modules/tasks/repository.py"
+      ]
+    },
+    "changed_sources": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "artifact_path",
+          "original_file_sha256",
+          "modified_file_sha256"
+        ],
+        "properties": {
+          "path": {
+            "const": "app/modules/tasks/repository.py"
+          },
+          "artifact_path": {
+            "const": "source-files/app/modules/tasks/repository.py"
+          },
+          "original_file_sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "modified_file_sha256": {
+            "$ref": "#/$defs/sha256"
+          }
+        }
+      }
+    },
+    "patch_path": {
+      "const": "probes/ownership-negative/source.patch"
+    },
+    "patch_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "evaluator_configurations": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "evaluator_id",
+          "configuration_path",
+          "artifact_path",
+          "configuration_sha256"
+        ],
+        "properties": {
+          "evaluator_id": {
+            "enum": [
+              "AC_PUBLIC_API",
+              "AC_MODULE_GRAPH",
+              "AC_DATA_OWNERSHIP"
+            ]
+          },
+          "configuration_path": {
+            "type": "string"
+          },
+          "artifact_path": {
+            "type": "string"
+          },
+          "configuration_sha256": {
+            "$ref": "#/$defs/sha256"
+          }
+        }
+      }
+    },
+    "evaluator_evidence_bindings": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_commit_sha",
+          "source_tree_sha",
+          "application_tree_sha",
+          "evaluator_id",
+          "process_exit_code",
+          "execution_status",
+          "compliance",
+          "configuration_sha256",
+          "evaluator_source_sha256",
+          "output_path",
+          "output_sha256",
+          "coverage_path",
+          "coverage_sha256",
+          "stdout_path",
+          "stdout_sha256",
+          "stderr_path",
+          "stderr_sha256"
+        ],
+        "properties": {
+          "source_commit_sha": {
+            "$ref": "#/$defs/sha1"
+          },
+          "source_tree_sha": {
+            "$ref": "#/$defs/sha1"
+          },
+          "application_tree_sha": {
+            "$ref": "#/$defs/sha1"
+          },
+          "evaluator_id": {
+            "enum": [
+              "AC_PUBLIC_API",
+              "AC_MODULE_GRAPH",
+              "AC_DATA_OWNERSHIP"
+            ]
+          },
+          "process_exit_code": {
+            "type": "integer"
+          },
+          "execution_status": {
+            "enum": [
+              "COMPLETED",
+              "FAILED"
+            ]
+          },
+          "compliance": {
+            "enum": [
+              "COMPLIANT",
+              "NON_COMPLIANT",
+              "NOT_EVALUABLE",
+              "NOT_APPLICABLE",
+              "UNKNOWN"
+            ]
+          },
+          "configuration_sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "evaluator_source_sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "output_path": {
+            "type": "string"
+          },
+          "output_sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "coverage_path": {
+            "type": "string"
+          },
+          "coverage_sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "stdout_path": {
+            "type": "string"
+          },
+          "stdout_sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "stderr_path": {
+            "type": "string"
+          },
+          "stderr_sha256": {
+            "$ref": "#/$defs/sha256"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha1": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

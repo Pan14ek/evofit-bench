@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import re
@@ -54,6 +55,11 @@ PROBE_SOURCE = (
     '    foreign_table = Table("notifications", MetaData(), autoload_with=session.bind)\n'
     "    return session.execute(select(foreign_table)).all()\n"
 )
+PROBE_RELATIVE_ROOT = "probes/ownership-negative"
+PROBE_COMMIT_MESSAGE = "isolated A0.5 ownership violation probe"
+PROBE_AUTHOR = "EvoFitBench A05 Probe"
+PROBE_EMAIL = "a05-probe@example.invalid"
+PROBE_COMMIT_DATE = "2026-10-26T00:00:00+0000"
 
 
 def _git_text(repository: Path, *args: str) -> str:
@@ -70,6 +76,274 @@ def _git_text(repository: Path, *args: str) -> str:
     if result.returncode:
         raise ProtocolError("MONO_CI_PSI_A05_GIT_READ_FAILED")
     return result.stdout.strip()
+
+
+def _git_bytes(repository: Path, *args: str, input_bytes: bytes | None = None) -> bytes:
+    git_binary = shutil.which("git")
+    if git_binary is None:
+        raise ProtocolError("MONO_CI_PSI_A05_GIT_EXECUTABLE_MISSING")
+    result = subprocess.run(  # nosec B603 # noqa: S603 - fixed local Git argv only
+        [git_binary, "-C", str(repository), *args],
+        check=False,
+        capture_output=True,
+        input=input_bytes,
+        env={"PATH": os.defpath, "LANG": "C.UTF-8"},
+    )
+    if result.returncode:
+        raise ProtocolError("MONO_CI_PSI_A05_GIT_READ_FAILED")
+    return result.stdout
+
+
+def _safe_probe_path(value: Any) -> str:
+    if not isinstance(value, str) or not value or "\\" in value:
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_PATH_INVALID")
+    path = Path(value)
+    if path.is_absolute() or any(part in {"", ".", ".."} for part in path.parts):
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_PATH_INVALID")
+    return path.as_posix()
+
+
+def _deterministic_probe_commit(checkout: Path) -> str:
+    environment = {
+        "PATH": os.defpath,
+        "LANG": "C.UTF-8",
+        "GIT_AUTHOR_DATE": PROBE_COMMIT_DATE,
+        "GIT_COMMITTER_DATE": PROBE_COMMIT_DATE,
+    }
+    git_binary = shutil.which("git")
+    if git_binary is None:
+        raise ProtocolError("MONO_CI_PSI_A05_GIT_EXECUTABLE_MISSING")
+    add = subprocess.run(  # nosec B603 # noqa: S603 - fixed local Git argv only
+        [git_binary, "-C", str(checkout), "add", "--", PROBE_PATH],
+        check=False,
+        capture_output=True,
+        env=environment,
+    )
+    if add.returncode:
+        raise ProtocolError("MONO_CI_PSI_A05_PROBE_STAGE_FAILED")
+    commit = subprocess.run(  # nosec B603 # noqa: S603 - fixed local Git argv only
+        [
+            git_binary,
+            "-C",
+            str(checkout),
+            "-c",
+            f"user.name={PROBE_AUTHOR}",
+            "-c",
+            f"user.email={PROBE_EMAIL}",
+            "-c",
+            "commit.gpgsign=false",
+            "commit",
+            "--quiet",
+            "-m",
+            PROBE_COMMIT_MESSAGE,
+        ],
+        check=False,
+        capture_output=True,
+        env=environment,
+    )
+    if commit.returncode:
+        raise ProtocolError("MONO_CI_PSI_A05_PROBE_COMMIT_FAILED")
+    return _git_text(checkout, "rev-parse", "HEAD")
+
+
+def _probe_patch_paths(patch_bytes: bytes) -> list[str]:
+    try:
+        patch_text = patch_bytes.decode("utf-8")
+    except UnicodeDecodeError as error:
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_PATCH_INVALID") from error
+    paths: list[str] = []
+    old_paths: list[str] = []
+    new_paths: list[str] = []
+    for line in patch_text.splitlines():
+        if line.startswith("diff --git "):
+            match = re.fullmatch(r"diff --git a/(.+) b/(.+)", line)
+            if match is None:
+                raise ContractValidationError("MONO_CI_PSI_A05_PROBE_PATCH_PATH_INVALID")
+            left, right = (_safe_probe_path(match.group(1)), _safe_probe_path(match.group(2)))
+            if left != right:
+                raise ContractValidationError("MONO_CI_PSI_A05_PROBE_PATCH_PATH_INVALID")
+            paths.append(left)
+        elif line.startswith("--- "):
+            header_path = line[4:].split("\t", maxsplit=1)[0]
+            expected_prefix = "a/"
+            if not header_path.startswith(expected_prefix):
+                raise ContractValidationError("MONO_CI_PSI_A05_PROBE_PATCH_PATH_INVALID")
+            old_paths.append(_safe_probe_path(header_path.removeprefix(expected_prefix)))
+        elif line.startswith("+++ "):
+            header_path = line[4:].split("\t", maxsplit=1)[0]
+            expected_prefix = "b/"
+            if not header_path.startswith(expected_prefix):
+                raise ContractValidationError("MONO_CI_PSI_A05_PROBE_PATCH_PATH_INVALID")
+            new_paths.append(_safe_probe_path(header_path.removeprefix(expected_prefix)))
+        elif line.startswith(("rename from ", "rename to ", "copy from ", "copy to ")):
+            raise ContractValidationError("MONO_CI_PSI_A05_PROBE_PATCH_PATH_INVALID")
+    if not paths or len(paths) != len(set(paths)) or old_paths != paths or new_paths != paths:
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_PATCH_INVALID")
+    return sorted(paths)
+
+
+@contextlib.contextmanager
+def replay_negative_probe(
+    repository: Path,
+    probe_artifact_root: Path,
+    *,
+    expected_parent_commit: str,
+    expected_parent_tree: str,
+    expected_parent_application_tree: str,
+    output: Path | None = None,
+) -> Iterator[tuple[Path, dict[str, Any]]]:
+    """Recreate and verify the archived negative source from its committed parent.
+
+    The synthesized probe commit is deterministic and local to the checkout. It is
+    recreated from the archived patch; no remote probe commit object is required.
+    """
+    repo = repository.resolve(strict=True)
+    if probe_artifact_root.is_symlink() or probe_artifact_root.parent.is_symlink():
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_ARTIFACT_SYMLINK_FORBIDDEN")
+    artifact_root = probe_artifact_root.resolve(strict=True)
+    if any(path.is_symlink() for path in artifact_root.rglob("*")):
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_ARTIFACT_SYMLINK_FORBIDDEN")
+    manifest_path = artifact_root / "probe-manifest.json"
+    patch_path = artifact_root / "source.patch"
+    if any(path.is_symlink() or not path.is_file() for path in (manifest_path, patch_path)):
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_ARTIFACT_MISSING")
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        patch_bytes = patch_path.read_bytes()
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_ARTIFACT_INVALID") from error
+    validate_payload("mono_ci_psi_a05_probe_manifest_v1.schema.json", manifest)
+    if (
+        not isinstance(manifest, dict)
+        or manifest.get("schema_version") != "MONO_CI_PSI_A05_PROBE_MANIFEST_V1"
+        or sha256_bytes(patch_bytes) != manifest.get("patch_sha256")
+        or manifest.get("parent_commit_sha") != expected_parent_commit
+        or manifest.get("parent_repository_tree_sha") != expected_parent_tree
+        or manifest.get("parent_application_tree_sha") != expected_parent_application_tree
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_MANIFEST_BINDING_MISMATCH")
+    source_rows = manifest.get("changed_sources")
+    if not isinstance(source_rows, list) or len(source_rows) != 1:
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_SOURCE_INVENTORY_INVALID")
+    source_row = source_rows[0]
+    path = _safe_probe_path(source_row.get("path"))
+    if path != PROBE_PATH or _probe_patch_paths(patch_bytes) != [path]:
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_PATH_INVENTORY_MISMATCH")
+    source_relpath = source_row.get("artifact_path")
+    if source_relpath != f"source-files/{path}":
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_SOURCE_ARTIFACT_PATH_INVALID")
+    source_file = artifact_root / source_relpath
+    if source_file.is_symlink() or not source_file.is_file():
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_SOURCE_ARTIFACT_MISSING")
+    modified_bytes = source_file.read_bytes()
+    if (
+        sha256_bytes(modified_bytes) != source_row.get("modified_file_sha256")
+        or PROBE_SOURCE.encode("utf-8") not in modified_bytes
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_SOURCE_DIGEST_MISMATCH")
+    actual_parent_tree = _git_text(repo, "rev-parse", f"{expected_parent_commit}^{{tree}}")
+    actual_parent_app = _git_text(repo, "rev-parse", f"{expected_parent_commit}:app")
+    original_bytes = _git_bytes(repo, "show", f"{expected_parent_commit}:{path}")
+    if (
+        actual_parent_tree != expected_parent_tree
+        or actual_parent_app != expected_parent_application_tree
+        or sha256_bytes(original_bytes) != source_row.get("original_file_sha256")
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_PARENT_SOURCE_MISMATCH")
+
+    if (
+        re.fullmatch(r"[a-f0-9]{40}", expected_parent_commit) is None
+        or _git_text(repo, "rev-parse", f"{expected_parent_commit}^{{commit}}")
+        != expected_parent_commit
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_PARENT_COMMIT_NOT_CANONICAL")
+
+    temporary: tempfile.TemporaryDirectory[str] | None = None
+    publication_staging: tempfile.TemporaryDirectory[str] | None = None
+    output_target: Path | None = None
+    git_binary = shutil.which("git")
+    if git_binary is None:
+        raise ProtocolError("MONO_CI_PSI_A05_GIT_EXECUTABLE_MISSING")
+    if output is None:
+        temporary = tempfile.TemporaryDirectory(prefix="mono-ci-a05-probe-replay-")
+        checkout = Path(temporary.name) / "source"
+    else:
+        if output.name in {"", ".", ".."}:
+            raise ContractValidationError("MONO_CI_PSI_A05_PROBE_OUTPUT_PATH_INVALID")
+        output_target = output.parent.resolve(strict=True) / output.name
+        if output_target.exists() or output_target.is_symlink():
+            raise ContractValidationError("MONO_CI_PSI_A05_PROBE_OUTPUT_MUST_BE_NEW")
+        publication_staging = tempfile.TemporaryDirectory(
+            prefix=".mono-ci-a05-probe-replay-", dir=output_target.parent
+        )
+        checkout = Path(publication_staging.name) / "source"
+    clone = subprocess.run(  # nosec B603 # noqa: S603 - fixed local Git argv only
+        [git_binary, "clone", "--quiet", "--shared", "--no-checkout", str(repo), str(checkout)],
+        check=False,
+        capture_output=True,
+        env={"PATH": os.defpath, "LANG": "C.UTF-8"},
+    )
+    try:
+        if clone.returncode:
+            raise ProtocolError("MONO_CI_PSI_A05_PROBE_REPLAY_CLONE_FAILED")
+        _git_text(checkout, "checkout", "--quiet", "--detach", expected_parent_commit)
+        checked = subprocess.run(  # nosec B603 # noqa: S603 - fixed local Git argv; patch is stdin only
+            [git_binary, "-C", str(checkout), "apply", "--check", "--binary"],
+            input=patch_bytes,
+            check=False,
+            capture_output=True,
+            env={"PATH": os.defpath, "LANG": "C.UTF-8"},
+        )
+        if checked.returncode:
+            raise ContractValidationError("MONO_CI_PSI_A05_PROBE_PATCH_DOES_NOT_APPLY")
+        applied = subprocess.run(  # nosec B603 # noqa: S603 - fixed local Git argv; patch is stdin only
+            [git_binary, "-C", str(checkout), "apply", "--binary"],
+            input=patch_bytes,
+            check=False,
+            capture_output=True,
+            env={"PATH": os.defpath, "LANG": "C.UTF-8"},
+        )
+        if applied.returncode:
+            raise ContractValidationError("MONO_CI_PSI_A05_PROBE_PATCH_APPLY_FAILED")
+        changed_paths = _git_text(
+            checkout, "diff", "--name-only", "--diff-filter=ACDMRTUXB"
+        ).splitlines()
+        replayed_file = checkout / path
+        if (
+            changed_paths != [path]
+            or replayed_file.is_symlink()
+            or not replayed_file.is_file()
+            or replayed_file.read_bytes() != modified_bytes
+            or sha256_bytes(replayed_file.read_bytes()) != source_row["modified_file_sha256"]
+        ):
+            raise ContractValidationError("MONO_CI_PSI_A05_PROBE_PATCH_SOURCE_DISAGREEMENT")
+        _git_text(checkout, "diff", "--check")
+        commit_sha = _deterministic_probe_commit(checkout)
+        tree_sha = _git_text(checkout, "rev-parse", "HEAD^{tree}")
+        app_tree_sha = _git_text(checkout, "rev-parse", "HEAD:app")
+        if (
+            commit_sha != manifest["probe_commit_sha"]
+            or tree_sha != manifest["probe_repository_tree_sha"]
+            or app_tree_sha != manifest["probe_application_tree_sha"]
+            or _git_text(checkout, "rev-parse", "HEAD^") != expected_parent_commit
+            or _git_text(checkout, "status", "--porcelain")
+        ):
+            raise ContractValidationError("MONO_CI_PSI_A05_PROBE_REPLAY_IDENTITY_MISMATCH")
+        published_checkout = checkout
+        if output_target is not None:
+            try:
+                os.rename(checkout, output_target)
+            except OSError as error:
+                raise ContractValidationError(
+                    "MONO_CI_PSI_A05_PROBE_OUTPUT_PUBLICATION_FAILED"
+                ) from error
+            published_checkout = output_target
+        yield published_checkout, manifest
+    finally:
+        if temporary is not None:
+            temporary.cleanup()
+        if publication_staging is not None:
+            publication_staging.cleanup()
 
 
 def _validate_a04_proposal(repository: Path) -> dict[str, Any]:
@@ -272,6 +546,8 @@ def a05_transition_context(
     *,
     extension_builder: Any,
     after_commit: str | None = None,
+    run_schema_version: str = "MONO_CI_PSI_TRANSITION_RUN_V4",
+    extension_schema: str = "mono_ci_psi_a05_experiment_evidence_v2.schema.json",
 ) -> Iterator[None]:
     """Temporarily configure the immutable A0.4→A0.5 source pair."""
     repo = repository.resolve(strict=True)
@@ -295,10 +571,11 @@ def a05_transition_context(
         "BASELINE_NAME": BASELINE_NAME,
         "PROPOSAL_RELATIVE": BASELINE_RELATIVE,
         "verify_execution_proposal": _validate_a04_proposal,
-        "TRANSITION_RUN_SCHEMA_VERSION": "MONO_CI_PSI_TRANSITION_RUN_V3",
+        "TRANSITION_RUN_SCHEMA_VERSION": run_schema_version,
         "TRANSITION_UNIT_OF_ANALYSIS": "ONE_A0_4_TO_A0_5_ARCHITECTURE_TRANSITION",
         "ADAPTATION_NECESSITY_SCHEMA_VERSION": "MONO_CI_PSI_ADAPTATION_NECESSITY_V3",
         "TRANSITION_RUN_EXTENSION_BUILDER": extension_builder,
+        "A05_EXPERIMENT_EVIDENCE_SCHEMA": extension_schema,
         "REPOSITORY_ROOT": repo,
     }
     previous = {name: getattr(transition, name) for name in assignments}
@@ -411,6 +688,8 @@ def _build_a05_extension(
 
     probe_dir: Path | None = None
     temporary: tempfile.TemporaryDirectory[str] | None = None
+    probe_artifact_root = run_root / PROBE_RELATIVE_ROOT
+    evaluator_configs: dict[str, dict[str, str]] = {}
     try:
         temporary = tempfile.TemporaryDirectory(prefix="mono-ci-psi-a05-probe-")
         probe_dir = Path(temporary.name) / "source"
@@ -420,19 +699,7 @@ def _build_a05_extension(
             probe_file.read_text(encoding="utf-8") + PROBE_SOURCE,
             encoding="utf-8",
         )
-        _git_run(probe_dir, "add", "--", PROBE_PATH)
-        _git_run(
-            probe_dir,
-            "-c",
-            "user.name=EvoFitBench A05 Probe",
-            "-c",
-            "user.email=a05-probe@example.invalid",
-            "commit",
-            "--quiet",
-            "-m",
-            "isolated A0.5 ownership violation probe",
-        )
-        probe_commit = _git_text(probe_dir, "rev-parse", "HEAD")
+        probe_commit = _deterministic_probe_commit(probe_dir)
         probe_parent = _git_text(probe_dir, "rev-parse", "HEAD^")
         if probe_parent != after_commit:
             raise ContractValidationError("MONO_CI_PSI_A05_PROBE_PARENT_MISMATCH")
@@ -443,6 +710,23 @@ def _build_a05_extension(
             raise ContractValidationError("MONO_CI_PSI_A05_PROBE_SCOPE_INVALID")
         probe_tree = _git_text(probe_dir, "rev-parse", "HEAD^{tree}")
         probe_app_tree = _git_text(probe_dir, "rev-parse", "HEAD:app")
+        patch_bytes = _git_bytes(
+            probe_dir,
+            "diff",
+            "--binary",
+            "--no-ext-diff",
+            probe_parent,
+            probe_commit,
+            "--",
+            PROBE_PATH,
+        )
+        modified_source = (probe_dir / PROBE_PATH).read_bytes()
+        parent_source = _git_bytes(repo, "show", f"{after_commit}:{PROBE_PATH}")
+        transition._write_new_file(probe_artifact_root / "source.patch", patch_bytes)
+        transition._write_new_file(
+            probe_artifact_root / "source-files" / PROBE_PATH,
+            modified_source,
+        )
         negative_rows = []
         candidate_negative_rows = []
         negative_ids = ("AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP")
@@ -451,6 +735,14 @@ def _build_a05_extension(
                 evaluator_id, "architecture/acceptance/a1/data_ownership_v1.yaml"
             )
             negative_config_bytes = (repo / config_path).read_bytes()
+            config_artifact_path = f"{PROBE_RELATIVE_ROOT}/evaluator-configs/{evaluator_id}.yaml"
+            transition._write_new_file(run_root / config_artifact_path, negative_config_bytes)
+            evaluator_configs[evaluator_id] = {
+                "evaluator_id": evaluator_id,
+                "configuration_path": config_path,
+                "artifact_path": config_artifact_path,
+                "configuration_sha256": sha256_bytes(negative_config_bytes),
+            }
             _run, row = _run_bound_evaluator(
                 repository=repo,
                 source_checkout=probe_dir,
@@ -483,6 +775,87 @@ def _build_a05_extension(
             candidate_negative_rows.append(candidate_row)
         if _git_text(probe_dir, "status", "--porcelain"):
             raise ContractValidationError("MONO_CI_PSI_A05_PROBE_WORKTREE_DIRTY")
+        probe_manifest = {
+            "schema_version": "MONO_CI_PSI_A05_PROBE_MANIFEST_V1",
+            "source_provenance": (
+                "DETERMINISTIC_LOCAL_PROBE_COMMIT_RECONSTRUCTED_FROM_ARCHIVED_PATCH"
+            ),
+            "remote_commit_required": False,
+            "parent_commit_sha": after_commit,
+            "parent_repository_tree_sha": after_tree,
+            "parent_application_tree_sha": after_app_tree,
+            "probe_commit_sha": probe_commit,
+            "probe_repository_tree_sha": probe_tree,
+            "probe_application_tree_sha": probe_app_tree,
+            "probe_commit_provenance": {
+                "availability": "LOCAL_ONLY_RECREATED_FROM_PATCH",
+                "author": PROBE_AUTHOR,
+                "email": PROBE_EMAIL,
+                "commit_date": PROBE_COMMIT_DATE,
+                "message": PROBE_COMMIT_MESSAGE,
+            },
+            "changed_paths": changed_paths,
+            "changed_sources": [
+                {
+                    "path": PROBE_PATH,
+                    "artifact_path": f"source-files/{PROBE_PATH}",
+                    "original_file_sha256": sha256_bytes(parent_source),
+                    "modified_file_sha256": sha256_bytes(modified_source),
+                }
+            ],
+            "patch_path": f"{PROBE_RELATIVE_ROOT}/source.patch",
+            "patch_sha256": sha256_bytes(patch_bytes),
+            "evaluator_configurations": [
+                evaluator_configs[key] for key in sorted(evaluator_configs)
+            ],
+            "evaluator_evidence_bindings": [
+                {
+                    key: row[key]
+                    for key in (
+                        "source_commit_sha",
+                        "source_tree_sha",
+                        "application_tree_sha",
+                        "evaluator_id",
+                        "process_exit_code",
+                        "execution_status",
+                        "compliance",
+                        "configuration_sha256",
+                        "evaluator_source_sha256",
+                        "output_path",
+                        "output_sha256",
+                        "coverage_path",
+                        "coverage_sha256",
+                        "stdout_path",
+                        "stdout_sha256",
+                        "stderr_path",
+                        "stderr_sha256",
+                    )
+                }
+                for row in sorted(negative_rows, key=lambda item: item["evaluator_id"])
+            ],
+        }
+        validate_payload("mono_ci_psi_a05_probe_manifest_v1.schema.json", probe_manifest)
+        probe_manifest_path = probe_artifact_root / "probe-manifest.json"
+        transition._write_new_file(probe_manifest_path, pretty_json_bytes(probe_manifest))
+        transition._write_new_file(
+            probe_artifact_root / "reproduction.json",
+            pretty_json_bytes(
+                {
+                    "schema_version": "MONO_CI_PSI_A05_PROBE_REPRODUCTION_V1",
+                    "command": (
+                        "python -m experiments.execution.tooling.mono_ci_psi_a05 replay-probe "
+                        "--repository <checkout> --run <verified-run> --output <new-checkout>"
+                    ),
+                    "expected_parent_commit_sha": after_commit,
+                    "expected_parent_repository_tree_sha": after_tree,
+                    "expected_parent_application_tree_sha": after_app_tree,
+                    "patch_path": "source.patch",
+                    "modified_source_path": f"source-files/{PROBE_PATH}",
+                    "remote_probe_commit_required": False,
+                    "production_database_access": "NOT_USED_SOURCE_LEVEL_STATIC_EVALUATION_ONLY",
+                }
+            ),
+        )
     finally:
         if probe_dir is not None:
             transition._git_worktree(repo, "remove", "--force", str(probe_dir), check=False)
@@ -517,12 +890,52 @@ def _build_a05_extension(
             old_capabilities[row["capability_type"]] = row
     active_evaluators = ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]
     probe_by_id = {row["evaluator_id"]: row for row in negative_rows}
-    old_compliant = all(
-        probe_by_id[evaluator_id]["compliance"] == "COMPLIANT" for evaluator_id in active_evaluators
+    detection_rows = [
+        _classify_probe_detection(
+            run_root, probe_by_id[evaluator_id], source_condition_verified=True
+        )
+        for evaluator_id in sorted(probe_by_id)
+    ]
+    detection_by_id = {row["evaluator_id"]: row["detection_status"] for row in detection_rows}
+    old_detection = _combine_old_detection(
+        detection_by_id["AC_PUBLIC_API"], detection_by_id["AC_MODULE_GRAPH"]
     )
-    ownership_detected = (
-        probe_by_id[OWNERSHIP_EVALUATOR]["compliance"] == "NON_COMPLIANT"
-        and "FOREIGN_TABLE_ACCESS" in probe_by_id[OWNERSHIP_EVALUATOR]["finding_codes"]
+    case_interpretation = _probe_case_interpretation(
+        old_detection, detection_by_id[OWNERSHIP_EVALUATOR]
+    )
+    before_observations = [
+        row
+        for row in run_record["evaluator_observations"]
+        if row["architecture_state"] == BEFORE_STATE
+    ]
+    after_observations = [
+        row
+        for row in run_record["evaluator_observations"]
+        if row["architecture_state"] == AFTER_STATE
+    ]
+    before_coverage = [
+        json.loads(
+            (
+                run_root / transition._coverage_assessment_path(BEFORE_STATE, row["evaluator_id"])
+            ).read_text(encoding="utf-8")
+        )
+        for row in before_observations
+    ]
+    before_scope_complete = bool(before_coverage) and all(
+        row.get("source_inspection_status") == "COMPLETE" for row in before_coverage
+    )
+    before_compliance = (
+        "COMPLIANT"
+        if before_observations
+        and all(
+            row["execution_status"] == "COMPLETED" and row["compliance"] == "COMPLIANT"
+            for row in before_observations
+        )
+        else "NOT_EVALUABLE"
+    )
+    old_capability_scope_verified = bool(old_capabilities) and all(
+        row.get("verification_status") == "VERIFIED_STATIC_SCOPE"
+        for row in old_capabilities.values()
     )
     adaptation_assessment = assess_adaptation_necessity(
         {
@@ -532,18 +945,28 @@ def _build_a05_extension(
             "capabilities_after": list(old_capabilities.values()),
             "requirement_capability_mappings": [mapping],
             "unresolved_requirements_after": [],
-            "evaluator_identity_verified": True,
-            "architecture_identity_verified": True,
-            "configuration_identity_verified": True,
-            "source_inspection_before": "COMPLETE",
-            "source_inspection_after": "COMPLETE",
-            "evaluator_compliance_before": "COMPLIANT",
-            "evaluator_compliance_after": "COMPLIANT",
-            "rule_scope_match_before": True,
-            "rule_scope_match_after": True,
+            "evaluator_identity_verified": bool(positive_row["evaluator_source_sha256"])
+            and all(bool(row["evaluator_source_sha256"]) for row in before_observations),
+            "architecture_identity_verified": all(
+                row["source_commit_sha"] == BEFORE_COMMIT for row in before_observations
+            )
+            and all(row["source_commit_sha"] == after_commit for row in after_observations)
+            and positive_row["source_commit_sha"] == after_commit,
+            "configuration_identity_verified": sha256_bytes(baseline_bytes)
+            == run_record["baseline"]["configuration_sha256"],
+            "source_inspection_before": "COMPLETE" if before_scope_complete else "INCOMPLETE",
+            "source_inspection_after": positive_row["inspection_status"],
+            "evaluator_compliance_before": before_compliance,
+            "evaluator_compliance_after": positive_row["compliance"],
+            "rule_scope_match_before": before_scope_complete,
+            "rule_scope_match_after": positive_row["inspection_status"] == "COMPLETE",
             "requirement_inventory_status_after": "COMPLETE_FOR_DECLARED_MANIFEST_TYPES",
             "requirement_universe_completeness_after": "UNKNOWN",
-            "capability_inventory_status_after": "VERIFIED_FOR_DECLARED_STATIC_SCOPE",
+            "capability_inventory_status_after": (
+                "VERIFIED_FOR_DECLARED_STATIC_SCOPE"
+                if old_capability_scope_verified
+                else "INCOMPLETE_OR_UNVERIFIED"
+            ),
             "architecture_state_after": AFTER_STATE,
             "pair_semantic_validity": "UNKNOWN",
             "normative_applicability": "DECLARED_NOT_APPROVED",
@@ -562,7 +985,7 @@ def _build_a05_extension(
         run_root=run_root,
     )
     positive = {
-        "condition_status": "COMPLIANT_A05_SOURCE",
+        "condition_status": "A0_5_SOURCE",
         "evaluator": positive_row,
     }
     negative = {
@@ -572,7 +995,7 @@ def _build_a05_extension(
         "evaluators": sorted(negative_rows, key=lambda row: row["evaluator_id"]),
     }
     extension = {
-        "schema_version": "MONO_CI_PSI_A05_EXPERIMENT_EVIDENCE_V1",
+        "schema_version": "MONO_CI_PSI_A05_EXPERIMENT_EVIDENCE_V2",
         "execution_id": run_record["execution_id"],
         "transition": {
             "before_state": BEFORE_STATE,
@@ -586,6 +1009,13 @@ def _build_a05_extension(
             "probe_repository_tree_sha": probe_tree,
             "probe_application_tree_sha": probe_app_tree,
             "probe_changed_paths": changed_paths,
+            "probe_manifest_path": f"{PROBE_RELATIVE_ROOT}/probe-manifest.json",
+            "probe_manifest_sha256": sha256_file(probe_manifest_path),
+            "probe_patch_path": f"{PROBE_RELATIVE_ROOT}/source.patch",
+            "probe_patch_sha256": sha256_bytes(patch_bytes),
+            "probe_source_path": f"{PROBE_RELATIVE_ROOT}/source-files/{PROBE_PATH}",
+            "probe_source_sha256": sha256_bytes(modified_source),
+            "probe_commit_provenance": "LOCAL_ONLY_RECREATED_FROM_ARCHIVED_PATCH",
         },
         "baseline": {
             "configuration_id": BASELINE_ID,
@@ -626,11 +1056,10 @@ def _build_a05_extension(
             "requirement_capability_comparison": adaptation_assessment[
                 "requirement_capability_comparison"
             ],
-            "old_controls_detected_probe": not old_compliant,
-            "ownership_evaluator_detected_probe": ownership_detected,
-            "old_configuration_insufficient_for_declared_obligation": bool(
-                old_compliant and ownership_detected
-            ),
+            "evidence_integrity": "VERIFIED_BY_SOURCE_REPLAY_AND_RAW_EVIDENCE_READBACK",
+            "per_evaluator_detection": detection_rows,
+            "old_baseline_detection": old_detection,
+            "case_interpretation": case_interpretation,
             "known_limitations": list(evaluator_config.get("coverage_limits", []))
             + [
                 "The A0.5 requirement is a declared engineering policy, not independently "
@@ -691,6 +1120,8 @@ def _run_bound_evaluator(
     )
     run_root = output_directory.parents[3]
     output_path = run_root / run["output_path"]
+    stdout_path = run_root / run["stdout_path"]
+    stderr_path = run_root / run["stderr_path"]
     output_bytes = output_path.read_bytes()
     coverage = verify_inspection_coverage(
         repository=repository,
@@ -740,10 +1171,15 @@ def _run_bound_evaluator(
         "evaluator_id": evaluator_id,
         "execution_status": result.get("execution_status"),
         "compliance": result.get("compliance"),
+        "process_exit_code": run["process_exit_code"],
         "configuration_sha256": run["configuration_sha256"],
         "evaluator_source_sha256": run["evaluator_source_sha256"],
         "output_path": run["output_path"],
         "output_sha256": sha256_file(output_path),
+        "stdout_path": run["stdout_path"],
+        "stdout_sha256": sha256_file(stdout_path),
+        "stderr_path": run["stderr_path"],
+        "stderr_sha256": sha256_file(stderr_path),
         "coverage_path": coverage_path.relative_to(run_root).as_posix(),
         "coverage_sha256": coverage_sha,
         "inspection_status": coverage["source_inspection_status"],
@@ -751,6 +1187,132 @@ def _run_bound_evaluator(
         "duration_ms": run["duration_ms"],
     }
     return run, row
+
+
+def _raw_finding_codes(evidence: dict[str, Any]) -> list[str]:
+    diagnostics = evidence.get("diagnostics", {})
+    if not isinstance(diagnostics, dict):
+        return []
+    policy_findings = diagnostics.get("policy_findings", [])
+    if not isinstance(policy_findings, list):
+        policy_findings = []
+    codes = sorted(
+        {
+            item["code"]
+            for item in policy_findings
+            if isinstance(item, dict) and isinstance(item.get("code"), str)
+        }
+    )
+    if not codes:
+        codes = sorted(
+            {
+                item["code"]
+                for value in diagnostics.values()
+                if isinstance(value, list)
+                for item in value
+                if isinstance(item, dict) and isinstance(item.get("code"), str)
+            }
+        )
+    return codes
+
+
+def _classify_probe_detection(
+    run_root: Path, row: dict[str, Any], *, source_condition_verified: bool = False
+) -> dict[str, Any]:
+    """Classify attribution from the raw evaluator result and independently verified scope."""
+    try:
+        output_path = run_root / row["output_path"]
+        coverage_path = run_root / row["coverage_path"]
+        if (
+            output_path.is_symlink()
+            or coverage_path.is_symlink()
+            or not output_path.is_file()
+            or not coverage_path.is_file()
+            or sha256_file(output_path) != row["output_sha256"]
+            or sha256_file(coverage_path) != row["coverage_sha256"]
+        ):
+            raise ValueError("RAW_EVIDENCE_MISSING_OR_MISMATCHED")
+        evidence = json.loads(output_path.read_text(encoding="utf-8"))
+        coverage = json.loads(coverage_path.read_text(encoding="utf-8"))
+        if not isinstance(evidence, dict) or not isinstance(coverage, dict):
+            raise ValueError("RAW_EVIDENCE_SHAPE_INVALID")
+    except (OSError, ValueError, KeyError, json.JSONDecodeError, UnicodeDecodeError):
+        return {
+            "evaluator_id": row.get("evaluator_id"),
+            "detection_status": "NOT_EVALUABLE",
+            "reason_codes": ["RAW_EVIDENCE_UNVERIFIED"],
+        }
+
+    result = evidence.get("result", {})
+    compliance = result.get("compliance")
+    expected_exit = (
+        2
+        if result.get("execution_status") == "FAILED"
+        else {
+            "COMPLIANT": 0,
+            "NON_COMPLIANT": 1,
+            "NOT_EVALUABLE": 2,
+            "UNKNOWN": 2,
+            "NOT_APPLICABLE": 3,
+        }.get(compliance)
+    )
+    identities_valid = (
+        evidence.get("evaluator", {}).get("id") == row.get("evaluator_id")
+        and evidence.get("evaluator", {}).get("configuration_digest")
+        == row.get("configuration_sha256")
+        and evidence.get("evaluator", {}).get("source_digest") == row.get("evaluator_source_sha256")
+        and evidence.get("architecture", {}).get("target_source_sha")
+        == row.get("source_commit_sha")
+        and row.get("execution_status") == result.get("execution_status")
+        and row.get("compliance") == compliance
+        and row.get("process_exit_code") == expected_exit
+        and row.get("inspection_status") == coverage.get("source_inspection_status")
+    )
+    if (
+        not source_condition_verified
+        or not identities_valid
+        or result.get("execution_status") != "COMPLETED"
+        or coverage.get("source_inspection_status") != "COMPLETE"
+        or evidence.get("architecture", {}).get("source_sha_status") != "MATCHED"
+        or evidence.get("architecture", {}).get("manifest_state_status") != "MATCHED"
+    ):
+        status = "NOT_EVALUABLE"
+        reasons = ["EXECUTION_IDENTITY_OR_SCOPE_UNRESOLVED"]
+    else:
+        attributable = "FOREIGN_TABLE_ACCESS" in _raw_finding_codes(evidence)
+        if attributable and compliance == "NON_COMPLIANT":
+            status = "DETECTED"
+            reasons = ["ATTRIBUTABLE_FOREIGN_TABLE_ACCESS_FINDING"]
+        elif compliance == "COMPLIANT" and not attributable:
+            status = "NOT_DETECTED"
+            reasons = ["COMPLETE_SCOPE_WITHOUT_ATTRIBUTABLE_FINDING"]
+        else:
+            status = "NOT_EVALUABLE"
+            reasons = ["RESULT_DOES_NOT_ESTABLISH_ATTRIBUTION"]
+    return {
+        "evaluator_id": row["evaluator_id"],
+        "detection_status": status,
+        "reason_codes": reasons,
+    }
+
+
+def _combine_old_detection(public_api: str, module_graph: str) -> str:
+    outcomes = {public_api, module_graph}
+    if "DETECTED" in outcomes:
+        return "DETECTED"
+    if outcomes == {"NOT_DETECTED"}:
+        return "NOT_DETECTED"
+    return "NOT_EVALUABLE"
+
+
+def _probe_case_interpretation(old_detection: str, ownership_detection: str) -> str:
+    if old_detection == "DETECTED":
+        return "NO_OLD_BASELINE_GAP_DEMONSTRATED"
+    if old_detection == "NOT_EVALUABLE" or ownership_detection == "NOT_EVALUABLE":
+        return "NOT_EVALUABLE"
+    if ownership_detection == "DETECTED":
+        return "OLD_BASELINE_GAP_SUPPORTED"
+    return "PROBE_NOT_VALIDATED_BY_ANY_CONTROL"
 
 
 def _observation_outcome(run_root: Path, row: dict[str, Any]) -> dict[str, Any]:
@@ -986,11 +1548,57 @@ def _git_run(repository: Path, *args: str) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    if arguments and arguments[0] == "replay-probe":
+        replay_parser = argparse.ArgumentParser(
+            description="Reconstruct an archived ΔA5 probe source."
+        )
+        replay_parser.add_argument("--repository", type=Path, required=True)
+        replay_parser.add_argument("--run", type=Path, required=True)
+        replay_parser.add_argument("--output", type=Path, required=True)
+        replay_args = replay_parser.parse_args(arguments[1:])
+        try:
+            record = transition.verify_transition_run(
+                replay_args.run, repository=replay_args.repository
+            )
+            extension_path = replay_args.run / record["a05_extension"]["path"]
+            extension = json.loads(extension_path.read_text(encoding="utf-8"))
+            binding = extension["transition"]
+            with replay_negative_probe(
+                replay_args.repository,
+                replay_args.run / PROBE_RELATIVE_ROOT,
+                expected_parent_commit=binding["after_commit_sha"],
+                expected_parent_tree=binding["after_repository_tree_sha"],
+                expected_parent_application_tree=binding["after_application_tree_sha"],
+                output=replay_args.output,
+            ) as (checkout, probe_manifest):
+                print(
+                    json.dumps(
+                        {
+                            "verification_status": "PASS",
+                            "source_checkout": str(checkout),
+                            "probe_commit_sha": probe_manifest["probe_commit_sha"],
+                            "probe_repository_tree_sha": probe_manifest[
+                                "probe_repository_tree_sha"
+                            ],
+                            "probe_application_tree_sha": probe_manifest[
+                                "probe_application_tree_sha"
+                            ],
+                            "remote_probe_commit_required": False,
+                        },
+                        sort_keys=True,
+                        indent=2,
+                    )
+                )
+            return 0
+        except (ContractValidationError, ProtocolError, OSError, json.JSONDecodeError) as error:
+            print(json.dumps({"verification_status": "FAIL", "error": str(error)}, sort_keys=True))
+            return 1
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--execution-id", required=True)
-    args = parser.parse_args(argv)
+    args = parser.parse_args(arguments)
     try:
         result = run_a05_transition(args.repository, args.output, args.execution_id)
     except (ContractValidationError, ProtocolError) as error:

@@ -1,0 +1,555 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_psi_transition_run_v4.schema.json",
+  "title": "Outcome-neutral evidence-backed A0.4 to A0.5 Method P DEVELOPMENT run",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "execution_id",
+    "source_revision_sha",
+    "study_id",
+    "mode",
+    "unit_of_analysis",
+    "study_readiness",
+    "measurement_status",
+    "p_algorithm_status",
+    "g1",
+    "g4",
+    "reference_gate",
+    "method_implementation",
+    "baseline",
+    "transition",
+    "policy_source",
+    "method_input",
+    "adaptation_evidence",
+    "runtime",
+    "execution_engine",
+    "evaluator_observations",
+    "evidence_ledger",
+    "psi",
+    "other_arms_or_case_outputs_used",
+    "metrics",
+    "output_checksums",
+    "a05_extension"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "MONO_CI_PSI_TRANSITION_RUN_V4"
+    },
+    "execution_id": {
+      "type": "string",
+      "pattern": "^DEV_PSI_TRANSITION_[A-Za-z0-9_-]{1,48}$"
+    },
+    "source_revision_sha": {
+      "$ref": "#/$defs/sha1"
+    },
+    "study_id": {
+      "const": "MONO_CI_B0_PSI_DEVELOPMENT_TECHNICAL_VALIDATION"
+    },
+    "mode": {
+      "const": "DEVELOPMENT_METHOD_EXECUTION_ONLY"
+    },
+    "unit_of_analysis": {
+      "const": "ONE_A0_4_TO_A0_5_ARCHITECTURE_TRANSITION"
+    },
+    "study_readiness": {
+      "const": "NO_GO"
+    },
+    "measurement_status": {
+      "const": "NOT_EXECUTED"
+    },
+    "p_algorithm_status": {
+      "const": "NOT_READY"
+    },
+    "g1": {
+      "const": "INCOMPLETE"
+    },
+    "g4": {
+      "const": "NOT_AUTHORIZED"
+    },
+    "reference_gate": {
+      "const": "NOT_READY"
+    },
+    "method_implementation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "source_path",
+        "sha256"
+      ],
+      "properties": {
+        "identity": {
+          "const": "P_GOVERNED_ADAPTATION_DEVELOPMENT_V1"
+        },
+        "source_path": {
+          "const": "experiments/execution/tooling/p_adaptation.py"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "configuration_id",
+        "configuration_sha256",
+        "identity_status",
+        "approval_status",
+        "method_input_authorized"
+      ],
+      "properties": {
+        "configuration_id": {
+          "const": "MONO_CI_RECONSTRUCTED_B0_A04_V1"
+        },
+        "configuration_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "identity_status": {
+          "const": "PROSPECTIVE_RECONSTRUCTION_NOT_HISTORICAL"
+        },
+        "approval_status": {
+          "const": "NOT_APPROVED"
+        },
+        "method_input_authorized": {
+          "const": false
+        }
+      }
+    },
+    "transition": {
+      "$ref": "#/$defs/transition"
+    },
+    "policy_source": {
+      "$ref": "#/$defs/policySource"
+    },
+    "method_input": {
+      "$ref": "#/$defs/methodInput"
+    },
+    "adaptation_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "verifier_id",
+        "trust_scope",
+        "key_path",
+        "key_sha256"
+      ],
+      "properties": {
+        "path": {
+          "const": "PSI/method-evidence/adaptation-evidence.json"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "verifier_id": {
+          "const": "DEV_PSI_HMAC_EVIDENCE_TEST_ONLY_V1"
+        },
+        "trust_scope": {
+          "const": "TEST_ONLY"
+        },
+        "key_path": {
+          "const": "provenance/test-only-evidence-verifier.key"
+        },
+        "key_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "runtime": {
+      "$ref": "#/$defs/runtime"
+    },
+    "execution_engine": {
+      "$ref": "#/$defs/executionEngine"
+    },
+    "evaluator_observations": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "architecture_state",
+          "source_commit_sha",
+          "source_tree_sha",
+          "application_tree_sha",
+          "evaluator_id",
+          "execution_status",
+          "compliance",
+          "process_exit_code",
+          "configuration_path",
+          "configuration_sha256",
+          "evaluator_source_sha256",
+          "target_state_manifest_sha256",
+          "output_path",
+          "output_sha256",
+          "stdout_path",
+          "stdout_sha256",
+          "stderr_path",
+          "stderr_sha256",
+          "inspection_scope_path",
+          "inspection_scope_sha256",
+          "started_at_utc",
+          "ended_at_utc",
+          "duration_ms"
+        ],
+        "properties": {
+          "architecture_state": {
+            "enum": [
+              "A0_4_REPORT_QUERY_PORT",
+              "A0_5_MODULE_DATA_OWNERSHIP"
+            ]
+          },
+          "source_commit_sha": {
+            "$ref": "#/$defs/sha1"
+          },
+          "source_tree_sha": {
+            "$ref": "#/$defs/sha1"
+          },
+          "application_tree_sha": {
+            "$ref": "#/$defs/sha1"
+          },
+          "evaluator_id": {
+            "enum": [
+              "AC_PUBLIC_API",
+              "AC_MODULE_GRAPH"
+            ]
+          },
+          "execution_status": {
+            "enum": [
+              "COMPLETED",
+              "FAILED"
+            ]
+          },
+          "compliance": {
+            "enum": [
+              "COMPLIANT",
+              "NON_COMPLIANT",
+              "UNKNOWN",
+              "NOT_EVALUABLE",
+              "NOT_APPLICABLE"
+            ]
+          },
+          "process_exit_code": {
+            "type": "integer"
+          },
+          "configuration_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "configuration_sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "evaluator_source_sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "target_state_manifest_sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "output_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "output_sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "stdout_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "stdout_sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "stderr_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "stderr_sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "inspection_scope_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "inspection_scope_sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "started_at_utc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ended_at_utc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "duration_ms": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "evidence_ledger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trust_scope",
+        "verifier_id",
+        "verified_fact_ids",
+        "unverified_policy_proofs",
+        "unverified_completeness_proofs"
+      ],
+      "properties": {
+        "trust_scope": {
+          "const": "DEVELOPMENT_SOURCE_INVENTORY_READBACK_ONLY"
+        },
+        "verifier_id": {
+          "const": "DEV_SOURCE_INVENTORY_READBACK_V1"
+        },
+        "verified_fact_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "unverified_policy_proofs": {
+          "const": true
+        },
+        "unverified_completeness_proofs": {
+          "const": true
+        }
+      }
+    },
+    "psi": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "decision",
+        "raw_result_path",
+        "raw_result_sha256",
+        "operation_emitted",
+        "governance_decision_emitted",
+        "prediction_emitted",
+        "scoring",
+        "execution_duration_ms"
+      ],
+      "properties": {
+        "status": {
+          "const": "DEVELOPMENT_METHOD_EXECUTED"
+        },
+        "decision": {
+          "enum": [
+            "HOLD",
+            "REJECT",
+            "ACCEPT"
+          ]
+        },
+        "raw_result_path": {
+          "const": "PSI/raw/method-result.json"
+        },
+        "raw_result_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "operation_emitted": {
+          "const": true
+        },
+        "governance_decision_emitted": {
+          "const": true
+        },
+        "prediction_emitted": {
+          "type": "boolean"
+        },
+        "scoring": {
+          "const": "NOT_EXECUTED"
+        },
+        "execution_duration_ms": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "other_arms_or_case_outputs_used": {
+      "const": false
+    },
+    "metrics": {
+      "const": "NOT_MEASURED"
+    },
+    "output_checksums": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/sha256"
+      }
+    },
+    "a05_extension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "const": "diagnostics/a05-experiment-evidence.json"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha1": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "before_state",
+        "after_state",
+        "before_commit_sha",
+        "after_commit_sha",
+        "before_repository_tree_sha",
+        "after_repository_tree_sha",
+        "before_application_tree_sha",
+        "after_application_tree_sha",
+        "before_state_manifest_sha256",
+        "after_state_manifest_sha256",
+        "state_manifest_path"
+      ],
+      "properties": {
+        "before_state": {
+          "const": "A0_4_REPORT_QUERY_PORT"
+        },
+        "after_state": {
+          "const": "A0_5_MODULE_DATA_OWNERSHIP"
+        },
+        "before_commit_sha": {
+          "const": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9"
+        },
+        "after_commit_sha": {
+          "$ref": "#/$defs/sha1"
+        },
+        "before_repository_tree_sha": {
+          "const": "2b436e0aaf09403ea516d73d20a466a122f86592"
+        },
+        "after_repository_tree_sha": {
+          "$ref": "#/$defs/sha1"
+        },
+        "before_application_tree_sha": {
+          "const": "007196f68652bc13f6798805793ffdfae96f95f7"
+        },
+        "after_application_tree_sha": {
+          "$ref": "#/$defs/sha1"
+        },
+        "before_state_manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "after_state_manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "state_manifest_path": {
+          "const": "provenance/transition-state-manifests.json"
+        }
+      }
+    },
+    "policySource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "revision",
+        "bundle_sha256",
+        "authority_status"
+      ],
+      "properties": {
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bundle_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "authority_status": {
+          "const": "DRAFT_OPEN_UNAPPROVED"
+        }
+      }
+    },
+    "methodInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "bundle_sha256",
+        "common_snapshot_sha256",
+        "baseline_proposal_sha256",
+        "structural_manifest_path"
+      ],
+      "properties": {
+        "path": {
+          "const": "PSI/method-input"
+        },
+        "bundle_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "common_snapshot_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "baseline_proposal_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "structural_manifest_path": {
+          "const": "architecture/states/A0_5_MODULE_DATA_OWNERSHIP.yaml"
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "inventory_sha256",
+        "isolation"
+      ],
+      "properties": {
+        "path": {
+          "const": "PSI/method-runtime"
+        },
+        "inventory_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "isolation": {
+          "const": "PYTHON_ISOLATED_MODE; NO_NETWORK; SOURCE_REPOSITORIES_DENIED; OTHER_SOURCE_OBSERVATIONS_DENIED"
+        }
+      }
+    },
+    "executionEngine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "const": "provenance/transition-runner.py"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    }
+  }
+}
