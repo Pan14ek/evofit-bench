@@ -149,7 +149,20 @@ def verify_inspection_coverage(
     ):
         raise ContractValidationError("PSI_INSPECTION_DECLARED_SCOPE_INVALID")
 
+    additional_files = scope.get("additional_source_files", [])
+    if not isinstance(additional_files, list):
+        raise ContractValidationError("PSI_INSPECTION_DECLARED_SCOPE_INVALID")
+    additional_paths = []
+    for row in additional_files:
+        path_value = row.get("path") if isinstance(row, Mapping) else row
+        path = _safe_relative_path(path_value)
+        if path is None:
+            raise ContractValidationError("PSI_INSPECTION_DECLARED_SCOPE_INVALID")
+        additional_paths.append(path)
+
     tree_entries = _git_tree_entries(repository, source_commit_sha, module_root)
+    for path in additional_paths:
+        tree_entries.update(_git_tree_entries(repository, source_commit_sha, f":(literal){path}"))
     tree_paths = set(tree_entries)
     discovered_modules = set()
     for path in tree_paths:
@@ -178,14 +191,7 @@ def verify_inspection_coverage(
             for name in sorted(discovered_modules - configured_modules)
         )
 
-    additional_files = scope.get("additional_source_files", [])
-    if not isinstance(additional_files, list):
-        raise ContractValidationError("PSI_INSPECTION_DECLARED_SCOPE_INVALID")
-    for row in additional_files:
-        path_value = row.get("path") if isinstance(row, Mapping) else row
-        path = _safe_relative_path(path_value)
-        if path is None:
-            raise ContractValidationError("PSI_INSPECTION_DECLARED_SCOPE_INVALID")
+    for path in additional_paths:
         if path not in tree_paths:
             scope_uncertainties.append(f"MISSING_CONFIGURED_SOURCE:{path}")
         else:

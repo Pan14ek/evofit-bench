@@ -40,7 +40,10 @@ def _write(root: Path, path: str, text: str) -> None:
 
 
 def _coverage_fixture(
-    tmp_path: Path, evaluator_id: str = "AC_PUBLIC_API", with_cycle: bool = False
+    tmp_path: Path,
+    evaluator_id: str = "AC_PUBLIC_API",
+    with_cycle: bool = False,
+    additional_source_files: list[str] | None = None,
 ) -> dict[str, Any]:
     repo = tmp_path / "source"
     repo.mkdir()
@@ -57,6 +60,8 @@ def _coverage_fixture(
         else "def thing():\n    return None\n"
     )
     _write(repo, "app/modules/beta/public.py", beta_source)
+    for path in additional_source_files or []:
+        _write(repo, path, "# explicitly configured shared source\n")
     _git(repo, "add", ".")
     _git(repo, "commit", "-qm", "fixture")
     commit = _git(repo, "rev-parse", "HEAD")
@@ -69,7 +74,10 @@ def _coverage_fixture(
             "expected_modules": ["alpha", "beta"],
             "minimum_source_files_per_module": 1,
             "minimum_inspected_files": 1,
-            "additional_source_files": [],
+            "additional_source_files": [
+                {"path": path, "purpose": "explicit shared infrastructure"}
+                for path in additional_source_files or []
+            ],
         },
         "states": {"A0_4_REPORT_QUERY_PORT": {"applicability": "ACTIVE"}},
         "public_api": {"interfaces_by_capability": {"alpha": {}, "beta": {}}},
@@ -85,13 +93,20 @@ def _coverage_fixture(
     config_bytes = yaml.safe_dump(config, sort_keys=False).encode("utf-8")
     manifest = {
         "architecture_state": "A0_4_REPORT_QUERY_PORT",
-        "governance_requirements": {"required_evaluators": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]},
+        "governance_requirements": {
+            "required_evaluators": ["AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP"]
+        },
     }
     manifest_bytes = yaml.safe_dump(manifest, sort_keys=False).encode("utf-8")
     files = sorted(
-        path.relative_to(repo).as_posix()
-        for path in (repo / "app/modules").rglob("*.py")
-        if len(path.relative_to(repo / "app/modules").parts) > 1
+        {
+            *(
+                path.relative_to(repo).as_posix()
+                for path in (repo / "app/modules").rglob("*.py")
+                if len(path.relative_to(repo / "app/modules").parts) > 1
+            ),
+            *(additional_source_files or []),
+        }
     )
     digests = [
         {"path": path, "sha256": hashlib.sha256((repo / path).read_bytes()).hexdigest()}
@@ -221,6 +236,23 @@ def test_inspection_coverage_schema_accepts_a05_state_without_changing_report_sh
     result["architecture_state"] = "A0_5_MODULE_DATA_OWNERSHIP"
 
     validate_payload("mono_ci_psi_inspection_coverage_v1.schema.json", result)
+
+
+def test_configured_source_outside_module_root_is_included_in_independent_inventory(
+    tmp_path: Path,
+) -> None:
+    extra_source = "app/db/model_registry.py"
+    fixture = _coverage_fixture(
+        tmp_path,
+        evaluator_id="AC_DATA_OWNERSHIP",
+        additional_source_files=[extra_source],
+    )
+
+    result = _verify(fixture, "AC_DATA_OWNERSHIP")
+
+    assert result["source_inspection_status"] == "COMPLETE"
+    assert extra_source in result["expected_subjects"]
+    assert extra_source in {row["path"] for row in result["source_inventory"]}
 
 
 def test_additional_unconfigured_subject_is_reported_as_unexpected(tmp_path: Path) -> None:

@@ -8,7 +8,7 @@
   "properties": {
     "schema_version": {"const": "MONO_CI_PSI_INSPECTION_COVERAGE_V1"},
     "architecture_state": {"enum": ["A0_3_GOVERNED_MODULE_GRAPH", "A0_4_REPORT_QUERY_PORT", "A0_5_MODULE_DATA_OWNERSHIP"]},
-    "evaluator_id": {"enum": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]},
+    "evaluator_id": {"enum": ["AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP"]},
     "inspection_unit": {"const": "file"},
     "expected_subjects": {"$ref": "#/$defs/paths"},
     "inspected_subjects": {"$ref": "#/$defs/paths"},

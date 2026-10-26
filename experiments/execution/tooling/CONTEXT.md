@@ -271,7 +271,9 @@ module without changing its original contract. This does not change
 
 Independent evaluator coverage and the adaptation-necessity assessment are
 DEVELOPMENT diagnostics stored outside method input. File scope is rebuilt
-from the source Git tree, state manifest and evaluator configuration; static
+from the source Git tree, state manifest and evaluator configuration;
+explicit additional source paths outside the module root are resolved as
+literal Git paths and included in the same digest-bound inventory. Static
 module edges and cycles are checked against source. The graph evaluator's
 dynamic dependency completeness remains UNKNOWN. V2 evidence binds expected
 and inspected file scope, while archive verification can reconstruct the
