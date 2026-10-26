@@ -858,9 +858,9 @@ def _verify_a05_candidate_extension(
         ),
         (
             negative_rows,
-            record["transition"]["probe_commit_sha"],
-            record["transition"]["probe_repository_tree_sha"],
-            record["transition"]["probe_application_tree_sha"],
+            extension["transition"]["probe_commit_sha"],
+            extension["transition"]["probe_repository_tree_sha"],
+            extension["transition"]["probe_application_tree_sha"],
         ),
     )
     for condition_rows, commit_sha, tree_sha, application_tree_sha in conditions:
