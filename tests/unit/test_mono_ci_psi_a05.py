@@ -227,6 +227,48 @@ def test_combined_old_control_detection_preserves_uncertainty() -> None:
     assert _probe_case_interpretation("NOT_EVALUABLE", "DETECTED") == "NOT_EVALUABLE"
 
 
+def test_v2_evidence_schema_resolves_local_refs_and_allows_inconclusive_results() -> None:
+    def assert_refs_resolve(value: Any, root_schema: dict[str, Any]) -> None:
+        if isinstance(value, dict):
+            reference = value.get("$ref")
+            if isinstance(reference, str) and reference.startswith("#/"):
+                target: Any = root_schema
+                for token in reference[2:].split("/"):
+                    token = token.replace("~1", "/").replace("~0", "~")
+                    assert isinstance(target, dict) and token in target
+                    target = target[token]
+            for child in value.values():
+                assert_refs_resolve(child, root_schema)
+        elif isinstance(value, list):
+            for child in value:
+                assert_refs_resolve(child, root_schema)
+
+    schema_paths = (
+        "mono_ci_psi_a05_experiment_evidence_v2.schema.json",
+        "mono_ci_psi_a05_probe_manifest_v1.schema.json",
+        "mono_ci_psi_transition_run_v4.schema.json",
+        "mono_ci_psi_transition_archive_v4.schema.json",
+    )
+    schemas: dict[str, dict[str, Any]] = {}
+    for name in schema_paths:
+        current_schema = json.loads(
+            (REPOSITORY_ROOT / "experiments/execution/schemas" / name).read_text(encoding="utf-8")
+        )
+        jsonschema.validators.validator_for(current_schema).check_schema(current_schema)
+        assert_refs_resolve(current_schema, current_schema)
+        schemas[name] = current_schema
+
+    schema = schemas["mono_ci_psi_a05_experiment_evidence_v2.schema.json"]
+    compliance = schema["properties"]["negative_condition"]["properties"]["evaluators"]["items"][
+        "properties"
+    ]["compliance"]["enum"]
+    detection = schema["properties"]["adequacy_diagnostic"]["properties"][
+        "per_evaluator_detection"
+    ]["items"]["properties"]["detection_status"]["enum"]
+    assert {"UNKNOWN", "NOT_EVALUABLE", "COMPLIANT", "NON_COMPLIANT"} <= set(compliance)
+    assert {"DETECTED", "NOT_DETECTED", "NOT_EVALUABLE"} == set(detection)
+
+
 def _make_replayable_probe_artifacts(tmp_path: Path) -> tuple[Path, Path, dict[str, Any]]:
     parent = "d0be79a5a89e6a84e8b2b09307b0998b11681ac9"
     seed = tmp_path / "seed"

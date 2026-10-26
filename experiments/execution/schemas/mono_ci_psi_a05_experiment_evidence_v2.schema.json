@@ -1001,6 +1001,10 @@
     }
   },
   "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
     "candidate_representation_binding": {
       "type": "object",
       "additionalProperties": false,
