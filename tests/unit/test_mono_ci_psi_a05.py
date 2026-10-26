@@ -28,7 +28,9 @@ from experiments.execution.tooling.mono_ci_psi_a05 import (
     _git_bytes,
     _git_text,
     _probe_case_interpretation,
+    _recompute_probe_detection_diagnostic,
     _validate_a04_proposal,
+    _verify_probe_detection_diagnostic,
     replay_negative_probe,
 )
 from experiments.execution.tooling.mono_ci_psi_coverage import (
@@ -133,6 +135,12 @@ def _detection_fixture(
     execution_status: str = "COMPLETED",
     inspection_status: str = "COMPLETE",
     finding_codes: tuple[str, ...] = (),
+    finding_items: tuple[dict[str, Any], ...] | None = None,
+    diagnostics_extra: dict[str, Any] | None = None,
+    source_text: str = (
+        "from sqlalchemy import MetaData, Table\n"
+        'foreign_table = Table("notifications", MetaData(), autoload_with=session.bind)\n'
+    ),
     process_exit_code: int | None = None,
 ) -> tuple[Path, dict[str, object]]:
     result_exit = (
@@ -146,6 +154,42 @@ def _detection_fixture(
             "NOT_APPLICABLE": 3,
         }[compliance]
     )
+    if finding_items is None:
+        findings = [
+            {
+                "code": code,
+                "source_path": PROBE_PATH,
+                "line": 2,
+                "source_capability": "tasks",
+                "target_capability": "notifications",
+            }
+            if code == "FOREIGN_TABLE_ACCESS"
+            else {"code": code}
+            for code in finding_codes
+        ]
+    else:
+        findings = list(finding_items)
+    diagnostics: dict[str, Any] = {"observed_policy_findings": findings}
+    foreign_finding = next(
+        (item for item in findings if item.get("code") == "FOREIGN_TABLE_ACCESS"), None
+    )
+    if foreign_finding is not None:
+        foreign_line = foreign_finding.get("line", 2)
+        diagnostics.update(
+            {
+                "foreign_table_accesses": [
+                    {
+                        "source_path": PROBE_PATH,
+                        "line": foreign_line,
+                        "table": "notifications",
+                        "owner": "notifications",
+                    }
+                ],
+                "table_owners": {"notifications": "notifications"},
+            }
+        )
+    if diagnostics_extra:
+        diagnostics.update(diagnostics_extra)
     evidence = {
         "evaluator": {
             "id": evaluator_id,
@@ -158,16 +202,51 @@ def _detection_fixture(
             "manifest_state_status": "MATCHED",
         },
         "result": {"execution_status": execution_status, "compliance": compliance},
-        "diagnostics": {"policy_findings": [{"code": code} for code in finding_codes]},
+        "diagnostics": diagnostics,
     }
+    evidence["result"]["violations"] = findings
     coverage = {"source_inspection_status": inspection_status}
-    output_path = tmp_path / "evaluator-output.json"
-    coverage_path = tmp_path / "inspection-coverage.json"
+    output_path = tmp_path / f"{evaluator_id}-evaluator-output.json"
+    coverage_path = tmp_path / f"{evaluator_id}-inspection-coverage.json"
     output_path.write_text(json.dumps(evidence), encoding="utf-8")
     coverage_path.write_text(json.dumps(coverage), encoding="utf-8")
+
+    source_bytes = source_text.encode("utf-8")
+    source_lines = source_text.splitlines()
+    patch_bytes = (
+        f"diff --git a/{PROBE_PATH} b/{PROBE_PATH}\n"
+        f"--- a/{PROBE_PATH}\n+++ b/{PROBE_PATH}\n"
+        f"@@ -0,0 +1,{len(source_lines)} @@\n" + "".join(f"+{line}\n" for line in source_lines)
+    ).encode("utf-8")
+    probe_root = tmp_path / "probes/ownership-negative"
+    source_artifact = probe_root / "source-files" / PROBE_PATH
+    patch_path = probe_root / "source.patch"
+    source_artifact.parent.mkdir(parents=True, exist_ok=True)
+    patch_path.parent.mkdir(parents=True, exist_ok=True)
+    source_artifact.write_bytes(source_bytes)
+    patch_path.write_bytes(patch_bytes)
+    manifest = {
+        "schema_version": "MONO_CI_PSI_A05_PROBE_MANIFEST_V1",
+        "probe_commit_sha": "a" * 40,
+        "probe_repository_tree_sha": "e" * 40,
+        "probe_application_tree_sha": "f" * 40,
+        "changed_paths": [PROBE_PATH],
+        "changed_sources": [
+            {
+                "path": PROBE_PATH,
+                "artifact_path": f"source-files/{PROBE_PATH}",
+                "modified_file_sha256": sha256_bytes(source_bytes),
+            }
+        ],
+        "patch_path": "probes/ownership-negative/source.patch",
+        "patch_sha256": sha256_bytes(patch_bytes),
+    }
+    (probe_root / "probe-manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     row: dict[str, object] = {
         "evaluator_id": evaluator_id,
         "source_commit_sha": "a" * 40,
+        "source_tree_sha": "e" * 40,
+        "application_tree_sha": "f" * 40,
         "execution_status": execution_status,
         "compliance": compliance,
         "process_exit_code": result_exit if process_exit_code is None else process_exit_code,
@@ -186,19 +265,36 @@ def test_three_state_detection_keeps_unknown_incomplete_and_unattributable_resul
     tmp_path: Path,
 ) -> None:
     cases = [
-        ("COMPLIANT", "COMPLETED", "COMPLETE", (), "NOT_DETECTED"),
-        ("NON_COMPLIANT", "COMPLETED", "COMPLETE", ("FOREIGN_TABLE_ACCESS",), "DETECTED"),
-        ("UNKNOWN", "COMPLETED", "COMPLETE", (), "NOT_EVALUABLE"),
-        ("NOT_EVALUABLE", "COMPLETED", "COMPLETE", (), "NOT_EVALUABLE"),
-        ("UNKNOWN", "FAILED", "COMPLETE", (), "NOT_EVALUABLE"),
-        ("NON_COMPLIANT", "COMPLETED", "COMPLETE", ("UNRELATED_POLICY_FINDING",), "NOT_EVALUABLE"),
-        ("COMPLIANT", "COMPLETED", "INCOMPLETE", (), "NOT_EVALUABLE"),
+        ("AC_PUBLIC_API", "COMPLIANT", "COMPLETED", "COMPLETE", (), "NOT_DETECTED"),
+        (
+            "AC_DATA_OWNERSHIP",
+            "NON_COMPLIANT",
+            "COMPLETED",
+            "COMPLETE",
+            ("FOREIGN_TABLE_ACCESS",),
+            "DETECTED",
+        ),
+        ("AC_PUBLIC_API", "UNKNOWN", "COMPLETED", "COMPLETE", (), "NOT_EVALUABLE"),
+        ("AC_PUBLIC_API", "NOT_EVALUABLE", "COMPLETED", "COMPLETE", (), "NOT_EVALUABLE"),
+        ("AC_PUBLIC_API", "UNKNOWN", "FAILED", "COMPLETE", (), "NOT_EVALUABLE"),
+        (
+            "AC_DATA_OWNERSHIP",
+            "NON_COMPLIANT",
+            "COMPLETED",
+            "COMPLETE",
+            ("UNRELATED_POLICY_FINDING",),
+            "NOT_EVALUABLE",
+        ),
+        ("AC_PUBLIC_API", "COMPLIANT", "COMPLETED", "INCOMPLETE", (), "NOT_EVALUABLE"),
     ]
-    for index, (compliance, execution, inspection, findings, expected) in enumerate(cases):
+    for index, (evaluator_id, compliance, execution, inspection, findings, expected) in enumerate(
+        cases
+    ):
         case_root = tmp_path / str(index)
         case_root.mkdir()
         case_root, row = _detection_fixture(
             case_root,
+            evaluator_id=evaluator_id,
             compliance=compliance,
             execution_status=execution,
             inspection_status=inspection,
@@ -209,7 +305,12 @@ def test_three_state_detection_keeps_unknown_incomplete_and_unattributable_resul
 
     mismatch_root = tmp_path / "exit-mismatch"
     mismatch_root.mkdir()
-    case_root, row = _detection_fixture(mismatch_root, process_exit_code=1, compliance="COMPLIANT")
+    case_root, row = _detection_fixture(
+        mismatch_root,
+        process_exit_code=1,
+        compliance="COMPLIANT",
+        diagnostics_extra={"observed_policy_findings": []},
+    )
     assert (
         _classify_probe_detection(case_root, row, source_condition_verified=True)[
             "detection_status"
@@ -217,6 +318,309 @@ def test_three_state_detection_keeps_unknown_incomplete_and_unattributable_resul
         == "NOT_EVALUABLE"
     )
     assert _classify_probe_detection(case_root, row)["detection_status"] == "NOT_EVALUABLE"
+
+
+def test_public_api_attribution_requires_a_probe_bound_private_import(tmp_path: Path) -> None:
+    root = tmp_path / "public-api"
+    root.mkdir()
+    finding = {
+        "code": "CROSS_MODULE_IMPORT_NOT_PUBLIC",
+        "source_path": PROBE_PATH,
+        "line": 1,
+        "source_capability": "tasks",
+        "target_capability": "notifications",
+        "imported_module": "app.modules.notifications.repository",
+        "imported_name": "NotificationRepository",
+    }
+    _root, row = _detection_fixture(
+        root,
+        evaluator_id="AC_PUBLIC_API",
+        compliance="NON_COMPLIANT",
+        finding_items=(finding,),
+        source_text=("from app.modules.notifications.repository import NotificationRepository\n"),
+        diagnostics_extra={
+            "cross_capability_imports": [
+                {
+                    "source_path": PROBE_PATH,
+                    "line": 1,
+                    "source_module": "app.modules.tasks.repository",
+                    "target_module": "app.modules.notifications.repository",
+                    "target_capability": "notifications",
+                    "imported_name": "NotificationRepository",
+                    "classification": "private_or_undeclared_contract",
+                }
+            ]
+        },
+    )
+
+    assert (
+        _classify_probe_detection(root, row, source_condition_verified=True)["detection_status"]
+        == "DETECTED"
+    )
+
+
+@pytest.mark.parametrize("finding_code", ["FORBIDDEN_DEPENDENCY", "UNDECLARED_DEPENDENCY"])
+def test_module_graph_attribution_requires_a_probe_bound_dependency_edge(
+    tmp_path: Path, finding_code: str
+) -> None:
+    root = tmp_path / finding_code.lower()
+    root.mkdir()
+    finding = {
+        "code": finding_code,
+        "source_capability": "tasks",
+        "target_capability": "notifications",
+    }
+    edge = {
+        "from": "tasks",
+        "to": "notifications",
+        "references": [
+            {
+                "source_path": PROBE_PATH,
+                "line": 1,
+                "source_module": "app.modules.tasks.repository",
+                "target_module": "app.modules.notifications.repository",
+            }
+        ],
+    }
+    _root, row = _detection_fixture(
+        root,
+        evaluator_id="AC_MODULE_GRAPH",
+        compliance="NON_COMPLIANT",
+        finding_items=(finding,),
+        source_text=("from app.modules.notifications.repository import NotificationRepository\n"),
+        diagnostics_extra={
+            "edges": [edge],
+            "allowed_edges": [],
+            "forbidden_edges": (
+                [{"from": "tasks", "to": "notifications"}]
+                if finding_code == "FORBIDDEN_DEPENDENCY"
+                else []
+            ),
+        },
+    )
+
+    assert (
+        _classify_probe_detection(root, row, source_condition_verified=True)["detection_status"]
+        == "DETECTED"
+    )
+
+
+def test_data_ownership_attribution_requires_a_probe_bound_foreign_table_access(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "ownership"
+    root.mkdir()
+    _root, row = _detection_fixture(
+        root,
+        evaluator_id="AC_DATA_OWNERSHIP",
+        compliance="NON_COMPLIANT",
+        finding_codes=("FOREIGN_TABLE_ACCESS",),
+    )
+
+    assert (
+        _classify_probe_detection(root, row, source_condition_verified=True)["detection_status"]
+        == "DETECTED"
+    )
+
+
+def test_recognized_finding_code_without_a_probe_line_is_not_detection(tmp_path: Path) -> None:
+    root = tmp_path / "unrelated"
+    root.mkdir()
+    finding = {
+        "code": "CROSS_MODULE_IMPORT_NOT_PUBLIC",
+        "source_path": PROBE_PATH,
+        "line": 200,
+        "source_capability": "tasks",
+        "target_capability": "notifications",
+        "imported_module": "app.modules.notifications.repository",
+        "imported_name": "NotificationRepository",
+    }
+    _root, row = _detection_fixture(
+        root,
+        evaluator_id="AC_PUBLIC_API",
+        compliance="NON_COMPLIANT",
+        finding_items=(finding,),
+        diagnostics_extra={
+            "cross_capability_imports": [
+                {
+                    "source_path": PROBE_PATH,
+                    "line": 200,
+                    "source_module": "app.modules.tasks.repository",
+                    "target_module": "app.modules.notifications.repository",
+                    "target_capability": "notifications",
+                    "imported_name": "NotificationRepository",
+                    "classification": "private_or_undeclared_contract",
+                }
+            ]
+        },
+    )
+
+    assert (
+        _classify_probe_detection(root, row, source_condition_verified=True)["detection_status"]
+        == "NOT_EVALUABLE"
+    )
+
+
+def test_existing_a05_probe_outcomes_remain_observation_neutral(tmp_path: Path) -> None:
+    rows = []
+    statuses = {}
+    for evaluator_id, compliance, codes in (
+        ("AC_PUBLIC_API", "COMPLIANT", ()),
+        ("AC_MODULE_GRAPH", "COMPLIANT", ()),
+        ("AC_DATA_OWNERSHIP", "NON_COMPLIANT", ("FOREIGN_TABLE_ACCESS",)),
+    ):
+        root = tmp_path / evaluator_id
+        root.mkdir()
+        _root, row = _detection_fixture(
+            root,
+            evaluator_id=evaluator_id,
+            compliance=compliance,
+            finding_codes=codes,
+        )
+        rows.append((root, row))
+        statuses[evaluator_id] = _classify_probe_detection(
+            root, row, source_condition_verified=True
+        )["detection_status"]
+
+    assert statuses == {
+        "AC_PUBLIC_API": "NOT_DETECTED",
+        "AC_MODULE_GRAPH": "NOT_DETECTED",
+        "AC_DATA_OWNERSHIP": "DETECTED",
+    }
+    assert (
+        _probe_case_interpretation(
+            _combine_old_detection(statuses["AC_PUBLIC_API"], statuses["AC_MODULE_GRAPH"]),
+            statuses["AC_DATA_OWNERSHIP"],
+        )
+        == "OLD_BASELINE_GAP_SUPPORTED"
+    )
+
+
+def test_archived_detection_diagnostic_recomputes_and_rejects_readback_drift(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "archived-run"
+    root.mkdir()
+    source_text = (
+        "from app.modules.notifications.repository import NotificationRepository\n"
+        "from sqlalchemy import MetaData, Table\n"
+        'foreign_table = Table("notifications", MetaData(), autoload_with=session.bind)\n'
+    )
+    public_finding = {
+        "code": "CROSS_MODULE_IMPORT_NOT_PUBLIC",
+        "source_path": PROBE_PATH,
+        "line": 1,
+        "source_capability": "tasks",
+        "target_capability": "notifications",
+        "imported_module": "app.modules.notifications.repository",
+        "imported_name": "NotificationRepository",
+    }
+    module_finding = {
+        "code": "UNDECLARED_DEPENDENCY",
+        "source_capability": "tasks",
+        "target_capability": "notifications",
+    }
+    rows: list[dict[str, Any]] = []
+    for evaluator_id, findings, extra in (
+        (
+            "AC_PUBLIC_API",
+            (public_finding,),
+            {
+                "cross_capability_imports": [
+                    {
+                        "source_path": PROBE_PATH,
+                        "line": 1,
+                        "source_module": "app.modules.tasks.repository",
+                        "target_module": "app.modules.notifications.repository",
+                        "target_capability": "notifications",
+                        "imported_name": "NotificationRepository",
+                        "classification": "private_or_undeclared_contract",
+                    }
+                ]
+            },
+        ),
+        (
+            "AC_MODULE_GRAPH",
+            (module_finding,),
+            {
+                "edges": [
+                    {
+                        "from": "tasks",
+                        "to": "notifications",
+                        "references": [
+                            {
+                                "source_path": PROBE_PATH,
+                                "line": 1,
+                                "source_module": "app.modules.tasks.repository",
+                                "target_module": "app.modules.notifications.repository",
+                            }
+                        ],
+                    }
+                ],
+                "allowed_edges": [],
+                "forbidden_edges": [],
+            },
+        ),
+        (
+            "AC_DATA_OWNERSHIP",
+            (
+                {
+                    "code": "FOREIGN_TABLE_ACCESS",
+                    "source_path": PROBE_PATH,
+                    "line": 3,
+                    "source_capability": "tasks",
+                    "target_capability": "notifications",
+                },
+            ),
+            {
+                "foreign_table_accesses": [
+                    {
+                        "source_path": PROBE_PATH,
+                        "line": 3,
+                        "table": "notifications",
+                        "owner": "notifications",
+                    }
+                ],
+                "table_owners": {"notifications": "notifications"},
+            },
+        ),
+    ):
+        _root, row = _detection_fixture(
+            root,
+            evaluator_id=evaluator_id,
+            compliance="NON_COMPLIANT",
+            finding_items=findings,
+            diagnostics_extra=extra,
+            source_text=source_text,
+        )
+        rows.append(row)
+
+    archived_diagnostic = _recompute_probe_detection_diagnostic(
+        root, rows, source_condition_verified=True
+    )
+    assert [row["detection_status"] for row in archived_diagnostic["per_evaluator_detection"]] == [
+        "DETECTED",
+        "DETECTED",
+        "DETECTED",
+    ]
+    assert (
+        _verify_probe_detection_diagnostic(
+            root,
+            rows,
+            archived_diagnostic,
+            source_condition_verified=True,
+        )
+        == archived_diagnostic
+    )
+
+    archived_diagnostic["old_baseline_detection"] = "NOT_DETECTED"
+    with pytest.raises(ContractValidationError, match="DERIVED_DIAGNOSTIC_MISMATCH"):
+        _verify_probe_detection_diagnostic(
+            root,
+            rows,
+            archived_diagnostic,
+            source_condition_verified=True,
+        )
 
 
 def test_combined_old_control_detection_preserves_uncertainty() -> None:

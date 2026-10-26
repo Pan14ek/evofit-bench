@@ -890,19 +890,12 @@ def _build_a05_extension(
             old_capabilities[row["capability_type"]] = row
     active_evaluators = ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]
     probe_by_id = {row["evaluator_id"]: row for row in negative_rows}
-    detection_rows = [
-        _classify_probe_detection(
-            run_root, probe_by_id[evaluator_id], source_condition_verified=True
-        )
-        for evaluator_id in sorted(probe_by_id)
-    ]
-    detection_by_id = {row["evaluator_id"]: row["detection_status"] for row in detection_rows}
-    old_detection = _combine_old_detection(
-        detection_by_id["AC_PUBLIC_API"], detection_by_id["AC_MODULE_GRAPH"]
+    detection_diagnostic = _recompute_probe_detection_diagnostic(
+        run_root, list(probe_by_id.values()), source_condition_verified=True
     )
-    case_interpretation = _probe_case_interpretation(
-        old_detection, detection_by_id[OWNERSHIP_EVALUATOR]
-    )
+    detection_rows = detection_diagnostic["per_evaluator_detection"]
+    old_detection = detection_diagnostic["old_baseline_detection"]
+    case_interpretation = detection_diagnostic["case_interpretation"]
     before_observations = [
         row
         for row in run_record["evaluator_observations"]
@@ -1189,37 +1182,245 @@ def _run_bound_evaluator(
     return run, row
 
 
-def _raw_finding_codes(evidence: dict[str, Any]) -> list[str]:
+def _raw_findings(evidence: dict[str, Any]) -> list[dict[str, Any]]:
+    diagnostics = evidence.get("diagnostics", {})
+    result = evidence.get("result", {})
+    if not isinstance(diagnostics, dict) or not isinstance(result, dict):
+        return []
+    candidates = [
+        result.get("violations"),
+        diagnostics.get("observed_policy_findings"),
+        diagnostics.get("policy_findings"),
+    ]
+    findings: dict[str, dict[str, Any]] = {}
+    for candidate in candidates:
+        if not isinstance(candidate, list):
+            continue
+        for item in candidate:
+            if isinstance(item, dict) and isinstance(item.get("code"), str):
+                findings[json.dumps(item, sort_keys=True)] = item
+    return [findings[key] for key in sorted(findings)]
+
+
+def _added_probe_lines(patch_bytes: bytes) -> set[int]:
+    """Return new-file line numbers introduced by the single-file probe patch."""
+    try:
+        patch_text = patch_bytes.decode("utf-8")
+    except UnicodeDecodeError as error:
+        raise ValueError("PROBE_PATCH_ENCODING_INVALID") from error
+    if _probe_patch_paths(patch_bytes) != [PROBE_PATH]:
+        raise ValueError("PROBE_PATCH_PATH_MISMATCH")
+
+    added_lines: set[int] = set()
+    new_line: int | None = None
+    saw_hunk = False
+    for line in patch_text.splitlines():
+        if line.startswith("@@"):
+            match = re.match(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@", line)
+            if match is None:
+                raise ValueError("PROBE_PATCH_HUNK_INVALID")
+            new_line = int(match.group(1))
+            saw_hunk = True
+            continue
+        if new_line is None:
+            continue
+        if line.startswith("+"):
+            added_lines.add(new_line)
+            new_line += 1
+        elif line.startswith("-"):
+            continue
+        elif line.startswith(" "):
+            new_line += 1
+        elif line.startswith("\\"):
+            continue
+        else:
+            raise ValueError("PROBE_PATCH_LINE_INVALID")
+    if not saw_hunk or not added_lines:
+        raise ValueError("PROBE_PATCH_HAS_NO_ADDED_SOURCE_LINES")
+    return added_lines
+
+
+def _probe_change_context(run_root: Path, row: dict[str, Any]) -> dict[str, Any] | None:
+    """Load the digest-bound source path and added lines used for attribution."""
+    try:
+        root = run_root.resolve(strict=True)
+        manifest_path = root / PROBE_RELATIVE_ROOT / "probe-manifest.json"
+        if (
+            manifest_path.is_symlink()
+            or not manifest_path.is_file()
+            or not manifest_path.resolve().is_relative_to(root)
+        ):
+            return None
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if not isinstance(manifest, dict):
+            return None
+        changed_sources = manifest.get("changed_sources")
+        if (
+            manifest.get("schema_version") != "MONO_CI_PSI_A05_PROBE_MANIFEST_V1"
+            or manifest.get("changed_paths") != [PROBE_PATH]
+            or not isinstance(changed_sources, list)
+            or len(changed_sources) != 1
+            or not isinstance(changed_sources[0], dict)
+        ):
+            return None
+        source = changed_sources[0]
+        if (
+            source.get("path") != PROBE_PATH
+            or source.get("artifact_path") != f"source-files/{PROBE_PATH}"
+            or manifest.get("patch_path") != f"{PROBE_RELATIVE_ROOT}/source.patch"
+            or manifest.get("probe_commit_sha") != row.get("source_commit_sha")
+            or manifest.get("probe_repository_tree_sha") != row.get("source_tree_sha")
+            or manifest.get("probe_application_tree_sha") != row.get("application_tree_sha")
+        ):
+            return None
+
+        source_path = root / PROBE_RELATIVE_ROOT / source["artifact_path"]
+        patch_path = root / manifest["patch_path"]
+        for artifact_path in (source_path, patch_path):
+            if (
+                artifact_path.is_symlink()
+                or not artifact_path.is_file()
+                or not artifact_path.resolve().is_relative_to(root)
+            ):
+                return None
+        source_bytes = source_path.read_bytes()
+        patch_bytes = patch_path.read_bytes()
+        if sha256_bytes(source_bytes) != source.get("modified_file_sha256") or sha256_bytes(
+            patch_bytes
+        ) != manifest.get("patch_sha256"):
+            return None
+        added_lines = _added_probe_lines(patch_bytes)
+        source_parts = Path(PROBE_PATH).with_suffix("").parts
+        if len(source_parts) < 4 or source_parts[:2] != ("app", "modules"):
+            return None
+        source_capability = source_parts[2]
+        source_module = ".".join(source_parts)
+        return {
+            "path": PROBE_PATH,
+            "added_lines": added_lines,
+            "source_capability": source_capability,
+            "source_module": source_module,
+        }
+    except (OSError, ValueError, KeyError, TypeError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+
+
+def _finding_location_is_probe_change(finding: dict[str, Any], change: dict[str, Any]) -> bool:
+    line = finding.get("line")
+    return (
+        finding.get("source_path") == change["path"]
+        and isinstance(line, int)
+        and not isinstance(line, bool)
+        and line in change["added_lines"]
+        and finding.get("source_capability") == change["source_capability"]
+    )
+
+
+def _finding_is_attributable(
+    evaluator_id: str, finding: dict[str, Any], evidence: dict[str, Any], change: dict[str, Any]
+) -> bool:
     diagnostics = evidence.get("diagnostics", {})
     if not isinstance(diagnostics, dict):
-        return []
-    policy_findings = diagnostics.get("policy_findings", [])
-    if not isinstance(policy_findings, list):
-        policy_findings = []
-    codes = sorted(
-        {
-            item["code"]
-            for item in policy_findings
-            if isinstance(item, dict) and isinstance(item.get("code"), str)
-        }
-    )
-    if not codes:
-        codes = sorted(
-            {
-                item["code"]
-                for value in diagnostics.values()
-                if isinstance(value, list)
-                for item in value
-                if isinstance(item, dict) and isinstance(item.get("code"), str)
-            }
+        return False
+
+    if evaluator_id == "AC_PUBLIC_API" and finding.get("code") == "CROSS_MODULE_IMPORT_NOT_PUBLIC":
+        target_capability = finding.get("target_capability")
+        target_module = finding.get("imported_module")
+        if (
+            not _finding_location_is_probe_change(finding, change)
+            or not isinstance(target_capability, str)
+            or target_capability == change["source_capability"]
+            or not isinstance(target_module, str)
+            or not (
+                target_module == f"app.modules.{target_capability}"
+                or target_module.startswith(f"app.modules.{target_capability}.")
+            )
+        ):
+            return False
+        imports = diagnostics.get("cross_capability_imports", [])
+        return isinstance(imports, list) and any(
+            isinstance(item, dict)
+            and item.get("source_path") == change["path"]
+            and item.get("line") == finding.get("line")
+            and item.get("source_module") == change["source_module"]
+            and item.get("target_module") == target_module
+            and item.get("target_capability") == target_capability
+            and item.get("imported_name") == finding.get("imported_name")
+            and item.get("classification") == "private_or_undeclared_contract"
+            for item in imports
         )
-    return codes
+
+    if evaluator_id == "AC_MODULE_GRAPH" and finding.get("code") in {
+        "FORBIDDEN_DEPENDENCY",
+        "UNDECLARED_DEPENDENCY",
+    }:
+        source_capability = finding.get("source_capability")
+        target_capability = finding.get("target_capability")
+        if (
+            source_capability != change["source_capability"]
+            or not isinstance(target_capability, str)
+            or target_capability == source_capability
+        ):
+            return False
+        pair = {"from": source_capability, "to": target_capability}
+        forbidden = diagnostics.get("forbidden_edges", [])
+        allowed = diagnostics.get("allowed_edges", [])
+        if finding["code"] == "FORBIDDEN_DEPENDENCY":
+            if not isinstance(forbidden, list) or pair not in forbidden:
+                return False
+        elif (
+            not isinstance(allowed, list)
+            or pair in allowed
+            or (isinstance(forbidden, list) and pair in forbidden)
+        ):
+            return False
+        edges = diagnostics.get("edges", [])
+        return isinstance(edges, list) and any(
+            isinstance(edge, dict)
+            and edge.get("from") == source_capability
+            and edge.get("to") == target_capability
+            and isinstance(edge.get("references"), list)
+            and any(
+                isinstance(reference, dict)
+                and reference.get("source_path") == change["path"]
+                and reference.get("line") in change["added_lines"]
+                and reference.get("source_module") == change["source_module"]
+                and isinstance(reference.get("target_module"), str)
+                and (
+                    reference["target_module"] == f"app.modules.{target_capability}"
+                    or reference["target_module"].startswith(f"app.modules.{target_capability}.")
+                )
+                for reference in edge["references"]
+            )
+            for edge in edges
+        )
+
+    if evaluator_id == OWNERSHIP_EVALUATOR and finding.get("code") == "FOREIGN_TABLE_ACCESS":
+        if not _finding_location_is_probe_change(finding, change):
+            return False
+        accesses = diagnostics.get("foreign_table_accesses", [])
+        table_owners = diagnostics.get("table_owners", {})
+        return (
+            isinstance(accesses, list)
+            and isinstance(table_owners, dict)
+            and any(
+                isinstance(access, dict)
+                and access.get("source_path") == change["path"]
+                and access.get("line") == finding.get("line")
+                and isinstance(access.get("table"), str)
+                and access.get("owner") == table_owners.get(access.get("table"))
+                and access.get("owner") == finding.get("target_capability")
+                and access.get("owner") != change["source_capability"]
+                for access in accesses
+            )
+        )
+    return False
 
 
 def _classify_probe_detection(
     run_root: Path, row: dict[str, Any], *, source_condition_verified: bool = False
 ) -> dict[str, Any]:
-    """Classify attribution from the raw evaluator result and independently verified scope."""
+    """Attribute evaluator findings only when they bind to the digest-verified probe delta."""
     try:
         output_path = run_root / row["output_path"]
         coverage_path = run_root / row["coverage_path"]
@@ -1279,21 +1480,73 @@ def _classify_probe_detection(
         status = "NOT_EVALUABLE"
         reasons = ["EXECUTION_IDENTITY_OR_SCOPE_UNRESOLVED"]
     else:
-        attributable = "FOREIGN_TABLE_ACCESS" in _raw_finding_codes(evidence)
-        if attributable and compliance == "NON_COMPLIANT":
-            status = "DETECTED"
-            reasons = ["ATTRIBUTABLE_FOREIGN_TABLE_ACCESS_FINDING"]
-        elif compliance == "COMPLIANT" and not attributable:
-            status = "NOT_DETECTED"
-            reasons = ["COMPLETE_SCOPE_WITHOUT_ATTRIBUTABLE_FINDING"]
-        else:
+        change = _probe_change_context(run_root, row)
+        findings = _raw_findings(evidence)
+        if change is None:
             status = "NOT_EVALUABLE"
-            reasons = ["RESULT_DOES_NOT_ESTABLISH_ATTRIBUTION"]
+            reasons = ["PROBE_SOURCE_EVIDENCE_UNVERIFIED"]
+        else:
+            attributable = [
+                finding
+                for finding in findings
+                if _finding_is_attributable(row["evaluator_id"], finding, evidence, change)
+            ]
+            if attributable and compliance == "NON_COMPLIANT":
+                status = "DETECTED"
+                reasons = sorted(
+                    {
+                        "ATTRIBUTABLE_FOREIGN_TABLE_ACCESS_FINDING"
+                        if finding["code"] == "FOREIGN_TABLE_ACCESS"
+                        else f"ATTRIBUTABLE_{finding['code']}_FINDING"
+                        for finding in attributable
+                    }
+                )
+            elif compliance == "COMPLIANT" and not findings:
+                status = "NOT_DETECTED"
+                reasons = ["COMPLETE_SCOPE_WITHOUT_ATTRIBUTABLE_FINDING"]
+            else:
+                status = "NOT_EVALUABLE"
+                reasons = ["RESULT_DOES_NOT_ESTABLISH_ATTRIBUTION"]
     return {
         "evaluator_id": row["evaluator_id"],
         "detection_status": status,
         "reason_codes": reasons,
     }
+
+
+def _recompute_probe_detection_diagnostic(
+    run_root: Path, rows: list[dict[str, Any]], *, source_condition_verified: bool
+) -> dict[str, Any]:
+    classifications = [
+        _classify_probe_detection(
+            run_root, row, source_condition_verified=source_condition_verified
+        )
+        for row in sorted(rows, key=lambda item: item["evaluator_id"])
+    ]
+    by_id = {row["evaluator_id"]: row["detection_status"] for row in classifications}
+    old_detection = _combine_old_detection(by_id["AC_PUBLIC_API"], by_id["AC_MODULE_GRAPH"])
+    return {
+        "per_evaluator_detection": classifications,
+        "old_baseline_detection": old_detection,
+        "case_interpretation": _probe_case_interpretation(
+            old_detection, by_id[OWNERSHIP_EVALUATOR]
+        ),
+    }
+
+
+def _verify_probe_detection_diagnostic(
+    run_root: Path,
+    rows: list[dict[str, Any]],
+    diagnostic: dict[str, Any],
+    *,
+    source_condition_verified: bool,
+) -> dict[str, Any]:
+    recomputed = _recompute_probe_detection_diagnostic(
+        run_root, rows, source_condition_verified=source_condition_verified
+    )
+    if any(diagnostic.get(key) != recomputed[key] for key in recomputed):
+        raise ContractValidationError("MONO_CI_PSI_A05_DERIVED_DIAGNOSTIC_MISMATCH")
+    return recomputed
 
 
 def _combine_old_detection(public_api: str, module_graph: str) -> str:

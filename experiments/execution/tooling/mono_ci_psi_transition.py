@@ -762,9 +762,7 @@ def _verify_a05_experiment_extension_v2(
     from experiments.execution.tooling.mono_ci_psi_a05 import (
         PROBE_PATH,
         PROBE_RELATIVE_ROOT,
-        _classify_probe_detection,
-        _combine_old_detection,
-        _probe_case_interpretation,
+        _verify_probe_detection_diagnostic,
         replay_negative_probe,
     )
 
@@ -891,7 +889,6 @@ def _verify_a05_experiment_extension_v2(
             state_manifest_bytes=state_manifest_bytes,
             architecture_state="A0_5_MODULE_DATA_OWNERSHIP",
         )
-        classifications = []
         for evaluator_id, row in sorted(negative_by_id.items()):
             config_ref = config_rows[evaluator_id]
             config_path = _checked_run_artifact(
@@ -923,26 +920,16 @@ def _verify_a05_experiment_extension_v2(
                 state_manifest_bytes=state_manifest_bytes,
                 architecture_state="A0_5_MODULE_DATA_OWNERSHIP",
             )
-            classifications.append(
-                _classify_probe_detection(run_root, row, source_condition_verified=True)
-            )
-
-        classification_by_id = {
-            row["evaluator_id"]: row["detection_status"] for row in classifications
-        }
-        old_detection = _combine_old_detection(
-            classification_by_id["AC_PUBLIC_API"], classification_by_id["AC_MODULE_GRAPH"]
-        )
-        interpretation = _probe_case_interpretation(
-            old_detection, classification_by_id["AC_DATA_OWNERSHIP"]
-        )
         diagnostic = extension["adequacy_diagnostic"]
+        _verify_probe_detection_diagnostic(
+            run_root,
+            negative_rows,
+            diagnostic,
+            source_condition_verified=True,
+        )
         if (
             diagnostic["evidence_integrity"]
             != "VERIFIED_BY_SOURCE_REPLAY_AND_RAW_EVIDENCE_READBACK"
-            or diagnostic["per_evaluator_detection"] != classifications
-            or diagnostic["old_baseline_detection"] != old_detection
-            or diagnostic["case_interpretation"] != interpretation
         ):
             raise ContractValidationError("MONO_CI_PSI_A05_DERIVED_DIAGNOSTIC_MISMATCH")
 
