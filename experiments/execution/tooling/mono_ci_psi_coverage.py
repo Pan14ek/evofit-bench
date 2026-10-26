@@ -23,8 +23,12 @@ import yaml
 from experiments.execution.tooling.errors import ContractValidationError
 from experiments.execution.tooling.hashing import canonical_json_bytes, sha256_bytes
 
-_EVALUATOR_IDS = {"AC_PUBLIC_API", "AC_MODULE_GRAPH"}
-_STATE_NAMES = {"A0_3_GOVERNED_MODULE_GRAPH", "A0_4_REPORT_QUERY_PORT"}
+_EVALUATOR_IDS = {"AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP"}
+_STATE_NAMES = {
+    "A0_3_GOVERNED_MODULE_GRAPH",
+    "A0_4_REPORT_QUERY_PORT",
+    "A0_5_MODULE_DATA_OWNERSHIP",
+}
 _SHA1 = re.compile(r"^[a-f0-9]{40}$")
 _SHA256 = re.compile(r"^[a-f0-9]{64}$")
 
@@ -43,6 +47,11 @@ _REQUIREMENT_CAPABILITY_MAPPINGS = {
         "capability_type": "evaluator.public_api.temporary_exception_scope",
         "mapping_id": "MAP-TEMPORARY-EXCEPTION-TO-A1-STATE-SCOPE-V1",
         "comparison_rule": "EXACT_EXCEPTION_AND_STATE_MEMBERSHIP",
+    },
+    "architecture.data_ownership.persistence_ownership": {
+        "capability_type": "evaluator.data_ownership.table_and_access_policy",
+        "mapping_id": "MAP-PERSISTENCE-OWNERSHIP-TO-A1-DATA-OWNERSHIP-V1",
+        "comparison_rule": "EXACT_TABLE_OWNERS_AND_DECLARED_STATIC_ACCESS_RULES",
     },
 }
 
@@ -708,6 +717,31 @@ def _mapped_requirement_is_covered(
             == set(requirement_value.get("imported_names", []))
             and state in configured.get("allowed_architecture_states", [])
             and state in requirement_value.get("allowed_architecture_states", [])
+        )
+    if requirement_type == "architecture.data_ownership.persistence_ownership":
+        table_owners = capability_value.get("table_owners")
+        prohibited = capability_value.get("prohibited_access_patterns")
+        registry_exception = capability_value.get("model_registry_exception")
+        if (
+            not isinstance(table_owners, Mapping)
+            or not isinstance(prohibited, list)
+            or not isinstance(registry_exception, Mapping)
+        ):
+            return None
+        required_ownership = requirement_value.get("table_owners")
+        required_patterns = requirement_value.get("prohibited_access_patterns")
+        required_exception = requirement_value.get("model_registry_exception")
+        if (
+            not isinstance(required_ownership, Mapping)
+            or not isinstance(required_patterns, list)
+            or not isinstance(required_exception, Mapping)
+        ):
+            return None
+        return (
+            dict(table_owners) == dict(required_ownership)
+            and set(prohibited) >= set(required_patterns)
+            and dict(registry_exception) == dict(required_exception)
+            and state == "A0_5_MODULE_DATA_OWNERSHIP"
         )
     return None
 

@@ -35,6 +35,24 @@ def _install_a04_manifest(root: Path) -> None:
         shutil.copyfile(source, target)
 
 
+def _install_a05_manifest(root: Path) -> None:
+    for relative in (stage.A05_MANIFEST, stage.A05_SCHEMA):
+        source = REPOSITORY_ROOT / relative
+        target = root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
+
+
+def _install_a05_evaluators(root: Path) -> None:
+    evaluator_root = root / "architecture/acceptance/a1"
+    evaluator_root.mkdir(parents=True, exist_ok=True)
+    for filename in ("public_api_v1.yaml", "module_graph_v1.yaml", "data_ownership_v1.yaml"):
+        shutil.copyfile(
+            REPOSITORY_ROOT / "architecture/acceptance/a1" / filename,
+            evaluator_root / filename,
+        )
+
+
 def _fake_a03_subject(root: Path) -> None:
     _fake_modules(root, stage.MODULES)
     contract_test = root / "tests/unit/test_module_public_apis.py"
@@ -46,6 +64,12 @@ def _fake_a03_subject(root: Path) -> None:
 def _fake_a04_subject(root: Path) -> None:
     _fake_a03_subject(root)
     _install_a04_manifest(root)
+
+
+def _fake_a05_subject(root: Path) -> None:
+    _fake_a04_subject(root)
+    _install_a05_manifest(root)
+    _install_a05_evaluators(root)
 
 
 def test_detects_exact_baseline_when_no_public_apis(tmp_path: Path) -> None:
@@ -93,6 +117,36 @@ def test_a04_manifest_is_latest_state_and_policy_bindings_are_explicit(tmp_path:
     assert stage.detect_stage(tmp_path) == stage.A04
     manifest = stage._validate_a04_manifest(tmp_path)
     stage._validate_a04_policy_bindings(REPOSITORY_ROOT, manifest)
+
+
+def test_a05_manifest_is_prospective_successor_and_binds_ownership_policy(tmp_path: Path) -> None:
+    _fake_a05_subject(tmp_path)
+    assert stage.detect_stage(tmp_path) == stage.A05
+    manifest = stage._validate_a05_manifest(tmp_path)
+    stage._validate_a05_policy_bindings(tmp_path, manifest)
+    assert manifest["source_provenance"]["predecessor_commit"] == stage.HISTORICAL_A04_SHA
+    assert manifest["governance_requirements"]["required_evaluators"] == list(
+        stage.A05_REQUIRED_EVALUATORS
+    )
+
+
+def test_a05_rejects_ownership_evaluator_or_exception_drift(tmp_path: Path) -> None:
+    _fake_a05_subject(tmp_path)
+    ownership_path = tmp_path / "architecture/acceptance/a1/data_ownership_v1.yaml"
+    original = ownership_path.read_text(encoding="utf-8")
+    ownership_path.write_text(
+        original.replace("audit_events: audit", "audit_events: tasks"), encoding="utf-8"
+    )
+    with pytest.raises(stage.StageCheckError, match="A0.5_OWNERSHIP_CONFIG_MANIFEST_MISMATCH"):
+        stage._validate_a05_policy_bindings(tmp_path, stage._validate_a05_manifest(tmp_path))
+
+    ownership_path.write_text(original, encoding="utf-8")
+    ownership_path.write_text(
+        original.replace("path: app/db/model_registry.py", "path: app/db/other_registry.py"),
+        encoding="utf-8",
+    )
+    with pytest.raises(stage.StageCheckError, match="A0.5_MODEL_REGISTRY_EXCEPTION_MISMATCH"):
+        stage._validate_a05_policy_bindings(tmp_path, stage._validate_a05_manifest(tmp_path))
 
 
 def test_committed_a03_manifest_removal_fails_acceptance_and_historical_a02_stays_valid(
@@ -167,6 +221,27 @@ def test_a04_manifest_removal_or_stage_downgrade_fails_and_history_stays_detecta
     assert stage.detect_stage(tmp_path) == stage.A03
     stage._git(tmp_path, "checkout", "--quiet", a02_commit)
     assert stage.detect_stage(tmp_path) == stage.A02
+
+
+def test_a05_manifest_removal_fails_and_historical_a04_remains_detectable(tmp_path: Path) -> None:
+    stage._git(tmp_path, "init", "--quiet")
+    stage._git(tmp_path, "config", "user.name", "Architecture stage test")
+    stage._git(tmp_path, "config", "user.email", "architecture-stage@example.test")
+    _fake_a04_subject(tmp_path)
+    stage._git(tmp_path, "add", "-A")
+    stage._git(tmp_path, "commit", "--quiet", "-m", "establish A0.4 state")
+    a04_commit = stage._git(tmp_path, "rev-parse", "HEAD")
+    _install_a05_manifest(tmp_path)
+    stage._git(tmp_path, "add", "-A")
+    stage._git(tmp_path, "commit", "--quiet", "-m", "establish A0.5 state")
+    assert stage.detect_stage(tmp_path) == stage.A05
+    (tmp_path / stage.A05_MANIFEST).unlink()
+    stage._git(tmp_path, "add", "-A")
+    stage._git(tmp_path, "commit", "--quiet", "-m", "remove established A0.5 manifest")
+    with pytest.raises(stage.StageCheckError, match="A0.5_MANIFEST_REMOVED_AFTER_ESTABLISHMENT"):
+        stage.detect_stage(tmp_path)
+    stage._git(tmp_path, "checkout", "--quiet", a04_commit)
+    assert stage.detect_stage(tmp_path) == stage.A04
 
 
 def test_a04_manifest_requires_valid_preserved_a03_record_and_schema(tmp_path: Path) -> None:
@@ -413,6 +488,32 @@ def test_a04_acceptance_requires_both_evaluators_and_adversarial_suite(
     ]
 
 
+def test_a05_acceptance_requires_three_evaluators_and_ownership_suite(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _fake_a05_subject(tmp_path)
+    calls: list[tuple[str, object]] = []
+    pytest_targets: list[list[str]] = []
+    monkeypatch.setattr(
+        stage,
+        "_git",
+        lambda _root, *args: (
+            ""
+            if args == ("status", "--porcelain", "--", "app", "architecture", "tests")
+            else "a" * 40
+        ),
+    )
+    monkeypatch.setattr(
+        stage, "_run_a05_evaluators", lambda _root, sha: calls.append(("evaluators", sha))
+    )
+    monkeypatch.setattr(
+        stage, "_run_pytest", lambda _root, paths, *, historical: pytest_targets.append(paths)
+    )
+    assert stage.current_stage_acceptance(tmp_path, requested_stage=stage.A05) == stage.A05
+    assert calls == [("evaluators", "a" * 40)]
+    assert "tests/unit/test_a05_data_ownership.py" in pytest_targets[0]
+
+
 def test_a04_evaluator_failure_blocks_architecture_tests(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -443,6 +544,6 @@ def test_a04_evaluator_failure_blocks_architecture_tests(
     assert not pytest_called
 
 
-def test_development_ci_pins_a04_architecture_stage() -> None:
+def test_development_ci_pins_a05_architecture_stage() -> None:
     workflow = (REPOSITORY_ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
-    assert "ARCHITECTURE_STAGE: A0_4_REPORT_QUERY_PORT" in workflow
+    assert "ARCHITECTURE_STAGE: A0_5_MODULE_DATA_OWNERSHIP" in workflow

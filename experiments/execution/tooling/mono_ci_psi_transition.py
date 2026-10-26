@@ -83,9 +83,16 @@ AFTER_STATE = "A0_4_REPORT_QUERY_PORT"
 STATE_MANIFESTS_PATH = "provenance/transition-state-manifests.json"
 TRANSITION_SCHEMA_V1 = "mono_ci_psi_transition_run_v1.schema.json"
 TRANSITION_SCHEMA_V2 = "mono_ci_psi_transition_run_v2.schema.json"
+TRANSITION_SCHEMA_V3 = "mono_ci_psi_transition_run_v3.schema.json"
 INSPECTION_COVERAGE_SCHEMA = "mono_ci_psi_inspection_coverage_v1.schema.json"
 ADAPTATION_NECESSITY_SCHEMA_V1 = "mono_ci_psi_adaptation_necessity_v1.schema.json"
 ADAPTATION_NECESSITY_SCHEMA_V2 = "mono_ci_psi_adaptation_necessity_v2.schema.json"
+ADAPTATION_NECESSITY_SCHEMA_V3 = "mono_ci_psi_adaptation_necessity_v3.schema.json"
+TRANSITION_RUN_SCHEMA_VERSION = "MONO_CI_PSI_TRANSITION_RUN_V2"
+TRANSITION_UNIT_OF_ANALYSIS = "ONE_A0_3_TO_A0_4_ARCHITECTURE_TRANSITION"
+ADAPTATION_NECESSITY_SCHEMA_VERSION = "MONO_CI_PSI_ADAPTATION_NECESSITY_V2"
+TRANSITION_RUN_EXTENSION_BUILDER = None
+A05_EXPERIMENT_EVIDENCE_SCHEMA = "mono_ci_psi_a05_experiment_evidence_v1.schema.json"
 RUN_ID_PATTERN = re.compile(r"^DEV_PSI_TRANSITION_[A-Za-z0-9_-]{1,48}$")
 SHA256_PATTERN = re.compile(r"^[a-f0-9]{64}$")
 RUNTIME_MODULES = (
@@ -366,12 +373,12 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
         adaptation_assessment_path = root / "diagnostics/adaptation-necessity-assessment.json"
         _write_new_file(adaptation_assessment_path, pretty_json_bytes(adaptation_assessment))
         record = {
-            "schema_version": "MONO_CI_PSI_TRANSITION_RUN_V2",
+            "schema_version": TRANSITION_RUN_SCHEMA_VERSION,
             "execution_id": execution_id,
             "source_revision_sha": _git_text(repo, "rev-parse", "HEAD").strip(),
             "study_id": "MONO_CI_B0_PSI_DEVELOPMENT_TECHNICAL_VALIDATION",
             "mode": "DEVELOPMENT_METHOD_EXECUTION_ONLY",
-            "unit_of_analysis": "ONE_A0_3_TO_A0_4_ARCHITECTURE_TRANSITION",
+            "unit_of_analysis": TRANSITION_UNIT_OF_ANALYSIS,
             "study_readiness": "NO_GO",
             "measurement_status": "NOT_EXECUTED",
             "p_algorithm_status": "NOT_READY",
@@ -457,6 +464,16 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
                 ),
             },
         }
+        if TRANSITION_RUN_EXTENSION_BUILDER is not None:
+            extension = TRANSITION_RUN_EXTENSION_BUILDER(repo, root, record)
+            if (
+                not isinstance(extension, dict)
+                or extension.get("path") != "diagnostics/a05-experiment-evidence.json"
+                or not isinstance(extension.get("sha256"), str)
+            ):
+                raise ProtocolError("MONO_CI_PSI_TRANSITION_EXTENSION_INVALID")
+            record["a05_extension"] = extension
+            record["output_checksums"][extension["path"]] = extension["sha256"]
         _write_new_file(root / "development_run.json", pretty_json_bytes(record))
         _seal_run(root)
         verify_transition_run(root)
@@ -483,9 +500,23 @@ def verify_transition_run(run_root: Path) -> dict[str, Any]:
     if not root.is_dir() or root.is_symlink():
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_RUN_ROOT_INVALID")
     record = json.loads((root / "development_run.json").read_text(encoding="utf-8"))
+    if (
+        record.get("schema_version") == "MONO_CI_PSI_TRANSITION_RUN_V3"
+        and AFTER_STATE != "A0_5_MODULE_DATA_OWNERSHIP"
+    ):
+        from experiments.execution.tooling.mono_ci_psi_a05 import a05_transition_context
+
+        after_commit = record.get("transition", {}).get("after_commit_sha")
+        with a05_transition_context(
+            REPOSITORY_ROOT,
+            extension_builder=None,
+            after_commit=after_commit,
+        ):
+            return verify_transition_run(root)
     schema_name = {
         "MONO_CI_PSI_TRANSITION_RUN_V1": TRANSITION_SCHEMA_V1,
         "MONO_CI_PSI_TRANSITION_RUN_V2": TRANSITION_SCHEMA_V2,
+        "MONO_CI_PSI_TRANSITION_RUN_V3": TRANSITION_SCHEMA_V3,
     }.get(record.get("schema_version"))
     if schema_name is None:
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_SCHEMA_UNSUPPORTED")
@@ -527,8 +558,13 @@ def verify_transition_run(run_root: Path) -> dict[str, Any]:
         path = root / relative
         if not path.is_file() or sha256_file(path) != digest:
             raise ContractValidationError("MONO_CI_PSI_TRANSITION_OUTPUT_CHECKSUM_MISMATCH")
-    if record["schema_version"] == "MONO_CI_PSI_TRANSITION_RUN_V2":
+    if record["schema_version"] in {
+        "MONO_CI_PSI_TRANSITION_RUN_V2",
+        "MONO_CI_PSI_TRANSITION_RUN_V3",
+    }:
         _verify_adaptation_necessity_report(root, record, raw)
+    if record["schema_version"] == "MONO_CI_PSI_TRANSITION_RUN_V3":
+        _verify_a05_experiment_extension(root, record)
     if (
         record["other_arms_or_case_outputs_used"] is not False
         or record["metrics"] != "NOT_MEASURED"
@@ -625,6 +661,82 @@ def verify_transition_run(run_root: Path) -> dict[str, Any]:
     if _read_checksums(root / "SHA256SUMS") != _directory_checksums(root, {"SHA256SUMS"}):
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_RUN_INVENTORY_MISMATCH")
     return record
+
+
+def _verify_a05_experiment_extension(run_root: Path, record: dict[str, Any]) -> None:
+    """Bind the A0.5 ownership probe and independent adequacy diagnostic to raw evidence."""
+    extension_ref = record.get("a05_extension")
+    if not isinstance(extension_ref, dict) or set(extension_ref) != {"path", "sha256"}:
+        raise ContractValidationError("MONO_CI_PSI_A05_EXTENSION_BINDING_INVALID")
+    extension_path = run_root / extension_ref["path"]
+    if (
+        extension_ref["path"] != "diagnostics/a05-experiment-evidence.json"
+        or not extension_path.is_file()
+        or sha256_file(extension_path) != extension_ref["sha256"]
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_EXTENSION_DIGEST_MISMATCH")
+    try:
+        extension = json.loads(extension_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
+        raise ContractValidationError("MONO_CI_PSI_A05_EXTENSION_INVALID") from error
+    validate_payload(A05_EXPERIMENT_EVIDENCE_SCHEMA, extension)
+    transition = extension["transition"]
+    if (
+        extension["execution_id"] != record["execution_id"]
+        or transition["before_state"] != record["transition"]["before_state"]
+        or transition["after_state"] != record["transition"]["after_state"]
+        or transition["before_commit_sha"] != record["transition"]["before_commit_sha"]
+        or transition["after_commit_sha"] != record["transition"]["after_commit_sha"]
+        or transition["probe_parent_commit_sha"] != record["transition"]["after_commit_sha"]
+        or extension["baseline"]["configuration_sha256"]
+        != record["baseline"]["configuration_sha256"]
+        or extension["scientific_boundary"]["method_decision"] != record["psi"]["decision"]
+        or extension["scientific_boundary"]["operation_plan"]
+        != json.loads((run_root / record["psi"]["raw_result_path"]).read_text())["operation_plan"][
+            "operations"
+        ]
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_EXTENSION_RUN_BINDING_MISMATCH")
+    positive = extension["positive_condition"]["evaluator"]
+    negative = extension["negative_condition"]["evaluators"]
+    negative_by_id = {row["evaluator_id"]: row for row in negative}
+    if set(negative_by_id) != {"AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP"}:
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_EVALUATOR_SET_INVALID")
+    if (
+        positive["evaluator_id"] != "AC_DATA_OWNERSHIP"
+        or positive["compliance"] != "COMPLIANT"
+        or negative_by_id["AC_PUBLIC_API"]["compliance"] != "COMPLIANT"
+        or negative_by_id["AC_MODULE_GRAPH"]["compliance"] != "COMPLIANT"
+        or negative_by_id["AC_DATA_OWNERSHIP"]["compliance"] != "NON_COMPLIANT"
+        or "FOREIGN_TABLE_ACCESS" not in negative_by_id["AC_DATA_OWNERSHIP"]["finding_codes"]
+        or extension["adequacy_diagnostic"]["old_controls_detected_probe"] is not False
+        or extension["adequacy_diagnostic"]["ownership_evaluator_detected_probe"] is not True
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_RESULT_MISMATCH")
+    for row in [positive, *negative]:
+        output_path = run_root / row["output_path"]
+        coverage_path = run_root / row["coverage_path"]
+        if (
+            not output_path.is_file()
+            or sha256_file(output_path) != row["output_sha256"]
+            or not coverage_path.is_file()
+            or sha256_file(coverage_path) != row["coverage_sha256"]
+        ):
+            raise ContractValidationError("MONO_CI_PSI_A05_PROBE_ARTIFACT_DIGEST_MISMATCH")
+        evidence = json.loads(output_path.read_text(encoding="utf-8"))
+        coverage = json.loads(coverage_path.read_text(encoding="utf-8"))
+        if (
+            evidence.get("evaluator", {}).get("id") != row["evaluator_id"]
+            or evidence.get("evaluator", {}).get("configuration_digest")
+            != row["configuration_sha256"]
+            or evidence.get("evaluator", {}).get("source_digest") != row["evaluator_source_sha256"]
+            or evidence.get("architecture", {}).get("target_source_sha") != row["source_commit_sha"]
+            or evidence.get("result", {}).get("execution_status") != row["execution_status"]
+            or evidence.get("result", {}).get("compliance") != row["compliance"]
+            or coverage.get("source_inspection_status") != row["inspection_status"]
+            or row["inspection_status"] != "COMPLETE"
+        ):
+            raise ContractValidationError("MONO_CI_PSI_A05_PROBE_EVIDENCE_BINDING_MISMATCH")
 
 
 def pack_transition_archive(
@@ -1451,7 +1563,7 @@ def _build_adaptation_necessity_report(
     method_operations = method_result.get("operation_plan", {}).get("operations", [])
     governance = method_result.get("governance", {})
     return {
-        "schema_version": "MONO_CI_PSI_ADAPTATION_NECESSITY_V2",
+        "schema_version": ADAPTATION_NECESSITY_SCHEMA_VERSION,
         "execution_id": execution_id,
         "assessment_scope": "SOURCE_BOUND_DEVELOPMENT_DIAGNOSTIC_NOT_INDEPENDENTLY_REVIEWED",
         "transition": {
@@ -2180,7 +2292,10 @@ def _verify_adaptation_necessity_report(
         # with the corrected V2 requirement-to-capability semantics.
         validate_payload(ADAPTATION_NECESSITY_SCHEMA_V1, actual_assessment)
         return
-    if schema_version != "MONO_CI_PSI_ADAPTATION_NECESSITY_V2":
+    if schema_version not in {
+        "MONO_CI_PSI_ADAPTATION_NECESSITY_V2",
+        "MONO_CI_PSI_ADAPTATION_NECESSITY_V3",
+    }:
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_ADAPTATION_ASSESSMENT_SCHEMA_INVALID")
     required_diagnostic_outputs = {
         _coverage_assessment_path(state, evaluator_id).as_posix()
@@ -2205,7 +2320,12 @@ def _verify_adaptation_necessity_report(
             (run_root / observation["output_path"]).read_text(encoding="utf-8")
         )
         evaluator_runs.append(row)
-    validate_payload(ADAPTATION_NECESSITY_SCHEMA_V2, actual_assessment)
+    assessment_schema = (
+        ADAPTATION_NECESSITY_SCHEMA_V3
+        if schema_version == "MONO_CI_PSI_ADAPTATION_NECESSITY_V3"
+        else ADAPTATION_NECESSITY_SCHEMA_V2
+    )
+    validate_payload(assessment_schema, actual_assessment)
     expected_assessment = _build_adaptation_necessity_report(
         repo=REPOSITORY_ROOT,
         run_root=run_root,

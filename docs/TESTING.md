@@ -167,6 +167,32 @@ later evidence-storage commit. `historical_a04_acceptance` uses that commit's
 own evaluator and configuration files for byte readback, so later changes do
 not rewrite the checkpoint.
 
+## ΔA5 module data ownership acceptance
+
+A0.5 is a prospective successor to canonical A0.4. The default stage gate now
+requires source-bound `AC_PUBLIC_API`, `AC_MODULE_GRAPH`, and
+`AC_DATA_OWNERSHIP` results. The A0.5 manifest declares the table, model, and
+repository owners and the narrow shared model-registry exception; it does not
+claim independent policy approval. A controlled temporary Git worktree adds
+one Tasks repository access to the Notifications-owned `notifications` table.
+The old two evaluators and the ownership evaluator run against that separate
+source commit, with independent inspection-coverage results. Probe source does
+not enter the A0.5 application commit or Method Ψ input.
+
+The A0.4 baseline is a separate prospective, unapproved two-control proposal.
+The A0.5 adapter reuses the existing isolated V3 input exporter and Method Ψ
+runner without changing the older A0.3→A0.4 pins. Its V3 run and archive
+schemas identify the A0.4→A0.5 unit. The actual method decision is recorded;
+`NO_GO`, `NOT_EXECUTED`, `P_ALGORITHM_STATUS=NOT_READY`, G1 incomplete, G4
+unauthorized, and the reference gate not ready remain fixed.
+
+Focused verification: `make test-mono-ci-psi-a05`. A fresh run uses
+`python -m experiments.execution.tooling.mono_ci_psi_a05 --repository <checkout>
+--output <new-external-path> --execution-id DEV_PSI_TRANSITION_A05_<unique>`;
+the existing transition archive command verifies its V3 archive. These
+DEVELOPMENT checks establish static evaluator behavior and source-bound method
+execution only; they are not an authorized B0/Ψ comparison.
+
 `architecture-test` stores Import Linter's cache under `.import_linter_cache`
 by default. Set `IMPORT_LINTER_CACHE_DIR` to a writable external path when
 running from a restricted worktree.

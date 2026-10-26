@@ -1,0 +1,70 @@
+{
+  "schema_version": "MONO_CI_RECONSTRUCTED_B0_A04_V1",
+  "configuration_id": "MONO_CI_RECONSTRUCTED_B0_A04_V1",
+  "status": "RECONSTRUCTION_PROPOSAL_NOT_APPROVED",
+  "historical_identity": "NOT_FOUND",
+  "architecture_state": "A0_4_REPORT_QUERY_PORT",
+  "target_state": "A0_5_MODULE_DATA_OWNERSHIP",
+  "scope": "CI_ONLY_TWO_ENGINEERING_CONTROLS",
+  "derivation": {
+    "source_commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+    "source_repository_tree_sha": "2b436e0aaf09403ea516d73d20a466a122f86592",
+    "source_application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+    "state_manifest_path": "architecture/states/A0_4_REPORT_QUERY_PORT.yaml",
+    "state_manifest_sha256": "9c981442a34830bdc44d77ffc17de5b9f832b0b261d0d92f28bd15dc567febd9",
+    "basis": "The canonical A0.4 state manifest requires AC_PUBLIC_API and AC_MODULE_GRAPH and marks AC_DATA_OWNERSHIP NOT_APPLICABLE. This prospective reconstruction activates only the two controls required by A0.4; evaluator availability and its A0.5 support do not make AC_DATA_OWNERSHIP an active baseline representation."
+  },
+  "criteria": [
+    {
+      "criterion_id": "architecture_compliance",
+      "status": "PROPOSED_UNREVIEWED",
+      "intent": "Retain source-level control over public module access and the bounded capability dependency graph."
+    }
+  ],
+  "representations": [
+    {
+      "representation_id": "REP_RECON_B0_A04_PUBLIC_API_CI_V1",
+      "criterion_id": "architecture_compliance",
+      "obligation_id": "AC_PUBLIC_API",
+      "stage": "ci_test",
+      "evaluator_id": "AC_PUBLIC_API",
+      "evaluator_version": "1.0.0",
+      "evaluator_source_sha256": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
+      "evaluator_configuration_path": "architecture/acceptance/a1/public_api_v1.yaml",
+      "evaluator_configuration_sha256": "8853c3a933b23f698c7ba7c5b6e511f292e8d9285dc0de4378741c53e466f7bb",
+      "mapping_status": "PROPOSED_UNREVIEWED",
+      "applicability": "UNKNOWN",
+      "semantic_validity": "UNKNOWN"
+    },
+    {
+      "representation_id": "REP_RECON_B0_A04_MODULE_GRAPH_CI_V1",
+      "criterion_id": "architecture_compliance",
+      "obligation_id": "AC_MODULE_GRAPH",
+      "stage": "ci_test",
+      "evaluator_id": "AC_MODULE_GRAPH",
+      "evaluator_version": "1.0.0",
+      "evaluator_source_sha256": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
+      "evaluator_configuration_path": "architecture/acceptance/a1/module_graph_v1.yaml",
+      "evaluator_configuration_sha256": "1abae6871a477ff2a07685ad645a70defa2f1ac6745598ae4cdc35aab4e95bf6",
+      "mapping_status": "PROPOSED_UNREVIEWED",
+      "applicability": "UNKNOWN",
+      "semantic_validity": "UNKNOWN"
+    }
+  ],
+  "limitations": [
+    "This is a prospective reconstruction for the A0.4→A0.5 transition, not a historical configuration or proof of historical intent.",
+    "The two controls are a bounded A0.4 active-configuration subset, not a complete approved applicability or mandatory-obligation denominator.",
+    "The evaluator source and configuration identities are engineering artifacts used to make this proposal technically testable; their historical presence at A0.4 is not claimed.",
+    "No operation, governance decision, coverage score, or adaptation-benefit claim is implied."
+  ],
+  "authorization": {
+    "baseline_approval": false,
+    "method_input_authorized": false,
+    "scientific_measurement_authorized": false,
+    "study_readiness": "NO_GO",
+    "P_ALGORITHM_STATUS": "NOT_READY",
+    "G1": "INCOMPLETE",
+    "G4": "NOT_AUTHORIZED",
+    "G_A1_C4_REF_FROZEN": "NOT_READY"
+  }
+}

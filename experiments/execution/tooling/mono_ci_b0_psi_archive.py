@@ -30,6 +30,7 @@ from experiments.execution.tooling.mono_ci_b0_psi_preflight import verify_prefli
 ARCHIVE_SCHEMA = "mono_ci_b0_psi_development_archive_v1.schema.json"
 TRANSITION_ARCHIVE_SCHEMA_V1 = "mono_ci_psi_transition_archive_v1.schema.json"
 TRANSITION_ARCHIVE_SCHEMA_V2 = "mono_ci_psi_transition_archive_v2.schema.json"
+TRANSITION_ARCHIVE_SCHEMA_V3 = "mono_ci_psi_transition_archive_v3.schema.json"
 ARCHIVE_MANIFEST_NAME = "ARCHIVE_MANIFEST.json"
 WORKFLOW_URL_PATTERN = re.compile(
     r"^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/runs/[0-9]+$"
@@ -201,8 +202,11 @@ def pack_psi_transition_archive(
         }
         for relative in _run_member_paths(run_directory)
     ]
+    is_a05 = run.get("schema_version") == "MONO_CI_PSI_TRANSITION_RUN_V3"
     manifest = {
-        "schema_version": "MONO_CI_PSI_TRANSITION_ARCHIVE_V2",
+        "schema_version": (
+            "MONO_CI_PSI_TRANSITION_ARCHIVE_V3" if is_a05 else "MONO_CI_PSI_TRANSITION_ARCHIVE_V2"
+        ),
         "archive_purpose": "DEVELOPMENT_METHOD_RAW_EXECUTION_ONLY",
         "execution_id": run["execution_id"],
         "workflow": {
@@ -234,17 +238,25 @@ def pack_psi_transition_archive(
         },
         "reproduction_commands": [
             "uv sync --frozen --extra dev",
-            "make test-mono-ci-psi-transition",
+            "make test-mono-ci-psi-transition" if not is_a05 else "make test-mono-ci-psi-a05",
             (
                 "uv run --frozen --extra dev python -m "
-                "experiments.execution.tooling.mono_ci_psi_transition run "
-                "--repository <checkout> --output <new-path> "
-                "--execution-id DEV_PSI_TRANSITION_<unique>"
+                + (
+                    "experiments.execution.tooling.mono_ci_psi_transition run "
+                    "--repository <checkout> --output <new-path> "
+                    "--execution-id DEV_PSI_TRANSITION_<unique>"
+                    if not is_a05
+                    else "experiments.execution.tooling.mono_ci_psi_a05 --repository <checkout> "
+                    "--output <new-path> --execution-id DEV_PSI_TRANSITION_A05_<unique>"
+                )
             ),
         ],
         "members": members,
     }
-    validate_payload(TRANSITION_ARCHIVE_SCHEMA_V2, manifest)
+    validate_payload(
+        TRANSITION_ARCHIVE_SCHEMA_V3 if is_a05 else TRANSITION_ARCHIVE_SCHEMA_V2,
+        manifest,
+    )
 
     destination = archive_path.expanduser().absolute()
     parent = destination.parent.resolve(strict=True)
@@ -358,6 +370,8 @@ def _transition_archive_schema(manifest: dict[str, Any]) -> str:
         return TRANSITION_ARCHIVE_SCHEMA_V1
     if version == "MONO_CI_PSI_TRANSITION_ARCHIVE_V2":
         return TRANSITION_ARCHIVE_SCHEMA_V2
+    if version == "MONO_CI_PSI_TRANSITION_ARCHIVE_V3":
+        return TRANSITION_ARCHIVE_SCHEMA_V3
     raise ContractValidationError("MONO_CI_PSI_TRANSITION_ARCHIVE_SCHEMA_UNSUPPORTED")
 
 
@@ -374,7 +388,8 @@ def _verify_transition_archive_manifest_binding(
         or manifest["transition"] != run["transition"]
         or manifest["authorization_boundary"] != _transition_authorization_boundary(run)
         or (
-            manifest.get("schema_version") == "MONO_CI_PSI_TRANSITION_ARCHIVE_V2"
+            manifest.get("schema_version")
+            in {"MONO_CI_PSI_TRANSITION_ARCHIVE_V2", "MONO_CI_PSI_TRANSITION_ARCHIVE_V3"}
             and manifest.get("evidence")
             != {
                 "input_bundle_sha256": run["method_input"]["bundle_sha256"],

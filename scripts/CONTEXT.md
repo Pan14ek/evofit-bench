@@ -10,7 +10,7 @@ Seed/reset, metrics capture, workload runners, method prep and reproducibility t
 ## Local landmarks
 
 - `__init__.py`
-- `check_architecture_stages.py` — W0 pinned historical A0.1/A0.2/A0.3/A0.4 checks and explicit A0.1/A0.2/A0.3/A0.4 recognition; development CI pins A0.4, requires source-bound AC_PUBLIC_API and AC_MODULE_GRAPH evidence, verifies the canonical A0.4 bundle against its own merge checkout, and rejects stage downgrade or deletion of an established A0.4 manifest.
+- `check_architecture_stages.py` — pinned historical A0.1/A0.2/A0.3/A0.4 checks and explicit current A0.1–A0.5 recognition; current A0.5 acceptance requires source-bound AC_PUBLIC_API, AC_MODULE_GRAPH, and AC_DATA_OWNERSHIP evidence and rejects stage downgrade or deletion of an established state manifest.
 - `collect_run_metadata.py`
 - `da01_contracts.py`
 - `da01_execution.py`
@@ -38,7 +38,7 @@ This is a selected list, not a complete source inventory.
 
 Run on disposable databases; fail clearly if required telemetry/provenance missing.
 
-The architecture stage gate recognizes A0.4 as active while preserving the A0.3 manifest and canonical checkpoint. It runs A0.1, declared A0.2, canonical A0.3, and canonical A0.4 acceptance at their pinned revisions before accepting current A0.4 source. Canonical A0.4 observation, diagnostic, manifest, evaluator, configuration, and inspected source bytes are independently read back against the exact PR #34 merge checkout. The current A0.4 gate requires both active evaluators to be complete, source-bound, compliant, and read back successfully; AC_DATA_OWNERSHIP remains NOT_APPLICABLE.
+The architecture stage gate recognizes A0.5 as the current prospective state while preserving A0.4 and its canonical checkpoint. It runs historical A0.1, declared A0.2, canonical A0.3, and canonical A0.4 acceptance at their pinned revisions before accepting A0.5 source. A0.5 preserves the A0.4 graph and query port, activates the existing data-ownership evaluator, and verifies its table-owner mapping and model-registry exception against the prospective manifest. The current A0.5 gate requires all three active evaluators to be complete, source-bound, compliant, and read back successfully. This engineering gate does not establish independent policy approval or measured research results.
 
 The B0/P preparation CLI accepts full commit SHAs and writes a new, write-once
 package under `experiments/results/<run-id>/`. The readback CLI independently

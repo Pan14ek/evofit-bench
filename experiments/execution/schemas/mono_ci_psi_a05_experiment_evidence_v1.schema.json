@@ -1,0 +1,642 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_psi_a05_experiment_evidence_v1.schema.json",
+  "title": "A0.5 ownership DEVELOPMENT evidence extension",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "execution_id",
+    "transition",
+    "baseline",
+    "independent_requirement",
+    "ownership_evaluator",
+    "positive_condition",
+    "negative_condition",
+    "adequacy_diagnostic",
+    "candidate_verification",
+    "scientific_boundary"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "MONO_CI_PSI_A05_EXPERIMENT_EVIDENCE_V1"
+    },
+    "execution_id": {
+      "type": "string",
+      "pattern": "^DEV_PSI_TRANSITION_[A-Za-z0-9_-]{1,48}$"
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "before_state",
+        "after_state",
+        "before_commit_sha",
+        "after_commit_sha",
+        "after_repository_tree_sha",
+        "after_application_tree_sha",
+        "probe_parent_commit_sha",
+        "probe_commit_sha",
+        "probe_repository_tree_sha",
+        "probe_application_tree_sha",
+        "probe_changed_paths"
+      ],
+      "properties": {
+        "before_state": {
+          "const": "A0_4_REPORT_QUERY_PORT"
+        },
+        "after_state": {
+          "const": "A0_5_MODULE_DATA_OWNERSHIP"
+        },
+        "before_commit_sha": {
+          "const": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9"
+        },
+        "after_commit_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "after_repository_tree_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "after_application_tree_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "probe_parent_commit_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "probe_commit_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "probe_repository_tree_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "probe_application_tree_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "probe_changed_paths": {
+          "const": [
+            "app/modules/tasks/repository.py"
+          ]
+        }
+      }
+    },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "configuration_id",
+        "configuration_sha256",
+        "historical_identity",
+        "approval_status",
+        "active_representations",
+        "ownership_representation_active"
+      ],
+      "properties": {
+        "configuration_id": {
+          "const": "MONO_CI_RECONSTRUCTED_B0_A04_V1"
+        },
+        "configuration_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "historical_identity": {
+          "const": "NOT_FOUND"
+        },
+        "approval_status": {
+          "const": "NOT_APPROVED"
+        },
+        "active_representations": {
+          "const": [
+            "AC_PUBLIC_API",
+            "AC_MODULE_GRAPH"
+          ]
+        },
+        "ownership_representation_active": {
+          "const": false
+        }
+      }
+    },
+    "independent_requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requirement_id",
+        "requirement_type",
+        "source_path",
+        "source_sha256",
+        "source_kind",
+        "authority_status",
+        "value",
+        "mapping_id",
+        "mapping_status"
+      ],
+      "properties": {
+        "requirement_id": {
+          "const": "architecture.data_ownership.persistence_ownership"
+        },
+        "requirement_type": {
+          "const": "architecture.data_ownership.persistence_ownership"
+        },
+        "source_path": {
+          "const": "architecture/states/A0_5_MODULE_DATA_OWNERSHIP.yaml"
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "source_kind": {
+          "const": "VERSIONED_ARCHITECTURE_STATE_MANIFEST"
+        },
+        "authority_status": {
+          "const": "DECLARED_ENGINEERING_REQUIREMENT_NOT_INDEPENDENTLY_APPROVED"
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "table_owners",
+            "model_modules",
+            "repository_modules",
+            "reporting_table_owner",
+            "prohibited_access_patterns",
+            "model_registry_exception"
+          ],
+          "properties": {
+            "table_owners": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "users",
+                "tasks",
+                "notifications",
+                "audit_events"
+              ],
+              "properties": {
+                "users": {
+                  "const": "users"
+                },
+                "tasks": {
+                  "const": "tasks"
+                },
+                "notifications": {
+                  "const": "notifications"
+                },
+                "audit_events": {
+                  "const": "audit"
+                }
+              }
+            },
+            "model_modules": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "repository_modules": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "reporting_table_owner": {
+              "const": "NONE"
+            },
+            "prohibited_access_patterns": {
+              "type": "array",
+              "minItems": 3,
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "model_registry_exception": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          }
+        },
+        "mapping_id": {
+          "const": "MAP-PERSISTENCE-OWNERSHIP-TO-A1-DATA-OWNERSHIP-V1"
+        },
+        "mapping_status": {
+          "const": "VERIFIED_RULE_IMPLEMENTATION_NOT_SEMANTIC_APPROVAL"
+        }
+      }
+    },
+    "ownership_evaluator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evaluator_id",
+        "version",
+        "source_sha256",
+        "configuration_path",
+        "configuration_sha256",
+        "a04_applicability",
+        "a05_applicability",
+        "coverage_limits"
+      ],
+      "properties": {
+        "evaluator_id": {
+          "const": "AC_DATA_OWNERSHIP"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "configuration_path": {
+          "const": "architecture/acceptance/a1/data_ownership_v1.yaml"
+        },
+        "configuration_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "a04_applicability": {
+          "const": "NOT_APPLICABLE"
+        },
+        "a05_applicability": {
+          "const": "ACTIVE"
+        },
+        "coverage_limits": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "positive_condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "condition_status",
+        "evaluator"
+      ],
+      "properties": {
+        "condition_status": {
+          "const": "COMPLIANT_A05_SOURCE"
+        },
+        "evaluator": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source_commit_sha",
+            "source_tree_sha",
+            "application_tree_sha",
+            "evaluator_id",
+            "execution_status",
+            "compliance",
+            "configuration_sha256",
+            "evaluator_source_sha256",
+            "output_path",
+            "output_sha256",
+            "coverage_path",
+            "coverage_sha256",
+            "inspection_status",
+            "finding_codes"
+          ],
+          "properties": {
+            "source_commit_sha": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{40}$"
+            },
+            "source_tree_sha": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{40}$"
+            },
+            "application_tree_sha": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{40}$"
+            },
+            "evaluator_id": {
+              "enum": [
+                "AC_PUBLIC_API",
+                "AC_MODULE_GRAPH",
+                "AC_DATA_OWNERSHIP"
+              ]
+            },
+            "execution_status": {
+              "enum": [
+                "COMPLETED",
+                "FAILED"
+              ]
+            },
+            "compliance": {
+              "enum": [
+                "COMPLIANT",
+                "NON_COMPLIANT",
+                "NOT_EVALUABLE",
+                "NOT_APPLICABLE",
+                "UNKNOWN"
+              ]
+            },
+            "configuration_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "evaluator_source_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "output_path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "output_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "coverage_path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "coverage_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "inspection_status": {
+              "enum": [
+                "COMPLETE",
+                "INCOMPLETE"
+              ]
+            },
+            "finding_codes": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "negative_condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "condition_status",
+        "source_commit_sha",
+        "changed_paths",
+        "evaluators"
+      ],
+      "properties": {
+        "condition_status": {
+          "const": "ISOLATED_TASKS_FOREIGN_NOTIFICATIONS_TABLE_ACCESS"
+        },
+        "source_commit_sha": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{40}$"
+        },
+        "changed_paths": {
+          "const": [
+            "app/modules/tasks/repository.py"
+          ]
+        },
+        "evaluators": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source_commit_sha",
+              "source_tree_sha",
+              "application_tree_sha",
+              "evaluator_id",
+              "execution_status",
+              "compliance",
+              "configuration_sha256",
+              "evaluator_source_sha256",
+              "output_path",
+              "output_sha256",
+              "coverage_path",
+              "coverage_sha256",
+              "inspection_status",
+              "finding_codes"
+            ],
+            "properties": {
+              "source_commit_sha": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{40}$"
+              },
+              "source_tree_sha": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{40}$"
+              },
+              "application_tree_sha": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{40}$"
+              },
+              "evaluator_id": {
+                "enum": [
+                  "AC_PUBLIC_API",
+                  "AC_MODULE_GRAPH",
+                  "AC_DATA_OWNERSHIP"
+                ]
+              },
+              "execution_status": {
+                "enum": [
+                  "COMPLETED",
+                  "FAILED"
+                ]
+              },
+              "compliance": {
+                "enum": [
+                  "COMPLIANT",
+                  "NON_COMPLIANT",
+                  "NOT_EVALUABLE",
+                  "NOT_APPLICABLE",
+                  "UNKNOWN"
+                ]
+              },
+              "configuration_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "evaluator_source_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "output_path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "output_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "coverage_path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "coverage_sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "inspection_status": {
+                "enum": [
+                  "COMPLETE",
+                  "INCOMPLETE"
+                ]
+              },
+              "finding_codes": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "adequacy_diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "assessment_status",
+        "missing_post_transition_controls",
+        "requirement_capability_comparison",
+        "old_controls_detected_probe",
+        "ownership_evaluator_detected_probe",
+        "old_configuration_insufficient_for_declared_obligation",
+        "known_limitations"
+      ],
+      "properties": {
+        "assessment_status": {
+          "enum": [
+            "ADAPTATION_NEEDED",
+            "NOT_EVALUABLE",
+            "MISMATCH_DETECTED"
+          ]
+        },
+        "missing_post_transition_controls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "requirement_capability_comparison": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "old_controls_detected_probe": {
+          "const": false
+        },
+        "ownership_evaluator_detected_probe": {
+          "const": true
+        },
+        "old_configuration_insufficient_for_declared_obligation": {
+          "const": true
+        },
+        "known_limitations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "candidate_verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "candidate_present",
+        "reason"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "NOT_EXECUTED",
+            "PASS",
+            "FAIL"
+          ]
+        },
+        "candidate_present": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "scientific_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "method_decision",
+        "operation_plan",
+        "candidate_status",
+        "study_readiness",
+        "measurement_status",
+        "p_algorithm_status",
+        "g1",
+        "g4",
+        "reference_gate",
+        "scoring"
+      ],
+      "properties": {
+        "method_decision": {
+          "enum": [
+            "HOLD",
+            "REJECT",
+            "ACCEPT"
+          ]
+        },
+        "operation_plan": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "candidate_status": {
+          "enum": [
+            "NOT_MATERIALIZED",
+            "MATERIALIZED"
+          ]
+        },
+        "study_readiness": {
+          "const": "NO_GO"
+        },
+        "measurement_status": {
+          "const": "NOT_EXECUTED"
+        },
+        "p_algorithm_status": {
+          "const": "NOT_READY"
+        },
+        "g1": {
+          "const": "INCOMPLETE"
+        },
+        "g4": {
+          "const": "NOT_AUTHORIZED"
+        },
+        "reference_gate": {
+          "const": "NOT_READY"
+        },
+        "scoring": {
+          "const": "NOT_EXECUTED"
+        }
+      }
+    }
+  }
+}

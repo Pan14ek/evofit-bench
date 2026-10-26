@@ -15,6 +15,7 @@ from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError
 from experiments.execution.tooling.hashing import canonical_json_bytes, sha256_bytes
 from experiments.execution.tooling.mono_ci_psi_coverage import (
+    _REQUIREMENT_CAPABILITY_MAPPINGS,
     assess_adaptation_necessity,
     verify_inspection_coverage,
 )
@@ -411,6 +412,63 @@ def test_new_independent_requirement_missing_from_unchanged_evaluator_is_detecte
     assert assessment["requirement_capability_comparison"][1]["comparison_result"] == (
         "NOT_COVERED"
     )
+
+
+def test_a05_ownership_requirement_is_independent_and_absent_from_a04_active_configuration() -> (
+    None
+):
+    requirement = {
+        "control_id": "architecture.data_ownership.persistence_ownership",
+        "requirement_type": "architecture.data_ownership.persistence_ownership",
+        "detail_status": "SPECIFIED",
+        "value": {
+            "table_owners": {
+                "users": "users",
+                "tasks": "tasks",
+                "notifications": "notifications",
+                "audit_events": "audit",
+            },
+            "prohibited_access_patterns": ["FOREIGN_TABLE_CONSTRUCTION_OR_METADATA_LOOKUP"],
+            "model_registry_exception": {
+                "path": "app/db/model_registry.py",
+                "module": "app.db.model_registry",
+                "allowed_target_suffix": ".model",
+                "required_import_kind": "from",
+                "require_declared_model_symbol": True,
+                "capability_code_may_import_registry": False,
+            },
+        },
+        "source_kind": "VERSIONED_ARCHITECTURE_STATE_MANIFEST",
+        "source_ref": {
+            "path": "architecture/states/A0_5_MODULE_DATA_OWNERSHIP.yaml",
+            "sha256": "b" * 64,
+        },
+    }
+    mapping_spec = _REQUIREMENT_CAPABILITY_MAPPINGS[
+        "architecture.data_ownership.persistence_ownership"
+    ]
+    mapping = {
+        "requirement_type": requirement["requirement_type"],
+        **mapping_spec,
+        "status": "VERIFIED_RULE_IMPLEMENTATION",
+    }
+    assessment = assess_adaptation_necessity(
+        _adaptation_case(
+            architecture_state_after="A0_5_MODULE_DATA_OWNERSHIP",
+            requirements_after=[requirement],
+            capabilities_after=[],
+            requirement_capability_mappings=[mapping],
+            requirement_universe_completeness_after="UNKNOWN",
+            normative_applicability="DECLARED_NOT_APPROVED",
+        )
+    )
+    assert assessment["assessment_status"] == "NOT_EVALUABLE"
+    assert assessment["missing_post_transition_controls"] == [requirement["control_id"]]
+    assert assessment["requirement_capability_comparison"][0]["comparison_result"] == (
+        "NOT_COVERED"
+    )
+    assert assessment["operation_justification"]["ADD"] == "UNSUPPORTED"
+    assert assessment["operation_justification"]["HOLD"].startswith("REQUIRED")
 
 
 def test_incomplete_or_unresolved_requirement_inventory_is_not_evaluable() -> None:
