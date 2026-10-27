@@ -2,7 +2,7 @@
 
 ## Two layers in one repository
 
-**Application layer:** an instrumented, capability-oriented Python monolith. The ΔA4 candidate state is `A0_4_REPORT_QUERY_PORT`; Reporting uses the existing public Tasks summary query, with source-based A0.4 acceptance and no topology change.
+**Application layer:** an instrumented, capability-oriented Python monolith. The prospective ΔA5 state is `A0_5_MODULE_DATA_OWNERSHIP`; persistence ownership is activated as an engineering policy on the A0.4 application source, with no topology or behavior change.
 
 **Experiment/method layer:** reproducible architecture/fitness contracts, isolated B0/B1/P inputs, independent scoring/evidence procedures and development-only P preparation. The method code is under `experiments/execution/tooling/`; the benchmark app is under `app/`. Do not import oracle-side logic into the method executor.
 
@@ -34,7 +34,7 @@ The A0.4 candidate source policy preserves exactly these capability edges:
 
 Each capability exposes its W1 public module API. Reporting calls `tasks.public.get_task_summary` with the caller's session. `AC_PUBLIC_API` allows the public query and rejects the former private `Reporting.service → Tasks.service.task_summary` import; its temporary exception remains scoped to historical A0.2/A0.3. `AC_MODULE_GRAPH` derives imports from the configured capability source scope and rejects undeclared dependencies, cycles, unresolved local imports, incomplete inspection, or source-identity mismatch. The A0.4 stage gate requires both evaluators to report source-bound `COMPLIANT` results and verifies their manifest, evaluator, configuration, source-file, and raw-diagnostic digests. Historical A0.3 acceptance is rerun at its canonical pinned source.
 
-The A0.4 state changes only the Reporting query dependency. It does not introduce module-owned databases, change REST behavior, add event transport, or alter transaction ownership. `app.db.model_registry` still imports capability ORM models into the shared SQLAlchemy `Base`. Task/Notification/Audit effects remain within a caller-managed transaction.
+The A0.4 state changes only the Reporting query dependency. The prospective A0.5 state activates table, model, and repository ownership rules: Users owns `users`, Tasks owns `tasks`, Notifications owns `notifications`, Audit owns `audit_events`, and Reporting owns no table. It prohibits cross-capability repository/model/table access while retaining the exact `app.db.model_registry.py` exception for declared model symbols. The A0.4 application already satisfies this static policy, so A0.5 is a policy-enforcement milestone, not an application refactor. It does not introduce module-owned databases, change REST behavior, add event transport, or alter transaction ownership. The state is a declared engineering requirement and is not independently approved scientific authority. The existing AST evaluator does not inspect raw SQL, dynamic table selection, reflection/runtime access, or database permissions.
 
 Shared infrastructure: `app.api`, `app.db`, `app.config`, `app.experiment`, `app.observability`, `app.models.base`, `app.services.errors`. `app.main` assembles HTTP routers and middleware. Detailed authoritative architecture: `../ARCHITECTURE.md` and `../architecture/states/A0_1_CAPABILITY_MODULES.yaml`.
 
@@ -68,7 +68,7 @@ flowchart TD
 | Path | Responsibility |
 | --- | --- |
 | `app/` | Benchmark service, business modules, DB, telemetry, experimental fault hooks |
-| `architecture/states/` | Preserved A0.1 capability manifest, historical A0.3 governed-graph state, and A0.4 reporting-query-port candidate state/schema |
+| `architecture/states/` | Preserved A0.1 capability manifest, historical A0.3 governed-graph state, canonical A0.4 source state, and prospective A0.5 data-ownership state/schema |
 | `architecture/acceptance/` | Current engineering dependency acceptance |
 | `fitness/catalog/` | Obligation and A0 fitness representation registries |
 | `fitness/traceability/` | Baseline links for impact analysis |

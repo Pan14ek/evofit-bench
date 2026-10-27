@@ -1,0 +1,99 @@
+schema_version: 1
+architecture_state: A0_5_MODULE_DATA_OWNERSHIP
+predecessor_state: A0_4_REPORT_QUERY_PORT
+
+implementation_scope:
+  - Activate explicit ownership of capability repositories, ORM models, and tables.
+  - Prohibit cross-capability persistence access while preserving existing public interfaces and dependency directions.
+  - Preserve the shared model registry exception only at app/db/model_registry.py.
+  - The A0.4 application source already satisfies these ownership conditions; this state records a policy-enforcement milestone without an application refactor.
+
+authority_status: DECLARED_ENGINEERING_REQUIREMENT_NOT_INDEPENDENTLY_APPROVED
+
+invariants:
+  deployment_units: 1
+  application_processes: 1
+  database_instances: 1
+  database_product: PostgreSQL
+  internal_communication: synchronous_python_calls
+  message_broker: none
+  rest_behavior: unchanged
+  transaction_ownership: caller_managed_session
+
+allowed_dependencies:
+  - {from: tasks, to: users}
+  - {from: tasks, to: notifications}
+  - {from: tasks, to: audit}
+  - {from: users, to: audit}
+  - {from: reporting, to: tasks}
+
+reporting_query_port:
+  source_module: app.modules.reporting.service
+  public_target_module: app.modules.tasks.public
+  public_imported_name: get_task_summary
+  forbidden_target_module: app.modules.tasks.service
+  forbidden_imported_name: task_summary
+
+persistence_ownership:
+  table_owners:
+    users: users
+    tasks: tasks
+    notifications: notifications
+    audit_events: audit
+  model_modules:
+    users: app.modules.users.model
+    tasks: app.modules.tasks.model
+    notifications: app.modules.notifications.model
+    audit: app.modules.audit.model
+  repository_modules:
+    users: app.modules.users.repository
+    tasks: app.modules.tasks.repository
+    notifications: app.modules.notifications.repository
+    audit: app.modules.audit.repository
+  reporting_table_owner: NONE
+  prohibited_access_patterns:
+    - FOREIGN_REPOSITORY_IMPORT
+    - FOREIGN_ORM_MODEL_IMPORT_OR_USE
+    - FOREIGN_TABLE_CONSTRUCTION_OR_METADATA_LOOKUP
+  shared_infrastructure:
+    database_instances: 1
+    sqlalchemy_metadata: shared
+    model_registry_exception:
+      path: app/db/model_registry.py
+      module: app.db.model_registry
+      allowed_target_suffix: .model
+      required_import_kind: from
+      require_declared_model_symbol: true
+      capability_code_may_import_registry: false
+
+# These are evaluator-configuration facts, not independent requirements.
+evaluator_applicability:
+  required_evaluators: [AC_PUBLIC_API, AC_MODULE_GRAPH, AC_DATA_OWNERSHIP]
+  not_applicable_evaluators: {}
+  fail_closed:
+    incomplete_source_scope: true
+    source_identity_mismatch: true
+    evaluator_or_configuration_digest_mismatch: true
+    unresolved_imports: true
+    undeclared_dependencies: true
+    foreign_persistence_access: true
+    noncompliance: true
+
+governance_requirements:
+  required_evaluators: [AC_PUBLIC_API, AC_MODULE_GRAPH, AC_DATA_OWNERSHIP]
+  not_applicable_evaluators: {}
+  fail_closed:
+    incomplete_source_scope: true
+    source_identity_mismatch: true
+    evaluator_or_configuration_digest_mismatch: true
+    unresolved_imports: true
+    undeclared_dependencies: true
+    foreign_persistence_access: true
+    noncompliance: true
+
+source_provenance:
+  predecessor_commit: d3101c0d3aa9b7b709253b6ec7518416f05f65b9
+  predecessor_tree: 2b436e0aaf09403ea516d73d20a466a122f86592
+  predecessor_application_tree: 007196f68652bc13f6798805793ffdfae96f95f7
+  evaluated_source_identity: >-
+    The exact A0.5 source commit, repository tree, and application tree are recorded by the separate post-commit DEVELOPMENT run provenance sidecar to avoid a self-referential manifest hash.

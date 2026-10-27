@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/a0-5-module-data-ownership-v1.json",
+  "title": "A0.5 module data ownership state record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "architecture_state", "predecessor_state", "implementation_scope", "authority_status", "invariants", "allowed_dependencies", "reporting_query_port", "persistence_ownership", "evaluator_applicability", "governance_requirements", "source_provenance"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "architecture_state": {"const": "A0_5_MODULE_DATA_OWNERSHIP"},
+    "predecessor_state": {"const": "A0_4_REPORT_QUERY_PORT"},
+    "implementation_scope": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "authority_status": {"const": "DECLARED_ENGINEERING_REQUIREMENT_NOT_INDEPENDENTLY_APPROVED"},
+    "invariants": {
+      "type": "object", "additionalProperties": false,
+      "required": ["deployment_units", "application_processes", "database_instances", "database_product", "internal_communication", "message_broker", "rest_behavior", "transaction_ownership"],
+      "properties": {
+        "deployment_units": {"const": 1}, "application_processes": {"const": 1},
+        "database_instances": {"const": 1}, "database_product": {"const": "PostgreSQL"},
+        "internal_communication": {"const": "synchronous_python_calls"}, "message_broker": {"const": "none"},
+        "rest_behavior": {"const": "unchanged"}, "transaction_ownership": {"const": "caller_managed_session"}
+      }
+    },
+    "allowed_dependencies": {
+      "type": "array", "minItems": 5, "maxItems": 5,
+      "items": {"type": "object", "additionalProperties": false, "required": ["from", "to"], "properties": {
+        "from": {"enum": ["tasks", "users", "reporting"]}, "to": {"enum": ["users", "notifications", "audit", "tasks"]}
+      }}
+    },
+    "reporting_query_port": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source_module", "public_target_module", "public_imported_name", "forbidden_target_module", "forbidden_imported_name"],
+      "properties": {
+        "source_module": {"const": "app.modules.reporting.service"},
+        "public_target_module": {"const": "app.modules.tasks.public"},
+        "public_imported_name": {"const": "get_task_summary"},
+        "forbidden_target_module": {"const": "app.modules.tasks.service"},
+        "forbidden_imported_name": {"const": "task_summary"}
+      }
+    },
+    "persistence_ownership": {
+      "type": "object", "additionalProperties": false,
+      "required": ["table_owners", "model_modules", "repository_modules", "reporting_table_owner", "prohibited_access_patterns", "shared_infrastructure"],
+      "properties": {
+        "table_owners": {"type": "object", "additionalProperties": false, "required": ["users", "tasks", "notifications", "audit_events"], "properties": {
+          "users": {"const": "users"}, "tasks": {"const": "tasks"}, "notifications": {"const": "notifications"}, "audit_events": {"const": "audit"}
+        }},
+        "model_modules": {"type": "object", "additionalProperties": false, "required": ["users", "tasks", "notifications", "audit"], "properties": {
+          "users": {"const": "app.modules.users.model"}, "tasks": {"const": "app.modules.tasks.model"},
+          "notifications": {"const": "app.modules.notifications.model"}, "audit": {"const": "app.modules.audit.model"}
+        }},
+        "repository_modules": {"type": "object", "additionalProperties": false, "required": ["users", "tasks", "notifications", "audit"], "properties": {
+          "users": {"const": "app.modules.users.repository"}, "tasks": {"const": "app.modules.tasks.repository"},
+          "notifications": {"const": "app.modules.notifications.repository"}, "audit": {"const": "app.modules.audit.repository"}
+        }},
+        "reporting_table_owner": {"const": "NONE"},
+        "prohibited_access_patterns": {"type": "array", "minItems": 3, "uniqueItems": true, "items": {"enum": ["FOREIGN_REPOSITORY_IMPORT", "FOREIGN_ORM_MODEL_IMPORT_OR_USE", "FOREIGN_TABLE_CONSTRUCTION_OR_METADATA_LOOKUP"]}},
+        "shared_infrastructure": {
+          "type": "object", "additionalProperties": false, "required": ["database_instances", "sqlalchemy_metadata", "model_registry_exception"],
+          "properties": {
+            "database_instances": {"const": 1}, "sqlalchemy_metadata": {"const": "shared"},
+            "model_registry_exception": {"type": "object", "additionalProperties": false, "required": ["path", "module", "allowed_target_suffix", "required_import_kind", "require_declared_model_symbol", "capability_code_may_import_registry"], "properties": {
+              "path": {"const": "app/db/model_registry.py"}, "module": {"const": "app.db.model_registry"},
+              "allowed_target_suffix": {"const": ".model"}, "required_import_kind": {"const": "from"},
+              "require_declared_model_symbol": {"const": true}, "capability_code_may_import_registry": {"const": false}
+            }}
+          }
+        }
+      }
+    },
+    "evaluator_applicability": {"$ref": "#/$defs/evaluatorPolicy"},
+    "governance_requirements": {"$ref": "#/$defs/evaluatorPolicy"},
+    "source_provenance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["predecessor_commit", "predecessor_tree", "predecessor_application_tree", "evaluated_source_identity"],
+      "properties": {
+        "predecessor_commit": {"const": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9"},
+        "predecessor_tree": {"const": "2b436e0aaf09403ea516d73d20a466a122f86592"},
+        "predecessor_application_tree": {"const": "007196f68652bc13f6798805793ffdfae96f95f7"},
+        "evaluated_source_identity": {"type": "string", "minLength": 1}
+      }
+    }
+  },
+  "$defs": {
+    "evaluatorPolicy": {
+      "type": "object", "additionalProperties": false,
+      "required": ["required_evaluators", "not_applicable_evaluators", "fail_closed"],
+      "properties": {
+        "required_evaluators": {"const": ["AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP"]},
+        "not_applicable_evaluators": {"type": "object", "maxProperties": 0, "additionalProperties": false},
+        "fail_closed": {"type": "object", "additionalProperties": false, "required": ["incomplete_source_scope", "source_identity_mismatch", "evaluator_or_configuration_digest_mismatch", "unresolved_imports", "undeclared_dependencies", "foreign_persistence_access", "noncompliance"], "properties": {
+          "incomplete_source_scope": {"const": true}, "source_identity_mismatch": {"const": true},
+          "evaluator_or_configuration_digest_mismatch": {"const": true}, "unresolved_imports": {"const": true},
+          "undeclared_dependencies": {"const": true}, "foreign_persistence_access": {"const": true}, "noncompliance": {"const": true}
+        }}
+      }
+    }
+  }
+}

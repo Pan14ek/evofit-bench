@@ -308,9 +308,11 @@ def run_fresh_evaluator(
     output_directory: Path,
 ) -> dict[str, Any]:
     """Execute one evaluator process against a clean exact-revision worktree."""
-    if evaluator_id not in EVALUATOR_IDS:
+    if evaluator_id not in {*EVALUATOR_IDS, "AC_DATA_OWNERSHIP"}:
         raise ProtocolError("PSI_EVALUATOR_ID_UNSUPPORTED")
-    config_relative = EVALUATOR_CONFIGS[evaluator_id]
+    config_relative = EVALUATOR_CONFIGS.get(
+        evaluator_id, "architecture/acceptance/a1/data_ownership_v1.yaml"
+    )
     config_path = repository / config_relative
     state_manifest = f"architecture/states/{architecture_state}.yaml"
     output_directory.mkdir(parents=True, exist_ok=False)

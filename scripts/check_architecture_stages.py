@@ -43,17 +43,21 @@ A01 = "A0_1_CAPABILITY_MODULES"
 A02 = "A0_2_PUBLIC_MODULE_APIS"
 A03 = "A0_3_GOVERNED_MODULE_GRAPH"
 A04 = "A0_4_REPORT_QUERY_PORT"
-ALLOWED_STAGES = ("auto", A01, A02, A03, A04)
+A05 = "A0_5_MODULE_DATA_OWNERSHIP"
+ALLOWED_STAGES = ("auto", A01, A02, A03, A04, A05)
 A03_MANIFEST = "architecture/states/A0_3_GOVERNED_MODULE_GRAPH.yaml"
 A03_SCHEMA = "architecture/states/A0_3_GOVERNED_MODULE_GRAPH.schema.json"
 A04_MANIFEST = "architecture/states/A0_4_REPORT_QUERY_PORT.yaml"
 A04_SCHEMA = "architecture/states/A0_4_REPORT_QUERY_PORT.schema.json"
+A05_MANIFEST = "architecture/states/A0_5_MODULE_DATA_OWNERSHIP.yaml"
+A05_SCHEMA = "architecture/states/A0_5_MODULE_DATA_OWNERSHIP.schema.json"
 A04_CANONICAL_BUNDLE = "architecture/acceptance/a1"
 A04_CANONICAL_INDEX = "a0_4_canonical_checkpoint.json"
 A04_CANONICAL_INDEX_SCHEMA = "a0_4_canonical_checkpoint.schema.json"
 A03_REQUIRED_EVALUATORS = ("AC_PUBLIC_API", "AC_MODULE_GRAPH")
 A04_REQUIRED_EVALUATORS = ("AC_PUBLIC_API", "AC_MODULE_GRAPH")
 A04_NON_APPLICABLE_EVALUATORS = ("AC_DATA_OWNERSHIP",)
+A05_REQUIRED_EVALUATORS = ("AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP")
 A03_DEPENDENCIES = {
     ("tasks", "users"),
     ("tasks", "notifications"),
@@ -221,6 +225,53 @@ def _validate_a04_manifest(root: Path) -> dict[str, Any]:
     return manifest
 
 
+def _validate_a05_manifest(root: Path) -> dict[str, Any]:
+    """Require the prospective ΔA5 ownership policy while preserving A0.4."""
+    _validate_a04_manifest(root)
+    manifest = _read_yaml(root / A05_MANIFEST, error_code="A0.5_MANIFEST_INVALID")
+    try:
+        schema = json.loads((root / A05_SCHEMA).read_text(encoding="utf-8"))
+        jsonschema.Draft202012Validator(schema).validate(manifest)
+    except (
+        OSError,
+        UnicodeDecodeError,
+        json.JSONDecodeError,
+        jsonschema.SchemaError,
+        jsonschema.ValidationError,
+    ) as error:
+        raise StageCheckError(f"A0.5_MANIFEST_SCHEMA_INVALID: {error}") from error
+    if manifest.get("architecture_state") != A05 or manifest.get("predecessor_state") != A04:
+        raise StageCheckError("A0.5_MANIFEST_STATE_OR_PREDECESSOR_MISMATCH")
+    if (
+        _edge_set(manifest.get("allowed_dependencies"), error_code="A0.5_GRAPH_INVALID")
+        != A04_DEPENDENCIES
+    ):
+        raise StageCheckError("A0.5_MANIFEST_GRAPH_MISMATCH")
+    if manifest.get("reporting_query_port") != A04_REPORTING_QUERY_PORT:
+        raise StageCheckError("A0.5_REPORTING_QUERY_PORT_MISMATCH")
+    if (
+        manifest.get("authority_status")
+        != "DECLARED_ENGINEERING_REQUIREMENT_NOT_INDEPENDENTLY_APPROVED"
+    ):
+        raise StageCheckError("A0.5_AUTHORITY_STATUS_MISMATCH")
+    requirements = manifest.get("governance_requirements")
+    if not isinstance(requirements, dict) or requirements.get("required_evaluators") != list(
+        A05_REQUIRED_EVALUATORS
+    ):
+        raise StageCheckError("A0.5_REQUIRED_EVALUATORS_MISMATCH")
+    if requirements.get("not_applicable_evaluators") != {}:
+        raise StageCheckError("A0.5_EVALUATOR_NOT_APPLICABLE_MISMATCH")
+    ownership = manifest.get("persistence_ownership")
+    if not isinstance(ownership, dict) or ownership.get("table_owners") != {
+        "users": "users",
+        "tasks": "tasks",
+        "notifications": "notifications",
+        "audit_events": "audit",
+    }:
+        raise StageCheckError("A0.5_TABLE_OWNERSHIP_MISMATCH")
+    return manifest
+
+
 def _a03_manifest_was_established(root: Path) -> bool:
     """Return whether an A0.3 manifest was added on this checkout's ancestry.
 
@@ -258,6 +309,13 @@ def _a04_manifest_was_established(root: Path) -> bool:
         A04_MANIFEST,
     )
     return bool(additions)
+
+
+def _a05_manifest_was_established(root: Path) -> bool:
+    """Return whether an A0.5 manifest was added on this checkout's ancestry."""
+    if not any((parent / ".git").exists() for parent in (root, *root.parents)):
+        return False
+    return bool(_git(root, "log", "--format=%H", "--diff-filter=A", "HEAD", "--", A05_MANIFEST))
 
 
 def _validate_a03_policy_bindings(root: Path, manifest: dict[str, Any]) -> None:
@@ -378,6 +436,46 @@ def _validate_a04_policy_bindings(root: Path, manifest: dict[str, Any]) -> None:
         raise StageCheckError("A0.4_OWNERSHIP_EVALUATOR_ID_MISMATCH")
 
 
+def _validate_a05_policy_bindings(root: Path, manifest: dict[str, Any]) -> None:
+    """Bind all three active A0.5 controls to the same declared module scope."""
+    _validate_a04_policy_bindings(root, _validate_a04_manifest(root))
+    _validate_a05_manifest(root)
+    evaluator_root = root / "architecture/acceptance/a1"
+    expected_ids = {
+        "public_api_v1.yaml": "AC_PUBLIC_API",
+        "module_graph_v1.yaml": "AC_MODULE_GRAPH",
+        "data_ownership_v1.yaml": "AC_DATA_OWNERSHIP",
+    }
+    for filename, evaluator_id in expected_ids.items():
+        config = _read_yaml(evaluator_root / filename, error_code="A0.5_EVALUATOR_CONFIG_INVALID")
+        identity = _mapping(config.get("evaluator"), error_code="A0.5_EVALUATOR_CONFIG_INVALID")
+        states = _mapping(config.get("states"), error_code="A0.5_EVALUATOR_CONFIG_INVALID")
+        scope = _mapping(config.get("source_scope"), error_code="A0.5_EVALUATOR_CONFIG_INVALID")
+        state = _mapping(states.get(A05), error_code="A0.5_EVALUATOR_NOT_ACTIVE")
+        if identity.get("id") != evaluator_id or state.get("applicability") != "ACTIVE":
+            raise StageCheckError("A0.5_REQUIRED_EVALUATOR_NOT_ACTIVE")
+        if scope.get("expected_modules") != list(MODULES):
+            raise StageCheckError("A0.5_EVALUATOR_SCOPE_MISMATCH")
+    ownership = _read_yaml(
+        evaluator_root / "data_ownership_v1.yaml", error_code="A0.5_OWNERSHIP_CONFIG_INVALID"
+    )
+    if (
+        ownership.get("data_ownership", {}).get("table_owners")
+        != manifest["persistence_ownership"]["table_owners"]
+    ):
+        raise StageCheckError("A0.5_OWNERSHIP_CONFIG_MANIFEST_MISMATCH")
+    exception = ownership.get("data_ownership", {}).get("model_registry_exception")
+    declared_exception = manifest["persistence_ownership"]["shared_infrastructure"][
+        "model_registry_exception"
+    ]
+    if (
+        not isinstance(exception, dict)
+        or {key: declared_exception.get(key) for key in exception} != exception
+        or declared_exception.get("capability_code_may_import_registry") is not False
+    ):
+        raise StageCheckError("A0.5_MODEL_REGISTRY_EXCEPTION_MISMATCH")
+
+
 def detect_stage(root: Path) -> str:
     """Recognize the latest established state; refuse partial or ambiguous APIs."""
     modules = root / "app" / "modules"
@@ -385,6 +483,16 @@ def detect_stage(root: Path) -> str:
     if missing_modules:
         raise StageCheckError(f"Missing capability modules: {missing_modules}")
     present = [name for name in MODULES if (modules / name / "public.py").is_file()]
+    a05_manifest = root / A05_MANIFEST
+    if a05_manifest.exists():
+        _validate_a05_manifest(root)
+        if len(present) != len(MODULES):
+            raise StageCheckError(f"A0.5 state lacks complete public APIs: {present}")
+        if not (root / "tests/unit/test_module_public_apis.py").is_file():
+            raise StageCheckError("A0.5 state lacks mandatory public API contract tests")
+        return A05
+    if _a05_manifest_was_established(root):
+        raise StageCheckError("A0.5_MANIFEST_REMOVED_AFTER_ESTABLISHMENT")
     a04_manifest = root / A04_MANIFEST
     if a04_manifest.exists():
         _validate_a04_manifest(root)
@@ -844,6 +952,51 @@ def _run_one_a04_evaluator(repo: Path, evaluator_id: str, expected_source_sha: s
     )
 
 
+def _run_one_a05_evaluator(repo: Path, evaluator_id: str, expected_source_sha: str) -> None:
+    config_path = (
+        repo
+        / "architecture/acceptance/a1"
+        / {
+            "AC_PUBLIC_API": "public_api_v1.yaml",
+            "AC_MODULE_GRAPH": "module_graph_v1.yaml",
+            "AC_DATA_OWNERSHIP": "data_ownership_v1.yaml",
+        }[evaluator_id]
+    )
+    evidence = run_evaluator(
+        evaluator_id,
+        repo,
+        config_path,
+        repo / A05_MANIFEST,
+        A05,
+        expected_source_sha,
+        ANALYZERS[evaluator_id],
+    )
+    _validate_a03_evidence(
+        evidence,
+        evaluator_id=evaluator_id,
+        expected_source_sha=expected_source_sha,
+        schema_path=repo / "architecture/acceptance/a1/evidence.schema.json",
+        expected_architecture_state=A05,
+    )
+    failures = verify_evidence(
+        evidence,
+        repo,
+        config_path,
+        evaluator_root=repo / "architecture/acceptance/a1",
+    )
+    if failures:
+        raise StageCheckError(f"{evaluator_id} evidence readback failed: {failures}")
+    print(
+        "[stage-ci] "
+        f"{evaluator_id} COMPLIANT source={expected_source_sha} "
+        f"files={len(evidence['source_scope']['inspected_paths'])} "
+        f"evaluator_sha256={evidence['evaluator']['source_digest']} "
+        f"config_sha256={evidence['evaluator']['configuration_digest']} "
+        f"raw_sha256={evidence['raw_output']['sha256']}",
+        flush=True,
+    )
+
+
 def _run_a03_evaluators(repo: Path, expected_source_sha: str) -> None:
     manifest = _validate_a03_manifest(repo)
     _validate_a03_policy_bindings(repo, manifest)
@@ -856,6 +1009,13 @@ def _run_a04_evaluators(repo: Path, expected_source_sha: str) -> None:
     _validate_a04_policy_bindings(repo, manifest)
     for evaluator_id in A04_REQUIRED_EVALUATORS:
         _run_one_a04_evaluator(repo, evaluator_id, expected_source_sha)
+
+
+def _run_a05_evaluators(repo: Path, expected_source_sha: str) -> None:
+    manifest = _validate_a05_manifest(repo)
+    _validate_a05_policy_bindings(repo, manifest)
+    for evaluator_id in A05_REQUIRED_EVALUATORS:
+        _run_one_a05_evaluator(repo, evaluator_id, expected_source_sha)
 
 
 def verify_historical_pin(root: Path) -> None:
@@ -1080,12 +1240,20 @@ def current_stage_acceptance(repo: Path, *, requested_stage: str, historical: bo
             "tests/unit/test_module_public_apis.py",
             "tests/architecture/a1/test_evaluators.py",
         ]
-    else:
+    elif current == A04:
         _run_a04_evaluators(repo, current_head)
         checks = [
             "tests/architecture/test_layer_rules.py",
             "tests/unit/test_module_public_apis.py",
             "tests/architecture/a1/test_evaluators.py",
+        ]
+    else:
+        _run_a05_evaluators(repo, current_head)
+        checks = [
+            "tests/architecture/test_layer_rules.py",
+            "tests/unit/test_module_public_apis.py",
+            "tests/architecture/a1/test_evaluators.py",
+            "tests/unit/test_a05_data_ownership.py",
         ]
     _run_pytest(repo, checks, historical=historical)
     print(f"[stage-ci] CURRENT {current} CHECKS PASS", flush=True)
@@ -1101,9 +1269,9 @@ def main() -> int:
     try:
         historical_a01_acceptance(root)
         current = current_stage_acceptance(root, requested_stage=args.stage)
-        if current in {A03, A04}:
+        if current in {A03, A04, A05}:
             historical_a02_acceptance(root)
-        if current == A04:
+        if current in {A04, A05}:
             historical_a03_acceptance(root)
             historical_a04_acceptance(root)
     except StageCheckError as error:

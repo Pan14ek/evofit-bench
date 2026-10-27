@@ -15,6 +15,7 @@ from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError
 from experiments.execution.tooling.hashing import canonical_json_bytes, sha256_bytes
 from experiments.execution.tooling.mono_ci_psi_coverage import (
+    _REQUIREMENT_CAPABILITY_MAPPINGS,
     assess_adaptation_necessity,
     verify_inspection_coverage,
 )
@@ -39,7 +40,10 @@ def _write(root: Path, path: str, text: str) -> None:
 
 
 def _coverage_fixture(
-    tmp_path: Path, evaluator_id: str = "AC_PUBLIC_API", with_cycle: bool = False
+    tmp_path: Path,
+    evaluator_id: str = "AC_PUBLIC_API",
+    with_cycle: bool = False,
+    additional_source_files: list[str] | None = None,
 ) -> dict[str, Any]:
     repo = tmp_path / "source"
     repo.mkdir()
@@ -56,6 +60,8 @@ def _coverage_fixture(
         else "def thing():\n    return None\n"
     )
     _write(repo, "app/modules/beta/public.py", beta_source)
+    for path in additional_source_files or []:
+        _write(repo, path, "# explicitly configured shared source\n")
     _git(repo, "add", ".")
     _git(repo, "commit", "-qm", "fixture")
     commit = _git(repo, "rev-parse", "HEAD")
@@ -68,7 +74,10 @@ def _coverage_fixture(
             "expected_modules": ["alpha", "beta"],
             "minimum_source_files_per_module": 1,
             "minimum_inspected_files": 1,
-            "additional_source_files": [],
+            "additional_source_files": [
+                {"path": path, "purpose": "explicit shared infrastructure"}
+                for path in additional_source_files or []
+            ],
         },
         "states": {"A0_4_REPORT_QUERY_PORT": {"applicability": "ACTIVE"}},
         "public_api": {"interfaces_by_capability": {"alpha": {}, "beta": {}}},
@@ -84,13 +93,20 @@ def _coverage_fixture(
     config_bytes = yaml.safe_dump(config, sort_keys=False).encode("utf-8")
     manifest = {
         "architecture_state": "A0_4_REPORT_QUERY_PORT",
-        "governance_requirements": {"required_evaluators": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]},
+        "governance_requirements": {
+            "required_evaluators": ["AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP"]
+        },
     }
     manifest_bytes = yaml.safe_dump(manifest, sort_keys=False).encode("utf-8")
     files = sorted(
-        path.relative_to(repo).as_posix()
-        for path in (repo / "app/modules").rglob("*.py")
-        if len(path.relative_to(repo / "app/modules").parts) > 1
+        {
+            *(
+                path.relative_to(repo).as_posix()
+                for path in (repo / "app/modules").rglob("*.py")
+                if len(path.relative_to(repo / "app/modules").parts) > 1
+            ),
+            *(additional_source_files or []),
+        }
     )
     digests = [
         {"path": path, "sha256": hashlib.sha256((repo / path).read_bytes()).hexdigest()}
@@ -210,6 +226,33 @@ def test_expected_subjects_are_derived_independently_from_git_and_config(tmp_pat
         "verified_matching_count": 3,
     }
     assert result["source_inspection_status"] == "INCOMPLETE"
+
+
+def test_inspection_coverage_schema_accepts_a05_state_without_changing_report_shape(
+    tmp_path: Path,
+) -> None:
+    fixture = _coverage_fixture(tmp_path)
+    result = _verify(fixture)
+    result["architecture_state"] = "A0_5_MODULE_DATA_OWNERSHIP"
+
+    validate_payload("mono_ci_psi_inspection_coverage_v1.schema.json", result)
+
+
+def test_configured_source_outside_module_root_is_included_in_independent_inventory(
+    tmp_path: Path,
+) -> None:
+    extra_source = "app/db/model_registry.py"
+    fixture = _coverage_fixture(
+        tmp_path,
+        evaluator_id="AC_DATA_OWNERSHIP",
+        additional_source_files=[extra_source],
+    )
+
+    result = _verify(fixture, "AC_DATA_OWNERSHIP")
+
+    assert result["source_inspection_status"] == "COMPLETE"
+    assert extra_source in result["expected_subjects"]
+    assert extra_source in {row["path"] for row in result["source_inventory"]}
 
 
 def test_additional_unconfigured_subject_is_reported_as_unexpected(tmp_path: Path) -> None:
@@ -411,6 +454,63 @@ def test_new_independent_requirement_missing_from_unchanged_evaluator_is_detecte
     assert assessment["requirement_capability_comparison"][1]["comparison_result"] == (
         "NOT_COVERED"
     )
+
+
+def test_a05_ownership_requirement_is_independent_and_absent_from_a04_active_configuration() -> (
+    None
+):
+    requirement = {
+        "control_id": "architecture.data_ownership.persistence_ownership",
+        "requirement_type": "architecture.data_ownership.persistence_ownership",
+        "detail_status": "SPECIFIED",
+        "value": {
+            "table_owners": {
+                "users": "users",
+                "tasks": "tasks",
+                "notifications": "notifications",
+                "audit_events": "audit",
+            },
+            "prohibited_access_patterns": ["FOREIGN_TABLE_CONSTRUCTION_OR_METADATA_LOOKUP"],
+            "model_registry_exception": {
+                "path": "app/db/model_registry.py",
+                "module": "app.db.model_registry",
+                "allowed_target_suffix": ".model",
+                "required_import_kind": "from",
+                "require_declared_model_symbol": True,
+                "capability_code_may_import_registry": False,
+            },
+        },
+        "source_kind": "VERSIONED_ARCHITECTURE_STATE_MANIFEST",
+        "source_ref": {
+            "path": "architecture/states/A0_5_MODULE_DATA_OWNERSHIP.yaml",
+            "sha256": "b" * 64,
+        },
+    }
+    mapping_spec = _REQUIREMENT_CAPABILITY_MAPPINGS[
+        "architecture.data_ownership.persistence_ownership"
+    ]
+    mapping = {
+        "requirement_type": requirement["requirement_type"],
+        **mapping_spec,
+        "status": "VERIFIED_RULE_IMPLEMENTATION",
+    }
+    assessment = assess_adaptation_necessity(
+        _adaptation_case(
+            architecture_state_after="A0_5_MODULE_DATA_OWNERSHIP",
+            requirements_after=[requirement],
+            capabilities_after=[],
+            requirement_capability_mappings=[mapping],
+            requirement_universe_completeness_after="UNKNOWN",
+            normative_applicability="DECLARED_NOT_APPROVED",
+        )
+    )
+    assert assessment["assessment_status"] == "NOT_EVALUABLE"
+    assert assessment["missing_post_transition_controls"] == [requirement["control_id"]]
+    assert assessment["requirement_capability_comparison"][0]["comparison_result"] == (
+        "NOT_COVERED"
+    )
+    assert assessment["operation_justification"]["ADD"] == "UNSUPPORTED"
+    assert assessment["operation_justification"]["HOLD"].startswith("REQUIRED")
 
 
 def test_incomplete_or_unresolved_requirement_inventory_is_not_evaluable() -> None:

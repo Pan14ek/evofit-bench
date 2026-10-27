@@ -59,6 +59,7 @@ from experiments.execution.tooling.mono_ci_psi_evidence import (
 )
 from experiments.execution.tooling.p_adaptation import verify_v3_p_bundle
 from experiments.execution.tooling.p_adaptation_evidence import verify_adaptation_evidence
+from experiments.execution.tooling.p_candidate import candidate_sha256
 from experiments.execution.tooling.p_input_export_v2 import (
     STRUCTURAL_SOURCE_PATH,
     _project_structural_manifest,
@@ -83,9 +84,17 @@ AFTER_STATE = "A0_4_REPORT_QUERY_PORT"
 STATE_MANIFESTS_PATH = "provenance/transition-state-manifests.json"
 TRANSITION_SCHEMA_V1 = "mono_ci_psi_transition_run_v1.schema.json"
 TRANSITION_SCHEMA_V2 = "mono_ci_psi_transition_run_v2.schema.json"
+TRANSITION_SCHEMA_V3 = "mono_ci_psi_transition_run_v3.schema.json"
+TRANSITION_SCHEMA_V4 = "mono_ci_psi_transition_run_v4.schema.json"
 INSPECTION_COVERAGE_SCHEMA = "mono_ci_psi_inspection_coverage_v1.schema.json"
 ADAPTATION_NECESSITY_SCHEMA_V1 = "mono_ci_psi_adaptation_necessity_v1.schema.json"
 ADAPTATION_NECESSITY_SCHEMA_V2 = "mono_ci_psi_adaptation_necessity_v2.schema.json"
+ADAPTATION_NECESSITY_SCHEMA_V3 = "mono_ci_psi_adaptation_necessity_v3.schema.json"
+TRANSITION_RUN_SCHEMA_VERSION = "MONO_CI_PSI_TRANSITION_RUN_V2"
+TRANSITION_UNIT_OF_ANALYSIS = "ONE_A0_3_TO_A0_4_ARCHITECTURE_TRANSITION"
+ADAPTATION_NECESSITY_SCHEMA_VERSION = "MONO_CI_PSI_ADAPTATION_NECESSITY_V2"
+TRANSITION_RUN_EXTENSION_BUILDER = None
+A05_EXPERIMENT_EVIDENCE_SCHEMA = "mono_ci_psi_a05_experiment_evidence_v1.schema.json"
 RUN_ID_PATTERN = re.compile(r"^DEV_PSI_TRANSITION_[A-Za-z0-9_-]{1,48}$")
 SHA256_PATTERN = re.compile(r"^[a-f0-9]{64}$")
 RUNTIME_MODULES = (
@@ -366,12 +375,12 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
         adaptation_assessment_path = root / "diagnostics/adaptation-necessity-assessment.json"
         _write_new_file(adaptation_assessment_path, pretty_json_bytes(adaptation_assessment))
         record = {
-            "schema_version": "MONO_CI_PSI_TRANSITION_RUN_V2",
+            "schema_version": TRANSITION_RUN_SCHEMA_VERSION,
             "execution_id": execution_id,
             "source_revision_sha": _git_text(repo, "rev-parse", "HEAD").strip(),
             "study_id": "MONO_CI_B0_PSI_DEVELOPMENT_TECHNICAL_VALIDATION",
             "mode": "DEVELOPMENT_METHOD_EXECUTION_ONLY",
-            "unit_of_analysis": "ONE_A0_3_TO_A0_4_ARCHITECTURE_TRANSITION",
+            "unit_of_analysis": TRANSITION_UNIT_OF_ANALYSIS,
             "study_readiness": "NO_GO",
             "measurement_status": "NOT_EXECUTED",
             "p_algorithm_status": "NOT_READY",
@@ -457,6 +466,16 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
                 ),
             },
         }
+        if TRANSITION_RUN_EXTENSION_BUILDER is not None:
+            extension = TRANSITION_RUN_EXTENSION_BUILDER(repo, root, record)
+            if (
+                not isinstance(extension, dict)
+                or extension.get("path") != "diagnostics/a05-experiment-evidence.json"
+                or not isinstance(extension.get("sha256"), str)
+            ):
+                raise ProtocolError("MONO_CI_PSI_TRANSITION_EXTENSION_INVALID")
+            record["a05_extension"] = extension
+            record["output_checksums"][extension["path"]] = extension["sha256"]
         _write_new_file(root / "development_run.json", pretty_json_bytes(record))
         _seal_run(root)
         verify_transition_run(root)
@@ -477,15 +496,39 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
         raise
 
 
-def verify_transition_run(run_root: Path) -> dict[str, Any]:
+def verify_transition_run(run_root: Path, *, repository: Path | None = None) -> dict[str, Any]:
     """Verify the run, exact P input bundle, raw result, and complete file inventory."""
     root = run_root.resolve(strict=True)
     if not root.is_dir() or root.is_symlink():
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_RUN_ROOT_INVALID")
     record = json.loads((root / "development_run.json").read_text(encoding="utf-8"))
+    if record.get("schema_version") in {
+        "MONO_CI_PSI_TRANSITION_RUN_V3",
+        "MONO_CI_PSI_TRANSITION_RUN_V4",
+    } and (
+        AFTER_STATE != "A0_5_MODULE_DATA_OWNERSHIP"
+        or (repository is not None and REPOSITORY_ROOT.resolve() != repository.resolve())
+    ):
+        from experiments.execution.tooling.mono_ci_psi_a05 import a05_transition_context
+
+        after_commit = record.get("transition", {}).get("after_commit_sha")
+        with a05_transition_context(
+            repository or REPOSITORY_ROOT,
+            extension_builder=None,
+            after_commit=after_commit,
+            run_schema_version=record["schema_version"],
+            extension_schema=(
+                "mono_ci_psi_a05_experiment_evidence_v1.schema.json"
+                if record["schema_version"] == "MONO_CI_PSI_TRANSITION_RUN_V3"
+                else "mono_ci_psi_a05_experiment_evidence_v2.schema.json"
+            ),
+        ):
+            return verify_transition_run(root, repository=repository or REPOSITORY_ROOT)
     schema_name = {
         "MONO_CI_PSI_TRANSITION_RUN_V1": TRANSITION_SCHEMA_V1,
         "MONO_CI_PSI_TRANSITION_RUN_V2": TRANSITION_SCHEMA_V2,
+        "MONO_CI_PSI_TRANSITION_RUN_V3": TRANSITION_SCHEMA_V3,
+        "MONO_CI_PSI_TRANSITION_RUN_V4": TRANSITION_SCHEMA_V4,
     }.get(record.get("schema_version"))
     if schema_name is None:
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_SCHEMA_UNSUPPORTED")
@@ -527,8 +570,16 @@ def verify_transition_run(run_root: Path) -> dict[str, Any]:
         path = root / relative
         if not path.is_file() or sha256_file(path) != digest:
             raise ContractValidationError("MONO_CI_PSI_TRANSITION_OUTPUT_CHECKSUM_MISMATCH")
-    if record["schema_version"] == "MONO_CI_PSI_TRANSITION_RUN_V2":
+    if record["schema_version"] in {
+        "MONO_CI_PSI_TRANSITION_RUN_V2",
+        "MONO_CI_PSI_TRANSITION_RUN_V3",
+        "MONO_CI_PSI_TRANSITION_RUN_V4",
+    }:
         _verify_adaptation_necessity_report(root, record, raw)
+    if record["schema_version"] == "MONO_CI_PSI_TRANSITION_RUN_V3":
+        _verify_a05_experiment_extension(root, record)
+    elif record["schema_version"] == "MONO_CI_PSI_TRANSITION_RUN_V4":
+        _verify_a05_experiment_extension_v2(root, record, repository or REPOSITORY_ROOT)
     if (
         record["other_arms_or_case_outputs_used"] is not False
         or record["metrics"] != "NOT_MEASURED"
@@ -625,6 +676,911 @@ def verify_transition_run(run_root: Path) -> dict[str, Any]:
     if _read_checksums(root / "SHA256SUMS") != _directory_checksums(root, {"SHA256SUMS"}):
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_RUN_INVENTORY_MISMATCH")
     return record
+
+
+def _verify_a05_experiment_extension(run_root: Path, record: dict[str, Any]) -> None:
+    """Bind the A0.5 ownership probe and independent adequacy diagnostic to raw evidence."""
+    extension_ref = record.get("a05_extension")
+    if not isinstance(extension_ref, dict) or set(extension_ref) != {"path", "sha256"}:
+        raise ContractValidationError("MONO_CI_PSI_A05_EXTENSION_BINDING_INVALID")
+    extension_path = run_root / extension_ref["path"]
+    if (
+        extension_ref["path"] != "diagnostics/a05-experiment-evidence.json"
+        or not extension_path.is_file()
+        or sha256_file(extension_path) != extension_ref["sha256"]
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_EXTENSION_DIGEST_MISMATCH")
+    try:
+        extension = json.loads(extension_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
+        raise ContractValidationError("MONO_CI_PSI_A05_EXTENSION_INVALID") from error
+    validate_payload(A05_EXPERIMENT_EVIDENCE_SCHEMA, extension)
+    transition = extension["transition"]
+    if (
+        extension["execution_id"] != record["execution_id"]
+        or transition["before_state"] != record["transition"]["before_state"]
+        or transition["after_state"] != record["transition"]["after_state"]
+        or transition["before_commit_sha"] != record["transition"]["before_commit_sha"]
+        or transition["after_commit_sha"] != record["transition"]["after_commit_sha"]
+        or transition["probe_parent_commit_sha"] != record["transition"]["after_commit_sha"]
+        or extension["baseline"]["configuration_sha256"]
+        != record["baseline"]["configuration_sha256"]
+        or extension["scientific_boundary"]["method_decision"] != record["psi"]["decision"]
+        or extension["scientific_boundary"]["operation_plan"]
+        != json.loads((run_root / record["psi"]["raw_result_path"]).read_text())["operation_plan"][
+            "operations"
+        ]
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_EXTENSION_RUN_BINDING_MISMATCH")
+    positive = extension["positive_condition"]["evaluator"]
+    negative = extension["negative_condition"]["evaluators"]
+    negative_by_id = {row["evaluator_id"]: row for row in negative}
+    if set(negative_by_id) != {"AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP"}:
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_EVALUATOR_SET_INVALID")
+    if (
+        positive["evaluator_id"] != "AC_DATA_OWNERSHIP"
+        or positive["compliance"] != "COMPLIANT"
+        or negative_by_id["AC_PUBLIC_API"]["compliance"] != "COMPLIANT"
+        or negative_by_id["AC_MODULE_GRAPH"]["compliance"] != "COMPLIANT"
+        or negative_by_id["AC_DATA_OWNERSHIP"]["compliance"] != "NON_COMPLIANT"
+        or "FOREIGN_TABLE_ACCESS" not in negative_by_id["AC_DATA_OWNERSHIP"]["finding_codes"]
+        or extension["adequacy_diagnostic"]["old_controls_detected_probe"] is not False
+        or extension["adequacy_diagnostic"]["ownership_evaluator_detected_probe"] is not True
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_RESULT_MISMATCH")
+    for row in [positive, *negative]:
+        output_path = run_root / row["output_path"]
+        coverage_path = run_root / row["coverage_path"]
+        if (
+            not output_path.is_file()
+            or sha256_file(output_path) != row["output_sha256"]
+            or not coverage_path.is_file()
+            or sha256_file(coverage_path) != row["coverage_sha256"]
+        ):
+            raise ContractValidationError("MONO_CI_PSI_A05_PROBE_ARTIFACT_DIGEST_MISMATCH")
+        evidence = json.loads(output_path.read_text(encoding="utf-8"))
+        coverage = json.loads(coverage_path.read_text(encoding="utf-8"))
+        if (
+            evidence.get("evaluator", {}).get("id") != row["evaluator_id"]
+            or evidence.get("evaluator", {}).get("configuration_digest")
+            != row["configuration_sha256"]
+            or evidence.get("evaluator", {}).get("source_digest") != row["evaluator_source_sha256"]
+            or evidence.get("architecture", {}).get("target_source_sha") != row["source_commit_sha"]
+            or evidence.get("result", {}).get("execution_status") != row["execution_status"]
+            or evidence.get("result", {}).get("compliance") != row["compliance"]
+            or coverage.get("source_inspection_status") != row["inspection_status"]
+            or row["inspection_status"] != "COMPLETE"
+        ):
+            raise ContractValidationError("MONO_CI_PSI_A05_PROBE_EVIDENCE_BINDING_MISMATCH")
+    _verify_a05_candidate_extension(run_root, record, extension)
+
+
+def _verify_a05_experiment_extension_v2(
+    run_root: Path, record: dict[str, Any], repository: Path
+) -> None:
+    """Verify V4 ΔA5 evidence without using observed outcomes as validity criteria."""
+    from experiments.execution.tooling.mono_ci_psi_a05 import (
+        PROBE_PATH,
+        PROBE_RELATIVE_ROOT,
+        _verify_probe_detection_diagnostic,
+        replay_negative_probe,
+    )
+
+    reference = record.get("a05_extension")
+    if not isinstance(reference, dict) or set(reference) != {"path", "sha256"}:
+        raise ContractValidationError("MONO_CI_PSI_A05_EXTENSION_BINDING_INVALID")
+    if (
+        reference["path"] != "diagnostics/a05-experiment-evidence.json"
+        or _checked_run_artifact(run_root, reference["path"], reference["sha256"]) is None
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_EXTENSION_DIGEST_MISMATCH")
+    extension_path = run_root / reference["path"]
+    extension = json.loads(extension_path.read_text(encoding="utf-8"))
+    validate_payload(A05_EXPERIMENT_EVIDENCE_SCHEMA, extension)
+    transition = extension["transition"]
+    if (
+        extension["execution_id"] != record["execution_id"]
+        or transition["before_state"] != record["transition"]["before_state"]
+        or transition["after_state"] != record["transition"]["after_state"]
+        or transition["before_commit_sha"] != record["transition"]["before_commit_sha"]
+        or transition["after_commit_sha"] != record["transition"]["after_commit_sha"]
+        or transition["after_repository_tree_sha"]
+        != record["transition"]["after_repository_tree_sha"]
+        or transition["after_application_tree_sha"]
+        != record["transition"]["after_application_tree_sha"]
+        or extension["baseline"]["configuration_sha256"]
+        != record["baseline"]["configuration_sha256"]
+        or extension["scientific_boundary"]["method_decision"] != record["psi"]["decision"]
+        or extension["scientific_boundary"]["operation_plan"]
+        != json.loads((run_root / record["psi"]["raw_result_path"]).read_text())["operation_plan"][
+            "operations"
+        ]
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_EXTENSION_RUN_BINDING_MISMATCH")
+
+    probe_artifact_root = run_root / PROBE_RELATIVE_ROOT
+    manifest_path = _checked_run_artifact(
+        run_root, transition["probe_manifest_path"], transition["probe_manifest_sha256"]
+    )
+    patch_path = _checked_run_artifact(
+        run_root, transition["probe_patch_path"], transition["probe_patch_sha256"]
+    )
+    source_path = _checked_run_artifact(
+        run_root, transition["probe_source_path"], transition["probe_source_sha256"]
+    )
+    if (
+        transition["probe_manifest_path"] != f"{PROBE_RELATIVE_ROOT}/probe-manifest.json"
+        or transition["probe_patch_path"] != f"{PROBE_RELATIVE_ROOT}/source.patch"
+        or transition["probe_source_path"] != f"{PROBE_RELATIVE_ROOT}/source-files/{PROBE_PATH}"
+        or manifest_path is None
+        or patch_path is None
+        or source_path is None
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_ARTIFACT_BINDING_INVALID")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    validate_payload("mono_ci_psi_a05_probe_manifest_v1.schema.json", manifest)
+    if (
+        manifest["parent_commit_sha"] != record["transition"]["after_commit_sha"]
+        or manifest["parent_repository_tree_sha"]
+        != record["transition"]["after_repository_tree_sha"]
+        or manifest["parent_application_tree_sha"]
+        != record["transition"]["after_application_tree_sha"]
+        or manifest["probe_commit_sha"] != transition["probe_commit_sha"]
+        or manifest["probe_repository_tree_sha"] != transition["probe_repository_tree_sha"]
+        or manifest["probe_application_tree_sha"] != transition["probe_application_tree_sha"]
+        or manifest["changed_paths"] != transition["probe_changed_paths"]
+        or manifest["patch_sha256"] != transition["probe_patch_sha256"]
+        or manifest["changed_sources"][0]["modified_file_sha256"]
+        != transition["probe_source_sha256"]
+        or manifest["remote_commit_required"] is not False
+        or manifest["probe_commit_provenance"]["availability"] != "LOCAL_ONLY_RECREATED_FROM_PATCH"
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_MANIFEST_BINDING_MISMATCH")
+    if (
+        extension["negative_condition"]["source_commit_sha"] != manifest["probe_commit_sha"]
+        or extension["negative_condition"]["changed_paths"] != manifest["changed_paths"]
+        or transition["probe_parent_commit_sha"] != manifest["parent_commit_sha"]
+        or transition["probe_commit_provenance"] != "LOCAL_ONLY_RECREATED_FROM_ARCHIVED_PATCH"
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_SOURCE_IDENTITY_MISMATCH")
+
+    state_sidecar = json.loads(
+        (run_root / record["transition"]["state_manifest_path"]).read_text(encoding="utf-8")
+    )
+    after_manifest = next(row for row in state_sidecar["manifests"] if row["state"] == "after")
+    state_manifest_bytes = after_manifest["content"].encode("utf-8")
+    if sha256_bytes(state_manifest_bytes) != record["transition"]["after_state_manifest_sha256"]:
+        raise ContractValidationError("MONO_CI_PSI_A05_STATE_MANIFEST_BINDING_MISMATCH")
+
+    positive = extension["positive_condition"]["evaluator"]
+    negative_rows = extension["negative_condition"]["evaluators"]
+    negative_by_id = {row["evaluator_id"]: row for row in negative_rows}
+    if set(negative_by_id) != {"AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP"}:
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_EVALUATOR_SET_INVALID")
+    config_rows = {row["evaluator_id"]: row for row in manifest["evaluator_configurations"]}
+    bindings = {row["evaluator_id"]: row for row in manifest["evaluator_evidence_bindings"]}
+    if set(config_rows) != set(negative_by_id) or set(bindings) != set(negative_by_id):
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_EVALUATOR_BINDING_SET_INVALID")
+
+    with replay_negative_probe(
+        repository,
+        probe_artifact_root,
+        expected_parent_commit=record["transition"]["after_commit_sha"],
+        expected_parent_tree=record["transition"]["after_repository_tree_sha"],
+        expected_parent_application_tree=record["transition"]["after_application_tree_sha"],
+    ) as (probe_repository, replay_manifest):
+        if replay_manifest != manifest:
+            raise ContractValidationError("MONO_CI_PSI_A05_PROBE_REPLAY_MANIFEST_MISMATCH")
+        positive_config_path = (
+            run_root
+            / "PSI/evaluator-observations/implementation/AC_DATA_OWNERSHIP/data_ownership_v1.yaml"
+        )
+        if positive_config_path.is_symlink() or not positive_config_path.is_file():
+            raise ContractValidationError("MONO_CI_PSI_A05_POSITIVE_CONFIG_MISSING")
+        positive_config_bytes = positive_config_path.read_bytes()
+        _verify_a05_evaluator_row(
+            run_root,
+            positive,
+            repository=repository,
+            expected_commit=record["transition"]["after_commit_sha"],
+            expected_tree=record["transition"]["after_repository_tree_sha"],
+            expected_application_tree=record["transition"]["after_application_tree_sha"],
+            configuration_bytes=positive_config_bytes,
+            state_manifest_bytes=state_manifest_bytes,
+            architecture_state="A0_5_MODULE_DATA_OWNERSHIP",
+        )
+        for evaluator_id, row in sorted(negative_by_id.items()):
+            config_ref = config_rows[evaluator_id]
+            config_path = _checked_run_artifact(
+                run_root,
+                config_ref["artifact_path"],
+                config_ref["configuration_sha256"],
+            )
+            if (
+                config_path is None
+                or config_ref["configuration_path"]
+                != EVALUATOR_CONFIGS.get(
+                    evaluator_id, "architecture/acceptance/a1/data_ownership_v1.yaml"
+                )
+                or config_ref["configuration_sha256"] != row["configuration_sha256"]
+                or bindings[evaluator_id] != _a05_evidence_binding(row)
+            ):
+                raise ContractValidationError(
+                    "MONO_CI_PSI_A05_PROBE_EVALUATOR_CONFIG_BINDING_MISMATCH"
+                )
+            configuration_bytes = config_path.read_bytes()
+            _verify_a05_evaluator_row(
+                run_root,
+                row,
+                repository=probe_repository,
+                expected_commit=manifest["probe_commit_sha"],
+                expected_tree=manifest["probe_repository_tree_sha"],
+                expected_application_tree=manifest["probe_application_tree_sha"],
+                configuration_bytes=configuration_bytes,
+                state_manifest_bytes=state_manifest_bytes,
+                architecture_state="A0_5_MODULE_DATA_OWNERSHIP",
+            )
+        diagnostic = extension["adequacy_diagnostic"]
+        _verify_probe_detection_diagnostic(
+            run_root,
+            negative_rows,
+            diagnostic,
+            source_condition_verified=True,
+        )
+        if (
+            diagnostic["evidence_integrity"]
+            != "VERIFIED_BY_SOURCE_REPLAY_AND_RAW_EVIDENCE_READBACK"
+        ):
+            raise ContractValidationError("MONO_CI_PSI_A05_DERIVED_DIAGNOSTIC_MISMATCH")
+
+        baseline_bytes = (run_root / "provenance/reconstructed-b0-proposal.json").read_bytes()
+        generic_diagnostic = json.loads(
+            (run_root / "diagnostics/adaptation-necessity-assessment.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        old_capabilities: dict[str, dict[str, Any]] = {}
+        for assessment in generic_diagnostic.get("assessments", []):
+            for capability in assessment.get("capability_inventory", {}).get(
+                "capabilities_after", []
+            ):
+                old_capabilities[capability["capability_type"]] = capability
+        before_observations = [
+            row
+            for row in record["evaluator_observations"]
+            if row["architecture_state"] == "A0_4_REPORT_QUERY_PORT"
+        ]
+        before_coverage = [
+            json.loads(
+                (
+                    run_root
+                    / _coverage_assessment_path("A0_4_REPORT_QUERY_PORT", row["evaluator_id"])
+                ).read_text(encoding="utf-8")
+            )
+            for row in before_observations
+        ]
+        before_scope_complete = bool(before_coverage) and all(
+            row.get("source_inspection_status") == "COMPLETE" for row in before_coverage
+        )
+        before_compliance = (
+            "COMPLIANT"
+            if before_observations
+            and all(
+                row["execution_status"] == "COMPLETED" and row["compliance"] == "COMPLIANT"
+                for row in before_observations
+            )
+            else "NOT_EVALUABLE"
+        )
+        capability_scope_verified = bool(old_capabilities) and all(
+            row.get("verification_status") == "VERIFIED_STATIC_SCOPE"
+            for row in old_capabilities.values()
+        )
+        independent = extension["independent_requirement"]
+        requirement = {
+            "control_id": independent["requirement_id"],
+            "requirement_type": independent["requirement_type"],
+            "detail_status": "SPECIFIED",
+            "value": independent["value"],
+            "source_kind": independent["source_kind"],
+            "source_ref": {
+                "path": independent["source_path"],
+                "sha256": independent["source_sha256"],
+            },
+        }
+        mapping_spec = _REQUIREMENT_CAPABILITY_MAPPINGS[
+            "architecture.data_ownership.persistence_ownership"
+        ]
+        mapping = {
+            "requirement_type": "architecture.data_ownership.persistence_ownership",
+            **mapping_spec,
+            "status": "VERIFIED_RULE_IMPLEMENTATION",
+        }
+        expected_adequacy = assess_adaptation_necessity(
+            {
+                "configuration_sha256_before": sha256_bytes(baseline_bytes),
+                "configuration_sha256_after": sha256_bytes(baseline_bytes),
+                "requirements_after": [requirement],
+                "capabilities_after": list(old_capabilities.values()),
+                "requirement_capability_mappings": [mapping],
+                "unresolved_requirements_after": [],
+                "evaluator_identity_verified": bool(positive["evaluator_source_sha256"])
+                and all(bool(row["evaluator_source_sha256"]) for row in before_observations),
+                "architecture_identity_verified": all(
+                    row["source_commit_sha"] == record["transition"]["before_commit_sha"]
+                    for row in before_observations
+                )
+                and positive["source_commit_sha"] == record["transition"]["after_commit_sha"],
+                "configuration_identity_verified": sha256_bytes(baseline_bytes)
+                == record["baseline"]["configuration_sha256"],
+                "source_inspection_before": "COMPLETE" if before_scope_complete else "INCOMPLETE",
+                "source_inspection_after": positive["inspection_status"],
+                "evaluator_compliance_before": before_compliance,
+                "evaluator_compliance_after": positive["compliance"],
+                "rule_scope_match_before": before_scope_complete,
+                "rule_scope_match_after": positive["inspection_status"] == "COMPLETE",
+                "requirement_inventory_status_after": "COMPLETE_FOR_DECLARED_MANIFEST_TYPES",
+                "requirement_universe_completeness_after": "UNKNOWN",
+                "capability_inventory_status_after": (
+                    "VERIFIED_FOR_DECLARED_STATIC_SCOPE"
+                    if capability_scope_verified
+                    else "INCOMPLETE_OR_UNVERIFIED"
+                ),
+                "architecture_state_after": "A0_5_MODULE_DATA_OWNERSHIP",
+                "pair_semantic_validity": "UNKNOWN",
+                "normative_applicability": "DECLARED_NOT_APPROVED",
+                "baseline_identity": "PROSPECTIVE_RECONSTRUCTION_NOT_HISTORICAL",
+                "independent_review": False,
+            }
+        )
+        if (
+            diagnostic["assessment_status"] != expected_adequacy["assessment_status"]
+            or diagnostic["missing_post_transition_controls"]
+            != expected_adequacy["missing_post_transition_controls"]
+            or diagnostic["requirement_capability_comparison"]
+            != expected_adequacy["requirement_capability_comparison"]
+        ):
+            raise ContractValidationError("MONO_CI_PSI_A05_ADEQUACY_DIAGNOSTIC_MISMATCH")
+        _verify_a05_candidate_extension(
+            run_root,
+            record,
+            extension,
+            outcome_neutral=True,
+            positive_repository=repository,
+            probe_repository=probe_repository,
+            state_manifest_bytes=state_manifest_bytes,
+        )
+
+
+def _checked_run_artifact(run_root: Path, relative: str, digest: str) -> Path | None:
+    if (
+        not isinstance(relative, str)
+        or not relative
+        or "\\" in relative
+        or Path(relative).is_absolute()
+        or any(part in {"", ".", ".."} for part in Path(relative).parts)
+    ):
+        return None
+    root = run_root.resolve(strict=True)
+    path = root / relative
+    try:
+        path.resolve(strict=True).relative_to(root)
+    except (OSError, ValueError):
+        return None
+    current = root
+    for part in Path(relative).parts:
+        current = current / part
+        if current.is_symlink():
+            return None
+    if not path.is_file() or sha256_file(path) != digest:
+        return None
+    return path
+
+
+def _a05_evidence_binding(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: row[key]
+        for key in (
+            "source_commit_sha",
+            "source_tree_sha",
+            "application_tree_sha",
+            "evaluator_id",
+            "process_exit_code",
+            "execution_status",
+            "compliance",
+            "configuration_sha256",
+            "evaluator_source_sha256",
+            "output_path",
+            "output_sha256",
+            "coverage_path",
+            "coverage_sha256",
+            "stdout_path",
+            "stdout_sha256",
+            "stderr_path",
+            "stderr_sha256",
+        )
+    }
+
+
+def _expected_a05_evaluator_exit_code(execution_status: str, compliance: str) -> int:
+    if execution_status == "FAILED":
+        return 2
+    return _expected_evaluator_exit_code(compliance)
+
+
+def _verify_a05_evaluator_row(
+    run_root: Path,
+    row: dict[str, Any],
+    *,
+    repository: Path,
+    expected_commit: str,
+    expected_tree: str,
+    expected_application_tree: str,
+    configuration_bytes: bytes,
+    state_manifest_bytes: bytes,
+    architecture_state: str,
+) -> None:
+    output_path = _checked_run_artifact(run_root, row["output_path"], row["output_sha256"])
+    stdout_path = _checked_run_artifact(run_root, row["stdout_path"], row["stdout_sha256"])
+    stderr_path = _checked_run_artifact(run_root, row["stderr_path"], row["stderr_sha256"])
+    coverage_path = _checked_run_artifact(run_root, row["coverage_path"], row["coverage_sha256"])
+    if output_path is None or stdout_path is None or stderr_path is None or coverage_path is None:
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_ARTIFACT_DIGEST_MISMATCH")
+    output_bytes = output_path.read_bytes()
+    stdout_bytes = stdout_path.read_bytes()
+    evidence = json.loads(output_bytes)
+    coverage = json.loads(coverage_path.read_text(encoding="utf-8"))
+    if (
+        json.loads(stdout_bytes) != evidence
+        or row["source_commit_sha"] != expected_commit
+        or row["source_tree_sha"] != expected_tree
+        or row["application_tree_sha"] != expected_application_tree
+        or evidence.get("evaluator", {}).get("id") != row["evaluator_id"]
+        or evidence.get("evaluator", {}).get("configuration_digest")
+        != sha256_bytes(configuration_bytes)
+        or evidence.get("evaluator", {}).get("source_digest") != row["evaluator_source_sha256"]
+        or evidence.get("architecture", {}).get("state") != architecture_state
+        or evidence.get("architecture", {}).get("target_source_sha") != expected_commit
+        or evidence.get("architecture", {}).get("source_sha_status") != "MATCHED"
+        or evidence.get("architecture", {}).get("manifest_state_status") != "MATCHED"
+        or evidence.get("architecture", {}).get("manifest_digest")
+        != sha256_bytes(state_manifest_bytes)
+        or evidence.get("result", {}).get("execution_status") != row["execution_status"]
+        or evidence.get("result", {}).get("compliance") != row["compliance"]
+        or row["process_exit_code"]
+        != _expected_a05_evaluator_exit_code(row["execution_status"], row["compliance"])
+        or coverage.get("source_inspection_status") != row["inspection_status"]
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_EVIDENCE_BINDING_MISMATCH")
+    diagnostics = evidence.get("diagnostics", {})
+    finding_codes = sorted(
+        {
+            item["code"]
+            for item in diagnostics.get("policy_findings", [])
+            if isinstance(item, dict) and isinstance(item.get("code"), str)
+        }
+    )
+    if not finding_codes:
+        finding_codes = sorted(
+            {
+                item["code"]
+                for value in diagnostics.values()
+                if isinstance(value, list)
+                for item in value
+                if isinstance(item, dict) and isinstance(item.get("code"), str)
+            }
+        )
+    if finding_codes != row["finding_codes"]:
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_FINDING_BINDING_MISMATCH")
+    expected_coverage = verify_inspection_coverage(
+        repository=repository,
+        source_commit_sha=expected_commit,
+        source_tree_sha=expected_tree,
+        architecture_state=architecture_state,
+        evaluator_id=row["evaluator_id"],
+        evaluator_configuration_bytes=configuration_bytes,
+        state_manifest_bytes=state_manifest_bytes,
+        evaluator_output_bytes=output_bytes,
+        evaluator_evidence=evidence,
+    )
+    if canonical_json_bytes(coverage) != canonical_json_bytes(expected_coverage):
+        raise ContractValidationError("MONO_CI_PSI_A05_PROBE_COVERAGE_RECOMPUTE_MISMATCH")
+    source_rows = evidence.get("evaluator", {}).get("source_artifacts")
+    implementation_root = (
+        run_root / "PSI/evaluator-observations/implementation" / row["evaluator_id"]
+    )
+    source_manifest_path = implementation_root / "source-manifest.json"
+    if (
+        not isinstance(source_rows, list)
+        or sha256_bytes(canonical_json_bytes(source_rows)) != row["evaluator_source_sha256"]
+        or source_manifest_path.is_symlink()
+        or not source_manifest_path.is_file()
+        or source_manifest_path.read_bytes() != canonical_json_bytes(source_rows)
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_EVALUATOR_SOURCE_MANIFEST_MISMATCH")
+    for source in source_rows:
+        source_file = implementation_root / "source" / source["path"]
+        if (
+            source_file.is_symlink()
+            or not source_file.is_file()
+            or sha256_file(source_file) != source["sha256"]
+        ):
+            raise ContractValidationError("MONO_CI_PSI_A05_EVALUATOR_SOURCE_FILE_MISMATCH")
+
+
+def _verify_a05_candidate_extension(
+    run_root: Path,
+    record: dict[str, Any],
+    extension: dict[str, Any],
+    *,
+    outcome_neutral: bool = False,
+    positive_repository: Path | None = None,
+    probe_repository: Path | None = None,
+    state_manifest_bytes: bytes | None = None,
+) -> None:
+    """Read back the exact materialized candidate and both independent executions."""
+    report = extension["candidate_verification"]
+    method_result = json.loads(
+        (run_root / record["psi"]["raw_result_path"]).read_text(encoding="utf-8")
+    )
+    candidate = method_result.get("candidate")
+    if candidate is None:
+        if report["candidate_present"] or report["status"] != "NOT_EXECUTED":
+            raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_ABSENCE_MISMATCH")
+        return
+    validate_payload("p_candidate_configuration_v1.schema.json", candidate)
+    candidate_path = run_root / report["materialized_candidate_path"]
+    if (
+        report["candidate_present"] is not True
+        or report["materialized_candidate_path"] != "diagnostics/materialized-method-candidate.json"
+        or candidate_path.is_symlink()
+        or not candidate_path.is_file()
+        or sha256_file(candidate_path) != report["materialized_candidate_file_sha256"]
+        or json.loads(candidate_path.read_text(encoding="utf-8")) != candidate
+        or report["candidate_configuration_sha256"] != candidate_sha256(candidate)
+        or report["candidate_configuration_sha256"]
+        != method_result.get("governance", {}).get("candidate_configuration_sha256")
+        or candidate.get("architecture_source_sha") != record["transition"]["after_commit_sha"]
+        or candidate.get("input_bundle_sha256") != record["method_input"]["bundle_sha256"]
+        or report["configuration_version"] != candidate.get("configuration_version")
+        or report["method_candidate_validation_status"]
+        != candidate.get("candidate_validation", {}).get("status")
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_MATERIALIZATION_MISMATCH")
+
+    parent = candidate.get("parent_configuration", {})
+    parent_file = run_root / "PSI/method-input" / str(parent.get("path", ""))
+    if (
+        parent_file.is_symlink()
+        or not parent_file.is_file()
+        or sha256_file(parent_file) != parent.get("sha256")
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_PARENT_BINDING_MISMATCH")
+
+    active_rows = [
+        row
+        for row in candidate.get("representations", [])
+        if isinstance(row, dict) and row.get("active") is True
+    ]
+    expected_bindings = []
+    for row in active_rows:
+        evaluator_id = row.get("evaluator")
+        contract = row.get("evidence_contract", {})
+        artifact = row.get("evaluator_artifact", {})
+        binding = {
+            "representation_id": row.get("id"),
+            "evaluator_id": evaluator_id,
+            "covers": row.get("covers", []),
+            "configuration_path": contract.get("configuration_path"),
+            "configuration_sha256": contract.get("configuration_sha256"),
+            "evaluator_source_sha256": contract.get("evaluator_source_sha256"),
+            "evaluator_artifact_path": artifact.get("path"),
+            "evaluator_artifact_sha256": artifact.get("sha256"),
+        }
+        expected_bindings.append(binding)
+        evaluator_root = run_root / "PSI/evaluator-observations/implementation" / str(evaluator_id)
+        config_copy = evaluator_root / Path(str(contract.get("configuration_path"))).name
+        source_manifest = evaluator_root / "source-manifest.json"
+        artifact_copy = run_root / str(artifact.get("path", ""))
+        if (
+            config_copy.is_symlink()
+            or not config_copy.is_file()
+            or sha256_file(config_copy) != contract.get("configuration_sha256")
+            or artifact_copy.is_symlink()
+            or not artifact_copy.is_file()
+            or sha256_file(artifact_copy) != artifact.get("sha256")
+            or artifact.get("path") != source_manifest.relative_to(run_root).as_posix()
+            or artifact.get("sha256") != contract.get("evaluator_source_sha256")
+        ):
+            raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_ACTIVE_BINDING_MISMATCH")
+    if expected_bindings != report["active_representations"]:
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_ACTIVE_BINDING_MISMATCH")
+
+    ownership_representation_ids = sorted(
+        str(row["id"])
+        for row in active_rows
+        if isinstance(row.get("covers"), list) and "AC_DATA_OWNERSHIP" in row["covers"]
+    )
+    target = report["target_obligation"]
+    if (
+        target["obligation_id"] != "AC_DATA_OWNERSHIP"
+        or target["representation_ids"] != ownership_representation_ids
+        or target["coverage_status"]
+        != ("COVERED" if ownership_representation_ids else "NOT_COVERED")
+        or target["adequacy_status"]
+        != (
+            "NOT_ESTABLISHED_BY_STATIC_EXECUTION" if ownership_representation_ids else "NOT_COVERED"
+        )
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_OBLIGATION_BINDING_MISMATCH")
+
+    positive_rows = report["positive_evaluations"]
+    negative_rows = report["negative_evaluations"]
+    representation_ids = sorted(row["representation_id"] for row in expected_bindings)
+    if (
+        sorted(row["representation_id"] for row in positive_rows) != representation_ids
+        or sorted(row["representation_id"] for row in negative_rows) != representation_ids
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_EVALUATION_SET_MISMATCH")
+
+    conditions = (
+        (
+            positive_rows,
+            record["transition"]["after_commit_sha"],
+            record["transition"]["after_repository_tree_sha"],
+            record["transition"]["after_application_tree_sha"],
+        ),
+        (
+            negative_rows,
+            extension["transition"]["probe_commit_sha"],
+            extension["transition"]["probe_repository_tree_sha"],
+            extension["transition"]["probe_application_tree_sha"],
+        ),
+    )
+    for condition_rows, commit_sha, tree_sha, application_tree_sha in conditions:
+        for row in condition_rows:
+            binding = next(
+                item
+                for item in expected_bindings
+                if item["representation_id"] == row["representation_id"]
+            )
+            output_path = run_root / row["output_path"]
+            coverage_path = run_root / row["coverage_path"]
+            if (
+                row["source_commit_sha"] != commit_sha
+                or row["source_tree_sha"] != tree_sha
+                or row["application_tree_sha"] != application_tree_sha
+                or row["evaluator_id"] != binding["evaluator_id"]
+                or row["configuration_sha256"] != binding["configuration_sha256"]
+                or row["evaluator_source_sha256"] != binding["evaluator_source_sha256"]
+                or (
+                    not outcome_neutral
+                    and (
+                        row["execution_status"] != "COMPLETED"
+                        or row["inspection_status"] != "COMPLETE"
+                    )
+                )
+                or not output_path.is_file()
+                or sha256_file(output_path) != row["output_sha256"]
+                or not coverage_path.is_file()
+                or sha256_file(coverage_path) != row["coverage_sha256"]
+            ):
+                raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_EVIDENCE_BINDING_MISMATCH")
+            evidence = json.loads(output_path.read_text(encoding="utf-8"))
+            coverage = json.loads(coverage_path.read_text(encoding="utf-8"))
+            if (
+                evidence.get("architecture", {}).get("target_source_sha") != commit_sha
+                or evidence.get("evaluator", {}).get("configuration_digest")
+                != binding["configuration_sha256"]
+                or evidence.get("evaluator", {}).get("source_digest")
+                != binding["evaluator_source_sha256"]
+                or coverage.get("source_inspection_status") != row["inspection_status"]
+                or coverage.get("architecture_state") != AFTER_STATE
+            ):
+                raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_RAW_EVIDENCE_MISMATCH")
+            if outcome_neutral:
+                stdout_path = run_root / row["stdout_path"]
+                stderr_path = run_root / row["stderr_path"]
+                if (
+                    stdout_path.is_symlink()
+                    or stderr_path.is_symlink()
+                    or not stdout_path.is_file()
+                    or not stderr_path.is_file()
+                    or sha256_file(stdout_path) != row["stdout_sha256"]
+                    or sha256_file(stderr_path) != row["stderr_sha256"]
+                    or json.loads(stdout_path.read_text(encoding="utf-8")) != evidence
+                    or evidence.get("result", {}).get("execution_status") != row["execution_status"]
+                    or evidence.get("result", {}).get("compliance") != row["compliance"]
+                    or row["process_exit_code"]
+                    != _expected_a05_evaluator_exit_code(row["execution_status"], row["compliance"])
+                ):
+                    raise ContractValidationError(
+                        "MONO_CI_PSI_A05_CANDIDATE_PROCESS_BINDING_MISMATCH"
+                    )
+                source_repository = (
+                    probe_repository
+                    if commit_sha == extension["transition"]["probe_commit_sha"]
+                    else positive_repository
+                )
+                if source_repository is None or state_manifest_bytes is None:
+                    raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_REPLAY_SOURCE_MISSING")
+                implementation_root = (
+                    run_root / "PSI/evaluator-observations/implementation" / binding["evaluator_id"]
+                )
+                config_file = implementation_root / Path(str(binding["configuration_path"])).name
+                if config_file.is_symlink() or not config_file.is_file():
+                    raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_CONFIGURATION_MISSING")
+                expected_coverage = verify_inspection_coverage(
+                    repository=source_repository,
+                    source_commit_sha=commit_sha,
+                    source_tree_sha=tree_sha,
+                    architecture_state=AFTER_STATE,
+                    evaluator_id=binding["evaluator_id"],
+                    evaluator_configuration_bytes=config_file.read_bytes(),
+                    state_manifest_bytes=state_manifest_bytes,
+                    evaluator_output_bytes=output_path.read_bytes(),
+                    evaluator_evidence=evidence,
+                )
+                if canonical_json_bytes(coverage) != canonical_json_bytes(expected_coverage):
+                    raise ContractValidationError(
+                        "MONO_CI_PSI_A05_CANDIDATE_COVERAGE_RECOMPUTE_MISMATCH"
+                    )
+
+    baseline = json.loads(
+        (run_root / "provenance/reconstructed-b0-proposal.json").read_text(encoding="utf-8")
+    )
+    baseline_by_id = {row["representation_id"]: row for row in baseline["representations"]}
+    candidate_by_id = {row["representation_id"]: row for row in expected_bindings}
+    baseline_ids = sorted(baseline_by_id)
+    added = sorted(set(candidate_by_id) - set(baseline_by_id))
+    removed = sorted(set(baseline_by_id) - set(candidate_by_id))
+    changed = sorted(
+        identity
+        for identity in set(candidate_by_id) & set(baseline_by_id)
+        if candidate_by_id[identity]["evaluator_id"] != baseline_by_id[identity]["evaluator_id"]
+        or candidate_by_id[identity]["configuration_sha256"]
+        != baseline_by_id[identity]["evaluator_configuration_sha256"]
+        or candidate_by_id[identity]["evaluator_source_sha256"]
+        != baseline_by_id[identity]["evaluator_source_sha256"]
+    )
+    prior_positive = {
+        row["evaluator_id"]: row
+        for row in record["evaluator_observations"]
+        if row["architecture_state"] == AFTER_STATE
+    }
+    prior_negative = {
+        row["evaluator_id"]: row for row in extension["negative_condition"]["evaluators"]
+    }
+    candidate_positive = {row["representation_id"]: row for row in positive_rows}
+    candidate_negative = {row["representation_id"]: row for row in negative_rows}
+    comparisons = []
+    for identity in sorted(candidate_by_id):
+        binding = candidate_by_id[identity]
+        baseline_row = baseline_by_id.get(identity)
+        binding_matches = bool(
+            baseline_row is not None
+            and baseline_row["evaluator_id"] == binding["evaluator_id"]
+            and baseline_row["evaluator_configuration_sha256"] == binding["configuration_sha256"]
+            and baseline_row["evaluator_source_sha256"] == binding["evaluator_source_sha256"]
+        )
+        old_positive = prior_positive.get(binding["evaluator_id"])
+        old_negative = prior_negative.get(binding["evaluator_id"])
+        new_positive = candidate_positive[identity]
+        new_negative = candidate_negative[identity]
+        positive_outcome = _a05_evaluator_outcome(run_root, new_positive)
+        negative_outcome = _a05_evaluator_outcome(run_root, new_negative)
+        old_positive_outcome = (
+            _a05_evaluator_outcome(run_root, old_positive)
+            if binding_matches and old_positive is not None
+            else None
+        )
+        old_negative_outcome = (
+            _a05_evaluator_outcome(run_root, old_negative)
+            if binding_matches and old_negative is not None
+            else None
+        )
+        comparisons.append(
+            {
+                "representation_id": identity,
+                "baseline_binding_matches": binding_matches,
+                "candidate_positive_outcome": positive_outcome,
+                "reconstructed_b0_positive_outcome": old_positive_outcome,
+                "positive_outcome_parity": (
+                    positive_outcome == old_positive_outcome
+                    if old_positive_outcome is not None
+                    else None
+                ),
+                "candidate_negative_outcome": negative_outcome,
+                "reconstructed_b0_negative_outcome": old_negative_outcome,
+                "negative_outcome_parity": (
+                    negative_outcome == old_negative_outcome
+                    if old_negative_outcome is not None
+                    else None
+                ),
+            }
+        )
+    comparable = [item for item in comparisons if item["baseline_binding_matches"]]
+    parity = all(
+        item["positive_outcome_parity"] is True and item["negative_outcome_parity"] is True
+        for item in comparable
+    )
+    baseline_comparison = report["reconstructed_b0_comparison"]
+    if (
+        report["outcome_comparisons"] != comparisons
+        or baseline_comparison["baseline_identity"] != "PROSPECTIVE_RECONSTRUCTION_NOT_HISTORICAL"
+        or baseline_comparison["baseline_active_representation_ids"] != baseline_ids
+        or baseline_comparison["candidate_active_representation_ids"] != representation_ids
+        or baseline_comparison["added_representation_ids"] != added
+        or baseline_comparison["removed_representation_ids"] != removed
+        or baseline_comparison["changed_representation_ids"] != changed
+        or baseline_comparison["active_control_set_unchanged"]
+        != (not (added or removed or changed))
+        or baseline_comparison["matching_control_outcomes_equal"] != parity
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_BASELINE_COMPARISON_MISMATCH")
+
+    positive_cost = round(sum(float(row["duration_ms"]) for row in positive_rows), 3)
+    negative_cost = round(sum(float(row["duration_ms"]) for row in negative_rows), 3)
+    additional_cost = round(
+        sum(
+            float(row["duration_ms"]) for row in positive_rows if row["representation_id"] in added
+        ),
+        3,
+    )
+    cost = report["execution_cost"]
+    if (
+        cost["candidate_positive_total_ms"] != positive_cost
+        or cost["candidate_negative_total_ms"] != negative_cost
+        or cost["candidate_validation_total_ms"] != round(positive_cost + negative_cost, 3)
+        or cost["additional_active_representations_per_ci_build"] != len(added)
+        or cost["estimated_additional_ci_execution_ms_per_build"] != additional_cost
+    ):
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_COST_BINDING_MISMATCH")
+
+    runs_complete = bool(expected_bindings) and all(
+        row["execution_status"] == "COMPLETED" and row["inspection_status"] == "COMPLETE"
+        for row in [*positive_rows, *negative_rows]
+    )
+    positive_controls_compliant = all(
+        _a05_evaluator_outcome(run_root, row)["compliance"] == "COMPLIANT" for row in positive_rows
+    )
+    expected_status = (
+        "PASS"
+        if candidate.get("candidate_validation", {}).get("status") == "valid"
+        and runs_complete
+        and positive_controls_compliant
+        and parity
+        else "FAIL"
+    )
+    if report["status"] != expected_status:
+        raise ContractValidationError("MONO_CI_PSI_A05_CANDIDATE_STATUS_MISMATCH")
+
+
+def _a05_evaluator_outcome(run_root: Path, row: dict[str, Any]) -> dict[str, Any]:
+    evidence = json.loads((run_root / row["output_path"]).read_text(encoding="utf-8"))
+    diagnostics = evidence.get("diagnostics", {})
+    codes = sorted(
+        {
+            item["code"]
+            for item in diagnostics.get("policy_findings", [])
+            if isinstance(item, dict) and isinstance(item.get("code"), str)
+        }
+    )
+    if not codes:
+        codes = sorted(
+            {
+                item["code"]
+                for values in diagnostics.values()
+                if isinstance(values, list)
+                for item in values
+                if isinstance(item, dict) and isinstance(item.get("code"), str)
+            }
+        )
+    return {
+        "evaluator_id": row["evaluator_id"],
+        "execution_status": evidence.get("result", {}).get("execution_status"),
+        "compliance": evidence.get("result", {}).get("compliance"),
+        "finding_codes": codes,
+    }
 
 
 def pack_transition_archive(
@@ -1451,7 +2407,7 @@ def _build_adaptation_necessity_report(
     method_operations = method_result.get("operation_plan", {}).get("operations", [])
     governance = method_result.get("governance", {})
     return {
-        "schema_version": "MONO_CI_PSI_ADAPTATION_NECESSITY_V2",
+        "schema_version": ADAPTATION_NECESSITY_SCHEMA_VERSION,
         "execution_id": execution_id,
         "assessment_scope": "SOURCE_BOUND_DEVELOPMENT_DIAGNOSTIC_NOT_INDEPENDENTLY_REVIEWED",
         "transition": {
@@ -2180,7 +3136,10 @@ def _verify_adaptation_necessity_report(
         # with the corrected V2 requirement-to-capability semantics.
         validate_payload(ADAPTATION_NECESSITY_SCHEMA_V1, actual_assessment)
         return
-    if schema_version != "MONO_CI_PSI_ADAPTATION_NECESSITY_V2":
+    if schema_version not in {
+        "MONO_CI_PSI_ADAPTATION_NECESSITY_V2",
+        "MONO_CI_PSI_ADAPTATION_NECESSITY_V3",
+    }:
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_ADAPTATION_ASSESSMENT_SCHEMA_INVALID")
     required_diagnostic_outputs = {
         _coverage_assessment_path(state, evaluator_id).as_posix()
@@ -2205,7 +3164,12 @@ def _verify_adaptation_necessity_report(
             (run_root / observation["output_path"]).read_text(encoding="utf-8")
         )
         evaluator_runs.append(row)
-    validate_payload(ADAPTATION_NECESSITY_SCHEMA_V2, actual_assessment)
+    assessment_schema = (
+        ADAPTATION_NECESSITY_SCHEMA_V3
+        if schema_version == "MONO_CI_PSI_ADAPTATION_NECESSITY_V3"
+        else ADAPTATION_NECESSITY_SCHEMA_V2
+    )
+    validate_payload(assessment_schema, actual_assessment)
     expected_assessment = _build_adaptation_necessity_report(
         repo=REPOSITORY_ROOT,
         run_root=run_root,

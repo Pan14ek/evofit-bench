@@ -7,8 +7,8 @@
   "required": ["schema_version", "architecture_state", "evaluator_id", "inspection_unit", "expected_subjects", "inspected_subjects", "missing_subjects", "unexpected_subjects", "altered_subjects", "verified_matching_subjects", "counts", "source_inspection_status", "overall_completeness", "uncertainties", "source_inventory", "dependency_analysis", "evidence_sources"],
   "properties": {
     "schema_version": {"const": "MONO_CI_PSI_INSPECTION_COVERAGE_V1"},
-    "architecture_state": {"enum": ["A0_3_GOVERNED_MODULE_GRAPH", "A0_4_REPORT_QUERY_PORT"]},
-    "evaluator_id": {"enum": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]},
+    "architecture_state": {"enum": ["A0_3_GOVERNED_MODULE_GRAPH", "A0_4_REPORT_QUERY_PORT", "A0_5_MODULE_DATA_OWNERSHIP"]},
+    "evaluator_id": {"enum": ["AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP"]},
     "inspection_unit": {"const": "file"},
     "expected_subjects": {"$ref": "#/$defs/paths"},
     "inspected_subjects": {"$ref": "#/$defs/paths"},
