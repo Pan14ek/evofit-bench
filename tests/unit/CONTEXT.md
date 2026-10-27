@@ -17,6 +17,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_architecture_stage_checks.py` — rejects missing/partial interfaces, stale historical pins, A0.2/A0.3/A0.4/A0.5 ambiguity, committed state-manifest deletion, invalid state/policy evidence, stage downgrade, failed evaluators, dirty source and vacuous test selection; preserves historical A0.2/A0.3/A0.4 detection and pins CI to A0.5.
 - `test_a05_data_ownership.py` — validates the prospective A0.5 ownership manifest and shows a controlled foreign-table access remains invisible to the old public API/module graph analyzers while the existing ownership analyzer reports it.
 - `test_mono_ci_psi_a05.py` — also checks evaluator-specific finding attribution against patch-added source lines, three-state UNKNOWN/incomplete handling, archived diagnostic recomputation, and deterministic source-patch replay without a remote probe commit.
+- `test_mono_ci_b0_psi_delta_a5.py` — validates ΔA5 local source pins and evidence-status separation; rejects source/method digest tampering, archive digest mismatch, historical value/timing overclaims, duplicate semantic identities, and uncountable evaluator/mapping cells, alongside fail-closed applicability cases. No test authorizes or executes a study.
 - `test_da01_execution.py`
 - `test_da01_inputs_and_isolation.py`
 - `test_experiment_evidence.py`
