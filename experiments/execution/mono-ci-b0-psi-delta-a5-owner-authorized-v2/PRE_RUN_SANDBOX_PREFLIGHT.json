@@ -1,6 +1,6 @@
 {
   "classification": "DEVELOPMENT_SANDBOX_CAPABILITY_PREFLIGHT",
-  "created_at_utc": "2026-10-27T19:47:58.269502+00:00",
+  "created_at_utc": "2026-10-27T20:28:08.547961+00:00",
   "error": null,
   "host_identity": {
     "docker_client_version": "28.0.4",
@@ -31,7 +31,7 @@
     "control_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "control_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "isolated_attempt_expected": "DENIED",
-    "port": 36749,
+    "port": 43767,
     "status": "CONTROL_REACHABLE_FROM_BRIDGE_CONTAINER",
     "target": "host.docker.internal"
   },
@@ -53,17 +53,17 @@
     "cap_drop": [
       "ALL"
     ],
-    "container_id": "a8bb439a61c4f5f1ac7af9cc5bab9024da8ba11cc1f6c267d6d0707c3b7d83da",
+    "container_id": "dea9838521f537e856d01635b97b95e14117b00e8efbd0c822d967b12c2b722a",
     "image_id": "sha256:3c4d812a6efe003770aafbdba65f9c1960ba8234ab23a133934205a70bdcda77",
     "mounts": [
       {
         "read_only": true,
-        "source": "/home/runner/work/_temp/evofit-delta-a5-v2-preflight-40572290484-1/canaries/input/required-input.json",
+        "source": "/home/runner/work/_temp/evofit-delta-a5-v2-preflight-40578264604-1/canaries/input/required-input.json",
         "target": "/canary/required-input.json"
       },
       {
         "read_only": false,
-        "source": "/home/runner/work/_temp/evofit-delta-a5-v2-preflight-40572290484-1/canaries/writable-output",
+        "source": "/home/runner/work/_temp/evofit-delta-a5-v2-preflight-40578264604-1/canaries/writable-output",
         "target": "/canary-output"
       }
     ],
