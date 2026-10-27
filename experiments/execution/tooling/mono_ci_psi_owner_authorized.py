@@ -457,6 +457,191 @@ def verify_calibration_archive(
     }
 
 
+def pack_partial_execution_archive(
+    run_root: Path,
+    archive_path: Path,
+    *,
+    study_id: str,
+    execution_id: str,
+    run_role: str,
+    sandbox_preflight_id: str,
+    archive_failure: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Seal an incomplete transition separately from the complete-run archive format."""
+    if run_root.is_symlink():
+        raise ProtocolError("OWNER_AUTHORIZED_PARTIAL_EVIDENCE_SOURCE_INVALID")
+    source = run_root.resolve(strict=True)
+    if not source.is_dir() or any(path.is_symlink() for path in source.rglob("*")):
+        raise ProtocolError("OWNER_AUTHORIZED_PARTIAL_EVIDENCE_SOURCE_INVALID")
+    progress_path = source / "partial-execution.json"
+    full_record_path = source / "development_run.json"
+    if progress_path.is_file():
+        progress = _json(progress_path)
+        phase_status = progress.get("phase_status", {})
+        method_status = progress.get("scientific_status", {}).get("method_decision", "NOT_OBSERVED")
+        method_process = progress.get("method_subprocess")
+        method_observation = progress.get("method_observation")
+        source_identities = progress.get("source_identities", {})
+        error = progress.get("error")
+        ended_at = progress.get("ended_at_utc")
+    elif full_record_path.is_file():
+        full_record = _json(full_record_path)
+        phase_status = {
+            "source_identity": "COMPLETED",
+            "baseline_identity": "COMPLETED",
+            "b0_evaluator_matrix": "COMPLETED",
+            "method_input_bundle": "COMPLETED",
+            "method_execution": "OBSERVED",
+            "candidate_validation": "COMPLETED",
+            "complete_transition_verification": "PASS",
+        }
+        method_status = "OBSERVED"
+        method_process = {
+            "status": full_record.get("psi", {}).get("status"),
+            "exit_code": 0,
+            "execution_duration_ms": full_record.get("psi", {}).get("execution_duration_ms"),
+        }
+        method_path = source / full_record.get("psi", {}).get("raw_result_path", "")
+        if method_path.is_file() and not method_path.is_symlink():
+            method = _json(method_path)
+            governance = method.get("governance", {})
+            plan = method.get("operation_plan", {})
+            candidate = method.get("candidate")
+            method_observation = {
+                "raw_result_path": method_path.relative_to(source).as_posix(),
+                "raw_result_sha256": _sha256(method_path),
+                "governance_decision": governance.get("result"),
+                "governance_reason_codes": governance.get("reason_codes", []),
+                "operations": plan.get("operations", []),
+                "operation_hold_reasons": plan.get("hold_reasons", []),
+                "candidate_state": "NOT_MATERIALIZED"
+                if candidate is None
+                else "MATERIALIZED_UNAPPLIED",
+                "candidate_sha256": method.get("candidate_sha256"),
+                "parse_status": "JSON_READBACK_ONLY",
+            }
+        else:
+            method_observation = None
+        transition = full_record.get("transition", {})
+        source_identities = {
+            key: transition.get(key)
+            for key in (
+                "before_commit_sha",
+                "before_repository_tree_sha",
+                "before_application_tree_sha",
+                "after_commit_sha",
+                "after_repository_tree_sha",
+                "after_application_tree_sha",
+            )
+        }
+        error = None
+        ended_at = datetime.now(UTC).isoformat()
+    else:
+        raise ProtocolError("OWNER_AUTHORIZED_PARTIAL_EVIDENCE_STATUS_MISSING")
+    members = []
+    for path in sorted(source.rglob("*")):
+        if not path.is_file():
+            continue
+        relative = path.relative_to(source).as_posix()
+        _safe_member_path(relative)
+        members.append(
+            {"path": relative, "size_bytes": path.stat().st_size, "sha256": _sha256(path)}
+        )
+    manifest = {
+        "schema_version": "MONO_CI_PSI_PARTIAL_EXECUTION_ARCHIVE_V1",
+        "classification": "PARTIAL_EXECUTION_EVIDENCE",
+        "study_id": study_id,
+        "execution_id": execution_id,
+        "run_role": run_role,
+        "source_identities": source_identities,
+        "sandbox_preflight_id": sandbox_preflight_id,
+        "phase_status": phase_status,
+        "method_observation_status": method_status,
+        "method_subprocess": method_process,
+        "method_observation": method_observation,
+        "error": error,
+        "archive_error": dict(archive_failure) if archive_failure is not None else None,
+        "ended_at_utc": ended_at,
+        "member_count": len(members),
+        "members": members,
+    }
+    validate_payload("mono_ci_psi_partial_execution_archive_v1.schema.json", manifest)
+    destination = archive_path.resolve()
+    if destination.exists() or Path(f"{destination}.sha256").exists():
+        raise ProtocolError("OWNER_AUTHORIZED_PARTIAL_ARCHIVE_MUST_BE_NEW")
+    with zipfile.ZipFile(
+        destination, "x", compression=zipfile.ZIP_DEFLATED, compresslevel=9
+    ) as zipped:
+        info = zipfile.ZipInfo("PARTIAL_EVIDENCE_MANIFEST.json", date_time=(1980, 1, 1, 0, 0, 0))
+        info.external_attr = 0o100644 << 16
+        info.compress_type = zipfile.ZIP_DEFLATED
+        zipped.writestr(info, pretty_json_bytes(manifest))
+        for row in members:
+            path = source / row["path"]
+            info = zipfile.ZipInfo(f"run/{row['path']}", date_time=(1980, 1, 1, 0, 0, 0))
+            info.external_attr = 0o100644 << 16
+            info.compress_type = zipfile.ZIP_DEFLATED
+            zipped.writestr(info, path.read_bytes())
+    digest = _sha256(destination)
+    Path(f"{destination}.sha256").write_text(f"{digest}  {destination.name}\n", encoding="ascii")
+    verified = verify_partial_execution_archive(destination)
+    return {
+        "archive_name": destination.name,
+        "archive_sha256": digest,
+        "member_count": verified["member_count"],
+        "verification_status": "PASS",
+    }
+
+
+def verify_partial_execution_archive(archive_path: Path) -> dict[str, Any]:
+    """Verify a partial evidence archive without weakening complete-run verification."""
+    archive = archive_path.resolve(strict=True)
+    digest = _sha256(archive)
+    sidecar = Path(f"{archive}.sha256")
+    if (
+        not sidecar.is_file()
+        or sidecar.read_text(encoding="ascii").strip() != f"{digest}  {archive.name}"
+    ):
+        raise ContractValidationError("OWNER_AUTHORIZED_PARTIAL_ARCHIVE_SIDECAR_MISMATCH")
+    try:
+        with zipfile.ZipFile(archive) as zipped:
+            names = zipped.namelist()
+            if len(names) != len(set(names)) or "PARTIAL_EVIDENCE_MANIFEST.json" not in names:
+                raise ContractValidationError("OWNER_AUTHORIZED_PARTIAL_ARCHIVE_INVENTORY_INVALID")
+            manifest = json.loads(zipped.read("PARTIAL_EVIDENCE_MANIFEST.json"))
+            validate_payload("mono_ci_psi_partial_execution_archive_v1.schema.json", manifest)
+            declared = {row["path"]: row for row in manifest["members"]}
+            expected = {f"run/{path}" for path in declared} | {"PARTIAL_EVIDENCE_MANIFEST.json"}
+            if (
+                manifest["member_count"] != len(declared)
+                or len(declared) != len(manifest["members"])
+                or set(names) != expected
+            ):
+                raise ContractValidationError(
+                    "OWNER_AUTHORIZED_PARTIAL_ARCHIVE_MEMBER_SET_MISMATCH"
+                )
+            for relative, row in declared.items():
+                _safe_member_path(relative)
+                content = zipped.read(f"run/{relative}")
+                if (
+                    len(content) != row["size_bytes"]
+                    or hashlib.sha256(content).hexdigest() != row["sha256"]
+                ):
+                    raise ContractValidationError(
+                        "OWNER_AUTHORIZED_PARTIAL_ARCHIVE_MEMBER_DIGEST_MISMATCH"
+                    )
+    except (OSError, zipfile.BadZipFile, KeyError, json.JSONDecodeError) as error:
+        raise ContractValidationError("OWNER_AUTHORIZED_PARTIAL_ARCHIVE_READ_FAILED") from error
+    return {
+        "archive_path": str(archive),
+        "archive_sha256": digest,
+        "member_count": len(declared),
+        "verification_status": "PASS",
+        "classification": "PARTIAL_EXECUTION_EVIDENCE",
+        "method_observation_status": manifest["method_observation_status"],
+    }
+
+
 def verify_analysis_checksums(bundle: Path) -> list[dict[str, str]]:
     """Read back every generated analysis file listed in its checksum inventory."""
     checksums_path = bundle / "analysis/ANALYSIS_SHA256SUMS.json"
@@ -487,12 +672,19 @@ def _write_jsonl(path: Path, records: Iterable[Mapping[str, Any]]) -> None:
             handle.write("\n")
 
 
-def _calibration_schedule() -> list[dict[str, Any]]:
+def _calibration_schedule(
+    source_conditions: tuple[str, ...] = SOURCE_CONDITIONS,
+) -> list[dict[str, Any]]:
+    if not source_conditions or any(
+        condition not in SOURCE_CONDITIONS for condition in source_conditions
+    ):
+        raise ProtocolError("OWNER_AUTHORIZED_CALIBRATION_SOURCE_CONDITIONS_INVALID")
     rng = random.Random(20261027)  # noqa: S311  # nosec B311 - preregistered order only
     cells = [
         {"evaluator_id": evaluator, "source_condition": condition}
         for condition in SOURCE_CONDITIONS
         for evaluator in EVALUATORS
+        if condition in source_conditions
     ]
     schedule: list[dict[str, Any]] = []
     for repetition in range(CALIBRATION_WARMUPS + CALIBRATION_REPETITIONS):
@@ -516,17 +708,21 @@ def _run_calibration(
     probe_checkout: Path,
     run_root: Path,
     uv_version: str,
+    study_id: str = "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V1",
+    source_conditions: tuple[str, ...] = SOURCE_CONDITIONS,
+    bind_source_repository: bool = False,
+    require_source_readback: bool = False,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     run_root.mkdir(parents=True, exist_ok=False)
     state_manifest_bytes = (
         subject / "architecture/states/A0_5_MODULE_DATA_OWNERSHIP.yaml"
     ).read_bytes()
-    schedule = _calibration_schedule()
+    schedule = _calibration_schedule(source_conditions)
     start_budget = time.perf_counter()
     records: list[dict[str, Any]] = []
     for index, planned in enumerate(schedule):
         base = {
-            "execution_id": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V1",
+            "execution_id": study_id,
             "classification": "DEVELOPMENT_CALIBRATION",
             **planned,
             "attempt_index": index + 1,
@@ -591,6 +787,7 @@ def _run_calibration(
             run, row = _run_bound_evaluator(
                 repository=subject,
                 source_checkout=checkout,
+                source_repository=checkout if bind_source_repository else None,
                 source_commit=source_sha,
                 architecture_state=AFTER_STATE,
                 evaluator_id=planned["evaluator_id"],
@@ -608,6 +805,17 @@ def _run_calibration(
             after = _usage_snapshot()
             coverage_path = run_root / row["coverage_path"]
             coverage = _json(coverage_path)
+            expected_source_tree = _git(checkout, "rev-parse", "HEAD^{tree}")
+            if require_source_readback and (
+                row["source_commit_sha"] != source_sha
+                or row["source_tree_sha"] != expected_source_tree
+                or row["inspection_status"] != "COMPLETE"
+                or coverage.get("source_inspection_status") != "COMPLETE"
+                or coverage.get("counts", {}).get("missing_count") != 0
+                or coverage.get("counts", {}).get("altered_count") != 0
+                or coverage.get("counts", {}).get("unexpected_count") != 0
+            ):
+                raise ContractValidationError("OWNER_AUTHORIZED_CALIBRATION_SOURCE_READBACK_FAILED")
             base.update(
                 {
                     "evaluator_source_sha256": row["evaluator_source_sha256"],

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_psi_owner_authorized_execution_v2.schema.json",
+  "title": "Raw execution index for exploratory ΔA5 V2",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "study_id", "classification", "freeze_commit", "freeze_record_sha256", "protocol_sha256", "runner_identity", "sandbox_preflight", "authorization", "source_identities", "baseline", "historical_probe_replay", "calibration", "transition_runs", "transition_summary", "gates", "interpretation_boundary"],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_PSI_OWNER_AUTHORIZED_EXECUTION_V2"},
+    "study_id": {"const": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V2"},
+    "classification": {"const": "RESEARCH_OWNER_AUTHORIZED_EXPLORATORY_DEVELOPMENT"},
+    "freeze_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "freeze_record_sha256": {"$ref": "#/$defs/sha256"},
+    "protocol_sha256": {"$ref": "#/$defs/sha256"},
+    "sandbox_preflight": {"type": "object", "required": ["preflight_id", "verification_status", "record_sha256"]},
+    "transition_runs": {"type": "array", "minItems": 4, "maxItems": 4, "items": {"type": "object", "required": ["execution_id", "measured", "run_status", "evidence_classification"], "properties": {"measured": {"type": "boolean"}, "run_status": {"enum": ["COMPLETED", "FAILED", "NOT_RUN_BUDGET_EXHAUSTED"]}, "evidence_classification": {"enum": ["COMPLETE_TRANSITION_ARCHIVE", "PARTIAL_EXECUTION_EVIDENCE", "NO_ATTEMPT"]}, "evidence_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}}}},
+    "gates": {"type": "object", "properties": {"P_ALGORITHM_STATUS": {"const": "NOT_READY"}, "G1": {"const": "INCOMPLETE"}, "G4": {"const": "NOT_AUTHORIZED"}, "scoring": {"const": "NOT_EXECUTED"}, "coverage": {"const": "UNKNOWN"}}}
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

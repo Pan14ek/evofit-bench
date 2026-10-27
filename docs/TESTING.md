@@ -623,3 +623,33 @@ The V2 A0.4→A0.5 package separates repository-local verification, historical P
 | DA5-ISO-01 | Historical runtime isolation evidence is identified separately from not-yet-created future arm bundles. | V2 package provenance and archived run reference | No future comparison run |
 
 Run the focused checks with `make test-mono-ci-psi-delta-a5`. This verifies the current repository-local package and its fail-closed contracts; it does not replay the historical archive, run either method, or produce a scientific result. The previous PR #56 report's `PASS_ARCHIVE_READBACK` is preserved as a historical claim. Optional replay requires an operator-supplied local archive via `--historical-archive`; it must match the pinned digest and source identities. The current package reports replay as `NOT_EXECUTED`.
+
+## Owner-authorized ΔA5 DEVELOPMENT re-execution V2
+
+V2 is a separately versioned exploratory rerun that fixes PR #58's evaluator
+source binding, verifies the digest-pinned Docker sandbox on the hosted runner,
+and seals complete and partial transition evidence. It preserves V1 protocol,
+measurement records, archives, and readback as historical inputs. A hosted
+preflight is required before `PRE_RUN_FREEZE.json` is written; a failed or
+identity-mismatched preflight stops before calibration and transition runs.
+Only a commit adding the freeze record may start the branch-gated V2 workflow.
+
+| Requirement | Expected behavior | Test owner | Status boundary |
+| --- | --- | --- | --- |
+| DA5-V2-SRC-01 | Source inspection resolves Git objects from the exact negative-probe checkout; missing, mismatched, or incomplete inspection stays FAILED. | `tests/unit/test_mono_ci_psi_owner_authorized_v2.py::test_negative_probe_inspection_uses_probe_git_repository_and_records_raw_exit_code`; `test_missing_or_incomplete_probe_inspection_stays_a_failed_measurement` | Source/scope integrity only |
+| DA5-V2-ISO-01 | Hosted preflight requires the pinned runtime, no network, read-only root, exact mounts, denied scorer/history/other-arm access, no credentials/socket, and a writable output mount. | `test_preflight_sidecar_and_all_probes_are_required`; `test_docker_container_command_is_locked_to_isolation_contract`; branch-gated hosted preflight | Capability evidence for that runner identity only |
+| DA5-V2-EVID-01 | Partial archive keeps available raw files, process exit and timing, phase state, and method observation; complete V4 verification remains separate. Archive errors do not overwrite the original execution failure. | `test_partial_archive_retains_method_observation_and_separates_archive_error`; `test_partial_archive_rejects_changed_member_even_with_sidecar_rewritten` | Byte-integrity/readback only |
+| DA5-V2-AN-01 | Analysis counts parsed process outputs without inferring compliance from exit code and records study IDs, raw digests, source status, and execution phases. | `test_analysis_counts_parsed_observations_without_inferring_compliance`; V2 analysis checksum readback | Descriptive reporting only |
+| DA5-V2-HIST-01 | V1 and V2 samples are explicitly identified and never pooled; historical failed probe measurements remain failed despite the post-run source/scope readback. | V2 analysis summary and generated Ukrainian monograph handoff | Historical claims remain bounded to their raw archive/readback digests |
+| DA5-V2-GATE-01 | P remains NOT_READY, G1 INCOMPLETE, G4 NOT_AUTHORIZED, scoring NOT_EXECUTED, and coverage UNKNOWN. | Protocol/execution schema checks and the dedicated branch workflow | No official gate promotion or scientific result |
+
+Run the focused regressions with `make test-mono-ci-psi-owner-authorized-v2`;
+this target also runs the adjacent owner protocol and evaluator evidence
+regressions. `make development-quality` includes this target. The
+hosted study workflow additionally requires a successful real-runner preflight,
+the exact pre-run freeze commit, an isolated method run, verified raw evidence,
+and release readback. A local container check is not treated as the hosted
+preflight. Even a fully read-back V2 archive remains owner-authorized
+DEVELOPMENT evidence: one architecture-level unit, unresolved independent
+reference and semantic adequacy, P NOT_READY, G1 INCOMPLETE, and G4 NOT
+AUTHORIZED.

@@ -588,12 +588,27 @@ def a05_transition_context(
             setattr(transition, name, value)
 
 
-def run_a05_transition(repository: Path, output_root: Path, execution_id: str) -> dict[str, Any]:
+def run_a05_transition(
+    repository: Path,
+    output_root: Path,
+    execution_id: str,
+    *,
+    isolation_backend: str | None = None,
+    preserve_partial_evidence: bool = False,
+    sandbox_preflight_id: str | None = None,
+) -> dict[str, Any]:
     """Execute the existing isolated P runner against the pinned ΔA5 transition."""
     repo = repository.resolve(strict=True)
     _validate_a04_proposal(repo)
     with a05_transition_context(repo, extension_builder=_build_a05_extension):
-        return transition.run_transition(repo, output_root, execution_id)
+        return transition.run_transition(
+            repo,
+            output_root,
+            execution_id,
+            isolation_backend=isolation_backend,
+            preserve_partial_evidence=preserve_partial_evidence,
+            sandbox_preflight_id=sandbox_preflight_id,
+        )
 
 
 def _build_a05_extension(
@@ -1096,6 +1111,7 @@ def _run_bound_evaluator(
     *,
     repository: Path,
     source_checkout: Path,
+    source_repository: Path | None = None,
     source_commit: str,
     architecture_state: str,
     evaluator_id: str,
@@ -1117,7 +1133,7 @@ def _run_bound_evaluator(
     stderr_path = run_root / run["stderr_path"]
     output_bytes = output_path.read_bytes()
     coverage = verify_inspection_coverage(
-        repository=repository,
+        repository=source_repository or repository,
         source_commit_sha=source_commit,
         source_tree_sha=run["source_tree_sha"],
         architecture_state=architecture_state,

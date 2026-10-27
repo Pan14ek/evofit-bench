@@ -18,6 +18,7 @@ Contract, schema, validity, applicability, safety and deterministic tests.
 - `test_a05_data_ownership.py` — validates the prospective A0.5 ownership manifest and shows a controlled foreign-table access remains invisible to the old public API/module graph analyzers while the existing ownership analyzer reports it.
 - `test_mono_ci_psi_a05.py` — also checks evaluator-specific finding attribution against patch-added source lines, three-state UNKNOWN/incomplete handling, archived diagnostic recomputation, and deterministic source-patch replay without a remote probe commit.
 - `test_mono_ci_psi_owner_authorized.py` — validates the separate owner-authorized protocol schemas, branch-gated inline CI activation, adapter-compatible transition IDs, pre-analysis raw upload ordering, plotting dependencies, descriptive statistics, HOLD preservation, archive/readback integrity, and analysis digests; it does not imply independent approval.
+- `test_mono_ci_psi_owner_authorized_v2.py` — covers exact source binding, V1 post-run raw replay, same-runner Docker preflight wiring, fail-closed freeze/bundle readback, preserved evaluator streams, complete/partial evidence archives, and descriptive analysis boundaries; fixtures do not establish official ΔA5 readiness.
 - `test_mono_ci_b0_psi_delta_a5.py` — validates ΔA5 local source pins and evidence-status separation; rejects source/method digest tampering, archive digest mismatch, historical value/timing overclaims, duplicate semantic identities, and uncountable evaluator/mapping cells, alongside fail-closed applicability cases. No test authorizes or executes a study.
 - `test_da01_execution.py`
 - `test_da01_inputs_and_isolation.py`
@@ -70,6 +71,7 @@ This is a selected list of direct tracked files, not a complete source inventory
 
 
 - test_mono_ci_psi_owner_authorized.py — preregistered protocol boundary, branch-gated inline CI activation, adapter-compatible run IDs, raw-data upload ordering, descriptive statistics, calibration archive integrity, and preservation of unapproved/UNKNOWN study gates; does not perform measured runs or authorize official ΔA5.
+- test_mono_ci_psi_owner_authorized_v2.py — hosted preflight and freeze contracts, historical V1 replay binding, partial-execution retention, workflow release/readback wiring, and V1/V2 analysis boundaries; contract fixtures alone are not a hosted run or approval.
 
 ## Established conventions
 

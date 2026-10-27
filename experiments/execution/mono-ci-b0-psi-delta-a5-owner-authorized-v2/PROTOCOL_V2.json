@@ -1,0 +1,75 @@
+{
+  "schema_version": "MONO_CI_PSI_OWNER_AUTHORIZED_PROTOCOL_V2",
+  "study_id": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V2",
+  "classification": "RESEARCH_OWNER_AUTHORIZED_EXPLORATORY_DEVELOPMENT",
+  "authorization": {
+    "provenance": "DIRECT_USER_CONVERSATION_INSTRUCTION",
+    "identity_independently_verified": false,
+    "signature_artifact": null,
+    "scope": "Repeat the bounded A0.4 to A0.5 DEVELOPMENT evaluator and Method Ψ execution after correcting source binding, sandbox capability verification, and partial evidence retention.",
+    "explicit_exclusions": ["independent_review", "G1_completion", "G4_authorization", "normative_policy_approval", "official_measured_study"]
+  },
+  "transition": {
+    "before_state": "A0_4_REPORT_QUERY_PORT",
+    "before_commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+    "before_repository_tree_sha": "2b436e0aaf09403ea516d73d20a466a122f86592",
+    "before_application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+    "after_state": "A0_5_MODULE_DATA_OWNERSHIP",
+    "after_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+    "after_repository_tree_sha": "97c060cc26313a879f0940a178d42e422cc4d188",
+    "after_application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7"
+  },
+  "baseline": {
+    "path": "experiments/execution/mono-ci-b0-psi-execution-a05-v1/RECONSTRUCTED_B0_A04_V1.json",
+    "identity": "PROSPECTIVE_RECONSTRUCTED_NOT_HISTORICAL",
+    "approval": "NOT_APPROVED",
+    "controls": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]
+  },
+  "negative_probe": {
+    "identity": "EXISTING_PR56_HISTORICAL_PROBE",
+    "passed_to_psi": false,
+    "new_holdout": false
+  },
+  "calibration": {
+    "evaluators": ["AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP"],
+    "source_conditions": ["EXISTING_NEGATIVE_PROBE", "A0_5_CLEAN_IF_RUNNER_COMPARABILITY_RULE_REQUIRES_CONTROL"],
+    "warmups_per_cell": 1,
+    "measured_repetitions_per_cell": 10,
+    "negative_probe_planned_total_calls": 33,
+    "clean_source_control_rule": "Add one warmup and ten measured calls per evaluator only if any frozen evaluator-runner field differs from V1; never pool V1 and V2 samples.",
+    "cell_order": "randomized_within_round",
+    "random_seed": 20261027
+  },
+  "transition_runs": {
+    "warmup_runs": 1,
+    "measured_runs": 3,
+    "same_architecture_transition": true,
+    "b0_controls": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"],
+    "psi": "Existing A0.5 DEVELOPMENT implementation, run in a digest-pinned network-disabled container after successful capability preflight.",
+    "scoring": "NOT_EXECUTED",
+    "coverage": "UNKNOWN"
+  },
+  "timing": {
+    "evaluator_process_boundary": "Existing run_fresh_evaluator subprocess interval",
+    "scope_verification_boundary": "Outer interval around source-bound evaluator and complete-scope readback",
+    "method_process_boundary": "Isolated Docker process start to process exit",
+    "full_transition_boundary": "Outer interval around run_a05_transition and archive attempt",
+    "cpu": "Host self and child CPU deltas; child CPU includes evaluator/Git/verifier children",
+    "peak_rss_per_process": "NOT_AVAILABLE",
+    "monetary_cost": "NOT_MEASURED"
+  },
+  "statistics": {
+    "descriptive_only": true,
+    "quantile": "nearest_rank_p90",
+    "significance_tests": false,
+    "architecture_level_n": 1,
+    "coverage_percentage": "NOT_COMPUTED"
+  },
+  "gates": {
+    "P_ALGORITHM_STATUS": "NOT_READY",
+    "G1": "INCOMPLETE",
+    "G4": "NOT_AUTHORIZED",
+    "independent_reference": "NOT_READY",
+    "official_delta_a5_protocol": "NO_GO_WITH_EXPLICIT_BLOCKERS"
+  }
+}

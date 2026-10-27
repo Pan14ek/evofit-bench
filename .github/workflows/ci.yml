@@ -185,3 +185,194 @@ jobs:
             echo "- Outer archive SHA-256: $(cut -d ' ' -f 1 "$OUTER_ARCHIVE.sha256")"
             echo "- Official gates remain P_ALGORITHM_STATUS=NOT_READY, G1=INCOMPLETE, G4=NOT_AUTHORIZED, scoring=NOT_EXECUTED, coverage=UNKNOWN."
           } >> "$GITHUB_STEP_SUMMARY"
+
+  delta-a5-v2-sandbox-preflight:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/codex/pr59-delta-a5-v2'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install frozen development dependencies
+        run: uv sync --frozen --extra dev
+      - name: Pull the digest-pinned isolated method runtime
+        run: docker pull --platform linux/amd64 python:3.12.15-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70
+      - name: Verify sandbox capabilities on the hosted runner
+        id: sandbox-preflight
+        run: |
+          set -euo pipefail
+          PREFLIGHT_OUTPUT="$RUNNER_TEMP/evofit-delta-a5-v2-preflight-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          echo "PREFLIGHT_OUTPUT=$PREFLIGHT_OUTPUT" >> "$GITHUB_ENV"
+          FREEZE="experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v2/PRE_RUN_FREEZE.json"
+          if [[ -f "$FREEZE" ]]; then
+            uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_owner_authorized_v2 \
+              preflight --repository "$GITHUB_WORKSPACE" --output "$PREFLIGHT_OUTPUT" --freeze "$FREEZE"
+          else
+            uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_owner_authorized_v2 \
+              preflight --repository "$GITHUB_WORKSPACE" --output "$PREFLIGHT_OUTPUT"
+          fi
+          jq -e '.verification_status == "PASS"' "$PREFLIGHT_OUTPUT/sandbox-preflight.json"
+          {
+            echo "## ΔA5 V2 hosted sandbox preflight"
+            echo "- Verification: PASS"
+            echo "- Preflight id: $(jq -r '.preflight_id' "$PREFLIGHT_OUTPUT/sandbox-preflight.json")"
+            echo "- Host identity: $(jq -c '.host_identity' "$PREFLIGHT_OUTPUT/sandbox-preflight.json")"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve hosted preflight record and raw probes
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mono-ci-psi-delta-a5-v2-preflight-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/evofit-delta-a5-v2-preflight-${{ github.run_id }}-${{ github.run_attempt }}/
+          if-no-files-found: warn
+          retention-days: 90
+          compression-level: 0
+
+  owner-authorized-delta-a5-v2:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/codex/pr59-delta-a5-v2' && contains(github.event.head_commit.message, 'V2 PRE-RUN FREEZE')
+    needs: [development-quality, delta-a5-v2-sandbox-preflight]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    permissions:
+      contents: write
+      actions: read
+    env:
+      UV_CACHE_DIR: /tmp/evofit-owner-authorized-a5-v2-uv-cache
+      UV_PROJECT_ENVIRONMENT: /tmp/evofit-owner-authorized-a5-v2-venv
+      RUN_OUTPUT: ${{ runner.temp }}/evofit-owner-authorized-a5-v2-${{ github.run_id }}-${{ github.run_attempt }}
+      PREFLIGHT_OUTPUT: ${{ runner.temp }}/evofit-delta-a5-v2-preflight-${{ github.run_id }}-${{ github.run_attempt }}
+      V2_PROTOCOL_ROOT: experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install frozen development dependencies
+        run: uv sync --frozen --extra dev
+      - name: Pull the digest-pinned isolated method runtime
+        run: docker pull --platform linux/amd64 python:3.12.15-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70
+      - name: Verify sandbox capabilities on the measurement runner
+        run: |
+          set -euo pipefail
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_owner_authorized_v2 \
+            preflight --repository "$GITHUB_WORKSPACE" --output "$PREFLIGHT_OUTPUT" \
+            --freeze "$GITHUB_WORKSPACE/$V2_PROTOCOL_ROOT/PRE_RUN_FREEZE.json"
+          jq -e '.verification_status == "PASS"' "$PREFLIGHT_OUTPUT/sandbox-preflight.json"
+      - name: Preserve measurement-runner preflight and raw probes
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mono-ci-psi-delta-a5-v2-measurement-preflight-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/evofit-delta-a5-v2-preflight-${{ github.run_id }}-${{ github.run_attempt }}/
+          if-no-files-found: warn
+          retention-days: 90
+          compression-level: 0
+      - name: Execute frozen owner-authorized V2 DEVELOPMENT repetitions
+        run: |
+          set -euo pipefail
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_owner_authorized_v2 \
+            run --repository "$GITHUB_WORKSPACE" --output "$RUN_OUTPUT" \
+            --frozen-revision "$GITHUB_SHA" --uv-version "$(uv --version)" \
+            --preflight "$PREFLIGHT_OUTPUT"
+      - name: Preserve raw V2 evidence before analysis
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mono-ci-psi-delta-a5-owner-authorized-v2-raw-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/evofit-owner-authorized-a5-v2-${{ github.run_id }}-${{ github.run_attempt }}/artifact-bundle/
+          if-no-files-found: warn
+          retention-days: 90
+          compression-level: 0
+      - name: Derive the analysis and Ukrainian monograph handoff
+        run: |
+          set -euo pipefail
+          uv run --frozen --extra dev --with-requirements research_dashboard/requirements.lock \
+            python -m experiments.execution.tooling.mono_ci_psi_owner_authorized_v2_analysis \
+            --bundle "$RUN_OUTPUT/artifact-bundle" --repository "$GITHUB_WORKSPACE" \
+            --output "$RUN_OUTPUT/analysis"
+          mkdir -p "$RUN_OUTPUT/artifact-bundle/analysis"
+          cp -R "$RUN_OUTPUT/analysis/." "$RUN_OUTPUT/artifact-bundle/analysis/"
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_owner_authorized_v2 \
+            verify-bundle --bundle "$RUN_OUTPUT/artifact-bundle" --repository "$GITHUB_WORKSPACE" \
+            > "$RUN_OUTPUT/artifact-bundle/VERIFICATION_REPORT.json"
+          jq -e '.verification_status == "PASS"' "$RUN_OUTPUT/artifact-bundle/VERIFICATION_REPORT.json"
+      - name: Assemble durable outer evidence archive
+        run: |
+          set -euo pipefail
+          RELEASE_TAG="mono-ci-psi-a05-owner-authorized-v2-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          OUTER_ARCHIVE="$RUNNER_TEMP/$RELEASE_TAG.zip"
+          (cd "$RUN_OUTPUT/artifact-bundle" && zip -0 -q -r "$OUTER_ARCHIVE" .)
+          sha256sum "$OUTER_ARCHIVE" > "$OUTER_ARCHIVE.sha256"
+          echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
+          echo "OUTER_ARCHIVE=$OUTER_ARCHIVE" >> "$GITHUB_ENV"
+      - name: Publish durable V2 evidence release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/release-notes.md" <<EOF_NOTES
+          Research-owner-authorized exploratory DEVELOPMENT evidence for ΔA5 V2.
+
+          - Study: MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V2
+          - Classification: DEVELOPMENT_CALIBRATION and EXPLORATORY_DEVELOPMENT
+          - Official ΔA5 readiness: NO_GO_WITH_EXPLICIT_BLOCKERS
+          - P_ALGORITHM_STATUS: NOT_READY
+          - G1: INCOMPLETE
+          - G4: NOT_AUTHORIZED
+          - Scoring: NOT_EXECUTED; coverage: UNKNOWN
+          - Protocol freeze commit: $GITHUB_SHA
+          - Outer archive SHA-256: $(cut -d ' ' -f 1 "$OUTER_ARCHIVE.sha256")
+          EOF_NOTES
+          gh release create "$RELEASE_TAG" "$OUTER_ARCHIVE" "$OUTER_ARCHIVE.sha256" \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "ΔA5 owner-authorized DEVELOPMENT V2 evidence $GITHUB_RUN_ID" \
+            --notes-file "$RUNNER_TEMP/release-notes.md" --prerelease
+      - name: Verify published release readback
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          READBACK="$RUNNER_TEMP/release-readback"
+          EXTRACTED="$RUNNER_TEMP/release-extracted"
+          mkdir -p "$READBACK" "$EXTRACTED"
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir "$READBACK"
+          (cd "$READBACK" && sha256sum --check "$(basename "$OUTER_ARCHIVE").sha256")
+          unzip -t "$READBACK/$(basename "$OUTER_ARCHIVE")"
+          unzip -q "$READBACK/$(basename "$OUTER_ARCHIVE")" -d "$EXTRACTED"
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_owner_authorized_v2 \
+            verify-bundle --bundle "$EXTRACTED" --repository "$GITHUB_WORKSPACE" \
+            > "$RUNNER_TEMP/release-readback-verification.json"
+          jq -e '.verification_status == "PASS"' "$RUNNER_TEMP/release-readback-verification.json"
+      - name: Record run, release, and digest
+        if: always()
+        run: |
+          {
+            echo "## ΔA5 owner-authorized V2 DEVELOPMENT evidence"
+            echo "- Study: MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V2"
+            echo "- Workflow run: https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT"
+            echo "- Freeze commit: $GITHUB_SHA"
+            if [[ -f "$RUN_OUTPUT/artifact-bundle/study-execution.json" ]]; then
+              echo "- Planned/measured/failed calibration calls: $(jq -r '.calibration.planned_calls|tostring' "$RUN_OUTPUT/artifact-bundle/study-execution.json") / $(jq -r '.calibration.measured_calls|tostring' "$RUN_OUTPUT/artifact-bundle/study-execution.json") / $(jq -r '.calibration.failed_calls|tostring' "$RUN_OUTPUT/artifact-bundle/study-execution.json")"
+              echo "- Completed/failed transitions: $(jq -r '.transition_summary.completed_runs|tostring' "$RUN_OUTPUT/artifact-bundle/study-execution.json") / $(jq -r '.transition_summary.failed_runs|tostring' "$RUN_OUTPUT/artifact-bundle/study-execution.json")"
+            fi
+            if [[ -n "${OUTER_ARCHIVE:-}" && -f "${OUTER_ARCHIVE}.sha256" ]]; then
+              echo "- Outer archive SHA-256: $(cut -d ' ' -f 1 "$OUTER_ARCHIVE.sha256")"
+              echo "- Durable prerelease: https://github.com/$GITHUB_REPOSITORY/releases/tag/$RELEASE_TAG"
+            fi
+            echo "- Gates remain P_ALGORITHM_STATUS=NOT_READY, G1=INCOMPLETE, G4=NOT_AUTHORIZED, scoring=NOT_EXECUTED, coverage=UNKNOWN."
+          } >> "$GITHUB_STEP_SUMMARY"
