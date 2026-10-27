@@ -1215,6 +1215,68 @@ def test_analysis_counts_parsed_observations_without_inferring_compliance() -> N
     assert analysis._b0_summary(rows * 2) == "ALL_OUTPUTS_PARSED"
 
 
+def test_analysis_separates_calibration_and_transition_b0_process_times() -> None:
+    summaries = analysis._measured_timing_summaries(
+        [
+            {
+                "measured": True,
+                "b0_evaluator_outcomes": [{"duration_ms": 200.0}, {"duration_ms": 300.0}],
+            },
+            {"measured": False, "b0_evaluator_outcomes": [{"duration_ms": 999.0}]},
+        ],
+        [
+            {"sample_status": "MEASURED", "is_warmup": False, "process_duration_ms": 100.0},
+            {"sample_status": "MEASURED", "is_warmup": True, "process_duration_ms": 999.0},
+            {"sample_status": "FAILED", "is_warmup": False, "process_duration_ms": 888.0},
+        ],
+    )
+
+    transition_stats = summaries["measured_transition_b0_evaluator_process_times"]
+    calibration_stats = summaries["measured_calibration_evaluator_process_times"]
+    assert transition_stats["n"] == 2
+    assert transition_stats["mean_ms"] == 250.0
+    assert calibration_stats["n"] == 1
+    assert calibration_stats["mean_ms"] == 100.0
+
+
+def test_analysis_calibration_completeness_counts_exclude_warmups_from_measured_rows() -> None:
+    counts = analysis._calibration_call_summary(
+        {
+            "measured_successful_samples": 30,
+            "measured_failed_samples": 30,
+            "measured_not_run_samples": 0,
+            "warmup_samples": 6,
+        },
+        planned_calls=66,
+    )
+
+    assert counts == {
+        "planned_calls": 66,
+        "measured_successful_calls": 30,
+        "measured_failed_calls": 30,
+        "warmup_calls": 6,
+        "not_run_measured_calls": 0,
+    }
+
+
+def test_analysis_strips_renderer_added_trailing_whitespace_from_svg(tmp_path: Path) -> None:
+    figure = tmp_path / "figure.svg"
+    figure.write_text('<svg>  \n<path d="M 0 0 " /> \n</svg>\n', encoding="utf-8")
+
+    analysis._strip_trailing_whitespace(figure)
+
+    assert figure.read_text(encoding="utf-8") == '<svg>\n<path d="M 0 0 " />\n</svg>\n'
+
+
+def test_analysis_normalizes_csv_line_endings(tmp_path: Path) -> None:
+    table = tmp_path / "samples.csv"
+    table.write_bytes(b"header,value\r\nrow,1\r\n")
+
+    analysis._normalize_csv_line_endings(table)
+
+    assert table.read_bytes() == b"header,value\nrow,1\n"
+
+
 def test_ci_runs_v2_preflight_and_study_only_on_the_dedicated_push() -> None:
     ci = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8"))
     preflight = ci["jobs"]["delta-a5-v2-sandbox-preflight"]

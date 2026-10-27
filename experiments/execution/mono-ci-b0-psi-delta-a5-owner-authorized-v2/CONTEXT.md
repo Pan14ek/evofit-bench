@@ -15,7 +15,7 @@ Version the narrow PR #58 execution corrections, freeze a hosted sandbox identit
 - `PRE_RUN_FREEZE.json` — created only after the hosted preflight and exact V2 implementation are fixed.
 - `PREMEASUREMENT_FAILURE_40569757224.json` and `PREMEASUREMENT_PREFLIGHT_ARTIFACT_40569757224.zip` — preserved first V2 run failure; technical preflight stopped before calibration or transitions, and the recorded SHA-256 binds the raw GitHub artifact.
 - `POSTEXECUTION_READBACK_FAILURE_40574090499.json` and `PRE_RUN_FREEZE_40574090499.json` — separately preserve the first fully measured V2 attempt, its post-method wrapper readback defect, actual archived Ψ HOLD/candidate observations, and the exact prior freeze.
-- `analysis/` — post-run analysis and Ukrainian insertion map; generated only from archived V2 raw data.
+- `analysis/` — supplemental post-run corrected analysis and Ukrainian insertion map, derived from the byte-verified V2 release without changing its raw archives or original analysis.
 - `evidence/` — post-run receipts and checksums; the durable raw bundle is also published as a GitHub release.
 
 ## Execution boundaries

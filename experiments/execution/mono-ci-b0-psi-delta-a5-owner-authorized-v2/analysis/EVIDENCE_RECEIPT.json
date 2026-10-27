@@ -1,0 +1,38 @@
+{
+  "analysis_derivation": {
+    "frozen_pre_run_analysis_code_sha256": "cdb8c1eeb880935311a109586a32dd0583e32db288373fe563c6b9378b72a331",
+    "new_measurements_executed": false,
+    "post_run_analysis_code_sha256": "18bf57666877b887917e4d3ba542818b4a374e85018e2365cf1d14bbd7f411f8",
+    "post_run_analysis_correction": true,
+    "same_calibration_and_transition_raw_evidence": true,
+    "schema_version": "MONO_CI_PSI_OWNER_AUTHORIZED_ANALYSIS_V3"
+  },
+  "analysis_files_sha256": {
+    "MONOGRAPH_INSERTION_MAP_UK.md": "1d1d6daf77c442f4c3d0325ddd36e2b6b26dc4ced31ae0b0482ab7ccf49aa2db",
+    "OWNER_AUTHORIZED_RESULTS_UK_V2.md": "f4691ead5dab9a27b2051af6ef941a97f0f1c32a0be283ae05db7e4dcf74ff03",
+    "POST_RUN_ANALYSIS_CORRECTION.md": "1b8d660f1b70a5eb4ab60fc28f15e8ff49c4351f08fc30bb947b245c9abc6205",
+    "analysis-summary.json": "5554e520c55d992225c2ad0a393e0d106dc178f0be0ee34b0c155b4a79773fef",
+    "evaluator-samples.csv": "67b32304f446850936941089028b4a40e5ca5ee217a9e72ceab0d7984d0a5d5d",
+    "evaluator-time-distributions.svg": "2cc72dadb434d4ff3ead22ba2b9ae08d696f859b27b27369c495422bb897d025",
+    "technical-failures.csv": "431d39268c1a27f5030b35846ca4c567bcb9a2b690b3a94479c84aa644619a27",
+    "transition-run-table.csv": "f450a8c2d001bb69af657ee773a4b12e54a278a474cd8b102e579b2c9c2e9aa5",
+    "transition-samples.csv": "5567e74afca9a4820403a6706513fe7b0b31877201fd2f808dd357d55ef8c8aa"
+  },
+  "classification": "POST_RUN_DERIVED_ANALYSIS",
+  "freeze_commit": "b34165dc2e8a857be84a12d42d1545453e626fd7",
+  "schema_version": "MONO_CI_PSI_POSTRUN_ANALYSIS_EVIDENCE_RECEIPT_V1",
+  "source_release": {
+    "asset_name": "mono-ci-psi-a05-owner-authorized-v2-40579333932-1.zip",
+    "calibration_archive_sha256": "211cd9bef19c0ad377cc3a01f183b7e062596da9f1a548fe1d71159e502dd837",
+    "downloaded_asset_checksum_verification": "PASS",
+    "github_asset_digest": "sha256:ef44cf280807e414b4027d846a8db05de74b555c60803500a97d074b666db0d2",
+    "independent_bundle_verification": "PASS",
+    "outer_archive_sha256": "ef44cf280807e414b4027d846a8db05de74b555c60803500a97d074b666db0d2",
+    "outer_zip_integrity": "PASS",
+    "tag": "mono-ci-psi-a05-owner-authorized-v2-40579333932-1",
+    "url": "https://github.com/Pan14ek/evofit-bench/releases/tag/mono-ci-psi-a05-owner-authorized-v2-40579333932-1",
+    "workflow_release_readback": "PASS"
+  },
+  "study_id": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V2",
+  "workflow_run_id": "40579333932"
+}

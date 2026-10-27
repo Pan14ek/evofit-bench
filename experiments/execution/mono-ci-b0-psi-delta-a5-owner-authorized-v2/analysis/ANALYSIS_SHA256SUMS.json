@@ -1,0 +1,11 @@
+{
+  "MONOGRAPH_INSERTION_MAP_UK.md": "1d1d6daf77c442f4c3d0325ddd36e2b6b26dc4ced31ae0b0482ab7ccf49aa2db",
+  "OWNER_AUTHORIZED_RESULTS_UK_V2.md": "f4691ead5dab9a27b2051af6ef941a97f0f1c32a0be283ae05db7e4dcf74ff03",
+  "POST_RUN_ANALYSIS_CORRECTION.md": "1b8d660f1b70a5eb4ab60fc28f15e8ff49c4351f08fc30bb947b245c9abc6205",
+  "analysis-summary.json": "5554e520c55d992225c2ad0a393e0d106dc178f0be0ee34b0c155b4a79773fef",
+  "evaluator-samples.csv": "67b32304f446850936941089028b4a40e5ca5ee217a9e72ceab0d7984d0a5d5d",
+  "evaluator-time-distributions.svg": "2cc72dadb434d4ff3ead22ba2b9ae08d696f859b27b27369c495422bb897d025",
+  "technical-failures.csv": "431d39268c1a27f5030b35846ca4c567bcb9a2b690b3a94479c84aa644619a27",
+  "transition-run-table.csv": "f450a8c2d001bb69af657ee773a4b12e54a278a474cd8b102e579b2c9c2e9aa5",
+  "transition-samples.csv": "5567e74afca9a4820403a6706513fe7b0b31877201fd2f808dd357d55ef8c8aa"
+}

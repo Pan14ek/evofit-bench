@@ -415,6 +415,56 @@ def _statistics_row(label: str, values: list[float]) -> dict[str, Any]:
     return {"measure": label, **analysis_v1.descriptive_statistics(values)}
 
 
+def _measured_timing_summaries(
+    transitions: list[Mapping[str, Any]], calibration_rows: list[Mapping[str, Any]]
+) -> dict[str, dict[str, Any]]:
+    """Report calibration and transition B0 process times as separate samples."""
+    transition_b0_times = [
+        item["duration_ms"]
+        for row in transitions
+        if row.get("measured")
+        for item in row.get("b0_evaluator_outcomes", [])
+        if item.get("duration_ms") is not None
+    ]
+    calibration_process_times = [
+        row["process_duration_ms"]
+        for row in calibration_rows
+        if row.get("sample_status") == "MEASURED"
+        and not row.get("is_warmup")
+        and row.get("process_duration_ms") is not None
+    ]
+    return {
+        "measured_transition_b0_evaluator_process_times": analysis_v1.descriptive_statistics(
+            transition_b0_times
+        ),
+        "measured_calibration_evaluator_process_times": analysis_v1.descriptive_statistics(
+            calibration_process_times
+        ),
+    }
+
+
+def _calibration_call_summary(summary: Mapping[str, Any], planned_calls: int) -> dict[str, int]:
+    """Use sample-row status counts and keep warmup calls outside measured samples."""
+    return {
+        "planned_calls": planned_calls,
+        "measured_successful_calls": int(summary.get("measured_successful_samples", 0)),
+        "measured_failed_calls": int(summary.get("measured_failed_samples", 0)),
+        "warmup_calls": int(summary.get("warmup_samples", 0)),
+        "not_run_measured_calls": int(summary.get("measured_not_run_samples", 0)),
+    }
+
+
+def _strip_trailing_whitespace(path: Path) -> None:
+    """Remove renderer-added trailing spaces without changing SVG content."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    path.write_text("\n".join(line.rstrip() for line in lines) + "\n", encoding="utf-8")
+
+
+def _normalize_csv_line_endings(path: Path) -> None:
+    """Use stable LF line endings so CSV digests survive cross-platform checkout."""
+    path.write_bytes(path.read_bytes().replace(b"\r\n", b"\n"))
+
+
 def _scientific_conclusion(transitions: list[Mapping[str, Any]]) -> str:
     decisions = Counter(
         str(row.get("method_decision"))
@@ -625,14 +675,18 @@ def _handoff(
         f"{v1_readback['counts']['archived_evaluator_outputs']} raw-виходи; "
         f"post-run технічний readback пройшов для "
         f"{v1_readback['counts']['post_run_scope_pass']} "
-        f"із них. Початкові 33 measurement records залишилися FAILED, їхні process durations "
-        f"не відновлювалися. Readback SHA-256 `{_sha256_file_from_mapping(v1_readback)}` "
+        f"із них. Архів містить 30 failed виміряних sample records і три failed warmup records "
+        f"для негативної умови; початкові статуси та process durations не переписувалися. "
+        f"Readback SHA-256 `{_sha256_file_from_mapping(v1_readback)}` "
         f"підтверджує лише повторне source/scope зіставлення, а не новий запуск."
     )
+    v1_calibration_counts = _calibration_call_summary(
+        v1_calibration_summary, int(v1_execution["calibration"].get("planned_calls", 0))
+    )
+    v2_calibration_counts = _calibration_call_summary(
+        v2_calibration_summary, int(execution["calibration"].get("planned_calls", 0))
+    )
     v2_conditions = execution["calibration"].get("source_conditions", [])
-    v2_calls = execution["calibration"].get("planned_calls", 0)
-    v2_measured = execution["calibration"].get("measured_calls", 0)
-    v2_failed = execution["calibration"].get("failed_calls", 0)
     v2_timing_rows = []
     for cell in v2_calibration_summary.get("cells", []):
         timing = cell.get("process_duration", {})
@@ -730,10 +784,10 @@ Study ID: `{execution["study_id"]}`. Класифікація — `RESEARCH_OWNE
 
 ## Порівняння повноти V1 та V2
 
-| Набір | Калібрування: planned / measured / failed | Переходи: completed / failed | Статус B0/Ψ |
-|---|---:|---:|---|
-| V1 (`{v1_execution["study_id"]}`; run 40499692594) | {v1_execution["calibration"]["planned_calls"]} / {v1_execution["calibration"]["measured_calls"]} / {v1_execution["calibration"]["failed_calls"]} | {v1_transition.get("completed_runs", 0)} / {v1_transition.get("failed_runs", 0)} | порівняння NOT_EXECUTED; Ψ NOT_OBSERVED |
-| V2 (`{execution["study_id"]}`; run {release_run}) | {v2_calls} / {v2_measured} / {v2_failed} | {completed} / {failed} | див. окремі фактичні рядки нижче |
+| Набір | Calls planned | Measured successful | Measured failed | Warmups | Measured not run | Transitions: completed / failed | Статус B0/Ψ |
+|---|---:|---:|---:|---:|---:|---:|---|
+| V1 (`{v1_execution["study_id"]}`; run 40499692594) | {v1_calibration_counts["planned_calls"]} | {v1_calibration_counts["measured_successful_calls"]} | {v1_calibration_counts["measured_failed_calls"]} | {v1_calibration_counts["warmup_calls"]} | {v1_calibration_counts["not_run_measured_calls"]} | {v1_transition.get("completed_runs", 0)} / {v1_transition.get("failed_runs", 0)} | порівняння NOT_EXECUTED; Ψ NOT_OBSERVED |
+| V2 (`{execution["study_id"]}`; run {release_run}) | {v2_calibration_counts["planned_calls"]} | {v2_calibration_counts["measured_successful_calls"]} | {v2_calibration_counts["measured_failed_calls"]} | {v2_calibration_counts["warmup_calls"]} | {v2_calibration_counts["not_run_measured_calls"]} | {completed} / {failed} | див. окремі фактичні рядки нижче |
 
 | Умова | Оцінювач | V1 n | V1 failed | V1 mean ms | V2 n | V2 failed | V2 mean ms |
 |---|---|---:|---:|---:|---:|---:|---:|
@@ -869,6 +923,11 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
         raise ContractValidationError("OWNER_AUTHORIZED_V2_ANALYSIS_OUTPUT_MUST_BE_NEW")
     output.mkdir(parents=True)
     execution = _read_json(bundle / "study-execution.json")
+    frozen_analysis_sha256 = _read_json(bundle / "protocol-snapshot/PRE_RUN_FREEZE.json")[
+        "analysis_version"
+    ]["sha256"]
+    analysis_code_sha256 = sha256_file(Path(__file__))
+    post_run_analysis_correction = analysis_code_sha256 != frozen_analysis_sha256
     premeasurement_failure = _read_preserved_premeasurement_failure(bundle)
     premeasurement_failures = [premeasurement_failure] if premeasurement_failure else []
     prior_readback_failure = _read_preserved_postexecution_readback_failure(bundle)
@@ -1127,14 +1186,8 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
             "method_result_sha256",
         ],
     )
-    v2_timing = [
-        row["process_duration_ms"]
-        for row in v2_calibration_rows
-        if row.get("sample_status") == "MEASURED"
-        and not row.get("is_warmup")
-        and row.get("process_duration_ms") is not None
-    ]
     measured_transitions = [row for row in transitions if row.get("measured")]
+    measured_timing_summaries = _measured_timing_summaries(transitions, v2_calibration_rows)
     transition_duration_stats = analysis_v1.descriptive_statistics(
         row["full_transition_duration_ms"]
         for row in measured_transitions
@@ -1197,7 +1250,7 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
         "v1_v2_samples_pooled": False,
     }
     summary = {
-        "schema_version": "MONO_CI_PSI_OWNER_AUTHORIZED_ANALYSIS_V2",
+        "schema_version": "MONO_CI_PSI_OWNER_AUTHORIZED_ANALYSIS_V3",
         "study_id": execution["study_id"],
         "classification": execution["classification"],
         "workflow_run_id": execution.get("workflow_run_id"),
@@ -1209,7 +1262,7 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
             "measured_full_transition": transition_duration_stats,
             "measured_method_execution": method_duration_stats,
             "candidate_validation_cost": candidate_cost_stats,
-            "measured_b0_evaluator_process_times": analysis_v1.descriptive_statistics(v2_timing),
+            **measured_timing_summaries,
             "candidate_cost_interpretation": "Only actual candidate validation runs; otherwise unavailable.",
             "method_cpu": "NOT_AVAILABLE_PER_METHOD_PROCESS",
             "monetary_cost": "NOT_MEASURED",
@@ -1229,29 +1282,68 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
         "data_processing": {
             "analysis_module": "experiments.execution.tooling.mono_ci_psi_owner_authorized_v2_analysis",
             "descriptive_statistics_module": "experiments.execution.tooling.mono_ci_psi_owner_authorized_analysis",
+            "analysis_code_sha256": analysis_code_sha256,
+            "frozen_pre_run_analysis_code_sha256": frozen_analysis_sha256,
+            "post_run_analysis_correction": post_run_analysis_correction,
             "p90": "nearest_rank",
             "v1_v2_samples_pooled": False,
         },
     }
     _write_json(output / "analysis-summary.json", summary)
-    analysis_v1._svg_figure(v2_calibration_rows, output / "evaluator-time-distributions.svg")
-    (output / "OWNER_AUTHORIZED_RESULTS_UK_V2.md").write_text(
-        _handoff(
-            execution=execution,
-            v1_execution=v1_execution,
-            v1_calibration_rows=v1_calibration,
-            v1_calibration_summary=v1_calibration_summary,
-            v2_calibration_summary=v2_calibration,
-            transitions=transitions,
-            calibration_archive_sha256=v2_calibration_verified["archive_sha256"],
-            v1_calibration_archive_sha256=v1_calibration_verified["archive_sha256"],
-            v1_readback=v1_readback,
-            premeasurement_failures=premeasurement_failures,
-            postexecution_readback_failures=postexecution_readback_failures,
-            transition_failures=failures,
-        ),
-        encoding="utf-8",
+    figure_path = output / "evaluator-time-distributions.svg"
+    analysis_v1._svg_figure(v2_calibration_rows, figure_path)
+    _strip_trailing_whitespace(figure_path)
+    handoff = _handoff(
+        execution=execution,
+        v1_execution=v1_execution,
+        v1_calibration_rows=v1_calibration,
+        v1_calibration_summary=v1_calibration_summary,
+        v2_calibration_summary=v2_calibration,
+        transitions=transitions,
+        calibration_archive_sha256=v2_calibration_verified["archive_sha256"],
+        v1_calibration_archive_sha256=v1_calibration_verified["archive_sha256"],
+        v1_readback=v1_readback,
+        premeasurement_failures=premeasurement_failures,
+        postexecution_readback_failures=postexecution_readback_failures,
+        transition_failures=failures,
     )
+    if post_run_analysis_correction:
+        b0_stats = measured_timing_summaries["measured_transition_b0_evaluator_process_times"]
+        calibration_stats = measured_timing_summaries[
+            "measured_calibration_evaluator_process_times"
+        ]
+        v1_counts = _calibration_call_summary(
+            v1_calibration_summary, int(v1_execution["calibration"].get("planned_calls", 0))
+        )
+        v2_counts = _calibration_call_summary(
+            v2_calibration, int(execution["calibration"].get("planned_calls", 0))
+        )
+        correction_note = (
+            "\n\n## Пост-run корекція похідного аналізу\n\n"
+            f"Цей звіт є post-run корекцією для run `{execution.get('workflow_run_id')}`; "
+            "вимірювання та raw archives не змінювалися. Первісний freeze прив'язував код аналізу "
+            f"до SHA-256 `{frozen_analysis_sha256}`; код цієї корекції має SHA-256 "
+            f"`{analysis_code_sha256}`. У V3 `analysis-summary.json` окремо подає "
+            f"{calibration_stats['n']} калібрувальних B0 evaluator-процесів і "
+            f"{b0_stats['n']} B0 evaluator-процесів у виміряних transition runs; "
+            "попереднє неоднозначне агреговане поле замінене цими двома ключами. "
+            "Порівняльна таблиця повноти тепер окремо рахує measured sample rows і warmups "
+            f"з архівів: V1 — {v1_counts['measured_successful_calls']} успішних, "
+            f"{v1_counts['measured_failed_calls']} failed виміряних samples і "
+            f"{v1_counts['warmup_calls']} warmups; V2 — "
+            f"{v2_counts['measured_successful_calls']} успішних, "
+            f"{v2_counts['measured_failed_calls']} failed виміряних samples і "
+            f"{v2_counts['warmup_calls']} warmups. Це відділяє warmup outcomes, які входили "
+            "до попередніх aggregate execution counts, від виміряних повторів. "
+            "Первинна release залишається byte-preserved; її readback і freeze verification "
+            "пройшли до цієї корекції.\n"
+        )
+        handoff = handoff.replace(
+            "\n## Класифікація і межі\n", correction_note + "\n## Класифікація і межі\n", 1
+        )
+        correction_path = output / "POST_RUN_ANALYSIS_CORRECTION.md"
+        correction_path.write_text(correction_note.lstrip(), encoding="utf-8")
+    (output / "OWNER_AUTHORIZED_RESULTS_UK_V2.md").write_text(handoff, encoding="utf-8")
     insertion_map = f"""# Монографія: карта вставлення для ΔA5 DEVELOPMENT V1/V2
 
 Цей файл підготовлений для ручного перенесення до наявного Google Doc. Документ напряму не змінювався.
@@ -1262,7 +1354,7 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
 
 ## Результати дослідження
 
-Вставити V1/V2 таблицю повноти, V2 таблицю фактичних B0/Ψ результатів, таблицю часу й candidate-validation cost, технічні помилки та SVG фігуру з `OWNER_AUTHORIZED_RESULTS_UK_V2.md`, `transition-run-table.csv`, `technical-failures.csv`, `evaluator-samples.csv` і `evaluator-time-distributions.svg`. Окремо зазначити попередній run 40574090499 як wrapper readback failure із збереженими raw HOLD результатами, не об'єднуючи його повтори з новим freeze. Для кожного числового рядка зберегти study `{execution["study_id"]}`, workflow run `{execution.get("workflow_run_id")}`, calibration archive SHA-256 `{v2_calibration_verified["archive_sha256"]}` або відповідний evidence digest і процедуру обробки з `analysis-summary.json`. У V1 частині посилатися на run 40499692594 та archive SHA-256 `{v1_calibration_verified["archive_sha256"]}`.
+Вставити V1/V2 таблицю повноти, V2 таблицю фактичних B0/Ψ результатів, таблицю часу й candidate-validation cost, технічні помилки та SVG фігуру з `OWNER_AUTHORIZED_RESULTS_UK_V2.md`, `transition-run-table.csv`, `technical-failures.csv`, `evaluator-samples.csv` і `evaluator-time-distributions.svg`. Окремо зазначити попередній run 40574090499 як wrapper readback failure із збереженими raw HOLD результатами, не об'єднуючи його повтори з новим freeze. У V3 `analysis-summary.json` calibration B0 evaluator process times і transition-level B0 evaluator process times подані окремо; ці дві сукупності не об'єднувати. У таблиці повноти брати planned, measured success/failure, warmups і not-run із sample rows; warmups не зараховувати до measured counts і не підміняти їх legacy aggregate `measured_calls`. Для кожного числового рядка зберегти study `{execution["study_id"]}`, workflow run `{execution.get("workflow_run_id")}`, calibration archive SHA-256 `{v2_calibration_verified["archive_sha256"]}` або відповідний evidence digest і процедуру обробки з `analysis-summary.json`. У V1 частині посилатися на run 40499692594 та archive SHA-256 `{v1_calibration_verified["archive_sha256"]}`.
 
 ## Обговорення
 
@@ -1273,6 +1365,8 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
 Використовувати лише розділ «Запропонований висновок» у `OWNER_AUTHORIZED_RESULTS_UK_V2.md`, замінюючи формулювання за фактичним результатом запуску. Не робити загальних висновків про наукову перевагу, verified mandatory coverage, runtime quality або G1/G4.
 """
     (output / "MONOGRAPH_INSERTION_MAP_UK.md").write_text(insertion_map, encoding="utf-8")
+    for csv_path in output.glob("*.csv"):
+        _normalize_csv_line_endings(csv_path)
     checksums = {
         path.name: sha256_file(path) for path in sorted(output.iterdir()) if path.is_file()
     }

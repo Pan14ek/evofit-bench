@@ -1,0 +1,2124 @@
+{
+  "calibration": {
+    "cells": [
+      {
+        "cpu_system": {
+          "maximum_seconds": 0.085993,
+          "mean_seconds": 0.074115,
+          "minimum_seconds": 0.061592,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.008522
+        },
+        "cpu_user": {
+          "maximum_seconds": 0.198303,
+          "mean_seconds": 0.188506,
+          "minimum_seconds": 0.175569,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.008809
+        },
+        "evaluator_id": "AC_DATA_OWNERSHIP",
+        "failed_samples": 0,
+        "finding_code_counts": {},
+        "inspection_status_counts": {
+          "COMPLETE": 10
+        },
+        "measured_samples": 10,
+        "not_run_samples": 0,
+        "outcome_counts": {
+          "COMPLIANT_NO_FINDING_REPORTED": 10
+        },
+        "planned_measured_samples": 10,
+        "process_duration": {
+          "maximum_ms": 176.674,
+          "mean_ms": 172.726,
+          "median_ms": 172.6,
+          "minimum_ms": 168.746,
+          "n": 10,
+          "p90_nearest_rank_ms": 175.501,
+          "sample_standard_deviation_ms": 2.779
+        },
+        "scope_call_duration": {
+          "maximum_ms": 266.864,
+          "mean_ms": 259.446,
+          "median_ms": 258.5,
+          "minimum_ms": 253.969,
+          "n": 10,
+          "p90_nearest_rank_ms": 263.074,
+          "sample_standard_deviation_ms": 4.304
+        },
+        "source_condition": "A0_5_CLEAN"
+      },
+      {
+        "cpu_system": {
+          "maximum_seconds": 0.126254,
+          "mean_seconds": 0.115495,
+          "minimum_seconds": 0.097879,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.008278
+        },
+        "cpu_user": {
+          "maximum_seconds": 0.240605,
+          "mean_seconds": 0.219912,
+          "minimum_seconds": 0.208293,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.010103
+        },
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "failed_samples": 0,
+        "finding_code_counts": {},
+        "inspection_status_counts": {
+          "COMPLETE": 10
+        },
+        "measured_samples": 10,
+        "not_run_samples": 0,
+        "outcome_counts": {
+          "COMPLIANT_NO_FINDING_REPORTED": 10
+        },
+        "planned_measured_samples": 10,
+        "process_duration": {
+          "maximum_ms": 174.04,
+          "mean_ms": 171.464,
+          "median_ms": 171.139,
+          "minimum_ms": 169.503,
+          "n": 10,
+          "p90_nearest_rank_ms": 173.478,
+          "sample_standard_deviation_ms": 1.469
+        },
+        "scope_call_duration": {
+          "maximum_ms": 333.786,
+          "mean_ms": 329.806,
+          "median_ms": 329.024,
+          "minimum_ms": 326.537,
+          "n": 10,
+          "p90_nearest_rank_ms": 332.697,
+          "sample_standard_deviation_ms": 2.731
+        },
+        "source_condition": "A0_5_CLEAN"
+      },
+      {
+        "cpu_system": {
+          "maximum_seconds": 0.087535,
+          "mean_seconds": 0.076752,
+          "minimum_seconds": 0.067876,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.005431
+        },
+        "cpu_user": {
+          "maximum_seconds": 0.182044,
+          "mean_seconds": 0.174401,
+          "minimum_seconds": 0.166577,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.004989
+        },
+        "evaluator_id": "AC_PUBLIC_API",
+        "failed_samples": 0,
+        "finding_code_counts": {},
+        "inspection_status_counts": {
+          "COMPLETE": 10
+        },
+        "measured_samples": 10,
+        "not_run_samples": 0,
+        "outcome_counts": {
+          "COMPLIANT_NO_FINDING_REPORTED": 10
+        },
+        "planned_measured_samples": 10,
+        "process_duration": {
+          "maximum_ms": 168.492,
+          "mean_ms": 166.039,
+          "median_ms": 166.754,
+          "minimum_ms": 162.748,
+          "n": 10,
+          "p90_nearest_rank_ms": 167.924,
+          "sample_standard_deviation_ms": 1.879
+        },
+        "scope_call_duration": {
+          "maximum_ms": 251.328,
+          "mean_ms": 248.089,
+          "median_ms": 248.608,
+          "minimum_ms": 244.197,
+          "n": 10,
+          "p90_nearest_rank_ms": 250.683,
+          "sample_standard_deviation_ms": 2.553
+        },
+        "source_condition": "A0_5_CLEAN"
+      },
+      {
+        "cpu_system": {
+          "maximum_seconds": 0.089777,
+          "mean_seconds": 0.074901,
+          "minimum_seconds": 0.063736,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.006868
+        },
+        "cpu_user": {
+          "maximum_seconds": 0.200358,
+          "mean_seconds": 0.189536,
+          "minimum_seconds": 0.171076,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.00762
+        },
+        "evaluator_id": "AC_DATA_OWNERSHIP",
+        "failed_samples": 0,
+        "finding_code_counts": {
+          "FOREIGN_TABLE_ACCESS": 10
+        },
+        "inspection_status_counts": {
+          "COMPLETE": 10
+        },
+        "measured_samples": 10,
+        "not_run_samples": 0,
+        "outcome_counts": {
+          "NON_COMPLIANT_FINDING_REPORTED": 10
+        },
+        "planned_measured_samples": 10,
+        "process_duration": {
+          "maximum_ms": 177.215,
+          "mean_ms": 173.907,
+          "median_ms": 173.634,
+          "minimum_ms": 170.837,
+          "n": 10,
+          "p90_nearest_rank_ms": 176.212,
+          "sample_standard_deviation_ms": 1.923
+        },
+        "scope_call_duration": {
+          "maximum_ms": 263.668,
+          "mean_ms": 261.317,
+          "median_ms": 261.181,
+          "minimum_ms": 257.597,
+          "n": 10,
+          "p90_nearest_rank_ms": 263.468,
+          "sample_standard_deviation_ms": 2.029
+        },
+        "source_condition": "EXISTING_NEGATIVE_PROBE"
+      },
+      {
+        "cpu_system": {
+          "maximum_seconds": 0.124747,
+          "mean_seconds": 0.113762,
+          "minimum_seconds": 0.104927,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.005348
+        },
+        "cpu_user": {
+          "maximum_seconds": 0.232597,
+          "mean_seconds": 0.225197,
+          "minimum_seconds": 0.217105,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.00555
+        },
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "failed_samples": 0,
+        "finding_code_counts": {},
+        "inspection_status_counts": {
+          "COMPLETE": 10
+        },
+        "measured_samples": 10,
+        "not_run_samples": 0,
+        "outcome_counts": {
+          "COMPLIANT_NO_FINDING_REPORTED": 10
+        },
+        "planned_measured_samples": 10,
+        "process_duration": {
+          "maximum_ms": 175.052,
+          "mean_ms": 171.5,
+          "median_ms": 171.583,
+          "minimum_ms": 166.998,
+          "n": 10,
+          "p90_nearest_rank_ms": 173.914,
+          "sample_standard_deviation_ms": 2.585
+        },
+        "scope_call_duration": {
+          "maximum_ms": 339.391,
+          "mean_ms": 333.381,
+          "median_ms": 333.441,
+          "minimum_ms": 328.268,
+          "n": 10,
+          "p90_nearest_rank_ms": 336.619,
+          "sample_standard_deviation_ms": 3.735
+        },
+        "source_condition": "EXISTING_NEGATIVE_PROBE"
+      },
+      {
+        "cpu_system": {
+          "maximum_seconds": 0.078139,
+          "mean_seconds": 0.070641,
+          "minimum_seconds": 0.063831,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.004597
+        },
+        "cpu_user": {
+          "maximum_seconds": 0.186135,
+          "mean_seconds": 0.18059,
+          "minimum_seconds": 0.173448,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.00397
+        },
+        "evaluator_id": "AC_PUBLIC_API",
+        "failed_samples": 0,
+        "finding_code_counts": {},
+        "inspection_status_counts": {
+          "COMPLETE": 10
+        },
+        "measured_samples": 10,
+        "not_run_samples": 0,
+        "outcome_counts": {
+          "COMPLIANT_NO_FINDING_REPORTED": 10
+        },
+        "planned_measured_samples": 10,
+        "process_duration": {
+          "maximum_ms": 167.262,
+          "mean_ms": 164.716,
+          "median_ms": 164.279,
+          "minimum_ms": 162.914,
+          "n": 10,
+          "p90_nearest_rank_ms": 165.974,
+          "sample_standard_deviation_ms": 1.352
+        },
+        "scope_call_duration": {
+          "maximum_ms": 251.355,
+          "mean_ms": 248.146,
+          "median_ms": 248.194,
+          "minimum_ms": 245.817,
+          "n": 10,
+          "p90_nearest_rank_ms": 250.142,
+          "sample_standard_deviation_ms": 1.94
+        },
+        "source_condition": "EXISTING_NEGATIVE_PROBE"
+      }
+    ],
+    "measured_failed_samples": 0,
+    "measured_not_run_samples": 0,
+    "measured_planned_samples": 60,
+    "measured_successful_samples": 60,
+    "warmup_samples": 6
+  },
+  "calibration_archive": {
+    "archive_path": "/private/tmp/evofit-pr59-release-40579333932/bundle/calibration.zip",
+    "archive_sha256": "211cd9bef19c0ad377cc3a01f183b7e062596da9f1a548fe1d71159e502dd837",
+    "member_count": 398,
+    "verification_status": "PASS"
+  },
+  "classification": "RESEARCH_OWNER_AUTHORIZED_EXPLORATORY_DEVELOPMENT",
+  "comparison_v1_v2": {
+    "previous_v2_postexecution_readback_attempt": [
+      {
+        "_record_sha256": "81bc3ccd67c372554d51d36e9d28bf3222bd73837e9ed64067e00208f3c3c8c2",
+        "calibration": {
+          "archive_sha256": "4d552a8111e591e9f7148c096117675453e9512e8d0016e582e1af1c2de833b1",
+          "failed_calls": 0,
+          "measured_calls": 66,
+          "planned_calls": 66
+        },
+        "classification": "POSTEXECUTION_READBACK_FAILURE_PRESERVED_PRIOR_ATTEMPT",
+        "freeze_commit": "490350858d64d4d80e4c52dc096ee7972c1b1729",
+        "previous_freeze_sha256": "058879119aa6c1a4b2463694c9dc26daf640a17b77369efaec7a9292a0aec9f3",
+        "release": {
+          "asset_name": "mono-ci-psi-a05-owner-authorized-v2-40574090499-1.zip",
+          "github_asset_digest_match": true,
+          "outer_archive_sha256": "11f4ec5aa1a399c2b4314c9785e256d9c894b61923c5748796d77ac1f0cf3e64",
+          "sidecar_status": "ABSOLUTE_RUNNER_TEMP_PATH_NOT_PORTABLE",
+          "url": "https://github.com/Pan14ek/evofit-bench/releases/tag/mono-ci-psi-a05-owner-authorized-v2-40574090499-1"
+        },
+        "schema_version": "MONO_CI_PSI_V2_POSTEXECUTION_READBACK_FAILURE_V1",
+        "study_execution_sha256": "3c7fec4f589c7f4906ac9c7d044c65ed81a809d59347f5fb694a6c982d80fc32",
+        "study_id": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V2",
+        "transition_attempts": [
+          {
+            "b0_evaluator_count": 4,
+            "b0_execution_status": "ALL_OUTPUTS_PARSED",
+            "candidate_configuration_sha256": "c91f52aba5301fc517639e089a0c7c39c82bea4d644d06091463d81b9287e81b",
+            "candidate_outcome_parity": true,
+            "candidate_state": "MATERIALIZED_UNAPPLIED",
+            "candidate_validation_cost_ms": 644.012,
+            "candidate_validation_status": "valid",
+            "development_run_sha256": "a55811d6b4a5d97effa3abf531bdc8613a18ab6b79c73c748031c2b55b76c363",
+            "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_WARMUP_00",
+            "full_transition_duration_ms": 24516.572,
+            "governance_reason_codes": [
+              "APPLICABILITY_UNKNOWN",
+              "COST_MODEL_UNRESOLVED",
+              "COST_VERDICT_UNRESOLVED",
+              "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED",
+              "INVARIANT_VERDICTS_NOT_ALL_POSITIVE",
+              "MANDATORY_APPLICABILITY_UNKNOWN",
+              "MANDATORY_CLASSIFICATION_UNRESOLVED",
+              "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION",
+              "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING"
+            ],
+            "method_decision": "HOLD",
+            "method_execution_duration_ms": 1918.254,
+            "method_exit_code": 0,
+            "method_process_status": "DEVELOPMENT_METHOD_EXECUTED",
+            "method_result_sha256": "d84fd0d47740eb924eecac106eaa9e0c6d6c86a69ef6e2a590a24ffa521e6f87",
+            "operation_hold_reasons": [
+              "COST_MODEL_UNRESOLVED",
+              "MANDATORY_APPLICABILITY_UNKNOWN",
+              "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION"
+            ],
+            "operation_plan": [],
+            "partial_archive_sha256": "3d5c58492ad600e0d13b815b249688307ec14f94c0b3c8dcd08a72fbb109ccf9",
+            "role": "WARMUP",
+            "wrapper_error": "KeyError: 'evaluator_observations'",
+            "wrapper_run_status": "FAILED"
+          },
+          {
+            "b0_evaluator_count": 4,
+            "b0_execution_status": "ALL_OUTPUTS_PARSED",
+            "candidate_configuration_sha256": "c91f52aba5301fc517639e089a0c7c39c82bea4d644d06091463d81b9287e81b",
+            "candidate_outcome_parity": true,
+            "candidate_state": "MATERIALIZED_UNAPPLIED",
+            "candidate_validation_cost_ms": 648.598,
+            "candidate_validation_status": "valid",
+            "development_run_sha256": "508e96c5d96981664880790b3a2c1d83cae7084885aff23a61329d23b754f75d",
+            "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_MEASURED_01",
+            "full_transition_duration_ms": 24417.062,
+            "governance_reason_codes": [
+              "APPLICABILITY_UNKNOWN",
+              "COST_MODEL_UNRESOLVED",
+              "COST_VERDICT_UNRESOLVED",
+              "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED",
+              "INVARIANT_VERDICTS_NOT_ALL_POSITIVE",
+              "MANDATORY_APPLICABILITY_UNKNOWN",
+              "MANDATORY_CLASSIFICATION_UNRESOLVED",
+              "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION",
+              "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING"
+            ],
+            "method_decision": "HOLD",
+            "method_execution_duration_ms": 1865.236,
+            "method_exit_code": 0,
+            "method_process_status": "DEVELOPMENT_METHOD_EXECUTED",
+            "method_result_sha256": "325e98037b6c2f4f0cb110fbabee2c1cbe0e05f4fa7d56db79eed211891ff103",
+            "operation_hold_reasons": [
+              "COST_MODEL_UNRESOLVED",
+              "MANDATORY_APPLICABILITY_UNKNOWN",
+              "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION"
+            ],
+            "operation_plan": [],
+            "partial_archive_sha256": "42e26b1058bf08c864dc77a0c53d888f9870cb72fbe9a78b2aeee68a9d070e5a",
+            "role": "MEASURED",
+            "wrapper_error": "KeyError: 'evaluator_observations'",
+            "wrapper_run_status": "FAILED"
+          },
+          {
+            "b0_evaluator_count": 4,
+            "b0_execution_status": "ALL_OUTPUTS_PARSED",
+            "candidate_configuration_sha256": "c91f52aba5301fc517639e089a0c7c39c82bea4d644d06091463d81b9287e81b",
+            "candidate_outcome_parity": true,
+            "candidate_state": "MATERIALIZED_UNAPPLIED",
+            "candidate_validation_cost_ms": 667.586,
+            "candidate_validation_status": "valid",
+            "development_run_sha256": "ff53cb45148db59276f375cbe4d492ae4b064f46add063effac66b0fb38a8a9a",
+            "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_MEASURED_02",
+            "full_transition_duration_ms": 24205.394,
+            "governance_reason_codes": [
+              "APPLICABILITY_UNKNOWN",
+              "COST_MODEL_UNRESOLVED",
+              "COST_VERDICT_UNRESOLVED",
+              "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED",
+              "INVARIANT_VERDICTS_NOT_ALL_POSITIVE",
+              "MANDATORY_APPLICABILITY_UNKNOWN",
+              "MANDATORY_CLASSIFICATION_UNRESOLVED",
+              "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION",
+              "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING"
+            ],
+            "method_decision": "HOLD",
+            "method_execution_duration_ms": 1918.904,
+            "method_exit_code": 0,
+            "method_process_status": "DEVELOPMENT_METHOD_EXECUTED",
+            "method_result_sha256": "097f70faf2da09eb8adbdfcee0231bbdb46be3496d63ffaa3b1185ec24c6b726",
+            "operation_hold_reasons": [
+              "COST_MODEL_UNRESOLVED",
+              "MANDATORY_APPLICABILITY_UNKNOWN",
+              "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION"
+            ],
+            "operation_plan": [],
+            "partial_archive_sha256": "4668554153df711e63e28f56e0c61e789f8fc1fe432e1d52dfe91033ea27acfd",
+            "role": "MEASURED",
+            "wrapper_error": "KeyError: 'evaluator_observations'",
+            "wrapper_run_status": "FAILED"
+          },
+          {
+            "b0_evaluator_count": 4,
+            "b0_execution_status": "ALL_OUTPUTS_PARSED",
+            "candidate_configuration_sha256": "c91f52aba5301fc517639e089a0c7c39c82bea4d644d06091463d81b9287e81b",
+            "candidate_outcome_parity": true,
+            "candidate_state": "MATERIALIZED_UNAPPLIED",
+            "candidate_validation_cost_ms": 634.99,
+            "candidate_validation_status": "valid",
+            "development_run_sha256": "90bf5ca3e83cf9c2a906d925c9efc1b818927a1c28ad70969403a7da6a880d0b",
+            "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_MEASURED_03",
+            "full_transition_duration_ms": 24323.323,
+            "governance_reason_codes": [
+              "APPLICABILITY_UNKNOWN",
+              "COST_MODEL_UNRESOLVED",
+              "COST_VERDICT_UNRESOLVED",
+              "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED",
+              "INVARIANT_VERDICTS_NOT_ALL_POSITIVE",
+              "MANDATORY_APPLICABILITY_UNKNOWN",
+              "MANDATORY_CLASSIFICATION_UNRESOLVED",
+              "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION",
+              "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING"
+            ],
+            "method_decision": "HOLD",
+            "method_execution_duration_ms": 1884.212,
+            "method_exit_code": 0,
+            "method_process_status": "DEVELOPMENT_METHOD_EXECUTED",
+            "method_result_sha256": "7be7a939a993f64672cb5b35730d5527788d5b896c73d1295f7a04e3ed2d051a",
+            "operation_hold_reasons": [
+              "COST_MODEL_UNRESOLVED",
+              "MANDATORY_APPLICABILITY_UNKNOWN",
+              "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION"
+            ],
+            "operation_plan": [],
+            "partial_archive_sha256": "f66dcbee1da4c1bccb01be051e0c5b43545481220b372d93b0f38098ed872de4",
+            "role": "MEASURED",
+            "wrapper_error": "KeyError: 'evaluator_observations'",
+            "wrapper_run_status": "FAILED"
+          }
+        ],
+        "workflow_run_id": 40574090499
+      }
+    ],
+    "schema_version": "MONO_CI_PSI_OWNER_AUTHORIZED_V1_V2_COMPARISON_V1",
+    "v1": {
+      "calibration": {
+        "cells": [
+          {
+            "cpu_system": {
+              "maximum_seconds": 0.085592,
+              "mean_seconds": 0.075176,
+              "minimum_seconds": 0.068831,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.004532
+            },
+            "cpu_user": {
+              "maximum_seconds": 0.186323,
+              "mean_seconds": 0.17919,
+              "minimum_seconds": 0.170909,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.004154
+            },
+            "evaluator_id": "AC_DATA_OWNERSHIP",
+            "failed_samples": 0,
+            "finding_code_counts": {},
+            "inspection_status_counts": {
+              "COMPLETE": 10
+            },
+            "measured_samples": 10,
+            "not_run_samples": 0,
+            "outcome_counts": {
+              "COMPLIANT_NO_FINDING_REPORTED": 10
+            },
+            "planned_measured_samples": 10,
+            "process_duration": {
+              "maximum_ms": 171.123,
+              "mean_ms": 166.436,
+              "median_ms": 166.411,
+              "minimum_ms": 164.236,
+              "n": 10,
+              "p90_nearest_rank_ms": 168.026,
+              "sample_standard_deviation_ms": 2.086
+            },
+            "scope_call_duration": {
+              "maximum_ms": 254.152,
+              "mean_ms": 251.13,
+              "median_ms": 251.977,
+              "minimum_ms": 248.26,
+              "n": 10,
+              "p90_nearest_rank_ms": 252.73,
+              "sample_standard_deviation_ms": 2.094
+            },
+            "source_condition": "A0_5_CLEAN"
+          },
+          {
+            "cpu_system": {
+              "maximum_seconds": 0.128303,
+              "mean_seconds": 0.11738,
+              "minimum_seconds": 0.104619,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.007002
+            },
+            "cpu_user": {
+              "maximum_seconds": 0.24958,
+              "mean_seconds": 0.213254,
+              "minimum_seconds": 0.20016,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.014173
+            },
+            "evaluator_id": "AC_MODULE_GRAPH",
+            "failed_samples": 0,
+            "finding_code_counts": {},
+            "inspection_status_counts": {
+              "COMPLETE": 10
+            },
+            "measured_samples": 10,
+            "not_run_samples": 0,
+            "outcome_counts": {
+              "COMPLIANT_NO_FINDING_REPORTED": 10
+            },
+            "planned_measured_samples": 10,
+            "process_duration": {
+              "maximum_ms": 201.432,
+              "mean_ms": 168.403,
+              "median_ms": 164.723,
+              "minimum_ms": 160.419,
+              "n": 10,
+              "p90_nearest_rank_ms": 168.72,
+              "sample_standard_deviation_ms": 11.824
+            },
+            "scope_call_duration": {
+              "maximum_ms": 360.376,
+              "mean_ms": 324.961,
+              "median_ms": 320.914,
+              "minimum_ms": 314.165,
+              "n": 10,
+              "p90_nearest_rank_ms": 331.741,
+              "sample_standard_deviation_ms": 13.266
+            },
+            "source_condition": "A0_5_CLEAN"
+          },
+          {
+            "cpu_system": {
+              "maximum_seconds": 0.075313,
+              "mean_seconds": 0.071744,
+              "minimum_seconds": 0.068081,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.002813
+            },
+            "cpu_user": {
+              "maximum_seconds": 0.180125,
+              "mean_seconds": 0.173236,
+              "minimum_seconds": 0.165372,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.005018
+            },
+            "evaluator_id": "AC_PUBLIC_API",
+            "failed_samples": 0,
+            "finding_code_counts": {},
+            "inspection_status_counts": {
+              "COMPLETE": 10
+            },
+            "measured_samples": 10,
+            "not_run_samples": 0,
+            "outcome_counts": {
+              "COMPLIANT_NO_FINDING_REPORTED": 10
+            },
+            "planned_measured_samples": 10,
+            "process_duration": {
+              "maximum_ms": 163.167,
+              "mean_ms": 160.162,
+              "median_ms": 159.732,
+              "minimum_ms": 156.451,
+              "n": 10,
+              "p90_nearest_rank_ms": 162.488,
+              "sample_standard_deviation_ms": 2.192
+            },
+            "scope_call_duration": {
+              "maximum_ms": 250.906,
+              "mean_ms": 242.0,
+              "median_ms": 241.377,
+              "minimum_ms": 236.64,
+              "n": 10,
+              "p90_nearest_rank_ms": 244.862,
+              "sample_standard_deviation_ms": 3.788
+            },
+            "source_condition": "A0_5_CLEAN"
+          },
+          {
+            "cpu_system": {
+              "maximum_seconds": null,
+              "mean_seconds": null,
+              "minimum_seconds": null,
+              "n": 0,
+              "sample_standard_deviation_seconds": null
+            },
+            "cpu_user": {
+              "maximum_seconds": null,
+              "mean_seconds": null,
+              "minimum_seconds": null,
+              "n": 0,
+              "sample_standard_deviation_seconds": null
+            },
+            "evaluator_id": "AC_DATA_OWNERSHIP",
+            "failed_samples": 10,
+            "finding_code_counts": {},
+            "inspection_status_counts": {},
+            "measured_samples": 0,
+            "not_run_samples": 0,
+            "outcome_counts": {},
+            "planned_measured_samples": 10,
+            "process_duration": {
+              "maximum_ms": null,
+              "mean_ms": null,
+              "median_ms": null,
+              "minimum_ms": null,
+              "n": 0,
+              "p90_nearest_rank_ms": null,
+              "sample_standard_deviation_ms": null
+            },
+            "scope_call_duration": {
+              "maximum_ms": null,
+              "mean_ms": null,
+              "median_ms": null,
+              "minimum_ms": null,
+              "n": 0,
+              "p90_nearest_rank_ms": null,
+              "sample_standard_deviation_ms": null
+            },
+            "source_condition": "EXISTING_NEGATIVE_PROBE"
+          },
+          {
+            "cpu_system": {
+              "maximum_seconds": null,
+              "mean_seconds": null,
+              "minimum_seconds": null,
+              "n": 0,
+              "sample_standard_deviation_seconds": null
+            },
+            "cpu_user": {
+              "maximum_seconds": null,
+              "mean_seconds": null,
+              "minimum_seconds": null,
+              "n": 0,
+              "sample_standard_deviation_seconds": null
+            },
+            "evaluator_id": "AC_MODULE_GRAPH",
+            "failed_samples": 10,
+            "finding_code_counts": {},
+            "inspection_status_counts": {},
+            "measured_samples": 0,
+            "not_run_samples": 0,
+            "outcome_counts": {},
+            "planned_measured_samples": 10,
+            "process_duration": {
+              "maximum_ms": null,
+              "mean_ms": null,
+              "median_ms": null,
+              "minimum_ms": null,
+              "n": 0,
+              "p90_nearest_rank_ms": null,
+              "sample_standard_deviation_ms": null
+            },
+            "scope_call_duration": {
+              "maximum_ms": null,
+              "mean_ms": null,
+              "median_ms": null,
+              "minimum_ms": null,
+              "n": 0,
+              "p90_nearest_rank_ms": null,
+              "sample_standard_deviation_ms": null
+            },
+            "source_condition": "EXISTING_NEGATIVE_PROBE"
+          },
+          {
+            "cpu_system": {
+              "maximum_seconds": null,
+              "mean_seconds": null,
+              "minimum_seconds": null,
+              "n": 0,
+              "sample_standard_deviation_seconds": null
+            },
+            "cpu_user": {
+              "maximum_seconds": null,
+              "mean_seconds": null,
+              "minimum_seconds": null,
+              "n": 0,
+              "sample_standard_deviation_seconds": null
+            },
+            "evaluator_id": "AC_PUBLIC_API",
+            "failed_samples": 10,
+            "finding_code_counts": {},
+            "inspection_status_counts": {},
+            "measured_samples": 0,
+            "not_run_samples": 0,
+            "outcome_counts": {},
+            "planned_measured_samples": 10,
+            "process_duration": {
+              "maximum_ms": null,
+              "mean_ms": null,
+              "median_ms": null,
+              "minimum_ms": null,
+              "n": 0,
+              "p90_nearest_rank_ms": null,
+              "sample_standard_deviation_ms": null
+            },
+            "scope_call_duration": {
+              "maximum_ms": null,
+              "mean_ms": null,
+              "median_ms": null,
+              "minimum_ms": null,
+              "n": 0,
+              "p90_nearest_rank_ms": null,
+              "sample_standard_deviation_ms": null
+            },
+            "source_condition": "EXISTING_NEGATIVE_PROBE"
+          }
+        ],
+        "measured_failed_samples": 30,
+        "measured_not_run_samples": 0,
+        "measured_planned_samples": 60,
+        "measured_successful_samples": 30,
+        "warmup_samples": 6
+      },
+      "calibration_archive_sha256": "d4851c292497728b98af5a75aa8f01883541eb5672274896cf6065cd0c612d27",
+      "probe_readback": {
+        "original_negative_rows_failed": 33,
+        "post_run_scope_pass": 33,
+        "raw_outputs_preserved": 33,
+        "readback_sha256": "26f81d389a0af61ccaa15e34b803dbe380320e5b0a2ae6bab278fd0a964be2a0"
+      },
+      "study_id": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V1",
+      "transition_summary": {
+        "completed": 0,
+        "failed": 4,
+        "method_decision": "NOT_OBSERVED",
+        "method_results": 0,
+        "planned": 4
+      },
+      "workflow_run_id": 40499692594
+    },
+    "v1_v2_samples_pooled": false,
+    "v2": {
+      "calibration": {
+        "cells": [
+          {
+            "cpu_system": {
+              "maximum_seconds": 0.085993,
+              "mean_seconds": 0.074115,
+              "minimum_seconds": 0.061592,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.008522
+            },
+            "cpu_user": {
+              "maximum_seconds": 0.198303,
+              "mean_seconds": 0.188506,
+              "minimum_seconds": 0.175569,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.008809
+            },
+            "evaluator_id": "AC_DATA_OWNERSHIP",
+            "failed_samples": 0,
+            "finding_code_counts": {},
+            "inspection_status_counts": {
+              "COMPLETE": 10
+            },
+            "measured_samples": 10,
+            "not_run_samples": 0,
+            "outcome_counts": {
+              "COMPLIANT_NO_FINDING_REPORTED": 10
+            },
+            "planned_measured_samples": 10,
+            "process_duration": {
+              "maximum_ms": 176.674,
+              "mean_ms": 172.726,
+              "median_ms": 172.6,
+              "minimum_ms": 168.746,
+              "n": 10,
+              "p90_nearest_rank_ms": 175.501,
+              "sample_standard_deviation_ms": 2.779
+            },
+            "scope_call_duration": {
+              "maximum_ms": 266.864,
+              "mean_ms": 259.446,
+              "median_ms": 258.5,
+              "minimum_ms": 253.969,
+              "n": 10,
+              "p90_nearest_rank_ms": 263.074,
+              "sample_standard_deviation_ms": 4.304
+            },
+            "source_condition": "A0_5_CLEAN"
+          },
+          {
+            "cpu_system": {
+              "maximum_seconds": 0.126254,
+              "mean_seconds": 0.115495,
+              "minimum_seconds": 0.097879,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.008278
+            },
+            "cpu_user": {
+              "maximum_seconds": 0.240605,
+              "mean_seconds": 0.219912,
+              "minimum_seconds": 0.208293,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.010103
+            },
+            "evaluator_id": "AC_MODULE_GRAPH",
+            "failed_samples": 0,
+            "finding_code_counts": {},
+            "inspection_status_counts": {
+              "COMPLETE": 10
+            },
+            "measured_samples": 10,
+            "not_run_samples": 0,
+            "outcome_counts": {
+              "COMPLIANT_NO_FINDING_REPORTED": 10
+            },
+            "planned_measured_samples": 10,
+            "process_duration": {
+              "maximum_ms": 174.04,
+              "mean_ms": 171.464,
+              "median_ms": 171.139,
+              "minimum_ms": 169.503,
+              "n": 10,
+              "p90_nearest_rank_ms": 173.478,
+              "sample_standard_deviation_ms": 1.469
+            },
+            "scope_call_duration": {
+              "maximum_ms": 333.786,
+              "mean_ms": 329.806,
+              "median_ms": 329.024,
+              "minimum_ms": 326.537,
+              "n": 10,
+              "p90_nearest_rank_ms": 332.697,
+              "sample_standard_deviation_ms": 2.731
+            },
+            "source_condition": "A0_5_CLEAN"
+          },
+          {
+            "cpu_system": {
+              "maximum_seconds": 0.087535,
+              "mean_seconds": 0.076752,
+              "minimum_seconds": 0.067876,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.005431
+            },
+            "cpu_user": {
+              "maximum_seconds": 0.182044,
+              "mean_seconds": 0.174401,
+              "minimum_seconds": 0.166577,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.004989
+            },
+            "evaluator_id": "AC_PUBLIC_API",
+            "failed_samples": 0,
+            "finding_code_counts": {},
+            "inspection_status_counts": {
+              "COMPLETE": 10
+            },
+            "measured_samples": 10,
+            "not_run_samples": 0,
+            "outcome_counts": {
+              "COMPLIANT_NO_FINDING_REPORTED": 10
+            },
+            "planned_measured_samples": 10,
+            "process_duration": {
+              "maximum_ms": 168.492,
+              "mean_ms": 166.039,
+              "median_ms": 166.754,
+              "minimum_ms": 162.748,
+              "n": 10,
+              "p90_nearest_rank_ms": 167.924,
+              "sample_standard_deviation_ms": 1.879
+            },
+            "scope_call_duration": {
+              "maximum_ms": 251.328,
+              "mean_ms": 248.089,
+              "median_ms": 248.608,
+              "minimum_ms": 244.197,
+              "n": 10,
+              "p90_nearest_rank_ms": 250.683,
+              "sample_standard_deviation_ms": 2.553
+            },
+            "source_condition": "A0_5_CLEAN"
+          },
+          {
+            "cpu_system": {
+              "maximum_seconds": 0.089777,
+              "mean_seconds": 0.074901,
+              "minimum_seconds": 0.063736,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.006868
+            },
+            "cpu_user": {
+              "maximum_seconds": 0.200358,
+              "mean_seconds": 0.189536,
+              "minimum_seconds": 0.171076,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.00762
+            },
+            "evaluator_id": "AC_DATA_OWNERSHIP",
+            "failed_samples": 0,
+            "finding_code_counts": {
+              "FOREIGN_TABLE_ACCESS": 10
+            },
+            "inspection_status_counts": {
+              "COMPLETE": 10
+            },
+            "measured_samples": 10,
+            "not_run_samples": 0,
+            "outcome_counts": {
+              "NON_COMPLIANT_FINDING_REPORTED": 10
+            },
+            "planned_measured_samples": 10,
+            "process_duration": {
+              "maximum_ms": 177.215,
+              "mean_ms": 173.907,
+              "median_ms": 173.634,
+              "minimum_ms": 170.837,
+              "n": 10,
+              "p90_nearest_rank_ms": 176.212,
+              "sample_standard_deviation_ms": 1.923
+            },
+            "scope_call_duration": {
+              "maximum_ms": 263.668,
+              "mean_ms": 261.317,
+              "median_ms": 261.181,
+              "minimum_ms": 257.597,
+              "n": 10,
+              "p90_nearest_rank_ms": 263.468,
+              "sample_standard_deviation_ms": 2.029
+            },
+            "source_condition": "EXISTING_NEGATIVE_PROBE"
+          },
+          {
+            "cpu_system": {
+              "maximum_seconds": 0.124747,
+              "mean_seconds": 0.113762,
+              "minimum_seconds": 0.104927,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.005348
+            },
+            "cpu_user": {
+              "maximum_seconds": 0.232597,
+              "mean_seconds": 0.225197,
+              "minimum_seconds": 0.217105,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.00555
+            },
+            "evaluator_id": "AC_MODULE_GRAPH",
+            "failed_samples": 0,
+            "finding_code_counts": {},
+            "inspection_status_counts": {
+              "COMPLETE": 10
+            },
+            "measured_samples": 10,
+            "not_run_samples": 0,
+            "outcome_counts": {
+              "COMPLIANT_NO_FINDING_REPORTED": 10
+            },
+            "planned_measured_samples": 10,
+            "process_duration": {
+              "maximum_ms": 175.052,
+              "mean_ms": 171.5,
+              "median_ms": 171.583,
+              "minimum_ms": 166.998,
+              "n": 10,
+              "p90_nearest_rank_ms": 173.914,
+              "sample_standard_deviation_ms": 2.585
+            },
+            "scope_call_duration": {
+              "maximum_ms": 339.391,
+              "mean_ms": 333.381,
+              "median_ms": 333.441,
+              "minimum_ms": 328.268,
+              "n": 10,
+              "p90_nearest_rank_ms": 336.619,
+              "sample_standard_deviation_ms": 3.735
+            },
+            "source_condition": "EXISTING_NEGATIVE_PROBE"
+          },
+          {
+            "cpu_system": {
+              "maximum_seconds": 0.078139,
+              "mean_seconds": 0.070641,
+              "minimum_seconds": 0.063831,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.004597
+            },
+            "cpu_user": {
+              "maximum_seconds": 0.186135,
+              "mean_seconds": 0.18059,
+              "minimum_seconds": 0.173448,
+              "n": 10,
+              "sample_standard_deviation_seconds": 0.00397
+            },
+            "evaluator_id": "AC_PUBLIC_API",
+            "failed_samples": 0,
+            "finding_code_counts": {},
+            "inspection_status_counts": {
+              "COMPLETE": 10
+            },
+            "measured_samples": 10,
+            "not_run_samples": 0,
+            "outcome_counts": {
+              "COMPLIANT_NO_FINDING_REPORTED": 10
+            },
+            "planned_measured_samples": 10,
+            "process_duration": {
+              "maximum_ms": 167.262,
+              "mean_ms": 164.716,
+              "median_ms": 164.279,
+              "minimum_ms": 162.914,
+              "n": 10,
+              "p90_nearest_rank_ms": 165.974,
+              "sample_standard_deviation_ms": 1.352
+            },
+            "scope_call_duration": {
+              "maximum_ms": 251.355,
+              "mean_ms": 248.146,
+              "median_ms": 248.194,
+              "minimum_ms": 245.817,
+              "n": 10,
+              "p90_nearest_rank_ms": 250.142,
+              "sample_standard_deviation_ms": 1.94
+            },
+            "source_condition": "EXISTING_NEGATIVE_PROBE"
+          }
+        ],
+        "measured_failed_samples": 0,
+        "measured_not_run_samples": 0,
+        "measured_planned_samples": 60,
+        "measured_successful_samples": 60,
+        "warmup_samples": 6
+      },
+      "calibration_archive_sha256": "211cd9bef19c0ad377cc3a01f183b7e062596da9f1a548fe1d71159e502dd837",
+      "method_decisions": {
+        "HOLD": 4
+      },
+      "premeasurement_failures": [
+        {
+          "archive_readback_status": "PASS",
+          "archive_sha256": "dbd0b4724aae79db3c9d0b0d472470b31f00287edbae3b11068795b1bc3df65f",
+          "calibration_calls_started": 0,
+          "calibration_status": "NOT_STARTED",
+          "candidate": "NOT_OBSERVED",
+          "classification": "PRE_MEASUREMENT_TECHNICAL_PREFLIGHT_FAILURE",
+          "error_code": "OWNER_AUTHORIZED_V2_BASELINE_IDENTITY_MISMATCH",
+          "failure_stage": "OWNER_AUTHORIZED_V2_TECHNICAL_PREFLIGHT",
+          "fresh_measurement_runner_preflight_status": "PASS",
+          "frozen_revision": "c8eebe96edf3166111c408cc4287b6b78ff0fe89",
+          "interpretation": "Pre-measurement code-level baseline-validator mismatch; this is not a B0/Method Ψ execution, transition failure, or Method Ψ outcome.",
+          "measurement_job_id": 122422460838,
+          "method_decision": "NOT_OBSERVED",
+          "method_psi_status": "NOT_OBSERVED",
+          "operation_plan": "NOT_OBSERVED",
+          "preflight_sha256": "67145fe1aec8040a71ca7bdc957de5a1a572a5f3fbb2ad07594337559d622e8f",
+          "raw_github_artifact": "PREMEASUREMENT_PREFLIGHT_ARTIFACT_40569757224.zip",
+          "raw_github_artifact_id": 12764238204,
+          "raw_github_artifact_sha256": "dbd0b4724aae79db3c9d0b0d472470b31f00287edbae3b11068795b1bc3df65f",
+          "sandbox_preflight_status": "PASS",
+          "schema_version": "MONO_CI_PSI_V2_PREMEASUREMENT_FAILURE_V1",
+          "study_id": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V2",
+          "technical_preflight_status": "FAIL",
+          "transition_attempts_started": 0,
+          "transition_status": "NOT_STARTED",
+          "workflow_attempt": 1,
+          "workflow_run_id": 40569757224,
+          "workflow_run_url": "https://github.com/Pan14ek/evofit-bench/actions/runs/40569757224"
+        }
+      ],
+      "study_id": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V2",
+      "transition_summary": {
+        "architecture_level_units": 1,
+        "complete_archives": 4,
+        "completed_runs": 4,
+        "failed_runs": 0,
+        "not_run_runs": 0,
+        "partial_archives": 0,
+        "partial_raw_only": 0,
+        "planned_runs": 4,
+        "technical_repetitions": 3,
+        "wall_duration_ms": 99447.533
+      },
+      "workflow_run_id": "40579333932"
+    }
+  },
+  "data_processing": {
+    "analysis_code_sha256": "18bf57666877b887917e4d3ba542818b4a374e85018e2365cf1d14bbd7f411f8",
+    "analysis_module": "experiments.execution.tooling.mono_ci_psi_owner_authorized_v2_analysis",
+    "descriptive_statistics_module": "experiments.execution.tooling.mono_ci_psi_owner_authorized_analysis",
+    "frozen_pre_run_analysis_code_sha256": "cdb8c1eeb880935311a109586a32dd0583e32db288373fe563c6b9378b72a331",
+    "p90": "nearest_rank",
+    "post_run_analysis_correction": true,
+    "v1_v2_samples_pooled": false
+  },
+  "gates": {
+    "G1": "INCOMPLETE",
+    "G4": "NOT_AUTHORIZED",
+    "P_ALGORITHM_STATUS": "NOT_READY",
+    "coverage": "UNKNOWN",
+    "reference": "NOT_READY",
+    "scoring": "NOT_EXECUTED",
+    "study_readiness": "NO_GO_WITH_EXPLICIT_BLOCKERS"
+  },
+  "postexecution_readback_failures": [
+    {
+      "_record_sha256": "81bc3ccd67c372554d51d36e9d28bf3222bd73837e9ed64067e00208f3c3c8c2",
+      "calibration": {
+        "archive_sha256": "4d552a8111e591e9f7148c096117675453e9512e8d0016e582e1af1c2de833b1",
+        "failed_calls": 0,
+        "measured_calls": 66,
+        "planned_calls": 66
+      },
+      "classification": "POSTEXECUTION_READBACK_FAILURE_PRESERVED_PRIOR_ATTEMPT",
+      "freeze_commit": "490350858d64d4d80e4c52dc096ee7972c1b1729",
+      "previous_freeze_sha256": "058879119aa6c1a4b2463694c9dc26daf640a17b77369efaec7a9292a0aec9f3",
+      "release": {
+        "asset_name": "mono-ci-psi-a05-owner-authorized-v2-40574090499-1.zip",
+        "github_asset_digest_match": true,
+        "outer_archive_sha256": "11f4ec5aa1a399c2b4314c9785e256d9c894b61923c5748796d77ac1f0cf3e64",
+        "sidecar_status": "ABSOLUTE_RUNNER_TEMP_PATH_NOT_PORTABLE",
+        "url": "https://github.com/Pan14ek/evofit-bench/releases/tag/mono-ci-psi-a05-owner-authorized-v2-40574090499-1"
+      },
+      "schema_version": "MONO_CI_PSI_V2_POSTEXECUTION_READBACK_FAILURE_V1",
+      "study_execution_sha256": "3c7fec4f589c7f4906ac9c7d044c65ed81a809d59347f5fb694a6c982d80fc32",
+      "study_id": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V2",
+      "transition_attempts": [
+        {
+          "b0_evaluator_count": 4,
+          "b0_execution_status": "ALL_OUTPUTS_PARSED",
+          "candidate_configuration_sha256": "c91f52aba5301fc517639e089a0c7c39c82bea4d644d06091463d81b9287e81b",
+          "candidate_outcome_parity": true,
+          "candidate_state": "MATERIALIZED_UNAPPLIED",
+          "candidate_validation_cost_ms": 644.012,
+          "candidate_validation_status": "valid",
+          "development_run_sha256": "a55811d6b4a5d97effa3abf531bdc8613a18ab6b79c73c748031c2b55b76c363",
+          "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_WARMUP_00",
+          "full_transition_duration_ms": 24516.572,
+          "governance_reason_codes": [
+            "APPLICABILITY_UNKNOWN",
+            "COST_MODEL_UNRESOLVED",
+            "COST_VERDICT_UNRESOLVED",
+            "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED",
+            "INVARIANT_VERDICTS_NOT_ALL_POSITIVE",
+            "MANDATORY_APPLICABILITY_UNKNOWN",
+            "MANDATORY_CLASSIFICATION_UNRESOLVED",
+            "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION",
+            "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING"
+          ],
+          "method_decision": "HOLD",
+          "method_execution_duration_ms": 1918.254,
+          "method_exit_code": 0,
+          "method_process_status": "DEVELOPMENT_METHOD_EXECUTED",
+          "method_result_sha256": "d84fd0d47740eb924eecac106eaa9e0c6d6c86a69ef6e2a590a24ffa521e6f87",
+          "operation_hold_reasons": [
+            "COST_MODEL_UNRESOLVED",
+            "MANDATORY_APPLICABILITY_UNKNOWN",
+            "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION"
+          ],
+          "operation_plan": [],
+          "partial_archive_sha256": "3d5c58492ad600e0d13b815b249688307ec14f94c0b3c8dcd08a72fbb109ccf9",
+          "role": "WARMUP",
+          "wrapper_error": "KeyError: 'evaluator_observations'",
+          "wrapper_run_status": "FAILED"
+        },
+        {
+          "b0_evaluator_count": 4,
+          "b0_execution_status": "ALL_OUTPUTS_PARSED",
+          "candidate_configuration_sha256": "c91f52aba5301fc517639e089a0c7c39c82bea4d644d06091463d81b9287e81b",
+          "candidate_outcome_parity": true,
+          "candidate_state": "MATERIALIZED_UNAPPLIED",
+          "candidate_validation_cost_ms": 648.598,
+          "candidate_validation_status": "valid",
+          "development_run_sha256": "508e96c5d96981664880790b3a2c1d83cae7084885aff23a61329d23b754f75d",
+          "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_MEASURED_01",
+          "full_transition_duration_ms": 24417.062,
+          "governance_reason_codes": [
+            "APPLICABILITY_UNKNOWN",
+            "COST_MODEL_UNRESOLVED",
+            "COST_VERDICT_UNRESOLVED",
+            "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED",
+            "INVARIANT_VERDICTS_NOT_ALL_POSITIVE",
+            "MANDATORY_APPLICABILITY_UNKNOWN",
+            "MANDATORY_CLASSIFICATION_UNRESOLVED",
+            "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION",
+            "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING"
+          ],
+          "method_decision": "HOLD",
+          "method_execution_duration_ms": 1865.236,
+          "method_exit_code": 0,
+          "method_process_status": "DEVELOPMENT_METHOD_EXECUTED",
+          "method_result_sha256": "325e98037b6c2f4f0cb110fbabee2c1cbe0e05f4fa7d56db79eed211891ff103",
+          "operation_hold_reasons": [
+            "COST_MODEL_UNRESOLVED",
+            "MANDATORY_APPLICABILITY_UNKNOWN",
+            "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION"
+          ],
+          "operation_plan": [],
+          "partial_archive_sha256": "42e26b1058bf08c864dc77a0c53d888f9870cb72fbe9a78b2aeee68a9d070e5a",
+          "role": "MEASURED",
+          "wrapper_error": "KeyError: 'evaluator_observations'",
+          "wrapper_run_status": "FAILED"
+        },
+        {
+          "b0_evaluator_count": 4,
+          "b0_execution_status": "ALL_OUTPUTS_PARSED",
+          "candidate_configuration_sha256": "c91f52aba5301fc517639e089a0c7c39c82bea4d644d06091463d81b9287e81b",
+          "candidate_outcome_parity": true,
+          "candidate_state": "MATERIALIZED_UNAPPLIED",
+          "candidate_validation_cost_ms": 667.586,
+          "candidate_validation_status": "valid",
+          "development_run_sha256": "ff53cb45148db59276f375cbe4d492ae4b064f46add063effac66b0fb38a8a9a",
+          "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_MEASURED_02",
+          "full_transition_duration_ms": 24205.394,
+          "governance_reason_codes": [
+            "APPLICABILITY_UNKNOWN",
+            "COST_MODEL_UNRESOLVED",
+            "COST_VERDICT_UNRESOLVED",
+            "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED",
+            "INVARIANT_VERDICTS_NOT_ALL_POSITIVE",
+            "MANDATORY_APPLICABILITY_UNKNOWN",
+            "MANDATORY_CLASSIFICATION_UNRESOLVED",
+            "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION",
+            "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING"
+          ],
+          "method_decision": "HOLD",
+          "method_execution_duration_ms": 1918.904,
+          "method_exit_code": 0,
+          "method_process_status": "DEVELOPMENT_METHOD_EXECUTED",
+          "method_result_sha256": "097f70faf2da09eb8adbdfcee0231bbdb46be3496d63ffaa3b1185ec24c6b726",
+          "operation_hold_reasons": [
+            "COST_MODEL_UNRESOLVED",
+            "MANDATORY_APPLICABILITY_UNKNOWN",
+            "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION"
+          ],
+          "operation_plan": [],
+          "partial_archive_sha256": "4668554153df711e63e28f56e0c61e789f8fc1fe432e1d52dfe91033ea27acfd",
+          "role": "MEASURED",
+          "wrapper_error": "KeyError: 'evaluator_observations'",
+          "wrapper_run_status": "FAILED"
+        },
+        {
+          "b0_evaluator_count": 4,
+          "b0_execution_status": "ALL_OUTPUTS_PARSED",
+          "candidate_configuration_sha256": "c91f52aba5301fc517639e089a0c7c39c82bea4d644d06091463d81b9287e81b",
+          "candidate_outcome_parity": true,
+          "candidate_state": "MATERIALIZED_UNAPPLIED",
+          "candidate_validation_cost_ms": 634.99,
+          "candidate_validation_status": "valid",
+          "development_run_sha256": "90bf5ca3e83cf9c2a906d925c9efc1b818927a1c28ad70969403a7da6a880d0b",
+          "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_MEASURED_03",
+          "full_transition_duration_ms": 24323.323,
+          "governance_reason_codes": [
+            "APPLICABILITY_UNKNOWN",
+            "COST_MODEL_UNRESOLVED",
+            "COST_VERDICT_UNRESOLVED",
+            "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED",
+            "INVARIANT_VERDICTS_NOT_ALL_POSITIVE",
+            "MANDATORY_APPLICABILITY_UNKNOWN",
+            "MANDATORY_CLASSIFICATION_UNRESOLVED",
+            "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION",
+            "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING"
+          ],
+          "method_decision": "HOLD",
+          "method_execution_duration_ms": 1884.212,
+          "method_exit_code": 0,
+          "method_process_status": "DEVELOPMENT_METHOD_EXECUTED",
+          "method_result_sha256": "7be7a939a993f64672cb5b35730d5527788d5b896c73d1295f7a04e3ed2d051a",
+          "operation_hold_reasons": [
+            "COST_MODEL_UNRESOLVED",
+            "MANDATORY_APPLICABILITY_UNKNOWN",
+            "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION"
+          ],
+          "operation_plan": [],
+          "partial_archive_sha256": "f66dcbee1da4c1bccb01be051e0c5b43545481220b372d93b0f38098ed872de4",
+          "role": "MEASURED",
+          "wrapper_error": "KeyError: 'evaluator_observations'",
+          "wrapper_run_status": "FAILED"
+        }
+      ],
+      "workflow_run_id": 40574090499
+    }
+  ],
+  "premeasurement_failures": [
+    {
+      "archive_readback_status": "PASS",
+      "archive_sha256": "dbd0b4724aae79db3c9d0b0d472470b31f00287edbae3b11068795b1bc3df65f",
+      "calibration_calls_started": 0,
+      "calibration_status": "NOT_STARTED",
+      "candidate": "NOT_OBSERVED",
+      "classification": "PRE_MEASUREMENT_TECHNICAL_PREFLIGHT_FAILURE",
+      "error_code": "OWNER_AUTHORIZED_V2_BASELINE_IDENTITY_MISMATCH",
+      "failure_stage": "OWNER_AUTHORIZED_V2_TECHNICAL_PREFLIGHT",
+      "fresh_measurement_runner_preflight_status": "PASS",
+      "frozen_revision": "c8eebe96edf3166111c408cc4287b6b78ff0fe89",
+      "interpretation": "Pre-measurement code-level baseline-validator mismatch; this is not a B0/Method Ψ execution, transition failure, or Method Ψ outcome.",
+      "measurement_job_id": 122422460838,
+      "method_decision": "NOT_OBSERVED",
+      "method_psi_status": "NOT_OBSERVED",
+      "operation_plan": "NOT_OBSERVED",
+      "preflight_sha256": "67145fe1aec8040a71ca7bdc957de5a1a572a5f3fbb2ad07594337559d622e8f",
+      "raw_github_artifact": "PREMEASUREMENT_PREFLIGHT_ARTIFACT_40569757224.zip",
+      "raw_github_artifact_id": 12764238204,
+      "raw_github_artifact_sha256": "dbd0b4724aae79db3c9d0b0d472470b31f00287edbae3b11068795b1bc3df65f",
+      "sandbox_preflight_status": "PASS",
+      "schema_version": "MONO_CI_PSI_V2_PREMEASUREMENT_FAILURE_V1",
+      "study_id": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V2",
+      "technical_preflight_status": "FAIL",
+      "transition_attempts_started": 0,
+      "transition_status": "NOT_STARTED",
+      "workflow_attempt": 1,
+      "workflow_run_id": 40569757224,
+      "workflow_run_url": "https://github.com/Pan14ek/evofit-bench/actions/runs/40569757224"
+    }
+  ],
+  "schema_version": "MONO_CI_PSI_OWNER_AUTHORIZED_ANALYSIS_V3",
+  "statistical_interpretation": {
+    "architecture_level_units": 1,
+    "coverage_percentage": "NOT_COMPUTED",
+    "significance_tests": "NOT_PERFORMED",
+    "technical_transition_repetitions": 3
+  },
+  "study_id": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V2",
+  "technical_failures": [
+    {
+      "archive_readback_status": "PASS_IN_PRIOR_RELEASE",
+      "b0_execution_status": "ALL_OUTPUTS_PARSED",
+      "calibration_calls_started": 66,
+      "candidate_state": "MATERIALIZED_UNAPPLIED",
+      "candidate_validation_cost_ms": 644.012,
+      "candidate_validation_status": "valid",
+      "error_or_hold_reasons": "KeyError: 'evaluator_observations'",
+      "evidence_classification": "PARTIAL_EXECUTION_EVIDENCE",
+      "evidence_digest": "3d5c58492ad600e0d13b815b249688307ec14f94c0b3c8dcd08a72fbb109ccf9",
+      "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_WARMUP_00",
+      "failure_stage": "POSTEXECUTION_READBACK",
+      "method_decision": "HOLD",
+      "method_execution_duration_ms": 1918.254,
+      "method_process_status": "DEVELOPMENT_METHOD_EXECUTED",
+      "method_result_sha256": "d84fd0d47740eb924eecac106eaa9e0c6d6c86a69ef6e2a590a24ffa521e6f87",
+      "run_role": "WARMUP",
+      "run_status": "FAILED",
+      "transition_attempts_started": 1,
+      "workflow_run_id": 40574090499
+    },
+    {
+      "archive_readback_status": "PASS_IN_PRIOR_RELEASE",
+      "b0_execution_status": "ALL_OUTPUTS_PARSED",
+      "calibration_calls_started": 66,
+      "candidate_state": "MATERIALIZED_UNAPPLIED",
+      "candidate_validation_cost_ms": 648.598,
+      "candidate_validation_status": "valid",
+      "error_or_hold_reasons": "KeyError: 'evaluator_observations'",
+      "evidence_classification": "PARTIAL_EXECUTION_EVIDENCE",
+      "evidence_digest": "42e26b1058bf08c864dc77a0c53d888f9870cb72fbe9a78b2aeee68a9d070e5a",
+      "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_MEASURED_01",
+      "failure_stage": "POSTEXECUTION_READBACK",
+      "method_decision": "HOLD",
+      "method_execution_duration_ms": 1865.236,
+      "method_process_status": "DEVELOPMENT_METHOD_EXECUTED",
+      "method_result_sha256": "325e98037b6c2f4f0cb110fbabee2c1cbe0e05f4fa7d56db79eed211891ff103",
+      "run_role": "MEASURED",
+      "run_status": "FAILED",
+      "transition_attempts_started": 1,
+      "workflow_run_id": 40574090499
+    },
+    {
+      "archive_readback_status": "PASS_IN_PRIOR_RELEASE",
+      "b0_execution_status": "ALL_OUTPUTS_PARSED",
+      "calibration_calls_started": 66,
+      "candidate_state": "MATERIALIZED_UNAPPLIED",
+      "candidate_validation_cost_ms": 667.586,
+      "candidate_validation_status": "valid",
+      "error_or_hold_reasons": "KeyError: 'evaluator_observations'",
+      "evidence_classification": "PARTIAL_EXECUTION_EVIDENCE",
+      "evidence_digest": "4668554153df711e63e28f56e0c61e789f8fc1fe432e1d52dfe91033ea27acfd",
+      "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_MEASURED_02",
+      "failure_stage": "POSTEXECUTION_READBACK",
+      "method_decision": "HOLD",
+      "method_execution_duration_ms": 1918.904,
+      "method_process_status": "DEVELOPMENT_METHOD_EXECUTED",
+      "method_result_sha256": "097f70faf2da09eb8adbdfcee0231bbdb46be3496d63ffaa3b1185ec24c6b726",
+      "run_role": "MEASURED",
+      "run_status": "FAILED",
+      "transition_attempts_started": 1,
+      "workflow_run_id": 40574090499
+    },
+    {
+      "archive_readback_status": "PASS_IN_PRIOR_RELEASE",
+      "b0_execution_status": "ALL_OUTPUTS_PARSED",
+      "calibration_calls_started": 66,
+      "candidate_state": "MATERIALIZED_UNAPPLIED",
+      "candidate_validation_cost_ms": 634.99,
+      "candidate_validation_status": "valid",
+      "error_or_hold_reasons": "KeyError: 'evaluator_observations'",
+      "evidence_classification": "PARTIAL_EXECUTION_EVIDENCE",
+      "evidence_digest": "f66dcbee1da4c1bccb01be051e0c5b43545481220b372d93b0f38098ed872de4",
+      "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_MEASURED_03",
+      "failure_stage": "POSTEXECUTION_READBACK",
+      "method_decision": "HOLD",
+      "method_execution_duration_ms": 1884.212,
+      "method_process_status": "DEVELOPMENT_METHOD_EXECUTED",
+      "method_result_sha256": "7be7a939a993f64672cb5b35730d5527788d5b896c73d1295f7a04e3ed2d051a",
+      "run_role": "MEASURED",
+      "run_status": "FAILED",
+      "transition_attempts_started": 1,
+      "workflow_run_id": 40574090499
+    },
+    {
+      "archive_readback_status": "PASS",
+      "b0_execution_status": "NOT_EXECUTED",
+      "calibration_calls_started": 0,
+      "error_or_hold_reasons": "OWNER_AUTHORIZED_V2_BASELINE_IDENTITY_MISMATCH",
+      "evidence_classification": "PRE_MEASUREMENT_TECHNICAL_PREFLIGHT_FAILURE",
+      "evidence_digest": "dbd0b4724aae79db3c9d0b0d472470b31f00287edbae3b11068795b1bc3df65f",
+      "execution_id": "workflow-40569757224-premeasurement",
+      "failure_stage": "OWNER_AUTHORIZED_V2_TECHNICAL_PREFLIGHT",
+      "method_decision": "NOT_OBSERVED",
+      "method_process_status": "NOT_OBSERVED",
+      "run_role": "PRE_MEASUREMENT",
+      "run_status": "FAILED_BEFORE_MEASUREMENTS",
+      "transition_attempts_started": 0,
+      "workflow_run_id": 40569757224
+    }
+  ],
+  "transition_failures": [],
+  "transition_runs": [
+    {
+      "b0_evaluator_outcomes": [
+        {
+          "architecture_state": "A0_4_REPORT_QUERY_PORT",
+          "compliance": "COMPLIANT",
+          "duration_ms": 222.384,
+          "evaluator_id": "AC_PUBLIC_API",
+          "execution_status": "COMPLETED",
+          "exit_code": 0,
+          "inspection_status": "COMPLETE",
+          "output_sha256": "78c2727fd02beec92adc6e53bc2e5c1fc1b466c4a538f65e862da4795488ba77",
+          "process_observation_status": "OUTPUT_PARSED",
+          "source_commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "78c2727fd02beec92adc6e53bc2e5c1fc1b466c4a538f65e862da4795488ba77"
+        },
+        {
+          "architecture_state": "A0_4_REPORT_QUERY_PORT",
+          "compliance": "COMPLIANT",
+          "duration_ms": 158.398,
+          "evaluator_id": "AC_MODULE_GRAPH",
+          "execution_status": "COMPLETED",
+          "exit_code": 0,
+          "inspection_status": "COMPLETE",
+          "output_sha256": "0ce2c9bb587b8992c0654d81f9010fbc163acf2d0febb57fc72b1dc701493201",
+          "process_observation_status": "OUTPUT_PARSED",
+          "source_commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "0ce2c9bb587b8992c0654d81f9010fbc163acf2d0febb57fc72b1dc701493201"
+        },
+        {
+          "architecture_state": "A0_5_MODULE_DATA_OWNERSHIP",
+          "compliance": "COMPLIANT",
+          "duration_ms": 250.246,
+          "evaluator_id": "AC_PUBLIC_API",
+          "execution_status": "COMPLETED",
+          "exit_code": 0,
+          "inspection_status": "COMPLETE",
+          "output_sha256": "33db23a090dfb7b6db788d4a1e0df031f8e25523de077bd6c44a006662526ec1",
+          "process_observation_status": "OUTPUT_PARSED",
+          "source_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "33db23a090dfb7b6db788d4a1e0df031f8e25523de077bd6c44a006662526ec1"
+        },
+        {
+          "architecture_state": "A0_5_MODULE_DATA_OWNERSHIP",
+          "compliance": "COMPLIANT",
+          "duration_ms": 254.805,
+          "evaluator_id": "AC_MODULE_GRAPH",
+          "execution_status": "COMPLETED",
+          "exit_code": 0,
+          "inspection_status": "COMPLETE",
+          "output_sha256": "383dcd0210a91e4c06c0fdd251ae7f5b24b4bab498f0eddd0abc236ce2475958",
+          "process_observation_status": "OUTPUT_PARSED",
+          "source_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "383dcd0210a91e4c06c0fdd251ae7f5b24b4bab498f0eddd0abc236ce2475958"
+        }
+      ],
+      "b0_execution_status": "ALL_OUTPUTS_PARSED",
+      "candidate_configuration_sha256": "c91f52aba5301fc517639e089a0c7c39c82bea4d644d06091463d81b9287e81b",
+      "candidate_evaluators": [
+        {
+          "candidate_negative": {
+            "compliance": "COMPLIANT",
+            "evaluator_id": "AC_MODULE_GRAPH",
+            "execution_status": "COMPLETED",
+            "finding_codes": []
+          },
+          "candidate_positive": {
+            "compliance": "COMPLIANT",
+            "evaluator_id": "AC_MODULE_GRAPH",
+            "execution_status": "COMPLETED",
+            "finding_codes": []
+          },
+          "negative_outcome_parity": true,
+          "positive_outcome_parity": true,
+          "representation_id": "REP_RECON_B0_A04_MODULE_GRAPH_CI_V1"
+        },
+        {
+          "candidate_negative": {
+            "compliance": "COMPLIANT",
+            "evaluator_id": "AC_PUBLIC_API",
+            "execution_status": "COMPLETED",
+            "finding_codes": []
+          },
+          "candidate_positive": {
+            "compliance": "COMPLIANT",
+            "evaluator_id": "AC_PUBLIC_API",
+            "execution_status": "COMPLETED",
+            "finding_codes": []
+          },
+          "negative_outcome_parity": true,
+          "positive_outcome_parity": true,
+          "representation_id": "REP_RECON_B0_A04_PUBLIC_API_CI_V1"
+        }
+      ],
+      "candidate_state": "MATERIALIZED_UNAPPLIED",
+      "candidate_validation_cost_ms": 652.908,
+      "candidate_verification_status": "PASS",
+      "error_or_hold_reasons": [
+        "COST_MODEL_UNRESOLVED",
+        "MANDATORY_APPLICABILITY_UNKNOWN",
+        "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION"
+      ],
+      "estimated_additional_ci_execution_ms_per_build": 0,
+      "evidence_classification": "COMPLETE_TRANSITION_ARCHIVE",
+      "evidence_digest": "2566fc6542829d05d42ae84132a2eb3c855347eeef91178e05f3312ea3bcc5f8",
+      "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_WARMUP_00",
+      "full_transition_duration_ms": 12670.667,
+      "governance_reason_codes": [
+        "APPLICABILITY_UNKNOWN",
+        "COST_MODEL_UNRESOLVED",
+        "COST_VERDICT_UNRESOLVED",
+        "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED",
+        "INVARIANT_VERDICTS_NOT_ALL_POSITIVE",
+        "MANDATORY_APPLICABILITY_UNKNOWN",
+        "MANDATORY_CLASSIFICATION_UNRESOLVED",
+        "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION",
+        "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING"
+      ],
+      "hold_reasons": [
+        "COST_MODEL_UNRESOLVED",
+        "MANDATORY_APPLICABILITY_UNKNOWN",
+        "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION"
+      ],
+      "measured": false,
+      "method_decision": "HOLD",
+      "method_execution_duration_ms": 1950.591,
+      "method_process_exit_code": 0,
+      "method_process_status": "COMPLETED",
+      "method_result_sha256": "ed7a0cf2e97fa30debd7661af3f064d6a776dec1b8a450df0e9a8e22087d4dc4",
+      "operation_plan": [],
+      "phase_status": {
+        "b0_evaluator_matrix": "COMPLETED",
+        "baseline_identity": "COMPLETED",
+        "candidate_validation": "COMPLETED",
+        "complete_transition_verification": "PASS",
+        "method_execution": "COMPLETED",
+        "method_input_bundle": "COMPLETED",
+        "source_identity": "COMPLETED"
+      },
+      "run_role": "WARMUP",
+      "run_status": "COMPLETED",
+      "source_identity_status": "PASS",
+      "source_revision_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+      "transition_record_sha256": "0caad20ffc9aceef762f00274713e080ba88bfb690d19951714c54a35de90f58"
+    },
+    {
+      "b0_evaluator_outcomes": [
+        {
+          "architecture_state": "A0_4_REPORT_QUERY_PORT",
+          "compliance": "COMPLIANT",
+          "duration_ms": 219.879,
+          "evaluator_id": "AC_PUBLIC_API",
+          "execution_status": "COMPLETED",
+          "exit_code": 0,
+          "inspection_status": "COMPLETE",
+          "output_sha256": "2e6c5aa0c48542136f33a9b66c7b923ee8f6b84afc57b75045a222b84d636660",
+          "process_observation_status": "OUTPUT_PARSED",
+          "source_commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "2e6c5aa0c48542136f33a9b66c7b923ee8f6b84afc57b75045a222b84d636660"
+        },
+        {
+          "architecture_state": "A0_4_REPORT_QUERY_PORT",
+          "compliance": "COMPLIANT",
+          "duration_ms": 228.413,
+          "evaluator_id": "AC_MODULE_GRAPH",
+          "execution_status": "COMPLETED",
+          "exit_code": 0,
+          "inspection_status": "COMPLETE",
+          "output_sha256": "6d686839d4254c5b67d2a439d008acaf1f53fa90b2893516244835e40adb1c23",
+          "process_observation_status": "OUTPUT_PARSED",
+          "source_commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "6d686839d4254c5b67d2a439d008acaf1f53fa90b2893516244835e40adb1c23"
+        },
+        {
+          "architecture_state": "A0_5_MODULE_DATA_OWNERSHIP",
+          "compliance": "COMPLIANT",
+          "duration_ms": 253.993,
+          "evaluator_id": "AC_PUBLIC_API",
+          "execution_status": "COMPLETED",
+          "exit_code": 0,
+          "inspection_status": "COMPLETE",
+          "output_sha256": "9f9b25747315cb58455a0303f2a7b5f05154d2ec4424f1ce3481759dadbabed0",
+          "process_observation_status": "OUTPUT_PARSED",
+          "source_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "9f9b25747315cb58455a0303f2a7b5f05154d2ec4424f1ce3481759dadbabed0"
+        },
+        {
+          "architecture_state": "A0_5_MODULE_DATA_OWNERSHIP",
+          "compliance": "COMPLIANT",
+          "duration_ms": 252.579,
+          "evaluator_id": "AC_MODULE_GRAPH",
+          "execution_status": "COMPLETED",
+          "exit_code": 0,
+          "inspection_status": "COMPLETE",
+          "output_sha256": "c6bac7492259372fe39dc69e88d67e256aaaa07ae236c98d863111e34bb10d12",
+          "process_observation_status": "OUTPUT_PARSED",
+          "source_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "c6bac7492259372fe39dc69e88d67e256aaaa07ae236c98d863111e34bb10d12"
+        }
+      ],
+      "b0_execution_status": "ALL_OUTPUTS_PARSED",
+      "candidate_configuration_sha256": "c91f52aba5301fc517639e089a0c7c39c82bea4d644d06091463d81b9287e81b",
+      "candidate_evaluators": [
+        {
+          "candidate_negative": {
+            "compliance": "COMPLIANT",
+            "evaluator_id": "AC_MODULE_GRAPH",
+            "execution_status": "COMPLETED",
+            "finding_codes": []
+          },
+          "candidate_positive": {
+            "compliance": "COMPLIANT",
+            "evaluator_id": "AC_MODULE_GRAPH",
+            "execution_status": "COMPLETED",
+            "finding_codes": []
+          },
+          "negative_outcome_parity": true,
+          "positive_outcome_parity": true,
+          "representation_id": "REP_RECON_B0_A04_MODULE_GRAPH_CI_V1"
+        },
+        {
+          "candidate_negative": {
+            "compliance": "COMPLIANT",
+            "evaluator_id": "AC_PUBLIC_API",
+            "execution_status": "COMPLETED",
+            "finding_codes": []
+          },
+          "candidate_positive": {
+            "compliance": "COMPLIANT",
+            "evaluator_id": "AC_PUBLIC_API",
+            "execution_status": "COMPLETED",
+            "finding_codes": []
+          },
+          "negative_outcome_parity": true,
+          "positive_outcome_parity": true,
+          "representation_id": "REP_RECON_B0_A04_PUBLIC_API_CI_V1"
+        }
+      ],
+      "candidate_state": "MATERIALIZED_UNAPPLIED",
+      "candidate_validation_cost_ms": 656.558,
+      "candidate_verification_status": "PASS",
+      "error_or_hold_reasons": [
+        "COST_MODEL_UNRESOLVED",
+        "MANDATORY_APPLICABILITY_UNKNOWN",
+        "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION"
+      ],
+      "estimated_additional_ci_execution_ms_per_build": 0,
+      "evidence_classification": "COMPLETE_TRANSITION_ARCHIVE",
+      "evidence_digest": "76024640bf1a5bfc8771f91a7c9c113c7486f44e28f6290b56dafb32867ae890",
+      "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_MEASURED_01",
+      "full_transition_duration_ms": 13015.458,
+      "governance_reason_codes": [
+        "APPLICABILITY_UNKNOWN",
+        "COST_MODEL_UNRESOLVED",
+        "COST_VERDICT_UNRESOLVED",
+        "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED",
+        "INVARIANT_VERDICTS_NOT_ALL_POSITIVE",
+        "MANDATORY_APPLICABILITY_UNKNOWN",
+        "MANDATORY_CLASSIFICATION_UNRESOLVED",
+        "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION",
+        "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING"
+      ],
+      "hold_reasons": [
+        "COST_MODEL_UNRESOLVED",
+        "MANDATORY_APPLICABILITY_UNKNOWN",
+        "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION"
+      ],
+      "measured": true,
+      "method_decision": "HOLD",
+      "method_execution_duration_ms": 1891.537,
+      "method_process_exit_code": 0,
+      "method_process_status": "COMPLETED",
+      "method_result_sha256": "c79ed5fe69b8d49936224ee78ecb21df3bacaae8dd957722e6b6f832cc87e9df",
+      "operation_plan": [],
+      "phase_status": {
+        "b0_evaluator_matrix": "COMPLETED",
+        "baseline_identity": "COMPLETED",
+        "candidate_validation": "COMPLETED",
+        "complete_transition_verification": "PASS",
+        "method_execution": "COMPLETED",
+        "method_input_bundle": "COMPLETED",
+        "source_identity": "COMPLETED"
+      },
+      "run_role": "MEASURED",
+      "run_status": "COMPLETED",
+      "source_identity_status": "PASS",
+      "source_revision_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+      "transition_record_sha256": "936def01819a8d775f26c84557fe11766f375f0e72aa7280cfffdbc01eec6d33"
+    },
+    {
+      "b0_evaluator_outcomes": [
+        {
+          "architecture_state": "A0_4_REPORT_QUERY_PORT",
+          "compliance": "COMPLIANT",
+          "duration_ms": 225.216,
+          "evaluator_id": "AC_PUBLIC_API",
+          "execution_status": "COMPLETED",
+          "exit_code": 0,
+          "inspection_status": "COMPLETE",
+          "output_sha256": "1145f0bb2a653504309f4e2552053734fdb4edbd44f10948d040840221f63cd1",
+          "process_observation_status": "OUTPUT_PARSED",
+          "source_commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "1145f0bb2a653504309f4e2552053734fdb4edbd44f10948d040840221f63cd1"
+        },
+        {
+          "architecture_state": "A0_4_REPORT_QUERY_PORT",
+          "compliance": "COMPLIANT",
+          "duration_ms": 225.078,
+          "evaluator_id": "AC_MODULE_GRAPH",
+          "execution_status": "COMPLETED",
+          "exit_code": 0,
+          "inspection_status": "COMPLETE",
+          "output_sha256": "fbac7fe21412a80528f7d56631b0b8e2bd460d64468f7fcc1d5243895836866d",
+          "process_observation_status": "OUTPUT_PARSED",
+          "source_commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "fbac7fe21412a80528f7d56631b0b8e2bd460d64468f7fcc1d5243895836866d"
+        },
+        {
+          "architecture_state": "A0_5_MODULE_DATA_OWNERSHIP",
+          "compliance": "COMPLIANT",
+          "duration_ms": 251.753,
+          "evaluator_id": "AC_PUBLIC_API",
+          "execution_status": "COMPLETED",
+          "exit_code": 0,
+          "inspection_status": "COMPLETE",
+          "output_sha256": "7b2dc0665a8ed14aad8cb291c4b7acef1edaaabb7396856fc0d86d7fd1a07108",
+          "process_observation_status": "OUTPUT_PARSED",
+          "source_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "7b2dc0665a8ed14aad8cb291c4b7acef1edaaabb7396856fc0d86d7fd1a07108"
+        },
+        {
+          "architecture_state": "A0_5_MODULE_DATA_OWNERSHIP",
+          "compliance": "COMPLIANT",
+          "duration_ms": 253.881,
+          "evaluator_id": "AC_MODULE_GRAPH",
+          "execution_status": "COMPLETED",
+          "exit_code": 0,
+          "inspection_status": "COMPLETE",
+          "output_sha256": "ad861ad525e3a3c7861863789b501a5edc966bbbc53cd00f4e1b30a4d7db3d0c",
+          "process_observation_status": "OUTPUT_PARSED",
+          "source_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "ad861ad525e3a3c7861863789b501a5edc966bbbc53cd00f4e1b30a4d7db3d0c"
+        }
+      ],
+      "b0_execution_status": "ALL_OUTPUTS_PARSED",
+      "candidate_configuration_sha256": "c91f52aba5301fc517639e089a0c7c39c82bea4d644d06091463d81b9287e81b",
+      "candidate_evaluators": [
+        {
+          "candidate_negative": {
+            "compliance": "COMPLIANT",
+            "evaluator_id": "AC_MODULE_GRAPH",
+            "execution_status": "COMPLETED",
+            "finding_codes": []
+          },
+          "candidate_positive": {
+            "compliance": "COMPLIANT",
+            "evaluator_id": "AC_MODULE_GRAPH",
+            "execution_status": "COMPLETED",
+            "finding_codes": []
+          },
+          "negative_outcome_parity": true,
+          "positive_outcome_parity": true,
+          "representation_id": "REP_RECON_B0_A04_MODULE_GRAPH_CI_V1"
+        },
+        {
+          "candidate_negative": {
+            "compliance": "COMPLIANT",
+            "evaluator_id": "AC_PUBLIC_API",
+            "execution_status": "COMPLETED",
+            "finding_codes": []
+          },
+          "candidate_positive": {
+            "compliance": "COMPLIANT",
+            "evaluator_id": "AC_PUBLIC_API",
+            "execution_status": "COMPLETED",
+            "finding_codes": []
+          },
+          "negative_outcome_parity": true,
+          "positive_outcome_parity": true,
+          "representation_id": "REP_RECON_B0_A04_PUBLIC_API_CI_V1"
+        }
+      ],
+      "candidate_state": "MATERIALIZED_UNAPPLIED",
+      "candidate_validation_cost_ms": 669.194,
+      "candidate_verification_status": "PASS",
+      "error_or_hold_reasons": [
+        "COST_MODEL_UNRESOLVED",
+        "MANDATORY_APPLICABILITY_UNKNOWN",
+        "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION"
+      ],
+      "estimated_additional_ci_execution_ms_per_build": 0,
+      "evidence_classification": "COMPLETE_TRANSITION_ARCHIVE",
+      "evidence_digest": "0b21562a3424726b38047b19145cba6620b3109028ab37991d0ded534e8087d5",
+      "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_MEASURED_02",
+      "full_transition_duration_ms": 13053.834,
+      "governance_reason_codes": [
+        "APPLICABILITY_UNKNOWN",
+        "COST_MODEL_UNRESOLVED",
+        "COST_VERDICT_UNRESOLVED",
+        "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED",
+        "INVARIANT_VERDICTS_NOT_ALL_POSITIVE",
+        "MANDATORY_APPLICABILITY_UNKNOWN",
+        "MANDATORY_CLASSIFICATION_UNRESOLVED",
+        "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION",
+        "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING"
+      ],
+      "hold_reasons": [
+        "COST_MODEL_UNRESOLVED",
+        "MANDATORY_APPLICABILITY_UNKNOWN",
+        "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION"
+      ],
+      "measured": true,
+      "method_decision": "HOLD",
+      "method_execution_duration_ms": 1929.674,
+      "method_process_exit_code": 0,
+      "method_process_status": "COMPLETED",
+      "method_result_sha256": "6e84d3e8864639ef5c010b75f3d8c48d5767c5178554fcd0df585aa07fbe3a18",
+      "operation_plan": [],
+      "phase_status": {
+        "b0_evaluator_matrix": "COMPLETED",
+        "baseline_identity": "COMPLETED",
+        "candidate_validation": "COMPLETED",
+        "complete_transition_verification": "PASS",
+        "method_execution": "COMPLETED",
+        "method_input_bundle": "COMPLETED",
+        "source_identity": "COMPLETED"
+      },
+      "run_role": "MEASURED",
+      "run_status": "COMPLETED",
+      "source_identity_status": "PASS",
+      "source_revision_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+      "transition_record_sha256": "723854c05a04bd768f063d3bc5df12458ec6782921aba0cd30ff75f6b1ee866f"
+    },
+    {
+      "b0_evaluator_outcomes": [
+        {
+          "architecture_state": "A0_4_REPORT_QUERY_PORT",
+          "compliance": "COMPLIANT",
+          "duration_ms": 216.154,
+          "evaluator_id": "AC_PUBLIC_API",
+          "execution_status": "COMPLETED",
+          "exit_code": 0,
+          "inspection_status": "COMPLETE",
+          "output_sha256": "518ba3e18b182cede015284d6b8bf8133204d39abe9eb7684cac71f83faee039",
+          "process_observation_status": "OUTPUT_PARSED",
+          "source_commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "518ba3e18b182cede015284d6b8bf8133204d39abe9eb7684cac71f83faee039"
+        },
+        {
+          "architecture_state": "A0_4_REPORT_QUERY_PORT",
+          "compliance": "COMPLIANT",
+          "duration_ms": 220.425,
+          "evaluator_id": "AC_MODULE_GRAPH",
+          "execution_status": "COMPLETED",
+          "exit_code": 0,
+          "inspection_status": "COMPLETE",
+          "output_sha256": "ef297053eb8103c077729bfa5a6cb94b0a3252e6b85705903d838ac7aa3c7d9e",
+          "process_observation_status": "OUTPUT_PARSED",
+          "source_commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "ef297053eb8103c077729bfa5a6cb94b0a3252e6b85705903d838ac7aa3c7d9e"
+        },
+        {
+          "architecture_state": "A0_5_MODULE_DATA_OWNERSHIP",
+          "compliance": "COMPLIANT",
+          "duration_ms": 248.108,
+          "evaluator_id": "AC_PUBLIC_API",
+          "execution_status": "COMPLETED",
+          "exit_code": 0,
+          "inspection_status": "COMPLETE",
+          "output_sha256": "9f6ad2dbf3316a60e37b6f15f18540c1ff6843792cdcb196a8f62d3b350da6c7",
+          "process_observation_status": "OUTPUT_PARSED",
+          "source_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "9f6ad2dbf3316a60e37b6f15f18540c1ff6843792cdcb196a8f62d3b350da6c7"
+        },
+        {
+          "architecture_state": "A0_5_MODULE_DATA_OWNERSHIP",
+          "compliance": "COMPLIANT",
+          "duration_ms": 257.938,
+          "evaluator_id": "AC_MODULE_GRAPH",
+          "execution_status": "COMPLETED",
+          "exit_code": 0,
+          "inspection_status": "COMPLETE",
+          "output_sha256": "cb96298136626a91942a97c7e0c0dc43e17119d34cde8968247aaedfa4984ef7",
+          "process_observation_status": "OUTPUT_PARSED",
+          "source_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stdout_sha256": "cb96298136626a91942a97c7e0c0dc43e17119d34cde8968247aaedfa4984ef7"
+        }
+      ],
+      "b0_execution_status": "ALL_OUTPUTS_PARSED",
+      "candidate_configuration_sha256": "c91f52aba5301fc517639e089a0c7c39c82bea4d644d06091463d81b9287e81b",
+      "candidate_evaluators": [
+        {
+          "candidate_negative": {
+            "compliance": "COMPLIANT",
+            "evaluator_id": "AC_MODULE_GRAPH",
+            "execution_status": "COMPLETED",
+            "finding_codes": []
+          },
+          "candidate_positive": {
+            "compliance": "COMPLIANT",
+            "evaluator_id": "AC_MODULE_GRAPH",
+            "execution_status": "COMPLETED",
+            "finding_codes": []
+          },
+          "negative_outcome_parity": true,
+          "positive_outcome_parity": true,
+          "representation_id": "REP_RECON_B0_A04_MODULE_GRAPH_CI_V1"
+        },
+        {
+          "candidate_negative": {
+            "compliance": "COMPLIANT",
+            "evaluator_id": "AC_PUBLIC_API",
+            "execution_status": "COMPLETED",
+            "finding_codes": []
+          },
+          "candidate_positive": {
+            "compliance": "COMPLIANT",
+            "evaluator_id": "AC_PUBLIC_API",
+            "execution_status": "COMPLETED",
+            "finding_codes": []
+          },
+          "negative_outcome_parity": true,
+          "positive_outcome_parity": true,
+          "representation_id": "REP_RECON_B0_A04_PUBLIC_API_CI_V1"
+        }
+      ],
+      "candidate_state": "MATERIALIZED_UNAPPLIED",
+      "candidate_validation_cost_ms": 658.133,
+      "candidate_verification_status": "PASS",
+      "error_or_hold_reasons": [
+        "COST_MODEL_UNRESOLVED",
+        "MANDATORY_APPLICABILITY_UNKNOWN",
+        "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION"
+      ],
+      "estimated_additional_ci_execution_ms_per_build": 0,
+      "evidence_classification": "COMPLETE_TRANSITION_ARCHIVE",
+      "evidence_digest": "7a6e6391a441f44c4a63abb2d245120f59fe58a2f950edb5de0731497046da6c",
+      "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_MEASURED_03",
+      "full_transition_duration_ms": 12977.58,
+      "governance_reason_codes": [
+        "APPLICABILITY_UNKNOWN",
+        "COST_MODEL_UNRESOLVED",
+        "COST_VERDICT_UNRESOLVED",
+        "INPUT_AUTHORITY_OR_COMPLETENESS_UNRESOLVED",
+        "INVARIANT_VERDICTS_NOT_ALL_POSITIVE",
+        "MANDATORY_APPLICABILITY_UNKNOWN",
+        "MANDATORY_CLASSIFICATION_UNRESOLVED",
+        "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION",
+        "VERIFIED_GOVERNANCE_PIPELINE_PROOF_MISSING"
+      ],
+      "hold_reasons": [
+        "COST_MODEL_UNRESOLVED",
+        "MANDATORY_APPLICABILITY_UNKNOWN",
+        "UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION"
+      ],
+      "measured": true,
+      "method_decision": "HOLD",
+      "method_execution_duration_ms": 1909.712,
+      "method_process_exit_code": 0,
+      "method_process_status": "COMPLETED",
+      "method_result_sha256": "255df9ae78341cd9b117604af38651cf012918f5f3c3f137b521db94f4714e07",
+      "operation_plan": [],
+      "phase_status": {
+        "b0_evaluator_matrix": "COMPLETED",
+        "baseline_identity": "COMPLETED",
+        "candidate_validation": "COMPLETED",
+        "complete_transition_verification": "PASS",
+        "method_execution": "COMPLETED",
+        "method_input_bundle": "COMPLETED",
+        "source_identity": "COMPLETED"
+      },
+      "run_role": "MEASURED",
+      "run_status": "COMPLETED",
+      "source_identity_status": "PASS",
+      "source_revision_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+      "transition_record_sha256": "19578e9f5316610e2ddec0a7156a2caee0402baf3b01d35f5ded1fadf1783ffa"
+    }
+  ],
+  "transition_summary": {
+    "architecture_level_units": 1,
+    "complete_archives": 4,
+    "completed_runs": 4,
+    "failed_runs": 0,
+    "not_run_runs": 0,
+    "partial_archives": 0,
+    "partial_raw_only": 0,
+    "planned_runs": 4,
+    "technical_repetitions": 3,
+    "wall_duration_ms": 99447.533
+  },
+  "transition_timing": {
+    "candidate_cost_interpretation": "Only actual candidate validation runs; otherwise unavailable.",
+    "candidate_validation_cost": {
+      "maximum_ms": 669.194,
+      "mean_ms": 661.295,
+      "median_ms": 658.133,
+      "minimum_ms": 656.558,
+      "n": 3,
+      "p90_nearest_rank_ms": 669.194,
+      "sample_standard_deviation_ms": 6.886
+    },
+    "measured_calibration_evaluator_process_times": {
+      "maximum_ms": 177.215,
+      "mean_ms": 170.059,
+      "median_ms": 170.586,
+      "minimum_ms": 162.748,
+      "n": 60,
+      "p90_nearest_rank_ms": 175.052,
+      "sample_standard_deviation_ms": 3.986
+    },
+    "measured_full_transition": {
+      "maximum_ms": 13053.834,
+      "mean_ms": 13015.624,
+      "median_ms": 13015.458,
+      "minimum_ms": 12977.58,
+      "n": 3,
+      "p90_nearest_rank_ms": 13053.834,
+      "sample_standard_deviation_ms": 38.127
+    },
+    "measured_method_execution": {
+      "maximum_ms": 1929.674,
+      "mean_ms": 1910.308,
+      "median_ms": 1909.712,
+      "minimum_ms": 1891.537,
+      "n": 3,
+      "p90_nearest_rank_ms": 1929.674,
+      "sample_standard_deviation_ms": 19.075
+    },
+    "measured_transition_b0_evaluator_process_times": {
+      "maximum_ms": 257.938,
+      "mean_ms": 237.785,
+      "median_ms": 238.261,
+      "minimum_ms": 216.154,
+      "n": 12,
+      "p90_nearest_rank_ms": 253.993,
+      "sample_standard_deviation_ms": 16.364
+    },
+    "method_cpu": "NOT_AVAILABLE_PER_METHOD_PROCESS",
+    "monetary_cost": "NOT_MEASURED"
+  },
+  "workflow_run_id": "40579333932"
+}
