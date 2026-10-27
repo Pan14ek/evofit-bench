@@ -40,6 +40,7 @@ permissions:
 jobs:
   development-archive:
     name: Development quality and raw evidence archive
+    if: github.ref != 'refs/heads/codex/mono-ci-a05-positive-add'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     services:
@@ -185,3 +186,7 @@ jobs:
           echo "- Archive SHA-256: \`$(sha256sum "$ARCHIVE_PATH" | cut -d ' ' -f 1)\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Source revision: \`$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Boundary: study readiness NO_GO; measurement NOT_EXECUTED; P_ALGORITHM_STATUS NOT_READY; G1 INCOMPLETE; G4 NOT_AUTHORIZED; reference gate NOT_READY; scoring NOT_EXECUTED." >> "$GITHUB_STEP_SUMMARY"
+
+  positive-add-study:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/codex/mono-ci-a05-positive-add'
+    uses: ./.github/workflows/mono-ci-psi-a05-positive-add.yml

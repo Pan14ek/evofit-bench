@@ -72,9 +72,7 @@
             "completeness_evidence",
             "applicability_ruleset",
             "policy_completeness_claims",
-            "policy_source_manifest",
-            "evaluator_artifact",
-            "study_profile"
+            "policy_source_manifest"
           ]
         },
         "size_bytes": {"type": "integer", "minimum": 0},

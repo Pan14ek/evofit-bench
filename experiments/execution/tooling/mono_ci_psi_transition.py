@@ -180,7 +180,11 @@ key_path = Path(sys.argv[3]).resolve(strict=True)
 result_path = Path(sys.argv[4]).resolve()
 ledger, ledger_summary = build_source_inventory_fact_ledger(bundle_path)
 trust_context = TestOnlyEvidenceTrustContext(key_path.read_bytes())
-if (bundle_path / "evidence/POSITIVE_ADD_PROFILE_V1.json").is_file():
+capabilities = json.loads((bundle_path / "fitness/evaluator-capabilities.json").read_text())
+positive_add_input = (
+    isinstance(capabilities, dict) and "positive_add_test_only_profile_v1" in capabilities
+)
+if positive_add_input:
     from experiments.execution.tooling.mono_ci_psi_a05_positive_add import (
         build_verified_bundle,
     )
@@ -585,7 +589,7 @@ def run_transition(
             "metrics": "NOT_MEASURED",
             "output_checksums": {
                 "PSI/raw/method-result.json": result_digest,
-                "PSI/method-input/method_input_v3.json": sha256_file(
+                f"PSI/method-input/{METHOD_INPUT_MANIFEST}": sha256_file(
                     bundle_root / METHOD_INPUT_MANIFEST
                 ),
                 STATE_MANIFESTS_PATH: sha256_file(root / STATE_MANIFESTS_PATH),

@@ -6,6 +6,7 @@ It does not alter planning, candidate materialization, or governance semantics.
 
 from __future__ import annotations
 
+import base64
 import json
 from dataclasses import dataclass
 from pathlib import Path
@@ -38,6 +39,7 @@ from experiments.execution.tooling.p_input_validation import (
 )
 from experiments.execution.tooling.p_operations import template_descriptor_sha256
 from experiments.execution.tooling.p_policy_source_v3 import (
+    METHOD_INPUT_SCHEMA,
     package_policy_source_v3,
     verify_method_bundle_v3,
 )
@@ -48,7 +50,6 @@ from experiments.pilots.pilot02_testonly_execution import (
     create_testonly_policy_source,
 )
 
-PROFILE_RELATIVE = "evidence/POSITIVE_ADD_PROFILE_V1.json"
 SCOPE_EVIDENCE_ID = "POSITIVE_ADD_SCOPE_DECLARATION"
 SCOPE_EVIDENCE_PATH = f"fitness/policy/evidence/{SCOPE_EVIDENCE_ID}.json"
 EVALUATOR_ID = "AC_DATA_OWNERSHIP"
@@ -202,8 +203,9 @@ def prepare_method_inputs(
     bundle_root: Path,
     profile_path: Path,
 ) -> dict[str, Any]:
-    """Add the pinned real evaluator template and its bytes to the V3 bundle."""
-    profile = json.loads(profile_path.read_bytes())
+    """Bind the TEST_ONLY profile and real artifact inside the V3 capability input."""
+    profile_bytes = profile_path.read_bytes()
+    profile = json.loads(profile_bytes)
     _validate_static_profile(profile)
     source_rows, source_manifest_bytes, source_digest = evaluator_source_artifacts(repository)
     config_bytes = (repository / CONFIGURATION_PATH).read_bytes()
@@ -219,13 +221,6 @@ def prepare_method_inputs(
             raise ContractValidationError("POSITIVE_ADD_EVALUATOR_SOURCE_DIGEST_MISMATCH")
         _write_identical_or_new(source_dir / row["path"], content)
     _write_identical_or_new(implementation_root / Path(CONFIGURATION_PATH).name, config_bytes)
-    input_artifact = bundle_root / TEMPLATE_ARTIFACT_PATH
-    input_artifact.parent.mkdir(parents=True, exist_ok=True)
-    input_artifact.write_bytes(source_manifest_bytes)
-    input_profile_path = bundle_root / PROFILE_RELATIVE
-    input_profile_path.parent.mkdir(parents=True, exist_ok=True)
-    input_profile_path.write_bytes(pretty_json_bytes(profile))
-
     representation = {
         "id": REPRESENTATION_ID,
         "active": True,
@@ -277,7 +272,8 @@ def prepare_method_inputs(
     capabilities["p_cost_model_v1"] = cost_model
     capabilities["positive_add_test_only_profile_v1"] = {
         "profile_id": PROFILE_ID,
-        "study_profile_sha256": sha256_file(input_profile_path),
+        "study_profile_base64": base64.b64encode(profile_bytes).decode("ascii"),
+        "study_profile_sha256": sha256_bytes(profile_bytes),
         "classification": "TEST_ONLY_AUTHOR_DECLARED_SCOPED_INPUT",
         "scope": "application",
         "selected_obligation_id": OBLIGATION_ID,
@@ -285,7 +281,9 @@ def prepare_method_inputs(
         "template_descriptor_sha256": template_descriptor_sha256(template),
         "template": template,
         "evaluator_artifact_path": TEMPLATE_ARTIFACT_PATH,
+        "evaluator_artifact_base64": base64.b64encode(source_manifest_bytes).decode("ascii"),
         "configuration_path": CONFIGURATION_PATH,
+        "configuration_bytes_base64": base64.b64encode(config_bytes).decode("ascii"),
         "configuration_sha256": config_digest,
         "source_manifest_sha256": source_digest,
         "cost_model": cost_model,
@@ -294,24 +292,23 @@ def prepare_method_inputs(
     manifest_path = bundle_root / "method_input_v3.json"
     method_manifest = json.loads(manifest_path.read_bytes())
     files = {row["path"]: row for row in method_manifest["files"]}
-    for relative, role in (
-        (TEMPLATE_ARTIFACT_PATH, "evaluator_artifact"),
-        (PROFILE_RELATIVE, "study_profile"),
-    ):
-        path = bundle_root / relative
-        files[relative] = {
-            "path": relative,
-            "role": role,
-            "size_bytes": path.stat().st_size,
-            "sha256": sha256_file(path),
+    capabilities_record = files.get("fitness/evaluator-capabilities.json")
+    if not isinstance(capabilities_record, dict):
+        raise ContractValidationError("POSITIVE_ADD_CAPABILITIES_INPUT_MISSING")
+    capabilities_record.update(
+        {
+            "size_bytes": capabilities_path.stat().st_size,
+            "sha256": sha256_file(capabilities_path),
         }
+    )
     method_manifest["files"] = sorted(files.values(), key=lambda row: row["path"])
     method_manifest["bundle_sha256"] = bundle_sha256(method_manifest["files"])
+    validate_payload(METHOD_INPUT_SCHEMA, method_manifest)
     manifest_path.write_bytes(pretty_json_bytes(method_manifest))
     _validate_profile_binding(bundle_root, method_manifest)
     return {
         "profile": profile,
-        "profile_sha256": sha256_bytes(pretty_json_bytes(profile)),
+        "profile_sha256": sha256_bytes(profile_bytes),
         "template": template,
         "template_descriptor_sha256": template_descriptor_sha256(template),
         "evaluator_source_manifest_sha256": source_digest,
@@ -328,7 +325,8 @@ def build_runtime_context(bundle_root: Path, key: bytes) -> PositiveAddRuntimeCo
     sources, source_report = load_verified_source_manifest(snapshot, manifest, bundle_root)
     if source_report.status.value != "VALID":
         raise ContractValidationError("POSITIVE_ADD_SOURCE_MANIFEST_UNVERIFIED")
-    profile = json.loads((bundle_root / PROFILE_RELATIVE).read_bytes())
+    profile_binding = _validate_profile_binding(bundle_root, manifest)
+    profile = json.loads(base64.b64decode(profile_binding["study_profile_base64"], validate=True))
     _validate_policy_claim_scope(snapshot, sources, profile)
     policy_context = PositiveAddTrustContext(key)
     policy_ledger = build_testonly_evidence_ledger(
@@ -401,7 +399,7 @@ def build_runtime_context(bundle_root: Path, key: bytes) -> PositiveAddRuntimeCo
 
 
 def build_verified_bundle(bundle_root: Path, key: bytes) -> tuple[Any, PositiveAddRuntimeContext]:
-    """Verify a profile bundle and register the TEST_ONLY adaptation verifier."""
+    """Verify V3 inputs and bind TEST_ONLY artifact bytes carried in capabilities."""
     context = build_runtime_context(bundle_root, key)
     bundle = verify_v3_p_bundle(
         bundle_root,
@@ -410,6 +408,24 @@ def build_verified_bundle(bundle_root: Path, key: bytes) -> tuple[Any, PositiveA
         fact_verifier=context.fact_verifier,
         completeness_verifier=context.completeness_verifier,
     )
+    profile = _validate_profile_binding(bundle_root, dict(bundle.manifest))
+    if TEMPLATE_ARTIFACT_PATH in bundle.artifact_bytes:
+        raise ContractValidationError("POSITIVE_ADD_EVALUATOR_ARTIFACT_PATH_CONFLICT")
+    try:
+        evaluator_artifact = base64.b64decode(profile["evaluator_artifact_base64"], validate=True)
+    except (KeyError, ValueError, TypeError) as error:
+        raise ContractValidationError("POSITIVE_ADD_EVALUATOR_ARTIFACT_ENCODING_INVALID") from error
+    from experiments.execution.tooling.p_adaptation import (
+        _VERIFIED_V3_BUNDLE_DIGESTS,
+        _verified_bundle_content_sha256,
+    )
+
+    object.__setattr__(
+        bundle,
+        "artifact_bytes",
+        {**bundle.artifact_bytes, TEMPLATE_ARTIFACT_PATH: evaluator_artifact},
+    )
+    _VERIFIED_V3_BUNDLE_DIGESTS[bundle] = _verified_bundle_content_sha256(bundle)
     return bundle, context
 
 
@@ -766,10 +782,33 @@ def _change_inventory_source_ids(bundle: Any) -> set[str]:
 
 def _validate_profile_binding(bundle_root: Path, manifest: dict[str, Any]) -> dict[str, Any]:
     records = {row["path"]: row for row in manifest["files"]}
-    capabilities = json.loads((bundle_root / "fitness/evaluator-capabilities.json").read_bytes())
+    capabilities_path = bundle_root / "fitness/evaluator-capabilities.json"
+    capability_record = records.get("fitness/evaluator-capabilities.json")
+    if (
+        not isinstance(capability_record, dict)
+        or capability_record.get("role") != "evaluator_capabilities"
+        or capability_record.get("sha256") != sha256_file(capabilities_path)
+        or capability_record.get("size_bytes") != capabilities_path.stat().st_size
+    ):
+        raise ContractValidationError("POSITIVE_ADD_CAPABILITIES_INPUT_UNPINNED")
+    capabilities = json.loads(capabilities_path.read_bytes())
     profile = capabilities.get("positive_add_test_only_profile_v1")
     if not isinstance(profile, dict) or profile.get("profile_id") != PROFILE_ID:
         raise ContractValidationError("POSITIVE_ADD_TEST_ONLY_PROFILE_MISSING")
+    try:
+        study_profile_bytes = base64.b64decode(profile["study_profile_base64"], validate=True)
+        evaluator_artifact = base64.b64decode(profile["evaluator_artifact_base64"], validate=True)
+        configuration_artifact = base64.b64decode(
+            profile["configuration_bytes_base64"], validate=True
+        )
+        study_profile = json.loads(study_profile_bytes)
+    except (KeyError, ValueError, TypeError, json.JSONDecodeError) as error:
+        raise ContractValidationError("POSITIVE_ADD_TEST_ONLY_PROFILE_ENCODING_INVALID") from error
+    if not isinstance(study_profile, dict) or sha256_bytes(study_profile_bytes) != profile.get(
+        "study_profile_sha256"
+    ):
+        raise ContractValidationError("POSITIVE_ADD_PROFILE_ARTIFACT_BINDING_MISMATCH")
+    _validate_static_profile(study_profile)
     templates = capabilities.get("generic_candidate_templates")
     if not isinstance(templates, list) or len(templates) != 1:
         raise ContractValidationError("POSITIVE_ADD_TEMPLATE_INVENTORY_INVALID")
@@ -780,17 +819,41 @@ def _validate_profile_binding(bundle_root: Path, manifest: dict[str, Any]) -> di
         or template_descriptor_sha256(template) != profile.get("template_descriptor_sha256")
     ):
         raise ContractValidationError("POSITIVE_ADD_TEMPLATE_PROFILE_BINDING_MISMATCH")
+    representation = template.get("representation")
+    if not isinstance(representation, dict):
+        raise ContractValidationError("POSITIVE_ADD_TEMPLATE_REPRESENTATION_INVALID")
+    evidence_contract = representation.get("evidence_contract")
+    if (
+        representation.get("id") != REPRESENTATION_ID
+        or representation.get("active") is not True
+        or representation.get("criterion") != "architecture_compliance"
+        or representation.get("stage") != "ci_test"
+        or representation.get("evaluator") != EVALUATOR_ID
+        or representation.get("covers") != [OBLIGATION_ID]
+        or representation.get("applicability_scope")
+        != {
+            "scope_id": "architecture.data_ownership.persistence_ownership",
+            "architecture_scope": "app.modules",
+            "architecture_state": "A0_5_MODULE_DATA_OWNERSHIP",
+        }
+        or not isinstance(evidence_contract, dict)
+    ):
+        raise ContractValidationError("POSITIVE_ADD_TEMPLATE_SCOPE_INVALID")
     artifact_path = profile.get("evaluator_artifact_path")
-    artifact_record = records.get(str(artifact_path))
+    configuration_sha256 = profile.get("configuration_sha256")
+    artifact_reference = representation.get("evaluator_artifact")
     if (
         artifact_path != TEMPLATE_ARTIFACT_PATH
-        or not isinstance(artifact_record, dict)
-        or artifact_record.get("role") != "evaluator_artifact"
-        or artifact_record.get("sha256") != profile.get("source_manifest_sha256")
-        or sha256_file(bundle_root / str(artifact_path)) != profile.get("source_manifest_sha256")
-        or not (bundle_root / PROFILE_RELATIVE).is_file()
+        or sha256_bytes(evaluator_artifact) != profile.get("source_manifest_sha256")
+        or artifact_reference
+        != {"path": TEMPLATE_ARTIFACT_PATH, "sha256": profile.get("source_manifest_sha256")}
+        or profile.get("configuration_path") != CONFIGURATION_PATH
+        or sha256_bytes(configuration_artifact) != configuration_sha256
+        or evidence_contract.get("configuration_path") != CONFIGURATION_PATH
+        or evidence_contract.get("configuration_sha256") != configuration_sha256
+        or evidence_contract.get("evaluator_source_sha256") != profile.get("source_manifest_sha256")
     ):
-        raise ContractValidationError("POSITIVE_ADD_EVALUATOR_ARTIFACT_BINDING_MISMATCH")
+        raise ContractValidationError("POSITIVE_ADD_EVALUATOR_OR_CONFIGURATION_BINDING_MISMATCH")
     cost = profile.get("cost_model")
     if (
         not isinstance(cost, dict)
@@ -801,15 +864,6 @@ def _validate_profile_binding(bundle_root: Path, manifest: dict[str, Any]) -> di
         or profile.get("selected_obligation_id") != OBLIGATION_ID
     ):
         raise ContractValidationError("POSITIVE_ADD_COST_PROFILE_BINDING_INVALID")
-    if records.get(PROFILE_RELATIVE, {}).get("role") != "study_profile":
-        raise ContractValidationError("POSITIVE_ADD_PROFILE_ARTIFACT_UNPINNED")
-    profile_record = records[PROFILE_RELATIVE]
-    if (
-        profile_record.get("sha256") != sha256_file(bundle_root / PROFILE_RELATIVE)
-        or profile_record.get("size_bytes") != (bundle_root / PROFILE_RELATIVE).stat().st_size
-        or profile.get("study_profile_sha256") != profile_record.get("sha256")
-    ):
-        raise ContractValidationError("POSITIVE_ADD_PROFILE_ARTIFACT_BINDING_MISMATCH")
     return profile
 
 
