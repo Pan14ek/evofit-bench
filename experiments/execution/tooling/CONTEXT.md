@@ -99,6 +99,10 @@ tracked in `docs/SPEC_03_IMPLEMENTATION_TRACEABILITY.md`.
 
 This is a selected list (21 direct tracked files), not a complete source inventory.
 
+
+- mono_ci_psi_owner_authorized.py — preregistration freeze verifier, randomized repeated A1 evaluator calibration, existing A0.5 isolated DEVELOPMENT runner, calibration archive readback, and V4 per-run archive packing; owner-authorized exploratory lane only.
+- mono_ci_psi_owner_authorized_analysis.py — deterministic descriptive analysis from verified raw archives, CSV tables, SVG timing figure, and Ukrainian monograph handoff; no score, coverage percentage, or inferential test.
+
 ## Established conventions
 
 Use deterministic source hashes and method-input isolation; keep scorer oracle-side.

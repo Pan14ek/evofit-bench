@@ -61,6 +61,7 @@ Versioned schemas for Snapshots, applicability, method packages, evidence and re
 - `mono_ci_psi_a05_experiment_evidence_v1.schema.json` — binds the A0.5 ownership positive/negative probes and, when Method Ψ materializes a candidate, its exact serialized candidate, independent evaluator runs, baseline comparison, obligation coverage, and measured incremental control cost.
 - `mono_ci_psi_transition_run_v4.schema.json` and `mono_ci_psi_transition_archive_v4.schema.json` — additive outcome-neutral ΔA5 DEVELOPMENT contracts; V4 archive verification requires replay against the pinned source checkout, while V1/V2/V3 semantics remain unchanged.
 - `mono_ci_psi_a05_experiment_evidence_v2.schema.json` and `mono_ci_psi_a05_probe_manifest_v1.schema.json` — bind exact negative-probe patch and source bytes, local-only deterministic source identity, evaluator/process/raw-stream identities, and DETECTED/NOT_DETECTED/NOT_EVALUABLE diagnostics without fixing evaluator outcomes.
+- `mono_ci_psi_owner_authorized_protocol_v1.schema.json`, `mono_ci_psi_owner_authorized_pre_run_freeze_v1.schema.json`, `mono_ci_psi_owner_authorized_execution_v1.schema.json`, and `mono_ci_psi_owner_authorized_calibration_archive_v1.schema.json` — owner-authorized DEVELOPMENT protocol, preregistration freeze, raw execution index, and calibration member manifest. They preserve exploratory classification, UNKNOWN coverage, and unchanged official gates.
 
 This is a selected list, not a complete source inventory.
 

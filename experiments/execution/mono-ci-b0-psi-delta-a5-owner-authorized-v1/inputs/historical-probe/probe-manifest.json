@@ -1,0 +1,110 @@
+{
+  "changed_paths": [
+    "app/modules/tasks/repository.py"
+  ],
+  "changed_sources": [
+    {
+      "artifact_path": "source-files/app/modules/tasks/repository.py",
+      "modified_file_sha256": "0cc63a811f0fcb5a110dace6f0c1b928764b0f6f6dcbe2a605fb4eb19ae5e61c",
+      "original_file_sha256": "6dbb8bd5ba5113476e948aadb3ac1bf7ee66c33c5dbd81bd37aca972a795c695",
+      "path": "app/modules/tasks/repository.py"
+    }
+  ],
+  "evaluator_configurations": [
+    {
+      "artifact_path": "probes/ownership-negative/evaluator-configs/AC_DATA_OWNERSHIP.yaml",
+      "configuration_path": "architecture/acceptance/a1/data_ownership_v1.yaml",
+      "configuration_sha256": "4c8a1b4bfcdc20d49c49d47d4e9fc8192611994dd269a85d362ddc2f62320b6e",
+      "evaluator_id": "AC_DATA_OWNERSHIP"
+    },
+    {
+      "artifact_path": "probes/ownership-negative/evaluator-configs/AC_MODULE_GRAPH.yaml",
+      "configuration_path": "architecture/acceptance/a1/module_graph_v1.yaml",
+      "configuration_sha256": "1abae6871a477ff2a07685ad645a70defa2f1ac6745598ae4cdc35aab4e95bf6",
+      "evaluator_id": "AC_MODULE_GRAPH"
+    },
+    {
+      "artifact_path": "probes/ownership-negative/evaluator-configs/AC_PUBLIC_API.yaml",
+      "configuration_path": "architecture/acceptance/a1/public_api_v1.yaml",
+      "configuration_sha256": "8853c3a933b23f698c7ba7c5b6e511f292e8d9285dc0de4378741c53e466f7bb",
+      "evaluator_id": "AC_PUBLIC_API"
+    }
+  ],
+  "evaluator_evidence_bindings": [
+    {
+      "application_tree_sha": "5f0f8d9ebd4334556c583dabc300e5eb3db1900f",
+      "compliance": "NON_COMPLIANT",
+      "configuration_sha256": "4c8a1b4bfcdc20d49c49d47d4e9fc8192611994dd269a85d362ddc2f62320b6e",
+      "coverage_path": "PSI/evaluator-observations/a05-negative/AC_DATA_OWNERSHIP/inspection-coverage.json",
+      "coverage_sha256": "00ee0f9b893c3a2ae069aa8d5faa9683e355384f73fa254243d489129abad1b8",
+      "evaluator_id": "AC_DATA_OWNERSHIP",
+      "evaluator_source_sha256": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
+      "execution_status": "COMPLETED",
+      "output_path": "PSI/evaluator-observations/a05-negative/AC_DATA_OWNERSHIP/evaluator-output.json",
+      "output_sha256": "afa95a325cdc032635b7125bcf503cdc1104937d0423d04c90b0566a7dbb8fa9",
+      "process_exit_code": 1,
+      "source_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26",
+      "source_tree_sha": "bf7385c577eafd42a4670ad70cfec81e91aeb2f7",
+      "stderr_path": "PSI/evaluator-observations/a05-negative/AC_DATA_OWNERSHIP/stderr.bin",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "PSI/evaluator-observations/a05-negative/AC_DATA_OWNERSHIP/stdout.bin",
+      "stdout_sha256": "afa95a325cdc032635b7125bcf503cdc1104937d0423d04c90b0566a7dbb8fa9"
+    },
+    {
+      "application_tree_sha": "5f0f8d9ebd4334556c583dabc300e5eb3db1900f",
+      "compliance": "COMPLIANT",
+      "configuration_sha256": "1abae6871a477ff2a07685ad645a70defa2f1ac6745598ae4cdc35aab4e95bf6",
+      "coverage_path": "PSI/evaluator-observations/a05-negative/AC_MODULE_GRAPH/inspection-coverage.json",
+      "coverage_sha256": "102f0307de3347d121da5f5d6ff1f8bd12ac0364b5d191d6394a952c5703778b",
+      "evaluator_id": "AC_MODULE_GRAPH",
+      "evaluator_source_sha256": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
+      "execution_status": "COMPLETED",
+      "output_path": "PSI/evaluator-observations/a05-negative/AC_MODULE_GRAPH/evaluator-output.json",
+      "output_sha256": "f3029dada1c6755b9aa028d39e4d18b5949522733eb322c934c1172a7d6dd21f",
+      "process_exit_code": 0,
+      "source_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26",
+      "source_tree_sha": "bf7385c577eafd42a4670ad70cfec81e91aeb2f7",
+      "stderr_path": "PSI/evaluator-observations/a05-negative/AC_MODULE_GRAPH/stderr.bin",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "PSI/evaluator-observations/a05-negative/AC_MODULE_GRAPH/stdout.bin",
+      "stdout_sha256": "f3029dada1c6755b9aa028d39e4d18b5949522733eb322c934c1172a7d6dd21f"
+    },
+    {
+      "application_tree_sha": "5f0f8d9ebd4334556c583dabc300e5eb3db1900f",
+      "compliance": "COMPLIANT",
+      "configuration_sha256": "8853c3a933b23f698c7ba7c5b6e511f292e8d9285dc0de4378741c53e466f7bb",
+      "coverage_path": "PSI/evaluator-observations/a05-negative/AC_PUBLIC_API/inspection-coverage.json",
+      "coverage_sha256": "6df8acb0577ef1e4ac68c17fc96d686b92f7ee8fe437ce11a31ce0c475bf3ad9",
+      "evaluator_id": "AC_PUBLIC_API",
+      "evaluator_source_sha256": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
+      "execution_status": "COMPLETED",
+      "output_path": "PSI/evaluator-observations/a05-negative/AC_PUBLIC_API/evaluator-output.json",
+      "output_sha256": "00cf234344a8aabb5bcb76e06796d485f152b1c2c30677be90ce6e7868766f48",
+      "process_exit_code": 0,
+      "source_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26",
+      "source_tree_sha": "bf7385c577eafd42a4670ad70cfec81e91aeb2f7",
+      "stderr_path": "PSI/evaluator-observations/a05-negative/AC_PUBLIC_API/stderr.bin",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_path": "PSI/evaluator-observations/a05-negative/AC_PUBLIC_API/stdout.bin",
+      "stdout_sha256": "00cf234344a8aabb5bcb76e06796d485f152b1c2c30677be90ce6e7868766f48"
+    }
+  ],
+  "parent_application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+  "parent_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+  "parent_repository_tree_sha": "97c060cc26313a879f0940a178d42e422cc4d188",
+  "patch_path": "probes/ownership-negative/source.patch",
+  "patch_sha256": "ca614f99c800cd16feea7d18c6344a8f326570b3677801c4ac2d8499d9be65cd",
+  "probe_application_tree_sha": "5f0f8d9ebd4334556c583dabc300e5eb3db1900f",
+  "probe_commit_provenance": {
+    "author": "EvoFitBench A05 Probe",
+    "availability": "LOCAL_ONLY_RECREATED_FROM_PATCH",
+    "commit_date": "2026-10-26T00:00:00+0000",
+    "email": "a05-probe@example.invalid",
+    "message": "isolated A0.5 ownership violation probe"
+  },
+  "probe_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26",
+  "probe_repository_tree_sha": "bf7385c577eafd42a4670ad70cfec81e91aeb2f7",
+  "remote_commit_required": false,
+  "schema_version": "MONO_CI_PSI_A05_PROBE_MANIFEST_V1",
+  "source_provenance": "DETERMINISTIC_LOCAL_PROBE_COMMIT_RECONSTRUCTED_FROM_ARCHIVED_PATCH"
+}

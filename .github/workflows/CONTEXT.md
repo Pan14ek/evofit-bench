@@ -14,6 +14,11 @@ CI workflow YAML: uv, Python and disposable PostgreSQL.
 - `mono-ci-psi-transition-development.yml` — separate exact-pair Method P DEVELOPMENT execution, shared archive-module readback, 90-day Actions artifact, and verified private-prerelease fallback; official research gates remain unchanged.
 - `mono-ci-psi-a05-development.yml` — separate canonical A0.4→committed A0.5 Method Ψ DEVELOPMENT run with focused/historical regressions, archive readback, and artifact/private-prerelease retention.
 
+
+- mono-ci-psi-owner-authorized.yml — one-shot run triggered only when the frozen protocol is first added on its dedicated branch; executes preregistered DEVELOPMENT calibration and full A0.5 adapter repetitions, verifies readback, and publishes a 90-day Actions artifact plus a persistent prerelease archive. This repository is public, so both evidence URLs are public. The workflow preserves official NO_GO/NOT_READY/G1/G4/reference/scoring/coverage states and is separate from the G4 measured-study path.
+
+The owner-authorized ΔA5 workflow is triggered by creation of its dedicated preregistration branch and requires the commit to change only PRE_RUN_FREEZE.json after the implementation commit. It uses the existing isolated A0.5 DEVELOPMENT adapter, writes raw run archives and calibration data, derives tables from those archives, then verifies both Actions artifact inputs and release readback. A later results commit does not rerun the experiment. The durable release is explicitly a researcher-authorized DEVELOPMENT archive, not an approval or official result.
+
 ## Established conventions
 
 Keep actions aligned with Makefile and pyproject.toml.

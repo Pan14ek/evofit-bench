@@ -1,0 +1,157 @@
+name: Owner-authorized ΔA5 exploratory DEVELOPMENT study
+
+on:
+  push:
+    branches:
+      - codex/research-owner-authorized-delta-a5
+    paths:
+      - .github/workflows/mono-ci-psi-owner-authorized.yml
+      - Makefile
+      - pyproject.toml
+      - uv.lock
+      - experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v1/**
+      - experiments/execution/tooling/mono_ci_psi_owner_authorized.py
+      - experiments/execution/tooling/mono_ci_psi_owner_authorized_analysis.py
+      - experiments/execution/tooling/mono_ci_psi_a05.py
+      - experiments/execution/tooling/mono_ci_psi_transition.py
+      - experiments/execution/tooling/mono_ci_psi_evidence.py
+      - experiments/execution/tooling/mono_ci_psi_coverage.py
+      - experiments/execution/tooling/mono_ci_b0_psi_archive.py
+      - experiments/execution/schemas/mono_ci_psi_*.schema.json
+
+permissions:
+  contents: write
+
+jobs:
+  authorized-development-run:
+    if: github.event.created == true && contains(toJson(github.event.commits), 'PRE_RUN_FREEZE.json')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      UV_CACHE_DIR: ${{ runner.temp }}/uv-cache
+      UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/evofit-owner-authorized-a5-venv
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install frozen development dependencies
+        run: uv sync --frozen --extra dev
+      - name: Install network-isolation runner
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bubblewrap
+      - name: Run focused protocol and archive tests
+        run: make test-mono-ci-psi-owner-authorized
+      - name: Execute preregistered calibration and B0/Ψ DEVELOPMENT repetitions
+        run: |
+          set -euo pipefail
+          RUN_OUTPUT="$RUNNER_TEMP/evofit-owner-authorized-a5-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          echo "RUN_OUTPUT=$RUN_OUTPUT" >> "$GITHUB_ENV"
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_owner_authorized run \
+            --repository "$GITHUB_WORKSPACE" \
+            --output "$RUN_OUTPUT" \
+            --frozen-revision "$GITHUB_SHA" \
+            --uv-version "$(uv --version)"
+      - name: Derive monograph tables, figure, and Ukrainian handoff
+        run: |
+          set -euo pipefail
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_owner_authorized_analysis \
+            --bundle "$RUN_OUTPUT/artifact-bundle" \
+            --repository "$GITHUB_WORKSPACE" \
+            --output "$RUN_OUTPUT/analysis"
+          mkdir -p "$RUN_OUTPUT/artifact-bundle/analysis"
+          cp -R "$RUN_OUTPUT/analysis/." "$RUN_OUTPUT/artifact-bundle/analysis/"
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_owner_authorized \
+            verify-bundle \
+            --bundle "$RUN_OUTPUT/artifact-bundle" \
+            --repository "$GITHUB_WORKSPACE" \
+            > "$RUN_OUTPUT/artifact-bundle/VERIFICATION_REPORT.json"
+          jq -e '.verification_status == "PASS"' "$RUN_OUTPUT/artifact-bundle/VERIFICATION_REPORT.json"
+      - name: Assemble durable evidence release asset
+        id: release-bundle
+        run: |
+          set -euo pipefail
+          RELEASE_TAG="mono-ci-psi-a05-owner-authorized-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          OUTER_ARCHIVE="$RUNNER_TEMP/$RELEASE_TAG.zip"
+          (cd "$RUN_OUTPUT/artifact-bundle" && zip -0 -q -r "$OUTER_ARCHIVE" .)
+          sha256sum "$OUTER_ARCHIVE" > "$OUTER_ARCHIVE.sha256"
+          echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
+          echo "OUTER_ARCHIVE=$OUTER_ARCHIVE" >> "$GITHUB_ENV"
+      - name: Upload 90-day Actions evidence artifact
+        id: upload
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: mono-ci-psi-a05-owner-authorized-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/mono-ci-psi-a05-owner-authorized-${{ github.run_id }}-${{ github.run_attempt }}.zip
+            ${{ runner.temp }}/mono-ci-psi-a05-owner-authorized-${{ github.run_id }}-${{ github.run_attempt }}.zip.sha256
+          if-no-files-found: error
+          retention-days: 90
+          compression-level: 0
+      - name: Publish persistent prerelease evidence archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/release-notes.md" <<EOF_NOTES
+          Research-owner-authorized exploratory DEVELOPMENT evidence for ΔA5.
+
+          - Study: MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V1
+          - Classification: DEVELOPMENT_CALIBRATION and EXPLORATORY_DEVELOPMENT
+          - Official ΔA5 readiness: NO_GO_WITH_EXPLICIT_BLOCKERS
+          - P_ALGORITHM_STATUS: NOT_READY
+          - G1: INCOMPLETE
+          - G4: NOT_AUTHORIZED
+          - Independent reference: NOT_READY
+          - Archive SHA-256: $(cut -d ' ' -f 1 "$OUTER_ARCHIVE.sha256")
+          - Protocol freeze commit: $GITHUB_SHA
+          EOF_NOTES
+          gh release create "$RELEASE_TAG" "$OUTER_ARCHIVE" "$OUTER_ARCHIVE.sha256" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "ΔA5 owner-authorized DEVELOPMENT evidence $GITHUB_RUN_ID" \
+            --notes-file "$RUNNER_TEMP/release-notes.md" \
+            --prerelease
+      - name: Verify published release readback
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          READBACK="$RUNNER_TEMP/release-readback"
+          mkdir -p "$READBACK"
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir "$READBACK"
+          (cd "$READBACK" && sha256sum --check "$(basename "$OUTER_ARCHIVE").sha256")
+          unzip -t "$READBACK/$(basename "$OUTER_ARCHIVE")"
+          mkdir -p "$RUNNER_TEMP/release-extracted"
+          unzip -q "$READBACK/$(basename "$OUTER_ARCHIVE")" -d "$RUNNER_TEMP/release-extracted"
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_owner_authorized \
+            verify-bundle \
+            --bundle "$RUNNER_TEMP/release-extracted" \
+            --repository "$GITHUB_WORKSPACE"
+      - name: Record result, digests, and evidence URLs
+        env:
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          ARTIFACT_OUTCOME: ${{ steps.upload.outcome }}
+        run: |
+          set -euo pipefail
+          RELEASE_URL="https://github.com/$GITHUB_REPOSITORY/releases/tag/$RELEASE_TAG"
+          echo "## Owner-authorized ΔA5 DEVELOPMENT evidence" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Study: MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V1" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Classification: DEVELOPMENT_CALIBRATION / EXPLORATORY_DEVELOPMENT" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Protocol freeze: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Durable prerelease evidence: $RELEASE_URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Actions artifact upload step: $ARTIFACT_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+          if [[ -n "$ARTIFACT_URL" ]]; then
+            echo "- 90-day Actions artifact: $ARTIFACT_URL" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- Actions artifact URL unavailable; the persistent prerelease archive is the durable copy." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "- Outer archive SHA-256: $(cut -d ' ' -f 1 "$OUTER_ARCHIVE.sha256")" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Official gates remain P_ALGORITHM_STATUS=NOT_READY, G1=INCOMPLETE, G4=NOT_AUTHORIZED, scoring=NOT_EXECUTED, coverage=UNKNOWN." >> "$GITHUB_STEP_SUMMARY"
