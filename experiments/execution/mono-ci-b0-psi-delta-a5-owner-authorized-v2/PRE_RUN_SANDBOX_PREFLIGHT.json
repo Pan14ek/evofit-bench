@@ -1,0 +1,108 @@
+{
+  "classification": "DEVELOPMENT_SANDBOX_CAPABILITY_PREFLIGHT",
+  "created_at_utc": "2026-10-27T19:03:58.976274+00:00",
+  "error": null,
+  "host_identity": {
+    "docker_client_version": "28.0.4",
+    "docker_daemon_platform": [
+      "linux",
+      "x86_64"
+    ],
+    "docker_kernel_version": "6.17.0-1022-azure",
+    "docker_server_version": "28.0.4",
+    "host_architecture": "x86_64",
+    "host_cpu_count": 4,
+    "host_gid": 1001,
+    "host_os": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "host_python_implementation": "CPython",
+    "host_python_version": "3.12.15",
+    "host_uid": 1001,
+    "python_runtime_image": "python:3.12.15-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70",
+    "python_runtime_platform": "linux/amd64",
+    "runner_image_os": "ubuntu24",
+    "runner_image_version": "20261023.334.3",
+    "runner_os": "Linux",
+    "uv_version": "uv 0.13.6 (x86_64-unknown-linux-gnu)"
+  },
+  "image": "python:3.12.15-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70",
+  "image_digest": "sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70",
+  "network_canary": {
+    "control_exit_code": 0,
+    "control_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "control_stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "isolated_attempt_expected": "DENIED",
+    "port": 37759,
+    "status": "CONTROL_REACHABLE_FROM_BRIDGE_CONTAINER",
+    "target": "host.docker.internal"
+  },
+  "platform": "linux/amd64",
+  "probes": {
+    "docker_socket_unmounted": true,
+    "other_arm_file_unreadable": true,
+    "outbound_network_denied": true,
+    "permitted_output_writable": true,
+    "repository_history_unreadable": true,
+    "required_inputs_read": true,
+    "runtime_started": true,
+    "scorer_file_unreadable": true,
+    "sensitive_environment_absent": true,
+    "test_canary_network_denied": true
+  },
+  "required_python_version": "3.12.15",
+  "sandbox_container": {
+    "cap_drop": [
+      "ALL"
+    ],
+    "container_id": "bf132864fca2e8ccc40712877576f09a17b40603e54897c44aa1db328eea6b0c",
+    "image_id": "sha256:3c4d812a6efe003770aafbdba65f9c1960ba8234ab23a133934205a70bdcda77",
+    "mounts": [
+      {
+        "read_only": true,
+        "source": "/home/runner/work/_temp/evofit-delta-a5-v2-preflight-40565658611-1/canaries/input/required-input.json",
+        "target": "/canary/required-input.json"
+      },
+      {
+        "read_only": false,
+        "source": "/home/runner/work/_temp/evofit-delta-a5-v2-preflight-40565658611-1/canaries/writable-output",
+        "target": "/canary-output"
+      }
+    ],
+    "network_mode": "none",
+    "privileged": false,
+    "process_exit_code": 0,
+    "process_result": {
+      "implementation": "cpython",
+      "input_value": "{\"probe\":\"readable\"}",
+      "network": {
+        "external_test_target": {
+          "denied": true,
+          "errno": 101,
+          "error": "OSError"
+        },
+        "host_canary": {
+          "denied": true,
+          "errno": 101,
+          "error": "OSError"
+        }
+      },
+      "output_value": "writable",
+      "protected": {
+        "other_arm": true,
+        "repo_git": true,
+        "scorer": true
+      },
+      "python_version": "3.12.15",
+      "sensitive_environment_absent": true
+    },
+    "published_ports": {},
+    "readonly_rootfs": true,
+    "security_options": [
+      "no-new-privileges"
+    ],
+    "sensitive_environment_names_present": [],
+    "user": "1001:1001",
+    "verified": true
+  },
+  "schema_version": "MONO_CI_PSI_DOCKER_ISOLATION_PREFLIGHT_V1",
+  "verification_status": "PASS"
+}
