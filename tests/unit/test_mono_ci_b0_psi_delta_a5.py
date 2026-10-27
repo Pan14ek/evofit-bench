@@ -1,4 +1,4 @@
-"""Contracts for the ΔA5 readiness package; fixtures do not approve policies."""
+"""Contracts for ΔA5 local evidence and semantic inventory; no test grants authority."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import copy
 import json
 from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import jsonschema  # type: ignore[import-untyped]
 import yaml
@@ -14,11 +14,26 @@ import yaml
 from experiments.execution.tooling.mono_ci_b0_psi_delta_a5 import (
     PACKAGE_RELATIVE,
     SCHEMA_RELATIVE,
+    classify_semantic_inventory_row,
     evaluate_applicability_profile,
+    is_verified_semantic_coverage,
+    validate_semantic_inventory,
+    verify_historical_archive,
     verify_package,
 )
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _package() -> dict[str, Any]:
+    return cast(dict[str, Any], json.loads((REPOSITORY_ROOT / PACKAGE_RELATIVE).read_text()))
+
+
+def _temporary_package(tmp_path: Path) -> tuple[dict[str, Any], Path]:
+    package = _package()
+    path = tmp_path / "readiness-package.json"
+    path.write_text(json.dumps(package, ensure_ascii=False, indent=2) + "\n")
+    return package, path
 
 
 def _catalog_ids() -> list[str]:
@@ -28,34 +43,187 @@ def _catalog_ids() -> list[str]:
 
 
 def _profile() -> tuple[dict[str, Any], list[str], str, str]:
-    package = json.loads((REPOSITORY_ROOT / PACKAGE_RELATIVE).read_text())
-    profile = copy.deepcopy(package["applicability_profile"])
+    profile = copy.deepcopy(_package()["applicability_profile"])
     ids = _catalog_ids()
     return profile, ids, profile["catalog_sha256"], profile["state_manifest_sha256"]
 
 
-def test_delta_a5_package_schema_and_repository_pins_verify_without_scoring() -> None:
+def test_package_v2_verifies_only_local_evidence_and_does_not_replay_archive() -> None:
     result = verify_package(REPOSITORY_ROOT)
-    assert result["verification_status"] == "PASS"
+    assert result["verification_status"] == "LOCALLY_VERIFIED"
+    assert result["local_repository_evidence_status"] == "LOCALLY_VERIFIED"
+    assert result["historical_evidence_status"] == "HISTORICAL_VERIFICATION_REFERENCED"
+    assert result["independent_archive_replay"]["status"] == "NOT_EXECUTED"
+    assert result["independent_archive_replay"]["verified_claim_ids"] == []
     assert result["study_readiness"] == "NO_GO_WITH_EXPLICIT_BLOCKERS"
     assert result["catalog_rows"] == 18
     assert result["applicability_scoring_authorized"] is False
 
-    package = json.loads((REPOSITORY_ROOT / PACKAGE_RELATIVE).read_text())
+    package = _package()
     schema = json.loads((REPOSITORY_ROOT / SCHEMA_RELATIVE).read_text())
     jsonschema.Draft202012Validator(schema).validate(package)
-    assert package["readiness"]["p_algorithm_status"] == "NOT_READY"
+    assert package["historical_development_run"]["verification_status"] == (
+        "HISTORICAL_VERIFICATION_REFERENCED"
+    )
+    assert package["historical_development_run"]["reported_verification_status"] == (
+        "PASS_ARCHIVE_READBACK"
+    )
     assert package["historical_development_run"]["method_decision"] == "HOLD"
     assert package["historical_development_run"]["operation_plan"] == []
     assert package["historical_development_run"]["scoring_status"] == "NOT_EXECUTED"
-    assert package["comparison_contract"]["scorer"]["reference_status"] == "NOT_CREATED_OR_APPROVED"
-    isolation_status = package["comparison_contract"]["isolation"]["status"]
-    assert isolation_status.startswith("HISTORICAL_DEVELOPMENT_ISOLATION_VERIFIED")
-    assert package["historical_development_run"]["not_a_comparison"] is True
-    assert package["historical_development_run"]["other_arms_or_case_outputs_used"] is False
-    assert package["historical_development_run"]["scorer_reference_accessed"] is False
-    assert all(row["pair_validity"] == "UNKNOWN" for row in package["semantic_adequacy"]["matrix"])
+    assert package["verification_scope"]["independent_archive_replay"]["status"] == ("NOT_EXECUTED")
     assert verify_package(REPOSITORY_ROOT) == result
+
+
+def test_modified_local_source_artifact_digest_fails_local_verification(tmp_path: Path) -> None:
+    package, path = _temporary_package(tmp_path)
+    package["source_artifacts"][0]["sha256"] = "0" * 64
+    path.write_text(json.dumps(package))
+    result = verify_package(REPOSITORY_ROOT, path)
+    assert result["verification_status"] == "VERIFICATION_FAILED"
+    assert any(error.startswith("SOURCE_ARTIFACT_DIGEST_MISMATCH:") for error in result["errors"])
+
+
+def test_modified_method_implementation_digest_fails_local_verification(tmp_path: Path) -> None:
+    package, path = _temporary_package(tmp_path)
+    package["method_candidate"]["source_digests"][0]["sha256"] = "0" * 64
+    path.write_text(json.dumps(package))
+    result = verify_package(REPOSITORY_ROOT, path)
+    assert result["verification_status"] == "VERIFICATION_FAILED"
+    assert any(error.startswith("METHOD_ARTIFACT_BINDING_MISMATCH:") for error in result["errors"])
+
+
+def test_changed_historical_result_cannot_claim_archive_replay(tmp_path: Path) -> None:
+    package, path = _temporary_package(tmp_path)
+    package["historical_development_run"]["method_result_sha256"] = "f" * 64
+    path.write_text(json.dumps(package))
+    result = verify_package(REPOSITORY_ROOT, path)
+    assert result["verification_status"] == "LOCALLY_VERIFIED"
+    assert result["historical_evidence_status"] == "HISTORICAL_VERIFICATION_REFERENCED"
+    assert result["independent_archive_replay"]["status"] == "NOT_EXECUTED"
+    assert result["independent_archive_replay"]["verified_claim_ids"] == []
+
+    package["historical_development_run"]["method_decision"] = "REJECT"
+    path.write_text(json.dumps(package))
+    rejected = verify_package(REPOSITORY_ROOT, path)
+    assert rejected["verification_status"] == "VERIFICATION_FAILED"
+    assert rejected["independent_archive_replay"]["status"] == "NOT_EXECUTED"
+
+
+def test_changed_historical_timing_remains_referenced_not_newly_measured(
+    tmp_path: Path,
+) -> None:
+    package, path = _temporary_package(tmp_path)
+    package["cost_profile"]["samples"][0]["milliseconds"] += 1.0
+    path.write_text(json.dumps(package))
+    result = verify_package(REPOSITORY_ROOT, path)
+    assert result["verification_status"] == "LOCALLY_VERIFIED"
+    assert result["historical_timing_status"] == "HISTORICAL_TIMING_OBSERVATION_REFERENCED"
+    assert result["independent_archive_replay"]["status"] == "NOT_EXECUTED"
+    sample = package["cost_profile"]["samples"][0]
+    assert sample["evidence_classification"] == "HISTORICAL_TIMING_OBSERVATION_REFERENCED"
+    assert sample["measured_by_current_verifier"] is False
+
+
+def test_mismatched_historical_archive_digest_fails_replay(tmp_path: Path) -> None:
+    archive_path = tmp_path / "wrong-archive.zip"
+    archive_path.write_bytes(b"not the pinned historical archive")
+    result = verify_package(REPOSITORY_ROOT, historical_archive_path=archive_path)
+    replay = result["independent_archive_replay"]
+    assert result["verification_status"] == "LOCALLY_VERIFIED"
+    assert replay["status"] == "VERIFICATION_FAILED"
+    assert replay["errors"] == ["HISTORICAL_ARCHIVE_DIGEST_MISMATCH"]
+    assert replay["verified_claim_ids"] == []
+
+
+def test_unavailable_archive_is_not_reported_as_replayed() -> None:
+    package = _package()
+    replay = verify_historical_archive(REPOSITORY_ROOT, package, None)
+    assert replay["status"] == "NOT_EXECUTED"
+    assert replay["observed_archive_sha256"] is None
+    assert replay["observed_source_revision_sha"] is None
+    assert replay["verified_claim_ids"] == []
+
+
+def test_semantic_inventory_distinguishes_pair_candidate_from_capability() -> None:
+    matrix = _package()["semantic_adequacy"]["matrix"]
+    declared = next(
+        row
+        for row in matrix
+        if row["representation_id"] is not None
+        and row["declared_mapping_status"] == "ENGINEERING_DECLARATION_ONLY"
+    )
+    assert classify_semantic_inventory_row(declared) == (
+        "PROPOSED_REPRESENTATION_OBLIGATION_PAIR",
+        "NOT_COUNTED_PAIR_VALIDITY_UNKNOWN",
+    )
+    assert declared["pair_validity"] == "UNKNOWN"
+    assert is_verified_semantic_coverage(declared) is False
+
+    capability = next(row for row in matrix if row["representation_id"] is None)
+    assert classify_semantic_inventory_row(capability) == (
+        "EVALUATOR_CAPABILITY_CANDIDATE",
+        "NOT_COUNTED_NO_MATERIALIZED_REPRESENTATION",
+    )
+    assert is_verified_semantic_coverage(capability) is False
+
+
+def test_undeclared_mapping_is_not_counted_as_verified_coverage() -> None:
+    matrix = _package()["semantic_adequacy"]["matrix"]
+    undeclared = next(
+        row for row in matrix if row["declared_mapping_status"] == "NO_DECLARED_PAIR_MAPPING"
+    )
+    promoted = copy.deepcopy(undeclared)
+    promoted.update(
+        pair_validity="VALID",
+        independent_review_status="INDEPENDENTLY_REVIEWED",
+        evidence_reference="synthetic-test-reference",
+    )
+    assert classify_semantic_inventory_row(undeclared) == (
+        "UNDECLARED_REPRESENTATION_OBLIGATION_MAPPING",
+        "NOT_COUNTED_UNDECLARED_MAPPING",
+    )
+    assert is_verified_semantic_coverage(promoted) is False
+
+
+def test_duplicate_and_conflicting_semantic_identities_are_rejected() -> None:
+    matrix = copy.deepcopy(_package()["semantic_adequacy"]["matrix"])
+    duplicate = copy.deepcopy(matrix[0])
+    errors, _ = validate_semantic_inventory(matrix + [duplicate])
+    assert "SEMANTIC_MATRIX_DUPLICATE_EVALUATOR_OBLIGATION_CELL" in errors
+    assert "SEMANTIC_INVENTORY_DUPLICATE_IDENTITY" in errors
+
+    conflicting = copy.deepcopy(matrix[0])
+    conflicting["evaluator_id"] = "AC_MODULE_GRAPH"
+    conflicting["declared_mapping_status"] = "NO_DECLARED_PAIR_MAPPING"
+    conflicting["inventory_class"] = "UNDECLARED_REPRESENTATION_OBLIGATION_MAPPING"
+    conflicting["coverage_status"] = "NOT_COUNTED_UNDECLARED_MAPPING"
+    errors, _ = validate_semantic_inventory(matrix + [conflicting])
+    assert "SEMANTIC_INVENTORY_IDENTITY_CONFLICT" in errors
+
+
+def test_unknown_pair_is_never_promoted_to_valid() -> None:
+    matrix = copy.deepcopy(_package()["semantic_adequacy"]["matrix"])
+    matrix[0]["pair_validity"] = "VALID"
+    errors, _ = validate_semantic_inventory(matrix)
+    assert "UNREVIEWED_PAIR_PROMOTION" in errors
+
+
+def test_nine_cell_inventory_is_reproducible_and_not_a_denominator() -> None:
+    package = _package()
+    semantic = package["semantic_adequacy"]
+    matrix = semantic["matrix"]
+    cells = {(row["evaluator_id"], row["obligation_id"]) for row in matrix}
+    assert len(matrix) == 9
+    assert len(cells) == 9
+    assert all(row["pair_validity"] == "UNKNOWN" for row in matrix)
+    assert semantic["inventory_purpose"] == "REVIEW_INVENTORY_NOT_SCORING_DENOMINATOR"
+    assert semantic["inventory_counts"] == {
+        "proposed_representation_obligation_pairs": 2,
+        "undeclared_representation_obligation_mappings": 4,
+        "evaluator_capability_candidates": 3,
+        "verified_coverage_pairs": 0,
+    }
 
 
 def test_applicability_proposal_keeps_all_unapproved_rows_unknown() -> None:

@@ -8,6 +8,8 @@ import json
 import re
 import shutil
 import subprocess  # nosec B404 - only fixed read-only local Git identity queries
+import tempfile
+import zipfile
 from datetime import date
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -16,10 +18,10 @@ import jsonschema
 import yaml
 
 PACKAGE_RELATIVE = Path(
-    "experiments/execution/mono-ci-b0-psi-delta-a5-v1/DELTA_A5_READINESS_V1.json"
+    "experiments/execution/mono-ci-b0-psi-delta-a5-v1/DELTA_A5_READINESS_V2.json"
 )
 SCHEMA_RELATIVE = Path(
-    "experiments/execution/schemas/mono_ci_b0_psi_delta_a5_readiness_v1.schema.json"
+    "experiments/execution/schemas/mono_ci_b0_psi_delta_a5_readiness_v2.schema.json"
 )
 EXPECTED_SOURCE_IDENTITIES = (
     (
@@ -40,6 +42,14 @@ EXPECTED_SOURCE_IDENTITIES = (
     ),
 )
 METHOD_CANDIDATE_BASE_SHA = "08e0a7269311ba6ec33882365deb97d4c3f38573"
+HISTORICAL_RUN_SOURCE_SHA = "a349d19fb89b577e6799e9736ed4ce0acc572166"
+SEMANTIC_INVENTORY_CLAIM_IDS = {
+    "ARCHIVE_IDENTITY_AND_MEMBER_INTEGRITY",
+    "METHOD_OUTCOME_AND_OUTPUT_DIGESTS",
+    "EVALUATOR_RESULTS_AND_SOURCE_BINDINGS",
+    "PROBE_SOURCE_AND_REPRODUCTION",
+    "HISTORICAL_TIMING_SAMPLES",
+}
 
 
 def _sha256_bytes(data: bytes) -> str:
@@ -204,6 +214,259 @@ def evaluate_applicability_profile(
     }
 
 
+def classify_semantic_inventory_row(row: dict[str, Any]) -> tuple[str, str]:
+    """Classify a review-inventory cell without treating capability as coverage."""
+    representation_id = row.get("representation_id")
+    mapping_status = row.get("declared_mapping_status")
+    if representation_id is None:
+        return (
+            "EVALUATOR_CAPABILITY_CANDIDATE",
+            "NOT_COUNTED_NO_MATERIALIZED_REPRESENTATION",
+        )
+    if not isinstance(representation_id, str) or not representation_id.strip():
+        raise ValueError("representation identifier must be non-empty or null")
+    if mapping_status == "NO_DECLARED_PAIR_MAPPING":
+        return (
+            "UNDECLARED_REPRESENTATION_OBLIGATION_MAPPING",
+            "NOT_COUNTED_UNDECLARED_MAPPING",
+        )
+    if mapping_status == "ENGINEERING_DECLARATION_ONLY":
+        return (
+            "PROPOSED_REPRESENTATION_OBLIGATION_PAIR",
+            "NOT_COUNTED_PAIR_VALIDITY_UNKNOWN",
+        )
+    raise ValueError("representation-obligation mapping status is unresolved or unsupported")
+
+
+def is_verified_semantic_coverage(row: dict[str, Any]) -> bool:
+    """Return true only for an authorized, independently reviewed exact pair."""
+    representation_id = row.get("representation_id")
+    return bool(
+        isinstance(representation_id, str)
+        and representation_id.strip()
+        and row.get("declared_mapping_status") == "NORMATIVELY_AUTHORIZED"
+        and row.get("pair_validity") == "VALID"
+        and row.get("independent_review_status") == "INDEPENDENTLY_REVIEWED"
+        and isinstance(row.get("evidence_reference"), str)
+        and row["evidence_reference"].strip()
+    )
+
+
+def validate_semantic_inventory(matrix: list[dict[str, Any]]) -> tuple[list[str], dict[str, int]]:
+    """Check inventory identities and classes without creating a scoring denominator."""
+    errors: list[str] = []
+    identities: dict[tuple[Any, ...], dict[str, Any]] = {}
+    evaluator_obligation_pairs: set[tuple[str, str]] = set()
+    counts = {
+        "proposed_representation_obligation_pairs": 0,
+        "undeclared_representation_obligation_mappings": 0,
+        "evaluator_capability_candidates": 0,
+        "verified_coverage_pairs": 0,
+    }
+    for row in matrix:
+        if not isinstance(row, dict):
+            errors.append("SEMANTIC_INVENTORY_ROW_INVALID")
+            continue
+        try:
+            inventory_class, coverage_status = classify_semantic_inventory_row(row)
+        except ValueError:
+            errors.append("SEMANTIC_INVENTORY_CLASSIFICATION_INVALID")
+            continue
+        if row.get("inventory_class") != inventory_class:
+            errors.append("SEMANTIC_INVENTORY_CLASS_MISMATCH")
+        if row.get("coverage_status") != coverage_status:
+            errors.append("SEMANTIC_INVENTORY_COVERAGE_STATUS_MISMATCH")
+        if row.get("pair_validity") != "UNKNOWN":
+            errors.append("UNREVIEWED_PAIR_PROMOTION")
+        if is_verified_semantic_coverage(row):
+            counts["verified_coverage_pairs"] += 1
+        else:
+            counts_key = {
+                "PROPOSED_REPRESENTATION_OBLIGATION_PAIR": (
+                    "proposed_representation_obligation_pairs"
+                ),
+                "UNDECLARED_REPRESENTATION_OBLIGATION_MAPPING": (
+                    "undeclared_representation_obligation_mappings"
+                ),
+                "EVALUATOR_CAPABILITY_CANDIDATE": "evaluator_capability_candidates",
+            }[inventory_class]
+            counts[counts_key] += 1
+        pair = (str(row.get("evaluator_id")), str(row.get("obligation_id")))
+        if pair in evaluator_obligation_pairs:
+            errors.append("SEMANTIC_MATRIX_DUPLICATE_EVALUATOR_OBLIGATION_CELL")
+        evaluator_obligation_pairs.add(pair)
+        states = tuple(row.get("architecture_states", []))
+        representation_id = row.get("representation_id")
+        if representation_id is None:
+            identity = (
+                states,
+                row.get("criterion_id"),
+                None,
+                row.get("evaluator_id"),
+                row.get("obligation_id"),
+            )
+        else:
+            identity = (
+                states,
+                row.get("criterion_id"),
+                representation_id,
+                row.get("obligation_id"),
+            )
+        previous = identities.get(identity)
+        if previous is not None:
+            issue = (
+                "SEMANTIC_INVENTORY_IDENTITY_CONFLICT"
+                if previous != row
+                else "SEMANTIC_INVENTORY_DUPLICATE_IDENTITY"
+            )
+            errors.append(issue)
+        else:
+            identities[identity] = row
+    return sorted(set(errors)), counts
+
+
+def verify_historical_archive(
+    repository: Path, package: dict[str, Any], archive_path: Path | None
+) -> dict[str, Any]:
+    """Optionally replay a supplied pinned archive; never fetches historical artifacts."""
+    historical = package["historical_development_run"]
+    expected_digest = historical["inner_archive_sha256"]
+    expected_source = historical["source_revision_sha"]
+    if archive_path is None:
+        return {
+            "status": "NOT_EXECUTED",
+            "expected_archive_sha256": expected_digest,
+            "observed_archive_sha256": None,
+            "expected_source_revision_sha": expected_source,
+            "observed_source_revision_sha": None,
+            "verified_claim_ids": [],
+            "errors": [],
+        }
+    original_archive = archive_path.expanduser().absolute()
+    try:
+        if original_archive.is_symlink() or not original_archive.is_file():
+            return {
+                "status": "NOT_VERIFIED",
+                "expected_archive_sha256": expected_digest,
+                "observed_archive_sha256": None,
+                "expected_source_revision_sha": expected_source,
+                "observed_source_revision_sha": None,
+                "verified_claim_ids": [],
+                "errors": ["HISTORICAL_ARCHIVE_UNAVAILABLE_OR_UNSAFE"],
+            }
+        observed_digest = _sha256_bytes(original_archive.read_bytes())
+    except OSError:
+        return {
+            "status": "NOT_VERIFIED",
+            "expected_archive_sha256": expected_digest,
+            "observed_archive_sha256": None,
+            "expected_source_revision_sha": expected_source,
+            "observed_source_revision_sha": None,
+            "verified_claim_ids": [],
+            "errors": ["HISTORICAL_ARCHIVE_READ_FAILED"],
+        }
+    if observed_digest != expected_digest:
+        return {
+            "status": "VERIFICATION_FAILED",
+            "expected_archive_sha256": expected_digest,
+            "observed_archive_sha256": observed_digest,
+            "expected_source_revision_sha": expected_source,
+            "observed_source_revision_sha": None,
+            "verified_claim_ids": [],
+            "errors": ["HISTORICAL_ARCHIVE_DIGEST_MISMATCH"],
+        }
+
+    from experiments.execution.tooling.mono_ci_b0_psi_archive import (
+        ARCHIVE_MANIFEST_NAME,
+        verify_psi_transition_archive,
+    )
+
+    try:
+        with tempfile.TemporaryDirectory(prefix="delta-a5-historical-replay-") as temporary:
+            extracted = Path(temporary) / "verified-archive"
+            replay = verify_psi_transition_archive(
+                original_archive,
+                extract_to=extracted,
+                repository=repository,
+            )
+            with zipfile.ZipFile(original_archive, "r") as archive:
+                manifest = json.loads(archive.read(ARCHIVE_MANIFEST_NAME))
+            run_path = extracted / "development_run.json"
+            run = json.loads(run_path.read_text(encoding="utf-8"))
+            source_identities = package["subject"]["source_identities"]
+            transition = run["transition"]
+            transition_matches = (
+                transition["before_commit_sha"] == source_identities[0]["commit_sha"]
+                and transition["after_commit_sha"] == source_identities[1]["commit_sha"]
+                and transition["before_repository_tree_sha"]
+                == source_identities[0]["repository_tree_sha"]
+                and transition["after_repository_tree_sha"]
+                == source_identities[1]["repository_tree_sha"]
+                and transition["before_application_tree_sha"]
+                == source_identities[0]["application_tree_sha"]
+                and transition["after_application_tree_sha"]
+                == source_identities[1]["application_tree_sha"]
+            )
+            metadata_matches = (
+                replay["archive_sha256"] == expected_digest
+                and replay["workflow_run_url"] == historical["workflow_run_url"]
+                and replay["artifact_name"] == historical["artifact_name"]
+                and replay["execution_id"] == historical["execution_id"]
+                and replay["member_count"] == historical["archive_members"]
+                and manifest["source_revision_sha"] == expected_source
+                and run["source_revision_sha"] == expected_source
+                and transition_matches
+            )
+            member_digests_match = True
+            for row in historical["archive_evidence"]:
+                member_path = extracted / _safe_repo_path(row["path"])
+                if (
+                    not member_path.is_file()
+                    or _sha256_bytes(member_path.read_bytes()) != row["sha256"]
+                ):
+                    member_digests_match = False
+                    break
+            if not metadata_matches or not member_digests_match:
+                errors = []
+                if not metadata_matches:
+                    errors.append("HISTORICAL_ARCHIVE_IDENTITY_MISMATCH")
+                if not member_digests_match:
+                    errors.append("HISTORICAL_REPORTED_MEMBER_DIGEST_MISMATCH")
+                return {
+                    "status": "VERIFICATION_FAILED",
+                    "expected_archive_sha256": expected_digest,
+                    "observed_archive_sha256": observed_digest,
+                    "expected_source_revision_sha": expected_source,
+                    "observed_source_revision_sha": manifest.get("source_revision_sha"),
+                    "verified_claim_ids": [],
+                    "errors": errors,
+                }
+    except (OSError, ValueError, KeyError, json.JSONDecodeError, zipfile.BadZipFile):
+        return {
+            "status": "VERIFICATION_FAILED",
+            "expected_archive_sha256": expected_digest,
+            "observed_archive_sha256": observed_digest,
+            "expected_source_revision_sha": expected_source,
+            "observed_source_revision_sha": None,
+            "verified_claim_ids": [],
+            "errors": ["HISTORICAL_ARCHIVE_REPLAY_FAILED"],
+        }
+    return {
+        "status": "INDEPENDENT_ARCHIVE_REPLAY_VERIFIED",
+        "expected_archive_sha256": expected_digest,
+        "observed_archive_sha256": observed_digest,
+        "expected_source_revision_sha": expected_source,
+        "observed_source_revision_sha": expected_source,
+        "verified_claim_ids": [
+            "INNER_ARCHIVE_DIGEST",
+            "ARCHIVE_MEMBER_INTEGRITY_AND_READBACK",
+            "A0_4_A0_5_SOURCE_IDENTITY_BINDING",
+        ],
+        "historical_reported_claims_status": "HISTORICAL_VERIFICATION_REFERENCED",
+        "errors": [],
+    }
+
+
 def _verify_git_identity(repository: Path, identity: dict[str, Any], errors: list[str]) -> None:
     commit = identity["commit_sha"]
     if re.fullmatch(r"[a-f0-9]{40}", commit) is None:
@@ -225,8 +488,12 @@ def _verify_git_identity(repository: Path, identity: dict[str, Any], errors: lis
         errors.append(f"STATE_MANIFEST_MISMATCH:{commit}")
 
 
-def verify_package(repository: Path, package_path: Path | None = None) -> dict[str, Any]:
-    """Verify package schema and all repository-local byte/source identities."""
+def verify_package(
+    repository: Path,
+    package_path: Path | None = None,
+    historical_archive_path: Path | None = None,
+) -> dict[str, Any]:
+    """Verify local package evidence and optionally replay an explicitly supplied archive."""
     repository = repository.resolve(strict=True)
     package_path = (package_path or repository / PACKAGE_RELATIVE).resolve(strict=True)
     errors: list[str] = []
@@ -236,7 +503,13 @@ def verify_package(repository: Path, package_path: Path | None = None) -> dict[s
         jsonschema.Draft202012Validator(schema).validate(package)
     except (OSError, json.JSONDecodeError, jsonschema.ValidationError) as error:
         return {
-            "verification_status": "FAIL",
+            "verification_status": "VERIFICATION_FAILED",
+            "local_repository_evidence_status": "VERIFICATION_FAILED",
+            "historical_evidence_status": "HISTORICAL_VERIFICATION_REFERENCED",
+            "independent_archive_replay": {
+                "status": "NOT_EXECUTED",
+                "verified_claim_ids": [],
+            },
             "study_readiness": "NO_GO_WITH_EXPLICIT_BLOCKERS",
             "errors": [f"PACKAGE_SCHEMA_OR_READ_ERROR:{type(error).__name__}"],
         }
@@ -359,8 +632,15 @@ def verify_package(repository: Path, package_path: Path | None = None) -> dict[s
         "AC_DATA_OWNERSHIP",
     }:
         errors.append("SEMANTIC_MATRIX_INCOMPLETE")
-    if any(row["pair_validity"] != "UNKNOWN" for row in matrix):
-        errors.append("UNREVIEWED_PAIR_PROMOTION")
+    inventory_errors, inventory_counts = validate_semantic_inventory(matrix)
+    errors.extend(inventory_errors)
+    if inventory_counts != package["semantic_adequacy"]["inventory_counts"]:
+        errors.append("SEMANTIC_INVENTORY_COUNTS_MISMATCH")
+    if (
+        package["semantic_adequacy"]["inventory_purpose"]
+        != "REVIEW_INVENTORY_NOT_SCORING_DENOMINATOR"
+    ):
+        errors.append("SEMANTIC_INVENTORY_PURPOSE_INVALID")
     if (
         package["method_candidate"]["algorithm_status"] != "NOT_READY"
         or package["method_candidate"]["freeze_status"] != "PROPOSED_NOT_INDEPENDENTLY_FROZEN"
@@ -370,6 +650,40 @@ def verify_package(repository: Path, package_path: Path | None = None) -> dict[s
         errors.append("COST_AUTHORITY_PROMOTION_FORBIDDEN")
     if package["historical_development_run"]["not_a_comparison"] is not True:
         errors.append("DEVELOPMENT_RUN_MISREPRESENTED_AS_COMPARISON")
+    scope = package["verification_scope"]
+    historical_scope = scope["historical_evidence"]
+    claim_ids = {row["claim_id"] for row in historical_scope["claims"]}
+    if (
+        scope["local_repository_evidence"]["status"] != "LOCALLY_VERIFIED"
+        or historical_scope["status"] != "HISTORICAL_VERIFICATION_REFERENCED"
+        or historical_scope["workflow_run_url"]
+        != package["historical_development_run"]["workflow_run_url"]
+        or historical_scope["workflow_head_sha"]
+        != package["historical_development_run"]["source_revision_sha"]
+        or claim_ids != SEMANTIC_INVENTORY_CLAIM_IDS
+        or any(
+            row["status"] != "HISTORICAL_VERIFICATION_REFERENCED"
+            for row in historical_scope["claims"]
+        )
+    ):
+        errors.append("EVIDENCE_CLASSIFICATION_INVALID")
+    independent_replay = scope["independent_archive_replay"]
+    if (
+        independent_replay["status"] != "NOT_EXECUTED"
+        or independent_replay["expected_inner_archive_sha256"]
+        != package["historical_development_run"]["inner_archive_sha256"]
+        or independent_replay["expected_source_revision_sha"] != HISTORICAL_RUN_SOURCE_SHA
+        or independent_replay["verified_archive_sha256"] is not None
+        or independent_replay["verified_source_revision_sha"] is not None
+        or independent_replay["verified_claim_ids"]
+    ):
+        errors.append("ARCHIVE_REPLAY_STATUS_OVERCLAIMED")
+    if (
+        package["historical_development_run"]["verification_status"]
+        != "HISTORICAL_VERIFICATION_REFERENCED"
+        or package["historical_development_run"]["source_revision_sha"] != HISTORICAL_RUN_SOURCE_SHA
+    ):
+        errors.append("HISTORICAL_RUN_CLASSIFICATION_INVALID")
     guard = package["readiness"]
     if (
         guard["overall_outcome"] != "NO_GO_WITH_EXPLICIT_BLOCKERS"
@@ -379,8 +693,31 @@ def verify_package(repository: Path, package_path: Path | None = None) -> dict[s
         or guard["scoring_status"] != "NOT_EXECUTED"
     ):
         errors.append("RESEARCH_GATE_PROMOTION_FORBIDDEN")
+    local_status = "LOCALLY_VERIFIED" if not errors else "VERIFICATION_FAILED"
+    if errors:
+        replay_result = {
+            "status": "NOT_EXECUTED",
+            "expected_archive_sha256": package["historical_development_run"][
+                "inner_archive_sha256"
+            ],
+            "observed_archive_sha256": None,
+            "expected_source_revision_sha": HISTORICAL_RUN_SOURCE_SHA,
+            "observed_source_revision_sha": None,
+            "verified_claim_ids": [],
+            "errors": ["ARCHIVE_REPLAY_SKIPPED_LOCAL_VERIFICATION_FAILED"],
+        }
+    else:
+        replay_result = verify_historical_archive(
+            repository,
+            package,
+            historical_archive_path,
+        )
     return {
-        "verification_status": "PASS" if not errors else "FAIL",
+        "verification_status": local_status,
+        "local_repository_evidence_status": local_status,
+        "historical_evidence_status": "HISTORICAL_VERIFICATION_REFERENCED",
+        "historical_timing_status": "HISTORICAL_TIMING_OBSERVATION_REFERENCED",
+        "independent_archive_replay": replay_result,
         "study_readiness": package["readiness"]["overall_outcome"],
         "catalog_rows": len(catalog_ids),
         "applicability_scoring_authorized": profile_result["scoring_authorized"],
@@ -392,10 +729,19 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repository", type=Path, default=Path.cwd())
     parser.add_argument("--package", type=Path)
+    parser.add_argument(
+        "--historical-archive",
+        type=Path,
+        help="Optional exact local archive file; never downloads a GitHub artifact.",
+    )
     args = parser.parse_args()
-    result = verify_package(args.repository, args.package)
+    result = verify_package(args.repository, args.package, args.historical_archive)
     print(json.dumps(result, indent=2, sort_keys=True))
-    return 0 if result["verification_status"] == "PASS" else 1
+    replay_status = result["independent_archive_replay"]["status"]
+    return int(
+        result["verification_status"] != "LOCALLY_VERIFIED"
+        or replay_status not in {"NOT_EXECUTED", "INDEPENDENT_ARCHIVE_REPLAY_VERIFIED"}
+    )
 
 
 if __name__ == "__main__":

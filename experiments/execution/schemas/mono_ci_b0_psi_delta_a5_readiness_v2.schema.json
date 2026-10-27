@@ -1,0 +1,909 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:evofitbench:mono-ci-b0-psi-delta-a5-readiness:v2",
+  "title": "MONO CI ΔA5 B0 versus Ψ readiness package v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "study_id",
+    "assessment_date",
+    "subject",
+    "source_artifacts",
+    "baseline",
+    "applicability_profile",
+    "semantic_adequacy",
+    "cost_profile",
+    "method_candidate",
+    "comparison_contract",
+    "historical_development_run",
+    "readiness",
+    "monograph_handoff",
+    "verification_scope"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "MONO_CI_B0_PSI_DELTA_A5_READINESS_V2"
+    },
+    "study_id": {
+      "const": "MONO_CI_B0_PSI_DELTA_A5_COMPARISON_V1"
+    },
+    "assessment_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "subject": {
+      "type": "object",
+      "required": [
+        "before_state",
+        "after_state",
+        "source_identities",
+        "policy_change",
+        "application_code_change"
+      ],
+      "properties": {
+        "before_state": {
+          "const": "A0_4_REPORT_QUERY_PORT"
+        },
+        "after_state": {
+          "const": "A0_5_MODULE_DATA_OWNERSHIP"
+        },
+        "source_identities": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/sourceIdentity"
+          }
+        },
+        "policy_change": {
+          "type": "object"
+        },
+        "application_code_change": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true
+    },
+    "source_artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/artifact"
+      }
+    },
+    "baseline": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256",
+        "identity_status",
+        "active_controls",
+        "approval_status"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "identity_status": {
+          "const": "PROSPECTIVE_RECONSTRUCTED_BASELINE"
+        },
+        "active_controls": {
+          "const": [
+            "AC_PUBLIC_API",
+            "AC_MODULE_GRAPH"
+          ]
+        },
+        "approval_status": {
+          "const": "NOT_APPROVED"
+        }
+      },
+      "additionalProperties": true
+    },
+    "applicability_profile": {
+      "type": "object",
+      "required": [
+        "authority_status",
+        "independent_review_status",
+        "catalog_path",
+        "catalog_sha256",
+        "catalog_closure_status",
+        "state_manifest_sha256",
+        "proposed_ci_review_targets",
+        "valid_until",
+        "rows"
+      ],
+      "properties": {
+        "authority_status": {
+          "enum": [
+            "ENGINEERING_POLICY_DECLARED",
+            "NORMATIVELY_AUTHORIZED"
+          ]
+        },
+        "independent_review_status": {
+          "enum": [
+            "PENDING",
+            "INDEPENDENTLY_REVIEWED"
+          ]
+        },
+        "catalog_path": {
+          "type": "string"
+        },
+        "catalog_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "catalog_closure_status": {
+          "enum": [
+            "OPEN",
+            "COMPLETE"
+          ]
+        },
+        "state_manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "proposed_ci_review_targets": {
+          "const": [
+            "AC_PUBLIC_API",
+            "AC_MODULE_GRAPH",
+            "AC_DATA_OWNERSHIP"
+          ]
+        },
+        "valid_until": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 18,
+          "maxItems": 18,
+          "items": {
+            "$ref": "#/$defs/applicabilityRow"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "semantic_adequacy": {
+      "type": "object",
+      "required": [
+        "evaluator_source_inventory_sha256",
+        "evaluators",
+        "matrix",
+        "review_status",
+        "inventory_purpose",
+        "inventory_counts",
+        "observation_evidence_classification"
+      ],
+      "properties": {
+        "evaluator_source_inventory_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "evaluators": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object"
+          }
+        },
+        "matrix": {
+          "type": "array",
+          "minItems": 9,
+          "maxItems": 9,
+          "items": {
+            "type": "object",
+            "required": [
+              "architecture_states",
+              "criterion_id",
+              "representation_id",
+              "representation_status",
+              "obligation_id",
+              "evaluator_id",
+              "declared_mapping_status",
+              "pair_validity",
+              "inventory_class",
+              "coverage_status",
+              "observation_evidence_classification"
+            ],
+            "properties": {
+              "architecture_states": {
+                "const": [
+                  "A0_4_REPORT_QUERY_PORT",
+                  "A0_5_MODULE_DATA_OWNERSHIP"
+                ]
+              },
+              "criterion_id": {
+                "const": "architecture_compliance"
+              },
+              "representation_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "obligation_id": {
+                "enum": [
+                  "AC_PUBLIC_API",
+                  "AC_MODULE_GRAPH",
+                  "AC_DATA_OWNERSHIP"
+                ]
+              },
+              "evaluator_id": {
+                "enum": [
+                  "AC_PUBLIC_API",
+                  "AC_MODULE_GRAPH",
+                  "AC_DATA_OWNERSHIP"
+                ]
+              },
+              "declared_mapping_status": {
+                "enum": [
+                  "ENGINEERING_DECLARATION_ONLY",
+                  "NO_DECLARED_PAIR_MAPPING"
+                ]
+              },
+              "pair_validity": {
+                "const": "UNKNOWN"
+              },
+              "observation_evidence_classification": {
+                "const": "HISTORICAL_VERIFICATION_REFERENCED"
+              }
+            },
+            "oneOf": [
+              {
+                "properties": {
+                  "representation_id": {
+                    "type": "null"
+                  },
+                  "representation_status": {
+                    "const": "EVALUATOR_PRESENT_REPRESENTATION_NOT_MATERIALIZED"
+                  },
+                  "inventory_class": {
+                    "const": "EVALUATOR_CAPABILITY_CANDIDATE"
+                  },
+                  "coverage_status": {
+                    "const": "NOT_COUNTED_NO_MATERIALIZED_REPRESENTATION"
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "representation_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "declared_mapping_status": {
+                    "const": "NO_DECLARED_PAIR_MAPPING"
+                  },
+                  "inventory_class": {
+                    "const": "UNDECLARED_REPRESENTATION_OBLIGATION_MAPPING"
+                  },
+                  "coverage_status": {
+                    "const": "NOT_COUNTED_UNDECLARED_MAPPING"
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "representation_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "declared_mapping_status": {
+                    "const": "ENGINEERING_DECLARATION_ONLY"
+                  },
+                  "inventory_class": {
+                    "const": "PROPOSED_REPRESENTATION_OBLIGATION_PAIR"
+                  },
+                  "coverage_status": {
+                    "const": "NOT_COUNTED_PAIR_VALIDITY_UNKNOWN"
+                  }
+                }
+              }
+            ],
+            "additionalProperties": true
+          }
+        },
+        "review_status": {
+          "const": "PENDING_INDEPENDENT_REVIEW"
+        },
+        "inventory_purpose": {
+          "const": "REVIEW_INVENTORY_NOT_SCORING_DENOMINATOR"
+        },
+        "observation_evidence_classification": {
+          "const": "HISTORICAL_VERIFICATION_REFERENCED"
+        },
+        "inventory_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "proposed_representation_obligation_pairs",
+            "undeclared_representation_obligation_mappings",
+            "evaluator_capability_candidates",
+            "verified_coverage_pairs"
+          ],
+          "properties": {
+            "proposed_representation_obligation_pairs": {
+              "const": 2
+            },
+            "undeclared_representation_obligation_mappings": {
+              "const": 4
+            },
+            "evaluator_capability_candidates": {
+              "const": 3
+            },
+            "verified_coverage_pairs": {
+              "const": 0
+            }
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "cost_profile": {
+      "type": "object",
+      "required": [
+        "unit",
+        "status",
+        "proposed_total_ci_bound_ms",
+        "resource_limits",
+        "samples"
+      ],
+      "properties": {
+        "unit": {
+          "const": "elapsed_wall_clock_milliseconds"
+        },
+        "status": {
+          "const": "COST_MODEL_UNRESOLVED"
+        },
+        "proposed_total_ci_bound_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "resource_limits": {
+          "type": "object"
+        },
+        "samples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "milliseconds",
+              "evidence_classification",
+              "measured_by_current_verifier"
+            ],
+            "properties": {
+              "milliseconds": {
+                "type": "number",
+                "minimum": 0
+              },
+              "evidence_classification": {
+                "const": "HISTORICAL_TIMING_OBSERVATION_REFERENCED"
+              },
+              "measured_by_current_verifier": {
+                "const": false
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "method_candidate": {
+      "type": "object",
+      "required": [
+        "implementation_version",
+        "interface_version",
+        "algorithm_status",
+        "freeze_status",
+        "source_digests",
+        "schema_digests",
+        "operation_selection",
+        "limitations"
+      ],
+      "properties": {
+        "implementation_version": {
+          "type": "string"
+        },
+        "interface_version": {
+          "type": "string"
+        },
+        "algorithm_status": {
+          "const": "NOT_READY"
+        },
+        "freeze_status": {
+          "const": "PROPOSED_NOT_INDEPENDENTLY_FROZEN"
+        },
+        "source_digests": {
+          "type": "array",
+          "minItems": 7,
+          "items": {
+            "$ref": "#/$defs/artifact"
+          }
+        },
+        "schema_digests": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "$ref": "#/$defs/artifact"
+          }
+        },
+        "operation_selection": {
+          "type": "object"
+        },
+        "limitations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "comparison_contract": {
+      "type": "object",
+      "required": [
+        "status",
+        "unit_of_analysis",
+        "arms",
+        "primary_metrics",
+        "isolation",
+        "scorer",
+        "repetitions"
+      ],
+      "properties": {
+        "status": {
+          "const": "DRAFT_NOT_APPROVED"
+        },
+        "unit_of_analysis": {
+          "const": "ONE_ARCHITECTURE_TRANSITION"
+        },
+        "arms": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "primary_metrics": {
+          "type": "array",
+          "minItems": 1
+        },
+        "isolation": {
+          "type": "object"
+        },
+        "scorer": {
+          "type": "object"
+        },
+        "repetitions": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true
+    },
+    "historical_development_run": {
+      "type": "object",
+      "required": [
+        "workflow_run_url",
+        "artifact_id",
+        "inner_archive_sha256",
+        "verification_status",
+        "measurement_status",
+        "method_decision",
+        "operation_plan",
+        "scoring_status",
+        "reported_verification_status",
+        "source_revision_sha",
+        "source_revision_status"
+      ],
+      "properties": {
+        "workflow_run_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "artifact_id": {
+          "type": "string"
+        },
+        "inner_archive_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "verification_status": {
+          "const": "HISTORICAL_VERIFICATION_REFERENCED"
+        },
+        "measurement_status": {
+          "const": "NOT_EXECUTED"
+        },
+        "method_decision": {
+          "const": "HOLD"
+        },
+        "operation_plan": {
+          "const": []
+        },
+        "scoring_status": {
+          "const": "NOT_EXECUTED"
+        },
+        "reported_verification_status": {
+          "const": "PASS_ARCHIVE_READBACK"
+        },
+        "source_revision_sha": {
+          "const": "a349d19fb89b577e6799e9736ed4ce0acc572166"
+        },
+        "source_revision_status": {
+          "const": "HISTORICAL_RUN_METADATA_REFERENCE"
+        },
+        "archive_evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "sha256",
+              "verification_status"
+            ],
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "verification_status": {
+                "const": "HISTORICAL_VERIFICATION_REFERENCED"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "readiness": {
+      "type": "object",
+      "required": [
+        "overall_outcome",
+        "p_algorithm_status",
+        "g1_status",
+        "g4_status",
+        "scoring_status",
+        "review_packet_status",
+        "matrix"
+      ],
+      "properties": {
+        "overall_outcome": {
+          "enum": [
+            "READY_FOR_INDEPENDENT_REVIEW",
+            "NO_GO_WITH_EXPLICIT_BLOCKERS",
+            "GO_FOR_MEASURED_EXECUTION"
+          ]
+        },
+        "p_algorithm_status": {
+          "enum": [
+            "NOT_READY",
+            "READY"
+          ]
+        },
+        "g1_status": {
+          "enum": [
+            "INCOMPLETE",
+            "COMPLETE"
+          ]
+        },
+        "g4_status": {
+          "enum": [
+            "NOT_AUTHORIZED",
+            "AUTHORIZED"
+          ]
+        },
+        "scoring_status": {
+          "enum": [
+            "NOT_EXECUTED",
+            "EXECUTED"
+          ]
+        },
+        "review_packet_status": {
+          "enum": [
+            "READY_FOR_INDEPENDENT_REVIEW",
+            "INCOMPLETE"
+          ]
+        },
+        "matrix": {
+          "type": "array",
+          "minItems": 10,
+          "items": {
+            "type": "object",
+            "required": [
+              "requirement_id",
+              "required_evidence",
+              "actual_evidence",
+              "verification_status",
+              "human_authorization_status",
+              "blocking_reason",
+              "next_action"
+            ]
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "monograph_handoff": {
+      "type": "object",
+      "required": [
+        "path",
+        "language",
+        "figure_status"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "language": {
+          "const": "uk"
+        },
+        "figure_status": {
+          "const": "SPECIFICATION_ONLY_NO_COMPARATIVE_FIGURE"
+        }
+      },
+      "additionalProperties": true
+    },
+    "verification_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "local_repository_evidence",
+        "historical_evidence",
+        "independent_archive_replay"
+      ],
+      "properties": {
+        "local_repository_evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "scope"
+          ],
+          "properties": {
+            "status": {
+              "const": "LOCALLY_VERIFIED"
+            },
+            "scope": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "historical_evidence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "workflow_run_url",
+            "workflow_head_sha",
+            "workflow_head_sha_status",
+            "claims"
+          ],
+          "properties": {
+            "status": {
+              "const": "HISTORICAL_VERIFICATION_REFERENCED"
+            },
+            "workflow_run_url": {
+              "type": "string",
+              "format": "uri"
+            },
+            "workflow_head_sha": {
+              "const": "a349d19fb89b577e6799e9736ed4ce0acc572166"
+            },
+            "workflow_head_sha_status": {
+              "const": "HISTORICAL_RUN_METADATA_REFERENCE"
+            },
+            "claims": {
+              "type": "array",
+              "minItems": 5,
+              "maxItems": 5,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "claim_id",
+                  "status",
+                  "field_paths"
+                ],
+                "properties": {
+                  "claim_id": {
+                    "enum": [
+                      "ARCHIVE_IDENTITY_AND_MEMBER_INTEGRITY",
+                      "METHOD_OUTCOME_AND_OUTPUT_DIGESTS",
+                      "EVALUATOR_RESULTS_AND_SOURCE_BINDINGS",
+                      "PROBE_SOURCE_AND_REPRODUCTION",
+                      "HISTORICAL_TIMING_SAMPLES"
+                    ]
+                  },
+                  "status": {
+                    "const": "HISTORICAL_VERIFICATION_REFERENCED"
+                  },
+                  "field_paths": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "independent_archive_replay": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "expected_inner_archive_sha256",
+            "expected_source_revision_sha",
+            "verified_archive_sha256",
+            "verified_source_revision_sha",
+            "verified_claim_ids",
+            "reason"
+          ],
+          "properties": {
+            "status": {
+              "const": "NOT_EXECUTED"
+            },
+            "expected_inner_archive_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "expected_source_revision_sha": {
+              "const": "a349d19fb89b577e6799e9736ed4ce0acc572166"
+            },
+            "verified_archive_sha256": {
+              "type": "null"
+            },
+            "verified_source_revision_sha": {
+              "type": "null"
+            },
+            "verified_claim_ids": {
+              "type": "array",
+              "maxItems": 0
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "sha1": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "artifact": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "additionalProperties": true
+    },
+    "sourceIdentity": {
+      "type": "object",
+      "required": [
+        "state",
+        "commit_sha",
+        "repository_tree_sha",
+        "application_tree_sha",
+        "state_manifest_path",
+        "state_manifest_sha256"
+      ],
+      "properties": {
+        "state": {
+          "type": "string"
+        },
+        "commit_sha": {
+          "$ref": "#/$defs/sha1"
+        },
+        "repository_tree_sha": {
+          "$ref": "#/$defs/sha1"
+        },
+        "application_tree_sha": {
+          "$ref": "#/$defs/sha1"
+        },
+        "state_manifest_path": {
+          "type": "string"
+        },
+        "state_manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "additionalProperties": false
+    },
+    "applicabilityRow": {
+      "type": "object",
+      "required": [
+        "obligation_id",
+        "applicability",
+        "mandatory_status",
+        "lifecycle_status",
+        "lifecycle_stages",
+        "scope_disposition",
+        "conflict",
+        "source_fact_refs"
+      ],
+      "properties": {
+        "obligation_id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9_]+$"
+        },
+        "applicability": {
+          "enum": [
+            "ACTIVE",
+            "INACTIVE",
+            "UNKNOWN"
+          ]
+        },
+        "mandatory_status": {
+          "enum": [
+            "MANDATORY",
+            "OPTIONAL",
+            "UNKNOWN"
+          ]
+        },
+        "lifecycle_status": {
+          "enum": [
+            "RESOLVED",
+            "NOT_REQUIRED",
+            "UNKNOWN"
+          ]
+        },
+        "lifecycle_stages": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "CI_TEST",
+              "DEPLOYMENT",
+              "RUNTIME"
+            ]
+          }
+        },
+        "scope_disposition": {
+          "enum": [
+            "PROPOSED_REVIEW_TARGET",
+            "UNRESOLVED_NOT_DROPPED"
+          ]
+        },
+        "conflict": {
+          "type": "boolean"
+        },
+        "source_fact_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

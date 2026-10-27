@@ -1,5 +1,5 @@
 {
-  "schema_version": "MONO_CI_B0_PSI_DELTA_A5_READINESS_V1",
+  "schema_version": "MONO_CI_B0_PSI_DELTA_A5_READINESS_V2",
   "study_id": "MONO_CI_B0_PSI_DELTA_A5_COMPARISON_V1",
   "assessment_date": "2026-10-27",
   "subject": {
@@ -518,7 +518,10 @@
         "negative_sha256": "00cf234344a8aabb5bcb76e06796d485f152b1c2c30677be90ce6e7868766f48",
         "negative_coverage_sha256": "6df8acb0577ef1e4ac68c17fc96d686b92f7ee8fe437ce11a31ce0c475bf3ad9",
         "source_case_positive_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
-        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26"
+        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26",
+        "inventory_class": "PROPOSED_REPRESENTATION_OBLIGATION_PAIR",
+        "coverage_status": "NOT_COUNTED_PAIR_VALIDITY_UNKNOWN",
+        "observation_evidence_classification": "HISTORICAL_VERIFICATION_REFERENCED"
       },
       {
         "architecture_states": [
@@ -556,7 +559,10 @@
         "negative_sha256": "00cf234344a8aabb5bcb76e06796d485f152b1c2c30677be90ce6e7868766f48",
         "negative_coverage_sha256": "6df8acb0577ef1e4ac68c17fc96d686b92f7ee8fe437ce11a31ce0c475bf3ad9",
         "source_case_positive_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
-        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26"
+        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26",
+        "inventory_class": "UNDECLARED_REPRESENTATION_OBLIGATION_MAPPING",
+        "coverage_status": "NOT_COUNTED_UNDECLARED_MAPPING",
+        "observation_evidence_classification": "HISTORICAL_VERIFICATION_REFERENCED"
       },
       {
         "architecture_states": [
@@ -594,7 +600,10 @@
         "negative_sha256": "00cf234344a8aabb5bcb76e06796d485f152b1c2c30677be90ce6e7868766f48",
         "negative_coverage_sha256": "6df8acb0577ef1e4ac68c17fc96d686b92f7ee8fe437ce11a31ce0c475bf3ad9",
         "source_case_positive_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
-        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26"
+        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26",
+        "inventory_class": "UNDECLARED_REPRESENTATION_OBLIGATION_MAPPING",
+        "coverage_status": "NOT_COUNTED_UNDECLARED_MAPPING",
+        "observation_evidence_classification": "HISTORICAL_VERIFICATION_REFERENCED"
       },
       {
         "architecture_states": [
@@ -632,7 +641,10 @@
         "negative_sha256": "f3029dada1c6755b9aa028d39e4d18b5949522733eb322c934c1172a7d6dd21f",
         "negative_coverage_sha256": "102f0307de3347d121da5f5d6ff1f8bd12ac0364b5d191d6394a952c5703778b",
         "source_case_positive_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
-        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26"
+        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26",
+        "inventory_class": "UNDECLARED_REPRESENTATION_OBLIGATION_MAPPING",
+        "coverage_status": "NOT_COUNTED_UNDECLARED_MAPPING",
+        "observation_evidence_classification": "HISTORICAL_VERIFICATION_REFERENCED"
       },
       {
         "architecture_states": [
@@ -670,7 +682,10 @@
         "negative_sha256": "f3029dada1c6755b9aa028d39e4d18b5949522733eb322c934c1172a7d6dd21f",
         "negative_coverage_sha256": "102f0307de3347d121da5f5d6ff1f8bd12ac0364b5d191d6394a952c5703778b",
         "source_case_positive_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
-        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26"
+        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26",
+        "inventory_class": "PROPOSED_REPRESENTATION_OBLIGATION_PAIR",
+        "coverage_status": "NOT_COUNTED_PAIR_VALIDITY_UNKNOWN",
+        "observation_evidence_classification": "HISTORICAL_VERIFICATION_REFERENCED"
       },
       {
         "architecture_states": [
@@ -708,7 +723,10 @@
         "negative_sha256": "f3029dada1c6755b9aa028d39e4d18b5949522733eb322c934c1172a7d6dd21f",
         "negative_coverage_sha256": "102f0307de3347d121da5f5d6ff1f8bd12ac0364b5d191d6394a952c5703778b",
         "source_case_positive_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
-        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26"
+        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26",
+        "inventory_class": "UNDECLARED_REPRESENTATION_OBLIGATION_MAPPING",
+        "coverage_status": "NOT_COUNTED_UNDECLARED_MAPPING",
+        "observation_evidence_classification": "HISTORICAL_VERIFICATION_REFERENCED"
       },
       {
         "architecture_states": [
@@ -747,7 +765,10 @@
         "negative_sha256": "afa95a325cdc032635b7125bcf503cdc1104937d0423d04c90b0566a7dbb8fa9",
         "negative_coverage_sha256": "00ee0f9b893c3a2ae069aa8d5faa9683e355384f73fa254243d489129abad1b8",
         "source_case_positive_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
-        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26"
+        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26",
+        "inventory_class": "EVALUATOR_CAPABILITY_CANDIDATE",
+        "coverage_status": "NOT_COUNTED_NO_MATERIALIZED_REPRESENTATION",
+        "observation_evidence_classification": "HISTORICAL_VERIFICATION_REFERENCED"
       },
       {
         "architecture_states": [
@@ -786,7 +807,10 @@
         "negative_sha256": "afa95a325cdc032635b7125bcf503cdc1104937d0423d04c90b0566a7dbb8fa9",
         "negative_coverage_sha256": "00ee0f9b893c3a2ae069aa8d5faa9683e355384f73fa254243d489129abad1b8",
         "source_case_positive_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
-        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26"
+        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26",
+        "inventory_class": "EVALUATOR_CAPABILITY_CANDIDATE",
+        "coverage_status": "NOT_COUNTED_NO_MATERIALIZED_REPRESENTATION",
+        "observation_evidence_classification": "HISTORICAL_VERIFICATION_REFERENCED"
       },
       {
         "architecture_states": [
@@ -825,7 +849,10 @@
         "negative_sha256": "afa95a325cdc032635b7125bcf503cdc1104937d0423d04c90b0566a7dbb8fa9",
         "negative_coverage_sha256": "00ee0f9b893c3a2ae069aa8d5faa9683e355384f73fa254243d489129abad1b8",
         "source_case_positive_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
-        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26"
+        "source_case_negative_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26",
+        "inventory_class": "EVALUATOR_CAPABILITY_CANDIDATE",
+        "coverage_status": "NOT_COUNTED_NO_MATERIALIZED_REPRESENTATION",
+        "observation_evidence_classification": "HISTORICAL_VERIFICATION_REFERENCED"
       }
     ],
     "review_status": "PENDING_INDEPENDENT_REVIEW",
@@ -851,7 +878,15 @@
         "source_patch_sha256": "ca614f99c800cd16feea7d18c6344a8f326570b3677801c4ac2d8499d9be65cd",
         "reproduction_record_sha256": "01e120c453c80b8834742029eb0b1526477ae56326324ff15facc36125202549"
       }
-    }
+    },
+    "inventory_purpose": "REVIEW_INVENTORY_NOT_SCORING_DENOMINATOR",
+    "inventory_counts": {
+      "proposed_representation_obligation_pairs": 2,
+      "undeclared_representation_obligation_mappings": 4,
+      "evaluator_capability_candidates": 3,
+      "verified_coverage_pairs": 0
+    },
+    "observation_evidence_classification": "HISTORICAL_VERIFICATION_REFERENCED"
   },
   "cost_profile": {
     "version": "MONO_CI_DELTA_A5_COST_PROFILE_V1",
@@ -891,67 +926,89 @@
         "name": "A04 AC_PUBLIC_API",
         "milliseconds": 137.96,
         "sample_count": 1,
-        "interpretation": "single historical subprocess sample"
+        "interpretation": "single historical subprocess sample",
+        "evidence_classification": "HISTORICAL_TIMING_OBSERVATION_REFERENCED",
+        "measured_by_current_verifier": false
       },
       {
         "name": "A04 AC_MODULE_GRAPH",
         "milliseconds": 141.866,
         "sample_count": 1,
-        "interpretation": "single historical subprocess sample"
+        "interpretation": "single historical subprocess sample",
+        "evidence_classification": "HISTORICAL_TIMING_OBSERVATION_REFERENCED",
+        "measured_by_current_verifier": false
       },
       {
         "name": "A05 clean AC_PUBLIC_API",
         "milliseconds": 104.393,
         "sample_count": 1,
-        "interpretation": "single historical subprocess sample"
+        "interpretation": "single historical subprocess sample",
+        "evidence_classification": "HISTORICAL_TIMING_OBSERVATION_REFERENCED",
+        "measured_by_current_verifier": false
       },
       {
         "name": "A05 clean AC_MODULE_GRAPH",
         "milliseconds": 105.941,
         "sample_count": 1,
-        "interpretation": "single historical subprocess sample"
+        "interpretation": "single historical subprocess sample",
+        "evidence_classification": "HISTORICAL_TIMING_OBSERVATION_REFERENCED",
+        "measured_by_current_verifier": false
       },
       {
         "name": "A05 clean AC_DATA_OWNERSHIP",
         "milliseconds": 101.192,
         "sample_count": 1,
-        "interpretation": "single historical subprocess sample"
+        "interpretation": "single historical subprocess sample",
+        "evidence_classification": "HISTORICAL_TIMING_OBSERVATION_REFERENCED",
+        "measured_by_current_verifier": false
       },
       {
         "name": "negative AC_DATA_OWNERSHIP",
         "milliseconds": 107.211,
         "sample_count": 1,
-        "interpretation": "single historical subprocess sample"
+        "interpretation": "single historical subprocess sample",
+        "evidence_classification": "HISTORICAL_TIMING_OBSERVATION_REFERENCED",
+        "measured_by_current_verifier": false
       },
       {
         "name": "negative AC_MODULE_GRAPH",
         "milliseconds": 105.06,
         "sample_count": 1,
-        "interpretation": "single historical subprocess sample"
+        "interpretation": "single historical subprocess sample",
+        "evidence_classification": "HISTORICAL_TIMING_OBSERVATION_REFERENCED",
+        "measured_by_current_verifier": false
       },
       {
         "name": "negative AC_PUBLIC_API",
         "milliseconds": 100.047,
         "sample_count": 1,
-        "interpretation": "single historical subprocess sample"
+        "interpretation": "single historical subprocess sample",
+        "evidence_classification": "HISTORICAL_TIMING_OBSERVATION_REFERENCED",
+        "measured_by_current_verifier": false
       },
       {
         "name": "Psi isolated process",
         "milliseconds": 779.222,
         "sample_count": 1,
-        "interpretation": "one DEVELOPMENT process, not calibrated"
+        "interpretation": "one DEVELOPMENT process, not calibrated",
+        "evidence_classification": "HISTORICAL_TIMING_OBSERVATION_REFERENCED",
+        "measured_by_current_verifier": false
       },
       {
         "name": "candidate diagnostic positive verification",
         "milliseconds": 195.342,
         "sample_count": 1,
-        "interpretation": "post-run diagnostic; no new active representation"
+        "interpretation": "post-run diagnostic; no new active representation",
+        "evidence_classification": "HISTORICAL_TIMING_OBSERVATION_REFERENCED",
+        "measured_by_current_verifier": false
       },
       {
         "name": "candidate diagnostic negative verification",
         "milliseconds": 213.566,
         "sample_count": 1,
-        "interpretation": "post-run diagnostic; not incremental CI cost"
+        "interpretation": "post-run diagnostic; not incremental CI cost",
+        "evidence_classification": "HISTORICAL_TIMING_OBSERVATION_REFERENCED",
+        "measured_by_current_verifier": false
       }
     ],
     "calibration_status": "NOT_CALIBRATED_SINGLE_RUN_SAMPLES_ONLY",
@@ -1153,7 +1210,6 @@
     "outer_artifact_sha256": "57f27fc632eb7a1609dd14f95c48d0f49304a150cabfc6ed96e079b182293b23",
     "inner_archive_sha256": "6e1b39df457d3053487a3123ab4f29e78467515c0925a58a36bb2dea26f7c563",
     "archive_members": 500,
-    "verification_status": "PASS_ARCHIVE_READBACK",
     "run_kind": "DEVELOPMENT_METHOD_EXECUTION_ONLY",
     "execution_id": "DEV_PSI_TRANSITION_A05_GHA_40416929860_1",
     "measurement_status": "NOT_EXECUTED",
@@ -1175,31 +1231,41 @@
     "archive_evidence": [
       {
         "path": "development_run.json",
-        "sha256": "7cd43392e78e5cd281b7d45e2ddcc135f720ccd22ab672583a0a7131a78274b1"
+        "sha256": "7cd43392e78e5cd281b7d45e2ddcc135f720ccd22ab672583a0a7131a78274b1",
+        "verification_status": "HISTORICAL_VERIFICATION_REFERENCED"
       },
       {
         "path": "diagnostics/a05-experiment-evidence.json",
-        "sha256": "4e69c15ccd7c069df69ce824c58b1ccc23022780e50f21954b7b426ebc00bf4d"
+        "sha256": "4e69c15ccd7c069df69ce824c58b1ccc23022780e50f21954b7b426ebc00bf4d",
+        "verification_status": "HISTORICAL_VERIFICATION_REFERENCED"
       },
       {
         "path": "PSI/raw/method-result.json",
-        "sha256": "951de04b70fd442da4aafa4694c4f12bdc73de60b32fcc3a90dfa7cba158043f"
+        "sha256": "951de04b70fd442da4aafa4694c4f12bdc73de60b32fcc3a90dfa7cba158043f",
+        "verification_status": "HISTORICAL_VERIFICATION_REFERENCED"
       },
       {
         "path": "probes/ownership-negative/probe-manifest.json",
-        "sha256": "61e3dd738e05ef999a7a093f3bc6b34368c505c85dde69c87db901cb496f5649"
+        "sha256": "61e3dd738e05ef999a7a093f3bc6b34368c505c85dde69c87db901cb496f5649",
+        "verification_status": "HISTORICAL_VERIFICATION_REFERENCED"
       },
       {
         "path": "probes/ownership-negative/source.patch",
-        "sha256": "ca614f99c800cd16feea7d18c6344a8f326570b3677801c4ac2d8499d9be65cd"
+        "sha256": "ca614f99c800cd16feea7d18c6344a8f326570b3677801c4ac2d8499d9be65cd",
+        "verification_status": "HISTORICAL_VERIFICATION_REFERENCED"
       },
       {
         "path": "probes/ownership-negative/reproduction.json",
-        "sha256": "01e120c453c80b8834742029eb0b1526477ae56326324ff15facc36125202549"
+        "sha256": "01e120c453c80b8834742029eb0b1526477ae56326324ff15facc36125202549",
+        "verification_status": "HISTORICAL_VERIFICATION_REFERENCED"
       }
     ],
     "other_arms_or_case_outputs_used": false,
-    "scorer_reference_accessed": false
+    "scorer_reference_accessed": false,
+    "reported_verification_status": "PASS_ARCHIVE_READBACK",
+    "verification_status": "HISTORICAL_VERIFICATION_REFERENCED",
+    "source_revision_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+    "source_revision_status": "HISTORICAL_RUN_METADATA_REFERENCE"
   },
   "readiness": {
     "overall_outcome": "NO_GO_WITH_EXPLICIT_BLOCKERS",
@@ -1338,5 +1404,81 @@
       "Historical DEVELOPMENT method execution",
       "No independent comparison or scientific effectiveness claim"
     ]
+  },
+  "verification_scope": {
+    "local_repository_evidence": {
+      "status": "LOCALLY_VERIFIED",
+      "scope": [
+        "package schema",
+        "pinned Git commit/tree/application-tree/state-manifest identities",
+        "repository-local artifact bytes and SHA-256 digests",
+        "baseline, Method Ψ, evaluator, schema and configuration bindings",
+        "semantic inventory classification and research-gate status"
+      ]
+    },
+    "historical_evidence": {
+      "status": "HISTORICAL_VERIFICATION_REFERENCED",
+      "workflow_run_url": "https://github.com/Pan14ek/evofit-bench/actions/runs/40416929860",
+      "workflow_head_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+      "workflow_head_sha_status": "HISTORICAL_RUN_METADATA_REFERENCE",
+      "claims": [
+        {
+          "claim_id": "ARCHIVE_IDENTITY_AND_MEMBER_INTEGRITY",
+          "status": "HISTORICAL_VERIFICATION_REFERENCED",
+          "field_paths": [
+            "historical_development_run.outer_artifact_sha256",
+            "historical_development_run.inner_archive_sha256",
+            "historical_development_run.archive_members",
+            "historical_development_run.archive_evidence"
+          ]
+        },
+        {
+          "claim_id": "METHOD_OUTCOME_AND_OUTPUT_DIGESTS",
+          "status": "HISTORICAL_VERIFICATION_REFERENCED",
+          "field_paths": [
+            "historical_development_run.method_decision",
+            "historical_development_run.operation_plan",
+            "historical_development_run.prediction_emitted",
+            "historical_development_run.method_result_sha256",
+            "historical_development_run.method_input_bundle_sha256",
+            "historical_development_run.candidate_sha256"
+          ]
+        },
+        {
+          "claim_id": "EVALUATOR_RESULTS_AND_SOURCE_BINDINGS",
+          "status": "HISTORICAL_VERIFICATION_REFERENCED",
+          "field_paths": [
+            "semantic_adequacy.positive_control",
+            "semantic_adequacy.negative_control",
+            "semantic_adequacy.matrix[*].positive_observation",
+            "semantic_adequacy.matrix[*].negative_observation",
+            "semantic_adequacy.matrix[*].evaluator_source_sha256"
+          ]
+        },
+        {
+          "claim_id": "PROBE_SOURCE_AND_REPRODUCTION",
+          "status": "HISTORICAL_VERIFICATION_REFERENCED",
+          "field_paths": [
+            "historical_development_run.archive_evidence[probe-manifest,source.patch,reproduction]"
+          ]
+        },
+        {
+          "claim_id": "HISTORICAL_TIMING_SAMPLES",
+          "status": "HISTORICAL_VERIFICATION_REFERENCED",
+          "field_paths": [
+            "cost_profile.samples[*].milliseconds"
+          ]
+        }
+      ]
+    },
+    "independent_archive_replay": {
+      "status": "NOT_EXECUTED",
+      "expected_inner_archive_sha256": "6e1b39df457d3053487a3123ab4f29e78467515c0925a58a36bb2dea26f7c563",
+      "expected_source_revision_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+      "verified_archive_sha256": null,
+      "verified_source_revision_sha": null,
+      "verified_claim_ids": [],
+      "reason": "No historical archive path was supplied to the current verifier; it performs no artifact download."
+    }
   }
 }
