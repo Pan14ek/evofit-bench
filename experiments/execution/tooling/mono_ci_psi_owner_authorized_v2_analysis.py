@@ -20,6 +20,7 @@ from typing import Any
 from experiments.execution.tooling import mono_ci_psi_owner_authorized as owner
 from experiments.execution.tooling import mono_ci_psi_owner_authorized_analysis as analysis_v1
 from experiments.execution.tooling import mono_ci_psi_owner_authorized_v2 as study_v2
+from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError
 from experiments.execution.tooling.hashing import (
     pretty_json_bytes,
@@ -344,6 +345,7 @@ def _handoff(
     calibration_archive_sha256: str,
     v1_calibration_archive_sha256: str,
     v1_readback: Mapping[str, Any],
+    premeasurement_failures: list[Mapping[str, Any]],
 ) -> str:
     v1_by = {
         (row["source_condition"], row["evaluator_id"]): row
@@ -452,6 +454,16 @@ def _handoff(
         "\n".join(transition_rows) or "| — | — | — | — | — | — | — | — | — | — | — |"
     )
     comparison_text = "\n".join(compare_rows) or "| — | — | 0 | 0 | — | 0 | 0 | — |"
+    premeasurement_text = (
+        "\n".join(
+            f"| {row.get('workflow_run_id')} | {row.get('failure_stage')} | "
+            f"{row.get('calibration_calls_started')} | {row.get('transition_attempts_started')} | "
+            f"{row.get('method_psi_status')} | {row.get('error_code')} | "
+            f"{row.get('archive_sha256')} |"
+            for row in premeasurement_failures
+        )
+        or "| — | — | 0 | 0 | — | — | — |"
+    )
     release_run = execution.get("workflow_run_id", "NOT_RECORDED")
     return f"""# Власницьки авторизоване DEVELOPMENT-дослідження ΔA5 — V2
 
@@ -494,6 +506,12 @@ V2 числові рядки відтворюються зі study `{execution["
 
 V1 зафіксував чотири bubblewrap-помилки `Failed RTM_NEWADDR: Operation not permitted`; результат Ψ, план операцій і кандидат не спостерігалися. Часткові B0 каталоги не були збережені. {v1_negative}
 
+Попередня технічна спроба V2 (run `40569757224`) зупинилася до калібрування через невідповідність ідентичності baseline у коді технічного preflight. Це окремий pre-measurement failure, а не одна з чотирьох transition-спроб і не результат B0/Ψ. Її raw hosted preflight ZIP має readback `{premeasurement_failures[0].get("archive_readback_status") if premeasurement_failures else "NOT_PRESENT"}`; SHA-256 наведено нижче.
+
+| Workflow run | Stage | Calibration calls | Transitions | Ψ status | Error | Raw preflight ZIP SHA-256 |
+|---:|---|---:|---:|---|---|---|
+{premeasurement_text}
+
 У V2 невиміряні, не запущені, помилкові та частково збережені фази збережено окремо у `technical-failures.csv`; інфраструктурна помилка не інтерпретується як HOLD. Якщо Method Ψ не видав валідний result, статус — NOT_OBSERVED. Якщо фактичне рішення було HOLD, його reason codes і raw digest збережені без змін.
 
 ## Обмеження інтерпретації
@@ -516,6 +534,57 @@ def _sha256_file_from_mapping(readback: Mapping[str, Any]) -> str:
     return str(readback.get("_record_sha256") or "NOT_RECORDED")
 
 
+def _read_preserved_premeasurement_failure(bundle: Path) -> dict[str, Any] | None:
+    """Verify the retained first V2 technical stop and its raw hosted preflight ZIP."""
+    protocol = bundle / "protocol-snapshot"
+    record_path = protocol / study_v2.PREMEASUREMENT_FAILURE.name
+    archive_path = protocol / study_v2.PREMEASUREMENT_ARTIFACT.name
+    sidecar_path = protocol / study_v2.PREMEASUREMENT_ARTIFACT_SIDECAR.name
+    present = [path.is_file() for path in (record_path, archive_path, sidecar_path)]
+    if not any(present):
+        return None
+    if not all(present):
+        raise ContractValidationError("OWNER_AUTHORIZED_V2_PREMEASUREMENT_EVIDENCE_INCOMPLETE")
+    record = _read_json(record_path)
+    if (
+        record.get("schema_version") != "MONO_CI_PSI_V2_PREMEASUREMENT_FAILURE_V1"
+        or record.get("classification") != "PRE_MEASUREMENT_TECHNICAL_PREFLIGHT_FAILURE"
+        or record.get("raw_github_artifact_sha256") != sha256_file(archive_path)
+    ):
+        raise ContractValidationError("OWNER_AUTHORIZED_V2_PREMEASUREMENT_RECORD_MISMATCH")
+    expected_sidecar = f"{sha256_file(archive_path)}  {archive_path.name}"
+    if sidecar_path.read_text(encoding="ascii").strip() != expected_sidecar:
+        raise ContractValidationError("OWNER_AUTHORIZED_V2_PREMEASUREMENT_SIDECAR_MISMATCH")
+    with zipfile.ZipFile(archive_path, "r") as zipped:
+        if zipped.testzip() is not None:
+            raise ContractValidationError("OWNER_AUTHORIZED_V2_PREMEASUREMENT_ZIP_CORRUPT")
+        names = set(zipped.namelist())
+        if not {"sandbox-preflight.json", "sandbox-preflight.json.sha256"} <= names:
+            raise ContractValidationError("OWNER_AUTHORIZED_V2_PREMEASUREMENT_PREFLIGHT_MISSING")
+        raw_preflight = zipped.read("sandbox-preflight.json")
+        preflight = json.loads(raw_preflight)
+        try:
+            validate_payload(study_v2.PREFLIGHT_SCHEMA, preflight)
+        except ContractValidationError as error:
+            raise ContractValidationError(
+                "OWNER_AUTHORIZED_V2_PREMEASUREMENT_PREFLIGHT_SCHEMA_INVALID"
+            ) from error
+        preflight_digest = hashlib.sha256(raw_preflight).hexdigest()
+        internal_sidecar = zipped.read("sandbox-preflight.json.sha256").decode("ascii").strip()
+        if internal_sidecar != f"{preflight_digest}  sandbox-preflight.json":
+            raise ContractValidationError(
+                "OWNER_AUTHORIZED_V2_PREMEASUREMENT_INTERNAL_DIGEST_MISMATCH"
+            )
+        if preflight.get("verification_status") != "PASS":
+            raise ContractValidationError("OWNER_AUTHORIZED_V2_PREMEASUREMENT_PREFLIGHT_NOT_PASS")
+    return {
+        **record,
+        "archive_readback_status": "PASS",
+        "archive_sha256": sha256_file(archive_path),
+        "preflight_sha256": preflight_digest,
+    }
+
+
 def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> dict[str, Any]:
     bundle = bundle_root.resolve(strict=True)
     repo = repository.resolve(strict=True)
@@ -524,6 +593,8 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
         raise ContractValidationError("OWNER_AUTHORIZED_V2_ANALYSIS_OUTPUT_MUST_BE_NEW")
     output.mkdir(parents=True)
     execution = _read_json(bundle / "study-execution.json")
+    premeasurement_failure = _read_preserved_premeasurement_failure(bundle)
+    premeasurement_failures = [premeasurement_failure] if premeasurement_failure else []
     v2_calibration_verified = owner.verify_calibration_archive(bundle / "calibration.zip")
     v2_calibration_rows = (
         owner._read_jsonl(bundle / "calibration.zip")
@@ -702,11 +773,34 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
         ],
     )
     failures = [row for row in transitions if row.get("run_status") != "COMPLETED"]
+    technical_failures = [
+        *failures,
+        *[
+            {
+                "execution_id": f"workflow-{row['workflow_run_id']}-premeasurement",
+                "workflow_run_id": row["workflow_run_id"],
+                "run_role": "PRE_MEASUREMENT",
+                "run_status": "FAILED_BEFORE_MEASUREMENTS",
+                "b0_execution_status": "NOT_EXECUTED",
+                "method_process_status": row["method_psi_status"],
+                "method_decision": row["method_decision"],
+                "error_or_hold_reasons": row["error_code"],
+                "evidence_classification": row["classification"],
+                "evidence_digest": row["archive_sha256"],
+                "failure_stage": row["failure_stage"],
+                "archive_readback_status": row["archive_readback_status"],
+                "calibration_calls_started": row["calibration_calls_started"],
+                "transition_attempts_started": row["transition_attempts_started"],
+            }
+            for row in premeasurement_failures
+        ],
+    ]
     _write_csv(
         output / "technical-failures.csv",
-        failures,
+        technical_failures,
         [
             "execution_id",
+            "workflow_run_id",
             "run_role",
             "run_status",
             "b0_execution_status",
@@ -715,6 +809,10 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
             "error_or_hold_reasons",
             "evidence_classification",
             "evidence_digest",
+            "failure_stage",
+            "archive_readback_status",
+            "calibration_calls_started",
+            "transition_attempts_started",
         ],
     )
     v2_timing = [
@@ -780,6 +878,7 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
                     ).items()
                 )
             ),
+            "premeasurement_failures": premeasurement_failures,
             "calibration_archive_sha256": v2_calibration_verified["archive_sha256"],
         },
         "v1_v2_samples_pooled": False,
@@ -804,6 +903,8 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
         },
         "comparison_v1_v2": comparison,
         "transition_failures": failures,
+        "technical_failures": technical_failures,
+        "premeasurement_failures": premeasurement_failures,
         "gates": execution["gates"],
         "statistical_interpretation": {
             "architecture_level_units": 1,
@@ -831,6 +932,7 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
             calibration_archive_sha256=v2_calibration_verified["archive_sha256"],
             v1_calibration_archive_sha256=v1_calibration_verified["archive_sha256"],
             v1_readback=v1_readback,
+            premeasurement_failures=premeasurement_failures,
         ),
         encoding="utf-8",
     )

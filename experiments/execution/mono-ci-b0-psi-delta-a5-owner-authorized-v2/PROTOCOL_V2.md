@@ -13,6 +13,20 @@ The only architecture-level unit remains the exact transition `A0_4_REPORT_QUERY
 3. **Mandatory preflight:** a bridge-network control container must reach a test-only host canary. The constrained sandbox must then start the pinned interpreter, read its required input, write only its permitted output, fail to read protected canaries and repository history, and fail to reach both the test canary and an external test target. The host identity, inspect record, stdout/stderr, results, and checksums are preserved. A failed preflight ends the run before any calibration or transition measurement.
 4. **Partial retention:** every attempted transition retains its raw run tree. A successful transition uses the unchanged complete V4 archive validator. An incomplete run uses the new, strictly typed `PARTIAL_EXECUTION_EVIDENCE` archive and validator. The partial manifest reports source identity verification, each phase, method-process status, any parseable raw method observation, errors, and checksums. Archive failure leaves the raw tree available for the outer evidence bundle. Infrastructure failures are never recorded as Method Ψ HOLD.
 
+The first frozen V2 workflow attempt (run `40569757224`, freeze commit
+`c8eebe96edf3166111c408cc4287b6b78ff0fe89`) passed both hosted sandbox
+preflights and stopped at technical preflight with
+`OWNER_AUTHORIZED_V2_BASELINE_IDENTITY_MISMATCH`. The V2 technical preflight
+had called the legacy transition proposal validator, whose baseline digest is
+not the A0.4 proposal identity pinned by this study. No calibration call,
+transition, B0 execution, or Method Ψ process started. Its raw measurement
+preflight artifact is preserved byte-for-byte with its GitHub artifact ID and
+SHA-256 in `PREMEASUREMENT_FAILURE_40569757224.json` and
+`PREMEASUREMENT_PREFLIGHT_ARTIFACT_40569757224.zip`. This attempt is retained
+as a technical failure and is not counted as a transition or Method Ψ result.
+The corrected V2 preflight uses the existing A0.4 proposal validator; a new
+freeze is required before the retry.
+
 ## Frozen measurement plan
 
 The source pair, application trees, reconstructed B0 bytes, evaluator set, historical negative-probe patch, and Method Ψ inputs are pinned in `PRE_RUN_FREEZE.json`. The freeze also pins all implementation/protocol/schema/workflow digests, exact hosted runner and Docker identity, sandbox image digest/platform, pre-run capability-preflight digest, budgets, repetition counts, and analysis version before measurement.

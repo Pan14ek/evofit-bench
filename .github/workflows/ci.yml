@@ -296,7 +296,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: mono-ci-psi-delta-a5-owner-authorized-v2-raw-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/evofit-owner-authorized-a5-v2-${{ github.run_id }}-${{ github.run_attempt }}/artifact-bundle/
+          path: |
+            ${{ runner.temp }}/evofit-owner-authorized-a5-v2-${{ github.run_id }}-${{ github.run_attempt }}/artifact-bundle/
+            ${{ runner.temp }}/evofit-owner-authorized-a5-v2-${{ github.run_id }}-${{ github.run_attempt }}/early-failure-evidence/
           if-no-files-found: warn
           retention-days: 90
           compression-level: 0

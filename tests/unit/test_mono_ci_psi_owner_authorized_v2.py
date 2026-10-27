@@ -553,6 +553,114 @@ def test_preflight_sidecar_and_all_probes_are_required(tmp_path: Path) -> None:
         v2._read_preflight(tmp_path)
 
 
+def test_technical_preflight_uses_a04_baseline_validator(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    repository = tmp_path / "repository"
+    baseline_path = repository / owner.B0_RELATIVE
+    baseline_path.parent.mkdir(parents=True)
+    baseline_path.write_text("pinned A0.4 baseline\n", encoding="utf-8")
+    probe = tmp_path / "probe"
+    probe.mkdir()
+    output = tmp_path / "output"
+    output.mkdir()
+    expected_digest = v2._sha256(baseline_path)
+    calls: list[Path] = []
+
+    def validate_a04(subject: Path) -> dict[str, str]:
+        calls.append(subject)
+        return {
+            "baseline_configuration_sha256": expected_digest,
+            "identity_status": "PROSPECTIVE_RECONSTRUCTION_NOT_HISTORICAL",
+            "approval_status": "NOT_APPROVED",
+        }
+
+    monkeypatch.setattr(a05, "_validate_a04_proposal", validate_a04)
+    monkeypatch.setattr(
+        transition,
+        "verify_execution_proposal",
+        lambda *_args, **_kwargs: pytest.fail("legacy transition validator must not be called"),
+    )
+    monkeypatch.setattr(owner, "_git", lambda *_args: "c" * 40)
+    monkeypatch.setattr(
+        v2,
+        "_v1_inspection_capability",
+        lambda *_args: {"verification_status": "PASS", "inspection_status": "COMPLETE"},
+    )
+
+    result = v2._technical_preflight(
+        repository,
+        repository,
+        probe,
+        {"verification_status": "PASS", "preflight_id": "a" * 64},
+        output,
+    )
+
+    assert calls == [repository]
+    assert result["baseline_identity"]["configuration_sha256"] == expected_digest
+    assert result["pre_measurement_execution_count"] == 0
+
+
+def test_technical_preflight_failure_preserves_raw_premeasurement_evidence(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    output = tmp_path / "output"
+    output.mkdir()
+    protocol_root = tmp_path / "protocol"
+    protocol_root.mkdir()
+    (protocol_root / "PROTOCOL_V2.json").write_text("{}\n", encoding="utf-8")
+    monkeypatch.setattr(v2, "PROTOCOL_ROOT", protocol_root)
+    preflight_root = tmp_path / "hosted-preflight"
+    preflight_root.mkdir()
+    record_path = preflight_root / "sandbox-preflight.json"
+    record_path.write_text('{"verification_status":"PASS"}\n', encoding="utf-8")
+    (preflight_root / "preflight.stdout.bin").write_bytes(b"hosted preflight output\n")
+    (output / "output-permission-probe.txt").write_text("writable\n", encoding="ascii")
+
+    preserved = v2._preserve_technical_preflight_failure(
+        output,
+        {"record_path": str(record_path), "preflight_id": "a" * 64},
+        {"status": "PASS", "source_commit_sha": "b" * 40},
+        ContractValidationError("OWNER_AUTHORIZED_V2_BASELINE_IDENTITY_MISMATCH"),
+    )
+
+    record = json.loads((preserved / "PREMEASUREMENT_FAILURE.json").read_text(encoding="utf-8"))
+    assert record["verification_status"] == "FAIL"
+    assert record["calibration_status"] == "NOT_STARTED"
+    assert record["transition_attempts_started"] == 0
+    assert record["method_psi_status"] == "NOT_OBSERVED"
+    assert (preserved / "sandbox-preflight/preflight.stdout.bin").read_bytes() == (
+        b"hosted preflight output\n"
+    )
+    assert (preserved / "protocol-snapshot/PROTOCOL_V2.json").is_file()
+    assert (preserved / "output-permission-probe.txt").is_file()
+
+
+def test_analysis_verifies_preserved_premeasurement_attempt_zip(tmp_path: Path) -> None:
+    protocol_snapshot = tmp_path / "bundle/protocol-snapshot"
+    protocol_snapshot.mkdir(parents=True)
+    for source in (
+        PROTOCOL_ROOT / v2.PREMEASUREMENT_FAILURE.name,
+        PROTOCOL_ROOT / v2.PREMEASUREMENT_ARTIFACT.name,
+        PROTOCOL_ROOT / v2.PREMEASUREMENT_ARTIFACT_SIDECAR.name,
+    ):
+        (protocol_snapshot / source.name).write_bytes(source.read_bytes())
+
+    verified = analysis._read_preserved_premeasurement_failure(tmp_path / "bundle")
+
+    assert verified is not None
+    assert verified["archive_readback_status"] == "PASS"
+    assert verified["archive_sha256"] == (
+        "dbd0b4724aae79db3c9d0b0d472470b31f00287edbae3b11068795b1bc3df65f"
+    )
+    assert verified["calibration_calls_started"] == 0
+
+    archive = protocol_snapshot / v2.PREMEASUREMENT_ARTIFACT.name
+    archive.write_bytes(archive.read_bytes() + b"tamper")
+    with pytest.raises(ContractValidationError, match="PREMEASUREMENT_RECORD_MISMATCH"):
+        analysis._read_preserved_premeasurement_failure(tmp_path / "bundle")
+
+
 def test_docker_container_command_is_locked_to_isolation_contract(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -660,4 +768,10 @@ def test_ci_runs_v2_preflight_and_study_only_on_the_dedicated_push() -> None:
     assert any(
         "measurement-preflight" in step.get("with", {}).get("name", "") for step in study["steps"]
     )
+    raw_upload = next(
+        step
+        for step in study["steps"]
+        if "owner-authorized-v2-raw" in step.get("with", {}).get("name", "")
+    )
+    assert "early-failure-evidence/" in raw_upload["with"]["path"]
     assert any("release download" in step.get("run", "") for step in study["steps"])

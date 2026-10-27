@@ -13,6 +13,7 @@ Version the narrow PR #58 execution corrections, freeze a hosted sandbox identit
 - `PRE_RUN_SANDBOX_PREFLIGHT.json` — raw successful pre-run hosted capability check used to prepare the freeze.
 - `pre-run-preflight/` — preserved canary inputs, outputs, and raw streams bound into the implementation freeze.
 - `PRE_RUN_FREEZE.json` — created only after the hosted preflight and exact V2 implementation are fixed.
+- `PREMEASUREMENT_FAILURE_40569757224.json` and `PREMEASUREMENT_PREFLIGHT_ARTIFACT_40569757224.zip` — preserved first V2 run failure; technical preflight stopped before calibration or transitions, and the recorded SHA-256 binds the raw GitHub artifact.
 - `analysis/` — post-run analysis and Ukrainian insertion map; generated only from archived V2 raw data.
 - `evidence/` — post-run receipts and checksums; the durable raw bundle is also published as a GitHub release.
 

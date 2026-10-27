@@ -16,6 +16,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from experiments.execution.tooling import mono_ci_psi_a05 as a05
 from experiments.execution.tooling import mono_ci_psi_owner_authorized as owner
 from experiments.execution.tooling import mono_ci_psi_transition as transition
 from experiments.execution.tooling.contracts import validate_payload
@@ -44,6 +45,9 @@ PROTOCOL_MD = PROTOCOL_ROOT / "PROTOCOL_V2.md"
 FREEZE_PATH = PROTOCOL_ROOT / "PRE_RUN_FREEZE.json"
 PRE_RUN_PREFLIGHT = PROTOCOL_ROOT / "PRE_RUN_SANDBOX_PREFLIGHT.json"
 PRE_RUN_PREFLIGHT_SIDECAR = Path(f"{PRE_RUN_PREFLIGHT}.sha256")
+PREMEASUREMENT_FAILURE = PROTOCOL_ROOT / "PREMEASUREMENT_FAILURE_40569757224.json"
+PREMEASUREMENT_ARTIFACT = PROTOCOL_ROOT / "PREMEASUREMENT_PREFLIGHT_ARTIFACT_40569757224.zip"
+PREMEASUREMENT_ARTIFACT_SIDECAR = Path(f"{PREMEASUREMENT_ARTIFACT}.sha256")
 HISTORICAL_PROBE_ROOT = owner.HISTORICAL_PROBE_ROOT
 V1_EXECUTION = (
     Path("experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v1")
@@ -168,6 +172,9 @@ def _freeze_input_paths(repository: Path) -> list[str]:
             "experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v2/CONTEXT.md",
             PROTOCOL_MD.as_posix(),
             PROTOCOL_JSON.as_posix(),
+            PREMEASUREMENT_FAILURE.as_posix(),
+            PREMEASUREMENT_ARTIFACT.as_posix(),
+            PREMEASUREMENT_ARTIFACT_SIDECAR.as_posix(),
             PRE_RUN_PREFLIGHT.as_posix(),
             PRE_RUN_PREFLIGHT_SIDECAR.as_posix(),
             "experiments/execution/tooling/mono_ci_psi_owner_authorized.py",
@@ -479,7 +486,7 @@ def _technical_preflight(
     output_probe.write_text("writable\n", encoding="ascii")
     if output_probe.read_text(encoding="ascii") != "writable\n":
         raise ProtocolError("OWNER_AUTHORIZED_V2_OUTPUT_PERMISSION_CHECK_FAILED")
-    baseline = transition.verify_execution_proposal(subject)
+    baseline = a05._validate_a04_proposal(subject)
     if baseline.get("baseline_configuration_sha256") != _sha256(repository / owner.B0_RELATIVE):
         raise ContractValidationError("OWNER_AUTHORIZED_V2_BASELINE_IDENTITY_MISMATCH")
     inspection = _v1_inspection_capability(repository, subject, probe_checkout)
@@ -508,6 +515,42 @@ def _technical_preflight(
         "complete_archive_verifier_imported": callable(verify_psi_transition_archive),
         "pre_measurement_execution_count": 0,
     }
+
+
+def _preserve_technical_preflight_failure(
+    output_root: Path,
+    preflight: Mapping[str, Any],
+    probe_replay: Mapping[str, Any],
+    error: Exception,
+) -> Path:
+    """Preserve authentic pre-measurement inputs and diagnostics after a technical stop."""
+    evidence_root = output_root / "early-failure-evidence"
+    evidence_root.mkdir(parents=True, exist_ok=False)
+    record = {
+        "schema_version": "MONO_CI_PSI_V2_PREMEASUREMENT_FAILURE_V1",
+        "classification": "PRE_MEASUREMENT_TECHNICAL_PREFLIGHT_FAILURE",
+        "study_id": STUDY_ID,
+        "failure_stage": "TECHNICAL_PREFLIGHT",
+        "verification_status": "FAIL",
+        "error_type": type(error).__name__,
+        "error": str(error),
+        "sandbox_preflight_id": preflight.get("preflight_id"),
+        "calibration_status": "NOT_STARTED",
+        "calibration_calls_started": 0,
+        "transition_status": "NOT_STARTED",
+        "transition_attempts_started": 0,
+        "method_psi_status": "NOT_OBSERVED",
+        "pre_measurement_execution_count": 0,
+        "recorded_at_utc": datetime.now(UTC).isoformat(),
+    }
+    _write_json_new(evidence_root / "PREMEASUREMENT_FAILURE.json", record)
+    _write_json_new(evidence_root / "probe-replay.json", dict(probe_replay))
+    _copy_tree(Path(preflight["record_path"]).parent, evidence_root / "sandbox-preflight")
+    _copy_tree(PROTOCOL_ROOT, evidence_root / "protocol-snapshot")
+    output_probe = output_root / "output-permission-probe.txt"
+    if output_probe.is_file() and not output_probe.is_symlink():
+        _copy_file(output_probe, evidence_root / output_probe.name)
+    return evidence_root
 
 
 def _tree_inventory(root: Path) -> list[dict[str, Any]]:
@@ -863,13 +906,22 @@ def run_study(
             ],
             "classification": "HISTORICAL_PROBE_REPLAYED_FOR_NEW_CALIBRATION",
         }
-        technical_preflight = _technical_preflight(
-            repo,
-            subject,
-            probe_checkout,
-            preflight,
-            output,
-        )
+        try:
+            technical_preflight = _technical_preflight(
+                repo,
+                subject,
+                probe_checkout,
+                preflight,
+                output,
+            )
+        except Exception as error:
+            try:
+                _preserve_technical_preflight_failure(output, preflight, probe_replay, error)
+            except Exception as preserve_error:
+                error.add_note(
+                    f"Pre-measurement evidence preservation also failed: {preserve_error}"
+                )
+            raise
         _write_json_new(output / "technical-preflight.json", technical_preflight)
         calibration_root = output / "calibration-raw"
     _calibration_records, calibration_summary = owner._run_calibration(
