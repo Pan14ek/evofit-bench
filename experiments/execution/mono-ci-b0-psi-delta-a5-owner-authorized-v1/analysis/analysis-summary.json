@@ -1,0 +1,444 @@
+{
+  "budget_sensitivity": {
+    "interpretation": "Evaluator-call planning proxy only; does not estimate Ψ candidate cost or authorize a budget.",
+    "sample_count": 30,
+    "scenarios": [
+      {
+        "estimated_evaluator_calls_at_p90": 2788,
+        "measured_execution_seconds": 900,
+        "setup_archive_reserve_seconds": 900,
+        "total_budget_seconds": 1800
+      },
+      {
+        "estimated_evaluator_calls_at_p90": 5576,
+        "measured_execution_seconds": 1800,
+        "setup_archive_reserve_seconds": 900,
+        "total_budget_seconds": 2700
+      },
+      {
+        "estimated_evaluator_calls_at_p90": 8365,
+        "measured_execution_seconds": 2700,
+        "setup_archive_reserve_seconds": 900,
+        "total_budget_seconds": 3600
+      }
+    ],
+    "scope_call_duration_p90_ms": 322.755
+  },
+  "calibration": {
+    "cells": [
+      {
+        "cpu_system": {
+          "maximum_seconds": 0.085592,
+          "mean_seconds": 0.075176,
+          "minimum_seconds": 0.068831,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.004532
+        },
+        "cpu_user": {
+          "maximum_seconds": 0.186323,
+          "mean_seconds": 0.17919,
+          "minimum_seconds": 0.170909,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.004154
+        },
+        "evaluator_id": "AC_DATA_OWNERSHIP",
+        "failed_samples": 0,
+        "finding_code_counts": {},
+        "inspection_status_counts": {
+          "COMPLETE": 10
+        },
+        "measured_samples": 10,
+        "not_run_samples": 0,
+        "outcome_counts": {
+          "COMPLIANT_NO_FINDING_REPORTED": 10
+        },
+        "planned_measured_samples": 10,
+        "process_duration": {
+          "maximum_ms": 171.123,
+          "mean_ms": 166.436,
+          "median_ms": 166.411,
+          "minimum_ms": 164.236,
+          "n": 10,
+          "p90_nearest_rank_ms": 168.026,
+          "sample_standard_deviation_ms": 2.086
+        },
+        "scope_call_duration": {
+          "maximum_ms": 254.152,
+          "mean_ms": 251.13,
+          "median_ms": 251.977,
+          "minimum_ms": 248.26,
+          "n": 10,
+          "p90_nearest_rank_ms": 252.73,
+          "sample_standard_deviation_ms": 2.094
+        },
+        "source_condition": "A0_5_CLEAN"
+      },
+      {
+        "cpu_system": {
+          "maximum_seconds": 0.128303,
+          "mean_seconds": 0.11738,
+          "minimum_seconds": 0.104619,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.007002
+        },
+        "cpu_user": {
+          "maximum_seconds": 0.24958,
+          "mean_seconds": 0.213254,
+          "minimum_seconds": 0.20016,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.014173
+        },
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "failed_samples": 0,
+        "finding_code_counts": {},
+        "inspection_status_counts": {
+          "COMPLETE": 10
+        },
+        "measured_samples": 10,
+        "not_run_samples": 0,
+        "outcome_counts": {
+          "COMPLIANT_NO_FINDING_REPORTED": 10
+        },
+        "planned_measured_samples": 10,
+        "process_duration": {
+          "maximum_ms": 201.432,
+          "mean_ms": 168.403,
+          "median_ms": 164.723,
+          "minimum_ms": 160.419,
+          "n": 10,
+          "p90_nearest_rank_ms": 168.72,
+          "sample_standard_deviation_ms": 11.824
+        },
+        "scope_call_duration": {
+          "maximum_ms": 360.376,
+          "mean_ms": 324.961,
+          "median_ms": 320.914,
+          "minimum_ms": 314.165,
+          "n": 10,
+          "p90_nearest_rank_ms": 331.741,
+          "sample_standard_deviation_ms": 13.266
+        },
+        "source_condition": "A0_5_CLEAN"
+      },
+      {
+        "cpu_system": {
+          "maximum_seconds": 0.075313,
+          "mean_seconds": 0.071744,
+          "minimum_seconds": 0.068081,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.002813
+        },
+        "cpu_user": {
+          "maximum_seconds": 0.180125,
+          "mean_seconds": 0.173236,
+          "minimum_seconds": 0.165372,
+          "n": 10,
+          "sample_standard_deviation_seconds": 0.005018
+        },
+        "evaluator_id": "AC_PUBLIC_API",
+        "failed_samples": 0,
+        "finding_code_counts": {},
+        "inspection_status_counts": {
+          "COMPLETE": 10
+        },
+        "measured_samples": 10,
+        "not_run_samples": 0,
+        "outcome_counts": {
+          "COMPLIANT_NO_FINDING_REPORTED": 10
+        },
+        "planned_measured_samples": 10,
+        "process_duration": {
+          "maximum_ms": 163.167,
+          "mean_ms": 160.162,
+          "median_ms": 159.732,
+          "minimum_ms": 156.451,
+          "n": 10,
+          "p90_nearest_rank_ms": 162.488,
+          "sample_standard_deviation_ms": 2.192
+        },
+        "scope_call_duration": {
+          "maximum_ms": 250.906,
+          "mean_ms": 242.0,
+          "median_ms": 241.377,
+          "minimum_ms": 236.64,
+          "n": 10,
+          "p90_nearest_rank_ms": 244.862,
+          "sample_standard_deviation_ms": 3.788
+        },
+        "source_condition": "A0_5_CLEAN"
+      },
+      {
+        "cpu_system": {
+          "maximum_seconds": null,
+          "mean_seconds": null,
+          "minimum_seconds": null,
+          "n": 0,
+          "sample_standard_deviation_seconds": null
+        },
+        "cpu_user": {
+          "maximum_seconds": null,
+          "mean_seconds": null,
+          "minimum_seconds": null,
+          "n": 0,
+          "sample_standard_deviation_seconds": null
+        },
+        "evaluator_id": "AC_DATA_OWNERSHIP",
+        "failed_samples": 10,
+        "finding_code_counts": {},
+        "inspection_status_counts": {},
+        "measured_samples": 0,
+        "not_run_samples": 0,
+        "outcome_counts": {},
+        "planned_measured_samples": 10,
+        "process_duration": {
+          "maximum_ms": null,
+          "mean_ms": null,
+          "median_ms": null,
+          "minimum_ms": null,
+          "n": 0,
+          "p90_nearest_rank_ms": null,
+          "sample_standard_deviation_ms": null
+        },
+        "scope_call_duration": {
+          "maximum_ms": null,
+          "mean_ms": null,
+          "median_ms": null,
+          "minimum_ms": null,
+          "n": 0,
+          "p90_nearest_rank_ms": null,
+          "sample_standard_deviation_ms": null
+        },
+        "source_condition": "EXISTING_NEGATIVE_PROBE"
+      },
+      {
+        "cpu_system": {
+          "maximum_seconds": null,
+          "mean_seconds": null,
+          "minimum_seconds": null,
+          "n": 0,
+          "sample_standard_deviation_seconds": null
+        },
+        "cpu_user": {
+          "maximum_seconds": null,
+          "mean_seconds": null,
+          "minimum_seconds": null,
+          "n": 0,
+          "sample_standard_deviation_seconds": null
+        },
+        "evaluator_id": "AC_MODULE_GRAPH",
+        "failed_samples": 10,
+        "finding_code_counts": {},
+        "inspection_status_counts": {},
+        "measured_samples": 0,
+        "not_run_samples": 0,
+        "outcome_counts": {},
+        "planned_measured_samples": 10,
+        "process_duration": {
+          "maximum_ms": null,
+          "mean_ms": null,
+          "median_ms": null,
+          "minimum_ms": null,
+          "n": 0,
+          "p90_nearest_rank_ms": null,
+          "sample_standard_deviation_ms": null
+        },
+        "scope_call_duration": {
+          "maximum_ms": null,
+          "mean_ms": null,
+          "median_ms": null,
+          "minimum_ms": null,
+          "n": 0,
+          "p90_nearest_rank_ms": null,
+          "sample_standard_deviation_ms": null
+        },
+        "source_condition": "EXISTING_NEGATIVE_PROBE"
+      },
+      {
+        "cpu_system": {
+          "maximum_seconds": null,
+          "mean_seconds": null,
+          "minimum_seconds": null,
+          "n": 0,
+          "sample_standard_deviation_seconds": null
+        },
+        "cpu_user": {
+          "maximum_seconds": null,
+          "mean_seconds": null,
+          "minimum_seconds": null,
+          "n": 0,
+          "sample_standard_deviation_seconds": null
+        },
+        "evaluator_id": "AC_PUBLIC_API",
+        "failed_samples": 10,
+        "finding_code_counts": {},
+        "inspection_status_counts": {},
+        "measured_samples": 0,
+        "not_run_samples": 0,
+        "outcome_counts": {},
+        "planned_measured_samples": 10,
+        "process_duration": {
+          "maximum_ms": null,
+          "mean_ms": null,
+          "median_ms": null,
+          "minimum_ms": null,
+          "n": 0,
+          "p90_nearest_rank_ms": null,
+          "sample_standard_deviation_ms": null
+        },
+        "scope_call_duration": {
+          "maximum_ms": null,
+          "mean_ms": null,
+          "median_ms": null,
+          "minimum_ms": null,
+          "n": 0,
+          "p90_nearest_rank_ms": null,
+          "sample_standard_deviation_ms": null
+        },
+        "source_condition": "EXISTING_NEGATIVE_PROBE"
+      }
+    ],
+    "measured_failed_samples": 30,
+    "measured_not_run_samples": 0,
+    "measured_planned_samples": 60,
+    "measured_successful_samples": 30,
+    "warmup_samples": 6
+  },
+  "calibration_archive": {
+    "archive_path": "/home/runner/work/_temp/evofit-owner-authorized-a5-40499692594-1/artifact-bundle/calibration.zip",
+    "archive_sha256": "d4851c292497728b98af5a75aa8f01883541eb5672274896cf6065cd0c612d27",
+    "member_count": 279,
+    "verification_status": "PASS"
+  },
+  "classification": "RESEARCH_OWNER_AUTHORIZED_EXPLORATORY_DEVELOPMENT",
+  "gates": {
+    "G1": "INCOMPLETE",
+    "G4": "NOT_AUTHORIZED",
+    "P_ALGORITHM_STATUS": "NOT_READY",
+    "coverage": "UNKNOWN",
+    "reference": "NOT_READY",
+    "scoring": "NOT_EXECUTED",
+    "study_readiness": "NO_GO_WITH_EXPLICIT_BLOCKERS"
+  },
+  "schema_version": "MONO_CI_PSI_OWNER_AUTHORIZED_ANALYSIS_V1",
+  "statistical_interpretation": {
+    "architecture_level_units": 1,
+    "coverage_percentage": "NOT_COMPUTED",
+    "significance_tests": "NOT_PERFORMED",
+    "technical_repetitions": 0
+  },
+  "study_id": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V1",
+  "transition_failures": [
+    {
+      "classification": "EXPLORATORY_DEVELOPMENT",
+      "cpu_system_seconds": 0.935654,
+      "cpu_user_seconds": 2.978327,
+      "error": {
+        "message": "MONO_CI_PSI_TRANSITION_METHOD_EXECUTION_FAILED: bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted\n",
+        "type": "ProtocolError"
+      },
+      "execution_id": "DEV_PSI_TRANSITION_OADEV_DELTA_A5_20261027_WARMUP_00",
+      "full_transition_duration_ms": 3877.026,
+      "index": 0,
+      "measured": false,
+      "outcome": null,
+      "role": "WARMUP",
+      "run_archive": "transition-warmup.zip",
+      "run_archive_sha256": null,
+      "run_archive_verification": null,
+      "run_status": "FAILED"
+    },
+    {
+      "classification": "EXPLORATORY_DEVELOPMENT",
+      "cpu_system_seconds": 0.913775,
+      "cpu_user_seconds": 3.057553,
+      "error": {
+        "message": "MONO_CI_PSI_TRANSITION_METHOD_EXECUTION_FAILED: bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted\n",
+        "type": "ProtocolError"
+      },
+      "execution_id": "DEV_PSI_TRANSITION_OADEV_DELTA_A5_20261027_MEASURED_01",
+      "full_transition_duration_ms": 3934.486,
+      "index": 1,
+      "measured": true,
+      "outcome": null,
+      "role": "MEASURED",
+      "run_archive": "transition-01.zip",
+      "run_archive_sha256": null,
+      "run_archive_verification": null,
+      "run_status": "FAILED"
+    },
+    {
+      "classification": "EXPLORATORY_DEVELOPMENT",
+      "cpu_system_seconds": 0.927386,
+      "cpu_user_seconds": 3.061571,
+      "error": {
+        "message": "MONO_CI_PSI_TRANSITION_METHOD_EXECUTION_FAILED: bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted\n",
+        "type": "ProtocolError"
+      },
+      "execution_id": "DEV_PSI_TRANSITION_OADEV_DELTA_A5_20261027_MEASURED_02",
+      "full_transition_duration_ms": 3952.292,
+      "index": 2,
+      "measured": true,
+      "outcome": null,
+      "role": "MEASURED",
+      "run_archive": "transition-02.zip",
+      "run_archive_sha256": null,
+      "run_archive_verification": null,
+      "run_status": "FAILED"
+    },
+    {
+      "classification": "EXPLORATORY_DEVELOPMENT",
+      "cpu_system_seconds": 0.940207,
+      "cpu_user_seconds": 3.035289,
+      "error": {
+        "message": "MONO_CI_PSI_TRANSITION_METHOD_EXECUTION_FAILED: bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted\n",
+        "type": "ProtocolError"
+      },
+      "execution_id": "DEV_PSI_TRANSITION_OADEV_DELTA_A5_20261027_MEASURED_03",
+      "full_transition_duration_ms": 3939.107,
+      "index": 3,
+      "measured": true,
+      "outcome": null,
+      "role": "MEASURED",
+      "run_archive": "transition-03.zip",
+      "run_archive_sha256": null,
+      "run_archive_verification": null,
+      "run_status": "FAILED"
+    }
+  ],
+  "transition_resources": {
+    "cpu_system": {
+      "maximum_seconds": null,
+      "mean_seconds": null,
+      "minimum_seconds": null,
+      "n": 0,
+      "sample_standard_deviation_seconds": null
+    },
+    "cpu_user": {
+      "maximum_seconds": null,
+      "mean_seconds": null,
+      "minimum_seconds": null,
+      "n": 0,
+      "sample_standard_deviation_seconds": null
+    },
+    "full_transition_duration": {
+      "maximum_ms": null,
+      "mean_ms": null,
+      "median_ms": null,
+      "minimum_ms": null,
+      "n": 0,
+      "p90_nearest_rank_ms": null,
+      "sample_standard_deviation_ms": null
+    },
+    "method_process_cpu": "NOT_AVAILABLE_SEPARATELY"
+  },
+  "transition_runs": [],
+  "transition_summary": {
+    "B0_outcome_counts": {},
+    "archived_transition_runs": 0,
+    "measured_archived_runs": 0,
+    "measured_method_decisions": {},
+    "measured_operation_counts": [],
+    "method_decisions": {},
+    "planned_transition_runs": 4
+  }
+}

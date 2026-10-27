@@ -1,0 +1,77 @@
+{
+  "study_id": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V1",
+  "classification": "RESEARCH_OWNER_AUTHORIZED_EXPLORATORY_DEVELOPMENT",
+  "workflow_run": {
+    "id": 40499692594,
+    "url": "https://github.com/Pan14ek/evofit-bench/actions/runs/40499692594",
+    "head_sha": "1bc90aab8f1973a274381685dbd5309f95dd1837",
+    "development_quality_job_id": 122173972284,
+    "owner_authorized_job_id": 122176412873,
+    "conclusion": "success"
+  },
+  "pre_run_freeze": {
+    "commit": "1bc90aab8f1973a274381685dbd5309f95dd1837",
+    "record_sha256": "ff1a995b85f891b57530c2b9dde2391250c4378298ea4394d79176b6d6c97ec5",
+    "protocol_sha256": "6c0a05b55fd1cf963b7141ec0edb4abbebd25b046664c13cb149dbffe8398eca"
+  },
+  "actions_artifacts": [
+    {
+      "id": 12732541571,
+      "name": "mono-ci-psi-a05-owner-authorized-raw-40499692594-1",
+      "size_bytes": 1117746,
+      "sha256": "59337d2152008b96509db8c50df6ed7f93fb8f49c6e461bac5d6ecf771e902b3",
+      "expires_at": "2027-01-25T11:54:50Z"
+    },
+    {
+      "id": 12732686154,
+      "name": "mono-ci-psi-a05-owner-authorized-40499692594-1",
+      "size_bytes": 1246430,
+      "sha256": "cc3245c7d399ce17bdbff0d1fabb31f6babb39bda7dff7e97339fde09534159e",
+      "expires_at": "2027-01-25T11:54:50Z"
+    }
+  ],
+  "persistent_release": {
+    "id": 425401462,
+    "tag": "mono-ci-psi-a05-owner-authorized-40499692594-1",
+    "url": "https://github.com/Pan14ek/evofit-bench/releases/tag/mono-ci-psi-a05-owner-authorized-40499692594-1",
+    "asset_name": "mono-ci-psi-a05-owner-authorized-40499692594-1.zip",
+    "asset_size_bytes": 1245869,
+    "asset_sha256": "655d92a407cd738af6a250f115725d7a8f733b29ece95b7316bcde4ded9df41d",
+    "sidecar_asset_sha256": "9514992235f6aa19c38a1723640311e1bd1023462fcb8a23d7a772b4a131a46c"
+  },
+  "verified_contents": {
+    "calibration_archive_sha256": "d4851c292497728b98af5a75aa8f01883541eb5672274896cf6065cd0c612d27",
+    "calibration_archive_member_count": 279,
+    "calibration_manifest_readback": "PASS",
+    "measurement_records_sha256": "94870fce4a47230e8eef4886040a05c9bb17ee1776c7d7dfba2c592176005be5",
+    "execution_record_sha256": "f5b47d2b1d1c24a51055f127ccb0e9dc06c10ff78ec12c1912281e245277ad95",
+    "analysis_readback": "PASS"
+  },
+  "limitations": {
+    "completed_transition_runs": 0,
+    "transition_archives": 0,
+    "baseline_transition_matrix_outputs_retained": false,
+    "method_decision": "NOT_OBSERVED",
+    "candidate": "NOT_OBSERVED",
+    "scoring": "NOT_EXECUTED",
+    "coverage": "UNKNOWN",
+    "G1": "INCOMPLETE",
+    "G4": "NOT_AUTHORIZED",
+    "negative_probe_runtime_rows": "FAILED during in-run source/scope readback; raw evaluator outputs completed and 33/33 passed post-run scope readback on exact probe checkout"
+  },
+  "post_run_probe_readback": {
+    "record_path": "POST_RUN_PROBE_READBACK.json",
+    "record_sha256": "26f81d389a0af61ccaa15e34b803dbe380320e5b0a2ae6bab278fd0a964be2a0",
+    "csv_path": "../../analysis/negative-probe-post-run-readback.csv",
+    "csv_sha256": "2ee074da5827f41cd30a7d4ef3320a4d1c7caa4a33fb5918ef0be81a1153a749",
+    "raw_evaluator_outputs": 33,
+    "post_run_scope_pass": 33,
+    "probe_commit": "5ace86095bda794c9576047c80b9267e70cd0f26",
+    "raw_results": {
+      "AC_DATA_OWNERSHIP|NON_COMPLIANT|FOREIGN_TABLE_ACCESS": 11,
+      "AC_MODULE_GRAPH|COMPLIANT|NO_FINDING": 11,
+      "AC_PUBLIC_API|COMPLIANT|NO_FINDING": 11
+    },
+    "original_measurement_rows_remain": "FAILED due in-run scope readback exception; no process durations were restored"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "analysis_files": [
+    {
+      "path": "OWNER_AUTHORIZED_RESULTS_UK_V1.md",
+      "sha256": "fd94ca55223360cbbbe5e579a7779d211cbcf588ec62cb49d3df603128ba4547"
+    },
+    {
+      "path": "analysis-summary.json",
+      "sha256": "bff6fe78221b4d128c242dd2f090eff18f816d127cb03b59fd7b9653b0e7b2e6"
+    },
+    {
+      "path": "evaluator-samples.csv",
+      "sha256": "83d30f61edb6867adf902b1b3f36f44feb0944dbfeeec587a83724d523d9cc86"
+    },
+    {
+      "path": "evaluator-time-distributions.svg",
+      "sha256": "233ad3043ac84e3102b4ab274f34e2ca146ce814ec2e53ab491796fdcca6909a"
+    },
+    {
+      "path": "transition-samples.csv",
+      "sha256": "8f034ad4ba59bb7746f922a63da4062e722073e3f51ab0378f842e7e347d1baa"
+    }
+  ],
+  "calibration_archive": {
+    "archive_path": "/home/runner/work/_temp/evofit-owner-authorized-a5-40499692594-1/artifact-bundle/calibration.zip",
+    "archive_sha256": "d4851c292497728b98af5a75aa8f01883541eb5672274896cf6065cd0c612d27",
+    "member_count": 279,
+    "verification_status": "PASS"
+  },
+  "classification": "RESEARCH_OWNER_AUTHORIZED_EXPLORATORY_DEVELOPMENT",
+  "gates": {
+    "G1": "INCOMPLETE",
+    "G4": "NOT_AUTHORIZED",
+    "P_ALGORITHM_STATUS": "NOT_READY",
+    "coverage": "UNKNOWN",
+    "reference": "NOT_READY",
+    "scoring": "NOT_EXECUTED",
+    "study_readiness": "NO_GO_WITH_EXPLICIT_BLOCKERS"
+  },
+  "study_id": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V1",
+  "transition_archives": [],
+  "verification_status": "PASS"
+}

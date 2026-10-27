@@ -1,0 +1,1 @@
+execution_id,run_role,measured,arm,architecture_state,evaluator_id,duration_ms,cpu_user_seconds,cpu_system_seconds,exit_code,compliance,source_commit_sha,output_sha256,method_decision,method_operations,candidate_state,method_duration_ms,method_result_sha256
