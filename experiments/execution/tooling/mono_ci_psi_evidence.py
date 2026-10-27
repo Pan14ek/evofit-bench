@@ -341,28 +341,87 @@ def run_fresh_evaluator(
         "LANG": "C.UTF-8",
         "PYTHONPATH": str(repository),
     }
-    result = subprocess.run(  # nosec B603 # noqa: S603 - fixed repository-owned evaluator CLI
-        command,
-        cwd=source_checkout,
-        env=environment,
-        check=False,
-        capture_output=True,
-        timeout=180,
-    )
+    try:
+        result = subprocess.run(  # nosec B603 # noqa: S603 - fixed repository-owned evaluator CLI
+            command,
+            cwd=source_checkout,
+            env=environment,
+            check=False,
+            capture_output=True,
+            timeout=180,
+        )
+    except subprocess.TimeoutExpired as error:
+        stdout_bytes = error.stdout if isinstance(error.stdout, bytes) else (error.stdout or b"")
+        stderr_bytes = error.stderr if isinstance(error.stderr, bytes) else (error.stderr or b"")
+        output_directory.joinpath("stdout.bin").write_bytes(stdout_bytes)
+        output_directory.joinpath("stderr.bin").write_bytes(stderr_bytes)
+        output_directory.joinpath("process-execution.json").write_bytes(
+            pretty_json_bytes(
+                {
+                    "schema_version": "EVALUATOR_PROCESS_EXECUTION_V1",
+                    "evaluator_id": evaluator_id,
+                    "architecture_state": architecture_state,
+                    "source_commit_sha": source_commit_sha,
+                    "status": "TIMED_OUT",
+                    "exit_code": None,
+                    "duration_ms": round((time.perf_counter() - start_perf) * 1000, 3),
+                    "stdout_sha256": sha256_bytes(stdout_bytes),
+                    "stderr_sha256": sha256_bytes(stderr_bytes),
+                }
+            )
+        )
+        raise
+    except OSError as error:
+        output_directory.joinpath("process-execution.json").write_bytes(
+            pretty_json_bytes(
+                {
+                    "schema_version": "EVALUATOR_PROCESS_EXECUTION_V1",
+                    "evaluator_id": evaluator_id,
+                    "architecture_state": architecture_state,
+                    "source_commit_sha": source_commit_sha,
+                    "status": "LAUNCH_FAILED",
+                    "exit_code": None,
+                    "duration_ms": round((time.perf_counter() - start_perf) * 1000, 3),
+                    "error": {"type": type(error).__name__, "message": str(error)[:1000]},
+                }
+            )
+        )
+        raise
     duration_ms = round((time.perf_counter() - start_perf) * 1000, 3)
     ended = datetime.now(UTC)
-    if result.returncode not in {0, 1, 2, 3}:
-        raise ProtocolError("PSI_EVALUATOR_PROCESS_FAILED")
     stdout_path = output_directory / "stdout.bin"
     stderr_path = output_directory / "stderr.bin"
     stdout_path.write_bytes(result.stdout)
     stderr_path.write_bytes(result.stderr)
+    process_record = {
+        "schema_version": "EVALUATOR_PROCESS_EXECUTION_V1",
+        "evaluator_id": evaluator_id,
+        "architecture_state": architecture_state,
+        "source_commit_sha": source_commit_sha,
+        "status": "PROCESS_EXITED",
+        "exit_code": result.returncode,
+        "started_at_utc": started.isoformat(),
+        "ended_at_utc": ended.isoformat(),
+        "duration_ms": duration_ms,
+        "stdout_sha256": sha256_bytes(result.stdout),
+        "stderr_sha256": sha256_bytes(result.stderr),
+    }
+    process_path = output_directory / "process-execution.json"
+    process_path.write_bytes(pretty_json_bytes(process_record))
+    if result.returncode not in {0, 1, 2, 3}:
+        raise ProtocolError("PSI_EVALUATOR_PROCESS_FAILED")
     try:
         evidence = json.loads(result.stdout)
     except (json.JSONDecodeError, UnicodeDecodeError) as error:
+        process_record.update({"status": "OUTPUT_INVALID", "error": {"type": type(error).__name__}})
+        process_path.write_bytes(pretty_json_bytes(process_record))
         raise ProtocolError("PSI_EVALUATOR_OUTPUT_INVALID_JSON") from error
     if not isinstance(evidence, dict):
+        process_record.update({"status": "OUTPUT_INVALID", "error": {"type": "InvalidShape"}})
+        process_path.write_bytes(pretty_json_bytes(process_record))
         raise ProtocolError("PSI_EVALUATOR_OUTPUT_INVALID_SHAPE")
+    process_record["status"] = "OUTPUT_PARSED"
+    process_path.write_bytes(pretty_json_bytes(process_record))
     output_path = output_directory / "evaluator-output.json"
     output_path.write_bytes(pretty_json_bytes(evidence))
     return {

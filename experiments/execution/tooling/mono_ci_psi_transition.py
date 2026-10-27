@@ -8,12 +8,17 @@ import importlib.metadata
 import importlib.util
 import json
 import os
+import platform
 import re
 import shutil
+import socket
 import subprocess  # nosec B404 - fixed interpreter and generated runtime script
 import sys
 import tempfile
+import threading
 import time
+import uuid
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -97,6 +102,12 @@ TRANSITION_RUN_EXTENSION_BUILDER = None
 A05_EXPERIMENT_EVIDENCE_SCHEMA = "mono_ci_psi_a05_experiment_evidence_v1.schema.json"
 RUN_ID_PATTERN = re.compile(r"^DEV_PSI_TRANSITION_[A-Za-z0-9_-]{1,48}$")
 SHA256_PATTERN = re.compile(r"^[a-f0-9]{64}$")
+ISOLATED_METHOD_IMAGE = (
+    "python:3.12.15-slim-bookworm@sha256:"
+    "6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70"
+)
+ISOLATED_METHOD_PLATFORM = "linux/amd64"
+ISOLATED_METHOD_PYTHON = "/usr/local/bin/python"
 RUNTIME_MODULES = (
     "contracts.py",
     "errors.py",
@@ -201,7 +212,15 @@ result_path.write_bytes(
 """
 
 
-def run_transition(repository: Path, output_root: Path, execution_id: str) -> dict[str, Any]:
+def run_transition(
+    repository: Path,
+    output_root: Path,
+    execution_id: str,
+    *,
+    isolation_backend: str | None = None,
+    preserve_partial_evidence: bool = False,
+    sandbox_preflight_id: str | None = None,
+) -> dict[str, Any]:
     """Build source-pinned inputs and execute the existing P DEVELOPMENT API once."""
     repo = repository.resolve(strict=True)
     if RUN_ID_PATTERN.fullmatch(execution_id) is None:
@@ -209,15 +228,46 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
     root = output_root.expanduser().absolute()
     if root.exists() or root.is_symlink() or root.is_relative_to(repo):
         raise ProtocolError("MONO_CI_PSI_TRANSITION_OUTPUT_MUST_BE_NEW_AND_EXTERNAL")
-    _verify_transition_sources(repo)
-    baseline = verify_execution_proposal(repo)
     root.mkdir(parents=True)
+    started_at = datetime.now(UTC).isoformat()
+    phases = {
+        "source_identity": "NOT_EXECUTED",
+        "baseline_identity": "NOT_EXECUTED",
+        "b0_evaluator_matrix": "NOT_EXECUTED",
+        "method_input_bundle": "NOT_EXECUTED",
+        "method_execution": "NOT_OBSERVED",
+        "candidate_validation": "NOT_EXECUTED",
+        "complete_transition_verification": "NOT_EXECUTED",
+    }
     try:
+        if isolation_backend == "docker":
+            if not isinstance(sandbox_preflight_id, str) or not SHA256_PATTERN.fullmatch(
+                sandbox_preflight_id
+            ):
+                raise ProtocolError("MONO_CI_PSI_TRANSITION_DOCKER_PREFLIGHT_BINDING_MISSING")
+            _write_new_file(
+                root / "provenance/sandbox-preflight-binding.json",
+                pretty_json_bytes(
+                    {
+                        "schema_version": "MONO_CI_PSI_DOCKER_PREFLIGHT_BINDING_V1",
+                        "classification": "DEVELOPMENT_SANDBOX_CAPABILITY_PREFLIGHT",
+                        "preflight_id": sandbox_preflight_id,
+                    }
+                ),
+            )
+        phases["source_identity"] = "IN_PROGRESS"
+        _verify_transition_sources(repo)
+        phases["source_identity"] = "COMPLETED"
+        phases["baseline_identity"] = "IN_PROGRESS"
+        baseline = verify_execution_proposal(repo)
+        phases["baseline_identity"] = "COMPLETED"
         psi = root / "PSI"
         psi.mkdir()
+        phases["b0_evaluator_matrix"] = "IN_PROGRESS"
         evaluator_runs, evaluator_bindings, evaluator_artifacts, coverage_assessments = (
             _collect_evaluator_matrix(repo, root)
         )
+        phases["b0_evaluator_matrix"] = "COMPLETED"
         proposal_path = repo / PROPOSAL_RELATIVE / BASELINE_NAME
         proposal_bytes = proposal_path.read_bytes()
         _write_new_file(root / "provenance/reconstructed-b0-proposal.json", proposal_bytes)
@@ -331,10 +381,12 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
         )
         adaptation_path = "experiments/execution/tooling/p_adaptation.py"
         adaptation_digest = _runtime_module_sha256(runtime_inventory, adaptation_path)
+        phases["method_input_bundle"] = "COMPLETED"
         raw_root = psi / "raw"
         raw_root.mkdir()
         result_path = raw_root / "method-result.json"
         execution_started = time.perf_counter()
+        phases["method_execution"] = "IN_PROGRESS"
         _execute_isolated_method(
             repo,
             runtime_root,
@@ -343,7 +395,10 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
             key_path,
             psi / "evaluator-observations",
             result_path,
+            isolation_backend=isolation_backend or "legacy",
+            sandbox_preflight_id=sandbox_preflight_id,
         )
+        phases["method_execution"] = "PROCESS_COMPLETED"
         execution_duration_ms = round((time.perf_counter() - execution_started) * 1000, 3)
         result_digest = sha256_file(result_path)
         method_result = json.loads(result_path.read_text(encoding="utf-8"))
@@ -354,6 +409,8 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
             raise ProtocolError("MONO_CI_PSI_TRANSITION_METHOD_IDENTITY_MISMATCH")
         decision = _governance_decision(method_result)
         _validate_method_result_v2(method_result)
+        phases["method_execution"] = "OBSERVED"
+        phases["candidate_validation"] = "IN_PROGRESS"
         adaptation_assessment = _build_adaptation_necessity_report(
             repo=repo,
             run_root=root,
@@ -476,9 +533,11 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
                 raise ProtocolError("MONO_CI_PSI_TRANSITION_EXTENSION_INVALID")
             record["a05_extension"] = extension
             record["output_checksums"][extension["path"]] = extension["sha256"]
+        phases["candidate_validation"] = "COMPLETED"
         _write_new_file(root / "development_run.json", pretty_json_bytes(record))
         _seal_run(root)
         verify_transition_run(root)
+        phases["complete_transition_verification"] = "PASS"
         return {
             "execution_id": execution_id,
             "study_readiness": record["study_readiness"],
@@ -491,9 +550,148 @@ def run_transition(repository: Path, output_root: Path, execution_id: str) -> di
             "result_path": str(root / "development_run.json"),
             "inventory_sha256": sha256_file(root / "SHA256SUMS"),
         }
-    except Exception:
-        shutil.rmtree(root, ignore_errors=True)
+    except Exception as error:
+        if preserve_partial_evidence:
+            _write_partial_execution_status(
+                root=root,
+                execution_id=execution_id,
+                started_at=started_at,
+                phases=phases,
+                error=error,
+                sandbox_preflight_id=sandbox_preflight_id,
+            )
+        else:
+            shutil.rmtree(root, ignore_errors=True)
         raise
+
+
+def _write_partial_execution_status(
+    *,
+    root: Path,
+    execution_id: str,
+    started_at: str,
+    phases: dict[str, str],
+    error: Exception,
+    sandbox_preflight_id: str | None,
+) -> None:
+    """Record authentic completed phases and artifacts for a failed DEVELOPMENT run."""
+    artifacts = [
+        {
+            "path": path.relative_to(root).as_posix(),
+            "size_bytes": path.stat().st_size,
+            "sha256": sha256_file(path),
+        }
+        for path in sorted(root.rglob("*"))
+        if path.is_file() and not path.is_symlink() and path.name != "partial-execution.json"
+    ]
+    process_record = None
+    sandbox_record = root / "PSI/raw/sandbox-execution.json"
+    if sandbox_record.is_file() and not sandbox_record.is_symlink():
+        try:
+            sandbox = json.loads(sandbox_record.read_text(encoding="utf-8"))
+            process_record = {
+                "status": sandbox.get("status", "NOT_OBSERVED"),
+                "exit_code": sandbox.get("exit_code"),
+                "execution_duration_ms": sandbox.get("execution_duration_ms"),
+                "record_path": "PSI/raw/sandbox-execution.json",
+                "record_sha256": sha256_file(sandbox_record),
+                "stdout_path": "PSI/raw/method-process.stdout.bin"
+                if (root / "PSI/raw/method-process.stdout.bin").is_file()
+                else None,
+                "stderr_path": "PSI/raw/method-process.stderr.bin"
+                if (root / "PSI/raw/method-process.stderr.bin").is_file()
+                else None,
+            }
+        except (OSError, json.JSONDecodeError):
+            process_record = {"status": "RECORD_UNREADABLE"}
+    method_observed = phases.get("method_execution") == "OBSERVED"
+    partial = {
+        "schema_version": "MONO_CI_PSI_PARTIAL_TRANSITION_V1",
+        "classification": "PARTIAL_EXECUTION_EVIDENCE",
+        "execution_id": execution_id,
+        "started_at_utc": started_at,
+        "ended_at_utc": datetime.now(UTC).isoformat(),
+        "source_identities": {
+            "verification_status": "VERIFIED"
+            if phases.get("source_identity") == "COMPLETED"
+            else "NOT_VERIFIED",
+            "expected": {
+                "before_commit_sha": BEFORE_COMMIT,
+                "before_repository_tree_sha": BEFORE_REPOSITORY_TREE,
+                "before_application_tree_sha": BEFORE_APP_TREE,
+                "after_commit_sha": AFTER_COMMIT,
+                "after_repository_tree_sha": AFTER_REPOSITORY_TREE,
+                "after_application_tree_sha": AFTER_APP_TREE,
+            },
+            "observed": {
+                "before_commit_sha": BEFORE_COMMIT
+                if phases.get("source_identity") == "COMPLETED"
+                else None,
+                "before_repository_tree_sha": BEFORE_REPOSITORY_TREE
+                if phases.get("source_identity") == "COMPLETED"
+                else None,
+                "before_application_tree_sha": BEFORE_APP_TREE
+                if phases.get("source_identity") == "COMPLETED"
+                else None,
+                "after_commit_sha": AFTER_COMMIT
+                if phases.get("source_identity") == "COMPLETED"
+                else None,
+                "after_repository_tree_sha": AFTER_REPOSITORY_TREE
+                if phases.get("source_identity") == "COMPLETED"
+                else None,
+                "after_application_tree_sha": AFTER_APP_TREE
+                if phases.get("source_identity") == "COMPLETED"
+                else None,
+            },
+        },
+        "sandbox_preflight_id": sandbox_preflight_id,
+        "phase_status": dict(phases),
+        "method_subprocess": process_record,
+        "error": {"type": type(error).__name__, "message": str(error)[:2000]},
+        "available_artifacts": artifacts,
+        "scientific_status": {
+            "method_decision": "OBSERVED" if method_observed else "NOT_OBSERVED",
+            "operation_plan": "OBSERVED" if method_observed else "NOT_OBSERVED",
+            "candidate": "NOT_OBSERVED",
+            "official_measurement_status": "NOT_EXECUTED",
+            "g1": "INCOMPLETE",
+            "g4": "NOT_AUTHORIZED",
+        },
+    }
+    method_path = root / "PSI/raw/method-result.json"
+    if method_path.is_file() and not method_path.is_symlink():
+        try:
+            method = json.loads(method_path.read_text(encoding="utf-8"))
+            if not isinstance(method, dict):
+                raise ValueError("Method output must be a JSON object")
+            governance = method.get("governance", {})
+            plan = method.get("operation_plan", {})
+            governance = governance if isinstance(governance, dict) else {}
+            plan = plan if isinstance(plan, dict) else {}
+            candidate = method.get("candidate")
+            partial["method_observation"] = {
+                "raw_result_path": "PSI/raw/method-result.json",
+                "raw_result_sha256": sha256_file(method_path),
+                "governance_decision": governance.get("result"),
+                "governance_reason_codes": governance.get("reason_codes", []),
+                "operations": plan.get("operations", []),
+                "operation_hold_reasons": plan.get("hold_reasons", []),
+                "candidate_state": "NOT_MATERIALIZED"
+                if candidate is None
+                else "MATERIALIZED_UNAPPLIED",
+                "candidate_sha256": method.get("candidate_sha256"),
+                "parse_status": "JSON_READBACK_ONLY",
+            }
+            partial["scientific_status"]["candidate"] = (
+                "NOT_PRODUCED" if candidate is None else "OBSERVED"
+            )
+        except (OSError, ValueError, TypeError, json.JSONDecodeError):
+            partial["method_observation"] = {
+                "raw_result_path": "PSI/raw/method-result.json",
+                "raw_result_sha256": sha256_file(method_path),
+                "parse_status": "UNREADABLE",
+            }
+    _write_new_file(root / "partial-execution.json", pretty_json_bytes(partial))
 
 
 def verify_transition_run(run_root: Path, *, repository: Path | None = None) -> dict[str, Any]:
@@ -3636,6 +3834,699 @@ def _runtime_module_sha256(inventory: dict[str, Any], relative_path: str) -> str
     raise ProtocolError("MONO_CI_PSI_TRANSITION_METHOD_IDENTITY_MISSING")
 
 
+class IsolatedMethodExecutionError(ProtocolError):
+    """A failed isolated launch with an explicit distinction from a method result."""
+
+    def __init__(self, message: str, *, process_started: bool, exit_code: int | None) -> None:
+        super().__init__(message)
+        self.process_started = process_started
+        self.exit_code = exit_code
+
+
+def _docker_binary() -> str:
+    docker = shutil.which("docker")
+    if docker is None:
+        raise ProtocolError("MONO_CI_PSI_TRANSITION_DOCKER_UNAVAILABLE")
+    return docker
+
+
+def _docker_host_command(*args: str, timeout: int = 30) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(  # noqa: S603 # nosec B603 - fixed Docker CLI with fixed arguments
+        [_docker_binary(), *args],
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=timeout,
+        env={"PATH": os.defpath, "LANG": "C.UTF-8"},
+    )
+
+
+def _uv_version_for_preflight() -> str | None:
+    uv_binary = shutil.which("uv")
+    if uv_binary is None:
+        return None
+    try:
+        result = subprocess.run(  # noqa: S603 # nosec B603 - fixed uv executable and --version argv
+            [uv_binary, "--version"],
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            timeout=10,
+            env={"PATH": os.defpath, "LANG": "C.UTF-8"},
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return result.stdout.strip() if result.returncode == 0 else None
+
+
+def _docker_image_platform() -> str:
+    result = _docker_host_command(
+        "image", "inspect", "--format", "{{.Os}}/{{.Architecture}}", ISOLATED_METHOD_IMAGE
+    )
+    if result.returncode != 0:
+        raise ProtocolError("MONO_CI_PSI_TRANSITION_PINNED_DOCKER_IMAGE_UNAVAILABLE")
+    return result.stdout.strip()
+
+
+def _mount_argument(source: Path, target: str, *, read_only: bool) -> str:
+    resolved = source.resolve(strict=True)
+    if source.is_symlink() or "," in str(resolved):
+        raise ProtocolError("MONO_CI_PSI_TRANSITION_SANDBOX_MOUNT_INVALID")
+    mode = ",readonly" if read_only else ""
+    return f"type=bind,source={resolved},target={target}{mode}"
+
+
+def _docker_container_base_args(
+    *,
+    name: str,
+    mounts: list[tuple[Path, str, bool]],
+    network_probe_host: bool = False,
+) -> list[str]:
+    if _docker_image_platform() != ISOLATED_METHOD_PLATFORM:
+        raise ProtocolError("MONO_CI_PSI_TRANSITION_DOCKER_PLATFORM_MISMATCH")
+    uid = os.getuid()
+    gid = os.getgid()
+    args = [
+        "create",
+        "--name",
+        name,
+        "--pull=never",
+        "--platform",
+        ISOLATED_METHOD_PLATFORM,
+        "--network",
+        "none",
+        "--read-only",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges",
+        "--pids-limit",
+        "64",
+        "--memory",
+        "512m",
+        "--cpus",
+        "1.0",
+        "--user",
+        f"{uid}:{gid}",
+        "--workdir",
+        "/tmp",  # nosec B108  # noqa: S108 - private, bounded container tmpfs
+        "--tmpfs",
+        "/tmp:rw,nosuid,nodev,noexec,size=16777216",  # nosec B108  # noqa: S108 - private tmpfs
+    ]
+    if network_probe_host:
+        args.extend(("--add-host", "host.docker.internal:host-gateway"))
+    for source, target, read_only in mounts:
+        args.extend(("--mount", _mount_argument(source, target, read_only=read_only)))
+    return args
+
+
+def _inspect_docker_container(
+    container_id: str,
+    expected_mounts: list[tuple[Path, str, bool]],
+    *,
+    require_network_probe_host: bool = False,
+) -> dict[str, Any]:
+    result = _docker_host_command("inspect", "--format", "{{json .}}", container_id)
+    if result.returncode != 0:
+        raise ProtocolError("MONO_CI_PSI_TRANSITION_DOCKER_INSPECT_FAILED")
+    try:
+        item = json.loads(result.stdout)
+    except json.JSONDecodeError as error:
+        raise ProtocolError("MONO_CI_PSI_TRANSITION_DOCKER_INSPECT_INVALID") from error
+    config = item.get("Config", {})
+    host = item.get("HostConfig", {})
+    mounts = item.get("Mounts", [])
+    actual_mounts = {
+        row.get("Destination"): (Path(row.get("Source", "")).resolve(), row.get("RW"))
+        for row in mounts
+        if isinstance(row, dict)
+    }
+    expected = {
+        target: (source.resolve(strict=True), not read_only)
+        for source, target, read_only in expected_mounts
+    }
+    security_options = host.get("SecurityOpt") or []
+    expected_no_new_privs = any(
+        option in {"no-new-privileges", "no-new-privileges=true", "no-new-privileges:true"}
+        for option in security_options
+    )
+    sensitive_env = {
+        "GITHUB_TOKEN",
+        "GH_TOKEN",
+        "ACTIONS_RUNTIME_TOKEN",
+        "DOCKER_HOST",
+        "DOCKER_CONFIG",
+    }
+    environment_names = {
+        value.partition("=")[0] for value in config.get("Env", []) if isinstance(value, str)
+    }
+    if (
+        host.get("NetworkMode") != "none"
+        or host.get("ReadonlyRootfs") is not True
+        or set(host.get("CapDrop") or []) != {"ALL"}
+        or host.get("CapAdd")
+        or not expected_no_new_privs
+        or host.get("Privileged") is not False
+        or host.get("Devices")
+        or host.get("DeviceRequests")
+        or host.get("PortBindings")
+        or host.get("PidMode") == "host"
+        or host.get("IpcMode") == "host"
+        or config.get("User") != f"{os.getuid()}:{os.getgid()}"
+        or actual_mounts != expected
+        or environment_names & sensitive_env
+    ):
+        raise ProtocolError("MONO_CI_PSI_TRANSITION_DOCKER_ISOLATION_CONTRACT_FAILED")
+    if require_network_probe_host and not any(
+        isinstance(value, str) and value.startswith("host.docker.internal:")
+        for value in host.get("ExtraHosts") or []
+    ):
+        raise ProtocolError("MONO_CI_PSI_TRANSITION_DOCKER_CANARY_MAPPING_MISSING")
+    return {
+        "container_id": item.get("Id"),
+        "image_id": item.get("Image"),
+        "network_mode": host.get("NetworkMode"),
+        "readonly_rootfs": host.get("ReadonlyRootfs"),
+        "cap_drop": host.get("CapDrop"),
+        "security_options": security_options,
+        "privileged": host.get("Privileged"),
+        "user": config.get("User"),
+        "mounts": [
+            {
+                "source": str(source),
+                "target": target,
+                "read_only": read_only,
+            }
+            for source, target, read_only in expected_mounts
+        ],
+        "published_ports": host.get("PortBindings"),
+        "sensitive_environment_names_present": sorted(environment_names & sensitive_env),
+        "verified": True,
+    }
+
+
+def _write_sandbox_record(path: Path, payload: dict[str, Any]) -> None:
+    path.write_bytes(pretty_json_bytes(payload))
+
+
+def _docker_isolation_preflight_program() -> str:
+    """Return the fixed program run inside the disposable preflight container."""
+    return """
+import json
+import os
+import socket
+import sys
+
+input_path, output_path, expected, host, port, repo_git, scorer, other = sys.argv[1:]
+result = {
+    "python_version": sys.version.split()[0],
+    "implementation": sys.implementation.name,
+}
+with open(input_path, encoding="utf-8") as stream:
+    result["input_value"] = stream.read().strip()
+output_probe_path = output_path + ".probe"
+with open(output_probe_path, "w", encoding="utf-8") as stream:
+    stream.write("writable\\n")
+with open(output_probe_path, encoding="utf-8") as stream:
+    result["output_value"] = stream.read().strip()
+
+def denied(path):
+    try:
+        with open(path, "rb") as stream:
+            stream.read(1)
+        return False
+    except OSError:
+        return True
+
+result["protected"] = {
+    "repo_git": denied(repo_git),
+    "scorer": denied(scorer),
+    "other_arm": denied(other),
+}
+result["sensitive_environment_absent"] = not any(
+    name in os.environ
+    for name in (
+        "GITHUB_TOKEN",
+        "GH_TOKEN",
+        "ACTIONS_RUNTIME_TOKEN",
+        "DOCKER_HOST",
+        "DOCKER_CONFIG",
+    )
+)
+
+def network_denied(target, target_port):
+    try:
+        connection = socket.create_connection((target, int(target_port)), timeout=1)
+        connection.close()
+        return {"denied": False}
+    except OSError as error:
+        return {"denied": True, "error": type(error).__name__, "errno": error.errno}
+
+result["network"] = {
+    "host_canary": network_denied(host, port),
+    "external_test_target": network_denied("1.1.1.1", 443),
+}
+with open(output_path, "w", encoding="utf-8") as stream:
+    json.dump(result, stream, sort_keys=True)
+print(json.dumps(result, sort_keys=True))
+ok = (
+    result["python_version"] == "3.12.15"
+    and result["implementation"] == "cpython"
+    and result["input_value"] == expected
+    and result["output_value"] == "writable"
+    and all(result["protected"].values())
+    and result["sensitive_environment_absent"]
+    and result["network"]["host_canary"]["denied"]
+    and result["network"]["external_test_target"]["denied"]
+)
+raise SystemExit(0 if ok else 23)
+""".lstrip()
+
+
+def run_docker_isolation_preflight(
+    repository: Path,
+    output_root: Path,
+    *,
+    expected_host_identity: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Exercise the pinned no-network container against isolated canary inputs."""
+    output = output_root.expanduser().absolute()
+    if output.exists() or output.is_symlink():
+        raise ProtocolError("MONO_CI_PSI_ISOLATION_PREFLIGHT_OUTPUT_MUST_BE_NEW")
+    output.mkdir(parents=True)
+    canary_root = output / "canaries"
+    input_root = canary_root / "input"
+    output_mount = canary_root / "writable-output"
+    protected_root = canary_root / "protected"
+    input_root.mkdir(parents=True)
+    output_mount.mkdir()
+    protected_root.mkdir()
+    input_path = input_root / "required-input.json"
+    input_path.write_text('{"probe":"readable"}\n', encoding="utf-8")
+    scorer_canary = protected_root / "scorer-reference-canary.json"
+    other_arm_canary = protected_root / "other-arm-canary.json"
+    scorer_canary.write_text('{"canary":"protected"}\n', encoding="utf-8")
+    other_arm_canary.write_text('{"canary":"protected"}\n', encoding="utf-8")
+    image_digest = ISOLATED_METHOD_IMAGE.rsplit("@", 1)[-1]
+    record: dict[str, Any] = {
+        "schema_version": "MONO_CI_PSI_DOCKER_ISOLATION_PREFLIGHT_V1",
+        "classification": "DEVELOPMENT_SANDBOX_CAPABILITY_PREFLIGHT",
+        "created_at_utc": datetime.now(UTC).isoformat(),
+        "image": ISOLATED_METHOD_IMAGE,
+        "image_digest": image_digest,
+        "required_python_version": "3.12.15",
+        "platform": ISOLATED_METHOD_PLATFORM,
+        "host_identity": {},
+        "network_canary": {"status": "NOT_RUN"},
+        "sandbox_container": {"status": "NOT_RUN"},
+        "probes": {
+            "runtime_started": False,
+            "required_inputs_read": False,
+            "permitted_output_writable": False,
+            "scorer_file_unreadable": False,
+            "other_arm_file_unreadable": False,
+            "repository_history_unreadable": False,
+            "outbound_network_denied": False,
+            "test_canary_network_denied": False,
+            "sensitive_environment_absent": False,
+            "docker_socket_unmounted": False,
+        },
+        "verification_status": "FAIL",
+        "error": None,
+    }
+    canary_listener: socket.socket | None = None
+    canary_thread: threading.Thread | None = None
+    canary_state: dict[str, Any] = {"received": False, "error": None}
+    container_id: str | None = None
+    try:
+        docker_version = _docker_host_command(
+            "version", "--format", "{{.Client.Version}}|{{.Server.Version}}"
+        )
+        docker_info = _docker_host_command(
+            "info", "--format", "{{.OSType}}|{{.Architecture}}|{{.KernelVersion}}"
+        )
+        if docker_version.returncode or docker_info.returncode:
+            raise ProtocolError("MONO_CI_PSI_ISOLATION_PREFLIGHT_DOCKER_DAEMON_UNAVAILABLE")
+        record["host_identity"] = {
+            "host_os": platform.platform(),
+            "host_architecture": platform.machine(),
+            "runner_os": os.environ.get("RUNNER_OS", "LOCAL"),
+            "runner_image_os": os.environ.get("ImageOS"),
+            "runner_image_version": os.environ.get("ImageVersion"),
+            "host_python_version": sys.version.split()[0],
+            "host_python_implementation": platform.python_implementation(),
+            "host_cpu_count": os.cpu_count(),
+            "host_uid": os.getuid(),
+            "host_gid": os.getgid(),
+            "uv_version": _uv_version_for_preflight(),
+            "docker_client_version": docker_version.stdout.strip().split("|", 1)[0],
+            "docker_server_version": docker_version.stdout.strip().split("|", 1)[-1],
+            "docker_daemon_platform": docker_info.stdout.strip().split("|", 2)[:2],
+            "docker_kernel_version": docker_info.stdout.strip().split("|", 2)[-1],
+            "python_runtime_image": ISOLATED_METHOD_IMAGE,
+            "python_runtime_platform": _docker_image_platform(),
+        }
+        if (
+            record["host_identity"]["python_runtime_platform"] != ISOLATED_METHOD_PLATFORM
+            or record["host_identity"]["docker_daemon_platform"][0] != "linux"
+            or not record["host_identity"]["uv_version"]
+        ):
+            raise ProtocolError("MONO_CI_PSI_ISOLATION_PREFLIGHT_PLATFORM_MISMATCH")
+        if expected_host_identity is not None and record["host_identity"] != expected_host_identity:
+            raise ProtocolError("MONO_CI_PSI_ISOLATION_PREFLIGHT_RUNNER_IDENTITY_MISMATCH")
+
+        canary_listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        canary_listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        canary_listener.bind(("0.0.0.0", 0))  # nosec B104  # noqa: S104 - ephemeral Docker bridge canary
+        canary_listener.listen(1)
+        canary_listener.settimeout(20)
+        canary_port = canary_listener.getsockname()[1]
+        canary_token = uuid.uuid4().hex
+
+        def accept_canary() -> None:
+            try:
+                connection, _address = canary_listener.accept()  # type: ignore[union-attr]
+                with connection:
+                    canary_state["received"] = connection.recv(256).decode("ascii") == canary_token
+                    connection.sendall(b"ACK")
+            except (OSError, UnicodeDecodeError) as error:
+                canary_state["error"] = type(error).__name__
+
+        canary_thread = threading.Thread(target=accept_canary, daemon=True)
+        canary_thread.start()
+        control_code = (
+            "import socket,sys;"
+            "s=socket.create_connection((sys.argv[1],int(sys.argv[2])),timeout=5);"
+            "s.sendall(sys.argv[3].encode());"
+            "assert s.recv(16)==b'ACK';s.close()"
+        )
+        control_args = [
+            "run",
+            "--rm",
+            "--pull=never",
+            "--platform",
+            ISOLATED_METHOD_PLATFORM,
+            "--network",
+            "bridge",
+            "--read-only",
+            "--cap-drop",
+            "ALL",
+            "--security-opt",
+            "no-new-privileges",
+            "--pids-limit",
+            "16",
+            "--memory",
+            "128m",
+            "--cpus",
+            "0.25",
+            "--user",
+            f"{os.getuid()}:{os.getgid()}",
+        ]
+        if platform.system() == "Linux":
+            control_args.extend(("--add-host", "host.docker.internal:host-gateway"))
+        control_args.extend(
+            (
+                ISOLATED_METHOD_IMAGE,
+                ISOLATED_METHOD_PYTHON,
+                "-I",
+                "-B",
+                "-c",
+                control_code,
+                "host.docker.internal",
+                str(canary_port),
+                canary_token,
+            )
+        )
+        control = _docker_host_command(*control_args, timeout=15)
+        (output / "network-canary-control.stdout.bin").write_bytes(control.stdout.encode("utf-8"))
+        (output / "network-canary-control.stderr.bin").write_bytes(control.stderr.encode("utf-8"))
+        canary_thread.join(timeout=2)
+        if control.returncode != 0 or canary_state["received"] is not True:
+            raise ProtocolError("MONO_CI_PSI_ISOLATION_PREFLIGHT_CANARY_CONTROL_FAILED")
+        record["network_canary"] = {
+            "status": "CONTROL_REACHABLE_FROM_BRIDGE_CONTAINER",
+            "target": "host.docker.internal",
+            "port": canary_port,
+            "control_stdout_sha256": sha256_bytes(control.stdout.encode("utf-8")),
+            "control_stderr_sha256": sha256_bytes(control.stderr.encode("utf-8")),
+            "control_exit_code": control.returncode,
+            "isolated_attempt_expected": "DENIED",
+        }
+
+        script = _docker_isolation_preflight_program()
+        mounts = [
+            (input_path, "/canary/required-input.json", True),
+            (output_mount, "/canary-output", False),
+        ]
+        name = f"efb-preflight-{uuid.uuid4().hex}"
+        command = _docker_container_base_args(name=name, mounts=mounts, network_probe_host=True)
+        command.extend(
+            (
+                ISOLATED_METHOD_IMAGE,
+                ISOLATED_METHOD_PYTHON,
+                "-I",
+                "-B",
+                "-c",
+                script,
+                "/canary/required-input.json",
+                "/canary-output/preflight-result.json",
+                '{"probe":"readable"}',
+                "host.docker.internal",
+                str(canary_port),
+                str(repository.resolve(strict=True) / ".git/config"),
+                str(scorer_canary),
+                str(other_arm_canary),
+            )
+        )
+        created = _docker_host_command(*command)
+        (output / "preflight-create.stdout.bin").write_bytes(created.stdout.encode("utf-8"))
+        (output / "preflight-create.stderr.bin").write_bytes(created.stderr.encode("utf-8"))
+        if created.returncode != 0:
+            raise ProtocolError("MONO_CI_PSI_ISOLATION_PREFLIGHT_CONTAINER_CREATE_FAILED")
+        container_id = created.stdout.strip()
+        record["sandbox_container"] = _inspect_docker_container(
+            container_id, mounts, require_network_probe_host=True
+        )
+        (output / "preflight-container-inspection.json").write_bytes(
+            pretty_json_bytes(record["sandbox_container"])
+        )
+        execution = _docker_host_command("start", "--attach", container_id, timeout=30)
+        (output / "preflight.stdout.bin").write_bytes(execution.stdout.encode("utf-8"))
+        (output / "preflight.stderr.bin").write_bytes(execution.stderr.encode("utf-8"))
+        inspected = _docker_host_command("inspect", "--format", "{{.State.ExitCode}}", container_id)
+        exit_code = (
+            int(inspected.stdout.strip()) if inspected.returncode == 0 else execution.returncode
+        )
+        result_path = output_mount / "preflight-result.json"
+        if not result_path.is_file() or result_path.is_symlink():
+            raise ProtocolError("MONO_CI_PSI_ISOLATION_PREFLIGHT_RESULT_MISSING")
+        result = json.loads(result_path.read_text(encoding="utf-8"))
+        record["sandbox_container"]["process_exit_code"] = exit_code
+        record["sandbox_container"]["process_result"] = result
+        record["probes"].update(
+            {
+                "runtime_started": result.get("implementation") == "cpython"
+                and result.get("python_version") == "3.12.15",
+                "required_inputs_read": result.get("input_value") == '{"probe":"readable"}',
+                "permitted_output_writable": result.get("output_value") == "writable",
+                "scorer_file_unreadable": result.get("protected", {}).get("scorer") is True,
+                "other_arm_file_unreadable": result.get("protected", {}).get("other_arm") is True,
+                "repository_history_unreadable": result.get("protected", {}).get("repo_git")
+                is True,
+                "outbound_network_denied": result.get("network", {})
+                .get("external_test_target", {})
+                .get("denied")
+                is True,
+                "test_canary_network_denied": result.get("network", {})
+                .get("host_canary", {})
+                .get("denied")
+                is True,
+                "sensitive_environment_absent": result.get("sensitive_environment_absent") is True,
+                "docker_socket_unmounted": "/var/run/docker.sock"
+                not in {row.get("Destination") for row in _docker_inspect_mounts(container_id)},
+            }
+        )
+        if exit_code != 0 or not all(record["probes"].values()):
+            raise ProtocolError("MONO_CI_PSI_ISOLATION_PREFLIGHT_PROBE_FAILED")
+        record["verification_status"] = "PASS"
+    except Exception as error:
+        record["verification_status"] = "FAIL"
+        record["error"] = {"type": type(error).__name__, "message": str(error)[:2000]}
+    finally:
+        if canary_listener is not None:
+            canary_listener.close()
+        if canary_thread is not None:
+            canary_thread.join(timeout=1)
+        if container_id is not None:
+            _docker_host_command("rm", "--force", container_id)
+        preflight_path = output / "sandbox-preflight.json"
+        _write_sandbox_record(preflight_path, record)
+        digest = sha256_file(preflight_path)
+        (output / "sandbox-preflight.json.sha256").write_text(
+            f"{digest}  sandbox-preflight.json\n", encoding="ascii"
+        )
+        record["preflight_id"] = digest
+    return record
+
+
+def _docker_inspect_mounts(container_id: str) -> list[dict[str, Any]]:
+    inspected = _docker_host_command("inspect", "--format", "{{json .Mounts}}", container_id)
+    if inspected.returncode != 0:
+        raise ProtocolError("MONO_CI_PSI_TRANSITION_DOCKER_MOUNTS_UNAVAILABLE")
+    value = json.loads(inspected.stdout)
+    return value if isinstance(value, list) else []
+
+
+def _execute_docker_isolated_method(
+    repository: Path,
+    runtime_root: Path,
+    bundle_root: Path,
+    evidence_sidecar: Path,
+    verifier_key: Path,
+    output: Path,
+    sandbox_preflight_id: str | None = None,
+) -> None:
+    if sys.platform != "linux":
+        raise ProtocolError("MONO_CI_PSI_TRANSITION_DOCKER_SANDBOX_REQUIRES_LINUX")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    if output.exists() or output.is_symlink():
+        raise ProtocolError("MONO_CI_PSI_TRANSITION_METHOD_OUTPUT_PATH_INVALID")
+    mounts = [
+        (runtime_root, "/mnt/method-runtime", True),
+        (bundle_root, "/mnt/method-input", True),
+        (evidence_sidecar, "/mnt/method-evidence.json", True),
+        (verifier_key, "/mnt/verifier-key", True),
+        (output.parent, "/mnt/method-output", False),
+    ]
+    name = f"efb-method-{uuid.uuid4().hex}"
+    record_path = output.parent / "sandbox-execution.json"
+    stdout_path = output.parent / "method-process.stdout.bin"
+    stderr_path = output.parent / "method-process.stderr.bin"
+    record: dict[str, Any] = {
+        "schema_version": "MONO_CI_PSI_DOCKER_SANDBOX_EXECUTION_V1",
+        "backend": "PINNED_DOCKER_CONTAINER_NETWORK_NONE",
+        "image": ISOLATED_METHOD_IMAGE,
+        "platform": ISOLATED_METHOD_PLATFORM,
+        "sandbox_preflight_id": sandbox_preflight_id,
+        "container_name": name,
+        "status": "CONTAINER_CREATE_IN_PROGRESS",
+        "process_started": False,
+        "exit_code": None,
+        "started_at_utc": datetime.now(UTC).isoformat(),
+        "stdout_path": "PSI/raw/method-process.stdout.bin",
+        "stderr_path": "PSI/raw/method-process.stderr.bin",
+        "inspection_path": "PSI/raw/sandbox-container-inspection.json",
+    }
+    _write_sandbox_record(record_path, record)
+    container_id: str | None = None
+    process_started_at = time.perf_counter()
+    try:
+        command = _docker_container_base_args(name=name, mounts=mounts)
+        command.extend(
+            (
+                ISOLATED_METHOD_IMAGE,
+                ISOLATED_METHOD_PYTHON,
+                "-I",
+                "-B",
+                "/mnt/method-runtime/execute_method.py",
+                "/mnt/method-input",
+                "/mnt/method-evidence.json",
+                "/mnt/verifier-key",
+                f"/mnt/method-output/{output.name}",
+            )
+        )
+        created = _docker_host_command(*command)
+        (output.parent / "sandbox-create.stdout.bin").write_bytes(created.stdout.encode("utf-8"))
+        (output.parent / "sandbox-create.stderr.bin").write_bytes(created.stderr.encode("utf-8"))
+        if created.returncode != 0:
+            record.update(
+                {
+                    "status": "CONTAINER_CREATE_FAILED",
+                    "create_exit_code": created.returncode,
+                    "ended_at_utc": datetime.now(UTC).isoformat(),
+                }
+            )
+            _write_sandbox_record(record_path, record)
+            raise IsolatedMethodExecutionError(
+                "MONO_CI_PSI_TRANSITION_SANDBOX_CREATE_FAILED",
+                process_started=False,
+                exit_code=created.returncode,
+            )
+        container_id = created.stdout.strip()
+        inspection = _inspect_docker_container(container_id, mounts)
+        (output.parent / "sandbox-container-inspection.json").write_bytes(
+            pretty_json_bytes(inspection)
+        )
+        record["container_id"] = container_id
+        record["isolation_verification"] = "PASS"
+        record["status"] = "CONTAINER_READY"
+        _write_sandbox_record(record_path, record)
+        record["status"] = "METHOD_PROCESS_RUNNING"
+        record["process_started"] = True
+        _write_sandbox_record(record_path, record)
+        try:
+            started = _docker_host_command("start", "--attach", container_id, timeout=180)
+        except subprocess.TimeoutExpired as error:
+            (output.parent / "method-process.stdout.bin").write_bytes(
+                error.stdout if isinstance(error.stdout, bytes) else (error.stdout or "").encode()
+            )
+            (output.parent / "method-process.stderr.bin").write_bytes(
+                error.stderr if isinstance(error.stderr, bytes) else (error.stderr or "").encode()
+            )
+            _docker_host_command("kill", container_id)
+            record.update(
+                {
+                    "status": "METHOD_PROCESS_TIMED_OUT",
+                    "execution_duration_ms": round(
+                        (time.perf_counter() - process_started_at) * 1000, 3
+                    ),
+                    "ended_at_utc": datetime.now(UTC).isoformat(),
+                }
+            )
+            _write_sandbox_record(record_path, record)
+            raise IsolatedMethodExecutionError(
+                "MONO_CI_PSI_TRANSITION_METHOD_PROCESS_TIMED_OUT",
+                process_started=True,
+                exit_code=None,
+            ) from error
+        stdout_path.write_bytes(started.stdout.encode("utf-8"))
+        stderr_path.write_bytes(started.stderr.encode("utf-8"))
+        inspected = _docker_host_command("inspect", "--format", "{{.State.ExitCode}}", container_id)
+        exit_code = (
+            int(inspected.stdout.strip()) if inspected.returncode == 0 else started.returncode
+        )
+        record.update(
+            {
+                "status": "COMPLETED" if exit_code == 0 else "METHOD_PROCESS_FAILED",
+                "exit_code": exit_code,
+                "execution_duration_ms": round(
+                    (time.perf_counter() - process_started_at) * 1000, 3
+                ),
+                "stdout_sha256": sha256_bytes(stdout_path.read_bytes()),
+                "stderr_sha256": sha256_bytes(stderr_path.read_bytes()),
+                "ended_at_utc": datetime.now(UTC).isoformat(),
+            }
+        )
+        _write_sandbox_record(record_path, record)
+        if exit_code != 0:
+            raise IsolatedMethodExecutionError(
+                "MONO_CI_PSI_TRANSITION_METHOD_PROCESS_FAILED",
+                process_started=True,
+                exit_code=exit_code,
+            )
+    finally:
+        if container_id is not None:
+            _docker_host_command("rm", "--force", container_id)
+    if not output.is_file() or output.is_symlink():
+        raise IsolatedMethodExecutionError(
+            "MONO_CI_PSI_TRANSITION_METHOD_OUTPUT_MISSING",
+            process_started=True,
+            exit_code=0,
+        )
+
+
 def _execute_isolated_method(
     repository: Path,
     runtime_root: Path,
@@ -3644,7 +4535,23 @@ def _execute_isolated_method(
     verifier_key: Path,
     other_observations_root: Path,
     output: Path,
+    *,
+    isolation_backend: str = "legacy",
+    sandbox_preflight_id: str | None = None,
 ) -> None:
+    if isolation_backend == "docker":
+        _execute_docker_isolated_method(
+            repository,
+            runtime_root,
+            bundle_root,
+            evidence_sidecar,
+            verifier_key,
+            output,
+            sandbox_preflight_id=sandbox_preflight_id,
+        )
+        return
+    if isolation_backend != "legacy":
+        raise ProtocolError("MONO_CI_PSI_TRANSITION_ISOLATION_BACKEND_UNSUPPORTED")
     interpreter = Path(sys.executable).resolve(strict=True)
     args = [
         str(interpreter),

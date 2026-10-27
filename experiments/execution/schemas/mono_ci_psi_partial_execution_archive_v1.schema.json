@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_psi_partial_execution_archive_v1.schema.json",
+  "title": "Incomplete owner-authorized ΔA5 execution evidence archive",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "classification",
+    "study_id",
+    "execution_id",
+    "run_role",
+    "source_identities",
+    "sandbox_preflight_id",
+    "phase_status",
+    "method_observation_status",
+    "method_subprocess",
+    "method_observation",
+    "error",
+    "ended_at_utc",
+    "member_count",
+    "members"
+  ],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_PSI_PARTIAL_EXECUTION_ARCHIVE_V1"},
+    "classification": {"const": "PARTIAL_EXECUTION_EVIDENCE"},
+    "study_id": {"const": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V2"},
+    "execution_id": {"type": "string", "pattern": "^DEV_PSI_TRANSITION_[A-Za-z0-9_-]{1,48}$"},
+    "run_role": {"enum": ["WARMUP", "MEASURED"]},
+    "source_identities": {"type": "object"},
+    "sandbox_preflight_id": {"$ref": "#/$defs/sha256"},
+    "phase_status": {
+      "type": "object",
+      "required": [
+        "source_identity",
+        "baseline_identity",
+        "b0_evaluator_matrix",
+        "method_input_bundle",
+        "method_execution",
+        "candidate_validation",
+        "complete_transition_verification"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source_identity": {"enum": ["NOT_EXECUTED", "IN_PROGRESS", "COMPLETED", "FAILED"]},
+        "baseline_identity": {"enum": ["NOT_EXECUTED", "IN_PROGRESS", "COMPLETED", "FAILED"]},
+        "b0_evaluator_matrix": {"enum": ["NOT_EXECUTED", "IN_PROGRESS", "COMPLETED", "FAILED"]},
+        "method_input_bundle": {"enum": ["NOT_EXECUTED", "IN_PROGRESS", "COMPLETED", "FAILED"]},
+        "method_execution": {"enum": ["NOT_OBSERVED", "IN_PROGRESS", "PROCESS_COMPLETED", "OBSERVED", "FAILED"]},
+        "candidate_validation": {"enum": ["NOT_EXECUTED", "IN_PROGRESS", "COMPLETED", "FAILED"]},
+        "complete_transition_verification": {"enum": ["NOT_EXECUTED", "PASS", "FAILED"]}
+      }
+    },
+    "method_observation_status": {"enum": ["NOT_OBSERVED", "OBSERVED"]},
+    "method_subprocess": {"type": ["object", "null"]},
+    "method_observation": {"type": ["object", "null"]},
+    "error": {"type": ["object", "null"]},
+    "archive_error": {"type": ["object", "null"]},
+    "ended_at_utc": {"type": "string", "format": "date-time"},
+    "member_count": {"type": "integer", "minimum": 1},
+    "members": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "size_bytes", "sha256"],
+        "properties": {
+          "path": {"type": "string", "minLength": 1},
+          "size_bytes": {"type": "integer", "minimum": 0},
+          "sha256": {"$ref": "#/$defs/sha256"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

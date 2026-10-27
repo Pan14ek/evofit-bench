@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_psi_docker_isolation_preflight_v1.schema.json",
+  "title": "Pinned Docker isolation capability preflight",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "classification",
+    "created_at_utc",
+    "image",
+    "image_digest",
+    "required_python_version",
+    "platform",
+    "host_identity",
+    "network_canary",
+    "sandbox_container",
+    "probes",
+    "verification_status",
+    "error"
+  ],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_PSI_DOCKER_ISOLATION_PREFLIGHT_V1"},
+    "classification": {"const": "DEVELOPMENT_SANDBOX_CAPABILITY_PREFLIGHT"},
+    "created_at_utc": {"type": "string", "format": "date-time"},
+    "image": {"const": "python:3.12.15-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70"},
+    "image_digest": {"const": "sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70"},
+    "required_python_version": {"const": "3.12.15"},
+    "platform": {"const": "linux/amd64"},
+    "host_identity": {"type": "object", "required": ["host_os", "host_architecture", "runner_os", "runner_image_os", "runner_image_version", "host_python_version", "host_python_implementation", "host_cpu_count", "host_uid", "host_gid", "uv_version", "docker_client_version", "docker_server_version", "docker_daemon_platform", "docker_kernel_version", "python_runtime_image", "python_runtime_platform"]},
+    "network_canary": {"type": "object"},
+    "sandbox_container": {"type": "object"},
+    "probes": {
+      "type": "object",
+      "required": ["runtime_started", "required_inputs_read", "permitted_output_writable", "scorer_file_unreadable", "other_arm_file_unreadable", "repository_history_unreadable", "outbound_network_denied", "test_canary_network_denied", "sensitive_environment_absent", "docker_socket_unmounted"],
+      "additionalProperties": false,
+      "properties": {
+        "runtime_started": {"type": "boolean"},
+        "required_inputs_read": {"type": "boolean"},
+        "permitted_output_writable": {"type": "boolean"},
+        "scorer_file_unreadable": {"type": "boolean"},
+        "other_arm_file_unreadable": {"type": "boolean"},
+        "repository_history_unreadable": {"type": "boolean"},
+        "outbound_network_denied": {"type": "boolean"},
+        "test_canary_network_denied": {"type": "boolean"},
+        "sensitive_environment_absent": {"type": "boolean"},
+        "docker_socket_unmounted": {"type": "boolean"}
+      }
+    },
+    "verification_status": {"enum": ["PASS", "FAIL"]},
+    "error": {"type": ["object", "null"]}
+  }
+}

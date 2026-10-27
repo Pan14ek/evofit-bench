@@ -1,0 +1,29 @@
+{
+  "cap_drop": [
+    "ALL"
+  ],
+  "container_id": "dea9838521f537e856d01635b97b95e14117b00e8efbd0c822d967b12c2b722a",
+  "image_id": "sha256:3c4d812a6efe003770aafbdba65f9c1960ba8234ab23a133934205a70bdcda77",
+  "mounts": [
+    {
+      "read_only": true,
+      "source": "/home/runner/work/_temp/evofit-delta-a5-v2-preflight-40578264604-1/canaries/input/required-input.json",
+      "target": "/canary/required-input.json"
+    },
+    {
+      "read_only": false,
+      "source": "/home/runner/work/_temp/evofit-delta-a5-v2-preflight-40578264604-1/canaries/writable-output",
+      "target": "/canary-output"
+    }
+  ],
+  "network_mode": "none",
+  "privileged": false,
+  "published_ports": {},
+  "readonly_rootfs": true,
+  "security_options": [
+    "no-new-privileges"
+  ],
+  "sensitive_environment_names_present": [],
+  "user": "1001:1001",
+  "verified": true
+}
