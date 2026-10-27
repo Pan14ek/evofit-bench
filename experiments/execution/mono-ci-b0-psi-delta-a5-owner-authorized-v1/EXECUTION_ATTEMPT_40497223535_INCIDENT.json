@@ -1,0 +1,87 @@
+{
+  "record_type": "OWNER_AUTHORIZED_EXECUTION_ATTEMPT_INCIDENT_V1",
+  "study_id": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V1",
+  "workflow_run": {
+    "run_id": 40497223535,
+    "run_url": "https://github.com/Pan14ek/evofit-bench/actions/runs/40497223535",
+    "job_id": 122168064154,
+    "freeze_commit": "30bb1b6372e5ee3201364b3b504774c0beabaad2",
+    "freeze_record_sha256": "c122046c83aa7519d89ba3211b6fa3b4c9edcedee33531a29aa9922a705a01cc",
+    "protocol_sha256": "6c0a05b55fd1cf963b7141ec0edb4abbebd25b046664c13cb149dbffe8398eca",
+    "execution_step": "SUCCESS",
+    "analysis_step": "FAILED",
+    "analysis_error": "ModuleNotFoundError: No module named 'matplotlib'",
+    "actions_artifacts": [],
+    "persistent_release": "NOT_CREATED"
+  },
+  "calibration": {
+    "classification": "DEVELOPMENT_CALIBRATION",
+    "planned_calls": 66,
+    "attempted_calls": 66,
+    "measured_calls_reported": 33,
+    "failed_calls_reported": 33,
+    "not_run_calls": 0,
+    "wall_duration_ms": 12220.284,
+    "measurement_records_sha256_reported": "4804049b27e7be33391740d14c8465b4e23be52f0c0a663e90b16b75c55bd387",
+    "archive_sha256_reported": "8e4a89d91053e27f825607f77e3f757c0685f078c2458c801426b0cfba954aa2",
+    "archive_member_count_reported": 279,
+    "in_run_archive_verification": "PASS_REPORTED_IN_WORKFLOW_LOG",
+    "raw_archive_retained": false,
+    "eligible_as_preserved_measurement_dataset": false
+  },
+  "transitions": {
+    "planned_runs": 4,
+    "completed_runs": 0,
+    "failed_runs": 4,
+    "not_run_runs": 0,
+    "wall_duration_ms": 84.37,
+    "attempts": [
+      {
+        "execution_id": "OADEV_DELTA_A5_20261027_WARMUP_00",
+        "role": "WARMUP",
+        "measured": false,
+        "duration_ms": 21.783,
+        "status": "FAILED",
+        "error": "MONO_CI_PSI_TRANSITION_EXECUTION_ID_INVALID",
+        "outcome": null,
+        "archive_sha256": null
+      },
+      {
+        "execution_id": "OADEV_DELTA_A5_20261027_MEASURED_01",
+        "role": "MEASURED",
+        "measured": true,
+        "duration_ms": 21.09,
+        "status": "FAILED",
+        "error": "MONO_CI_PSI_TRANSITION_EXECUTION_ID_INVALID",
+        "outcome": null,
+        "archive_sha256": null
+      },
+      {
+        "execution_id": "OADEV_DELTA_A5_20261027_MEASURED_02",
+        "role": "MEASURED",
+        "measured": true,
+        "duration_ms": 20.79,
+        "status": "FAILED",
+        "error": "MONO_CI_PSI_TRANSITION_EXECUTION_ID_INVALID",
+        "outcome": null,
+        "archive_sha256": null
+      },
+      {
+        "execution_id": "OADEV_DELTA_A5_20261027_MEASURED_03",
+        "role": "MEASURED",
+        "measured": true,
+        "duration_ms": 20.52,
+        "status": "FAILED",
+        "error": "MONO_CI_PSI_TRANSITION_EXECUTION_ID_INVALID",
+        "outcome": null,
+        "archive_sha256": null
+      }
+    ]
+  },
+  "interpretation": {
+    "method_psi_execution": "NOT_STARTED; the adapter rejected every transition ID before evaluator or method execution.",
+    "b0_psi_comparison": "NO_COMPLETED_B0_VS_PSI_TRANSITION; calibration evaluator observations are separate.",
+    "calibration_data": "The workflow log retains only the runner-reported summary and digests. The raw calibration archive was not uploaded and is unavailable for independent readback.",
+    "treatment": "Keep this attempt separate from any later archived execution; do not combine its counts with a later run or present them as a verified dataset."
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_psi_owner_authorized_protocol_v1.schema.json",
+  "title": "Research-owner-authorized exploratory ΔA5 protocol",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schema_version", "study_id", "classification", "authorization", "transition", "baseline", "cases", "calibration", "transition_runs", "timing", "budget", "statistics", "gates"],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_PROTOCOL_V1"},
+    "study_id": {"const": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V1"},
+    "classification": {"const": "RESEARCH_OWNER_AUTHORIZED_EXPLORATORY_DEVELOPMENT"},
+    "authorization": {
+      "type": "object",
+      "required": ["date", "provenance", "identity_independently_verified", "signature_artifact", "scope", "explicit_exclusions"],
+      "properties": {
+        "provenance": {"const": "DIRECT_USER_CONVERSATION_INSTRUCTION"},
+        "identity_independently_verified": {"const": false},
+        "signature_artifact": {"type": ["null", "string"]},
+        "explicit_exclusions": {"type": "array", "contains": {"const": "G4_authorization"}}
+      }
+    },
+    "transition": {
+      "type": "object",
+      "required": ["before_commit_sha", "before_repository_tree_sha", "before_application_tree_sha", "after_commit_sha", "after_repository_tree_sha", "after_application_tree_sha"],
+      "properties": {
+        "before_commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "after_commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "before_application_tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "after_application_tree_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"}
+      }
+    },
+    "baseline": {"type": "object", "required": ["path", "sha256", "identity", "approval", "controls"], "properties": {"sha256": {"$ref": "#/$defs/sha256"}, "identity": {"const": "PROSPECTIVE_RECONSTRUCTED_NOT_HISTORICAL"}, "approval": {"const": "NOT_APPROVED"}, "controls": {"const": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]}}},
+    "calibration": {"type": "object", "required": ["evaluators", "source_conditions", "warmups_per_cell", "measured_repetitions_per_cell", "planned_measured_process_calls", "planned_total_process_calls_including_warmups"], "properties": {"evaluators": {"const": ["AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP"]}, "source_conditions": {"const": ["A0_5_CLEAN", "EXISTING_NEGATIVE_PROBE"]}, "measured_repetitions_per_cell": {"const": 10}, "planned_measured_process_calls": {"const": 60}, "planned_total_process_calls_including_warmups": {"const": 66}}},
+    "transition_runs": {"type": "object", "required": ["warmup_runs", "measured_runs", "scoring", "coverage"], "properties": {"measured_runs": {"const": 3}, "scoring": {"const": "NOT_EXECUTED"}, "coverage": {"const": "UNKNOWN"}}},
+    "budget": {"type": "object", "required": ["total_measured_execution_seconds", "author_selected", "candidate_cost_threshold", "cost_model_status"], "properties": {"total_measured_execution_seconds": {"const": 2700}, "author_selected": {"const": true}, "candidate_cost_threshold": {"type": "null"}, "cost_model_status": {"const": "UNRESOLVED"}}},
+    "statistics": {"type": "object", "required": ["descriptive_only", "significance_tests", "architecture_level_n", "coverage_percentage"], "properties": {"significance_tests": {"const": false}, "architecture_level_n": {"const": 1}, "coverage_percentage": {"const": "NOT_COMPUTED"}}},
+    "gates": {"type": "object", "required": ["P_ALGORITHM_STATUS", "G1", "G4", "independent_reference", "official_delta_a5_protocol"], "properties": {"P_ALGORITHM_STATUS": {"const": "NOT_READY"}, "G1": {"const": "INCOMPLETE"}, "G4": {"const": "NOT_AUTHORIZED"}, "independent_reference": {"const": "NOT_READY"}, "official_delta_a5_protocol": {"const": "NO_GO_WITH_EXPLICIT_BLOCKERS"}}}
+  },
+  "$defs": {"sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

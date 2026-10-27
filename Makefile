@@ -52,7 +52,7 @@ DEVELOPMENT_PROTECTED_TESTS = \
 	tests/unit/test_da01_execution.py \
 	tests/unit/test_research_schema_foundation.py
 
-.PHONY: install run test test-unit test-integration development-regression-test development-lint development-typecheck development-quality lint typecheck security architecture-test quality migration-test db-upgrade seed seed-fingerprint reset wait-ready load-smoke load-baseline exp01-smoke experiment-reset export-metrics metadata research-dashboard research-figures test-research-dashboard test-monograph-evidence test-mono-ci-b0-psi test-mono-ci-b0-psi-execution test-mono-ci-psi-transition test-mono-ci-psi-a05 test-mono-ci-psi-delta-a5
+.PHONY: install run test test-unit test-integration development-regression-test development-lint development-typecheck development-quality lint typecheck security architecture-test quality migration-test db-upgrade seed seed-fingerprint reset wait-ready load-smoke load-baseline exp01-smoke experiment-reset export-metrics metadata research-dashboard research-figures test-research-dashboard test-monograph-evidence test-mono-ci-b0-psi test-mono-ci-b0-psi-execution test-mono-ci-psi-transition test-mono-ci-psi-a05 test-mono-ci-psi-delta-a5 test-mono-ci-psi-owner-authorized
 
 install:
 	$(UV) sync --extra dev
@@ -94,6 +94,9 @@ test-mono-ci-psi-delta-a5:
 	$(UV) run --frozen --extra dev python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_mono_ci_b0_psi_delta_a5.py
 	$(UV) run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_b0_psi_delta_a5 --repository .
 
+test-mono-ci-psi-owner-authorized:
+	$(UV) run --frozen --extra dev python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_mono_ci_psi_owner_authorized.py
+
 test:
 	$(UV) run python -m pytest --cov=app --cov-report=term-missing --cov-report=xml
 
@@ -134,10 +137,12 @@ development-regression-test:
 development-lint:
 	$(UV) run ruff check . \
 		--extend-exclude=tests/unit/test_da01_execution.py \
-		--extend-exclude=tests/unit/test_research_schema_foundation.py
+		--extend-exclude=tests/unit/test_research_schema_foundation.py \
+		--extend-exclude='experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v1/inputs/historical-probe/source-files/**'
 	$(UV) run ruff format --check . \
 		--extend-exclude=tests/unit/test_da01_execution.py \
-		--extend-exclude=tests/unit/test_research_schema_foundation.py
+		--extend-exclude=tests/unit/test_research_schema_foundation.py \
+		--extend-exclude='experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v1/inputs/historical-probe/source-files/**'
 
 development-typecheck:
 	$(UV) run --frozen --extra dev --with-requirements research_dashboard/requirements.lock \

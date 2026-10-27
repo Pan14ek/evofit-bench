@@ -1,0 +1,15 @@
+diff --git a/app/modules/tasks/repository.py b/app/modules/tasks/repository.py
+index 36f3f05..5d8816e 100644
+--- a/app/modules/tasks/repository.py
++++ b/app/modules/tasks/repository.py
+@@ -46,3 +46,10 @@ def task_assignment_counts(session: Session) -> tuple[int, int, int]:
+     total_count = int(total or 0)
+     assigned_count = int(assigned or 0)
+     return total_count, assigned_count, total_count - assigned_count
++
++
++from sqlalchemy import MetaData, Table
++
++def _a05_probe_foreign_notification_table(session):
++    foreign_table = Table("notifications", MetaData(), autoload_with=session.bind)
++    return session.execute(select(foreign_table)).all()

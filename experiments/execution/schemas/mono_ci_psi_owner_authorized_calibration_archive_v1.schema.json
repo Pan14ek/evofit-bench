@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_psi_owner_authorized_calibration_archive_v1.schema.json",
+  "title": "Member manifest for exploratory evaluator calibration archive",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "classification", "member_count", "members"],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_PSI_OWNER_AUTHORIZED_CALIBRATION_ARCHIVE_V1"},
+    "classification": {"const": "DEVELOPMENT_CALIBRATION"},
+    "member_count": {"type": "integer", "minimum": 0},
+    "members": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["path", "size_bytes", "sha256"], "properties": {"path": {"type": "string", "minLength": 1}, "size_bytes": {"type": "integer", "minimum": 0}, "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}}}
+  }
+}

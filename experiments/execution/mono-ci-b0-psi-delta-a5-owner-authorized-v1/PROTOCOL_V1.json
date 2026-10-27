@@ -1,0 +1,124 @@
+{
+  "schema_version": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_PROTOCOL_V1",
+  "study_id": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V1",
+  "classification": "RESEARCH_OWNER_AUTHORIZED_EXPLORATORY_DEVELOPMENT",
+  "authorization": {
+    "date": "2026-10-27",
+    "provenance": "DIRECT_USER_CONVERSATION_INSTRUCTION",
+    "identity_independently_verified": false,
+    "signature_artifact": null,
+    "scope": "Real DEVELOPMENT evaluator and isolated Method Psi execution under a separate versioned exploratory protocol.",
+    "explicit_exclusions": ["independent_review", "G1_completion", "G4_authorization", "normative_policy_approval"]
+  },
+  "transition": {
+    "before_state": "A0_4_REPORT_QUERY_PORT",
+    "before_commit_sha": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+    "before_repository_tree_sha": "2b436e0aaf09403ea516d73d20a466a122f86592",
+    "before_application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+    "before_state_manifest_sha256": "9c981442a34830bdc44d77ffc17de5b9f832b0b261d0d92f28bd15dc567febd9",
+    "after_state": "A0_5_MODULE_DATA_OWNERSHIP",
+    "after_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+    "after_repository_tree_sha": "97c060cc26313a879f0940a178d42e422cc4d188",
+    "after_application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+    "after_state_manifest_sha256": "2906216b212b450706368d44233488fd638d2e7af789980ea2abf02740a04ae8"
+  },
+  "baseline": {
+    "path": "experiments/execution/mono-ci-b0-psi-execution-a05-v1/RECONSTRUCTED_B0_A04_V1.json",
+    "sha256": "9a8c15fabc41ec6e079b3ec708a60dcc0320fa5e7370e1416123e9ec4f64643d",
+    "identity": "PROSPECTIVE_RECONSTRUCTED_NOT_HISTORICAL",
+    "approval": "NOT_APPROVED",
+    "controls": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"]
+  },
+  "cases": {
+    "clean": "Exact A0.5 source; input to the existing transition adapter.",
+    "negative_probe": {
+      "identity": "Existing PR #56 source patch; reverified and replayed, not a new holdout.",
+      "changed_path": "app/modules/tasks/repository.py",
+      "passed_to_psi": false,
+      "new_holdout": false
+    }
+  },
+  "calibration": {
+    "evaluators": ["AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP"],
+    "source_conditions": ["A0_5_CLEAN", "EXISTING_NEGATIVE_PROBE"],
+    "warmups_per_cell": 1,
+    "measured_repetitions_per_cell": 10,
+    "cell_order": "randomized_within_round",
+    "random_seed": 20261027,
+    "planned_measured_process_calls": 60,
+    "planned_total_process_calls_including_warmups": 66
+  },
+  "transition_runs": {
+    "warmup_runs": 1,
+    "measured_runs": 3,
+    "same_architecture_transition": true,
+    "b0_controls": ["AC_PUBLIC_API", "AC_MODULE_GRAPH"],
+    "psi": "Existing isolated A0.5 DEVELOPMENT implementation; actual output preserved.",
+    "scoring": "NOT_EXECUTED",
+    "coverage": "UNKNOWN"
+  },
+  "timing": {
+    "clock": "time.perf_counter",
+    "evaluator_process_boundary": "run_fresh_evaluator around the evaluator subprocess",
+    "evaluator_scope_boundary": "outer interval around _run_bound_evaluator",
+    "psi_process_boundary": "existing transition record psi.execution_duration_ms",
+    "method_stage_breakdown": "NOT_AVAILABLE_IN_EXISTING_TRANSITION_CONTRACT",
+    "full_transition_boundary": "outer interval around run_a05_transition",
+    "cpu": "resource self and child CPU deltas; child CPU includes evaluator and Git/verifier children",
+    "peak_rss": "NOT_AVAILABLE_PER_PROCESS"
+  },
+  "budget": {
+    "total_measured_execution_seconds": 2700,
+    "calibration_seconds": 900,
+    "transition_runs_seconds": 1800,
+    "basis": "60-minute timeout in .github/workflows/mono-ci-psi-a05-development.yml minus 15-minute setup/archive/upload reserve",
+    "author_selected": true,
+    "candidate_cost_threshold": null,
+    "cost_model_status": "UNRESOLVED"
+  },
+  "statistics": {
+    "descriptive_only": true,
+    "quantile": "nearest_rank_p90",
+    "significance_tests": false,
+    "architecture_level_n": 1,
+    "coverage_percentage": "NOT_COMPUTED"
+  },
+  "activation_history": [
+    {
+      "freeze_commit": "500bc94d5914ef84c5796d8833e9b233955124d3",
+      "workflow_run_id": 40491096266,
+      "status": "FAILED_WITH_ZERO_JOBS",
+      "measurement_status": "NOT_STARTED",
+      "study_observations": false
+    },
+    {
+      "freeze_commit": "a2db859248236bcb6acf8860080ce5b5b89d2b41",
+      "workflow_run_id": 40493480973,
+      "status": "FAILED_WITH_ZERO_JOBS",
+      "measurement_status": "NOT_STARTED",
+      "study_observations": false
+    },
+    {
+      "freeze_commit": "7049affc12f9f2d6aca224730af4ff49a252b464",
+      "workflow_run_id": 40494704760,
+      "caller_workflow_run_id": 40494706231,
+      "status": "FAILED_WITH_ZERO_CHECKS_OR_JOBS",
+      "measurement_status": "NOT_STARTED",
+      "study_observations": false
+    },
+    {
+      "freeze_commit": "d20e0f698bf1b0ccdba949b30d04102673c0a74a",
+      "workflow_run_id": 40496123688,
+      "status": "FAILED_WITH_ZERO_JOBS",
+      "measurement_status": "NOT_STARTED",
+      "study_observations": false
+    }
+  ],
+  "gates": {
+    "P_ALGORITHM_STATUS": "NOT_READY",
+    "G1": "INCOMPLETE",
+    "G4": "NOT_AUTHORIZED",
+    "independent_reference": "NOT_READY",
+    "official_delta_a5_protocol": "NO_GO_WITH_EXPLICIT_BLOCKERS"
+  }
+}

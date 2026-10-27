@@ -29,6 +29,7 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - `mono-ci-b0-psi-execution-v1/` and `tooling/mono_ci_b0_psi_execution.py` — separately versioned baseline-reconstruction proposal and DEVELOPMENT-only input/evaluator runner; preserves NO_GO and does not score.
 - `mono-ci-b0-psi-execution-a05-v1/` and `tooling/mono_ci_psi_a05.py` — separate prospective A0.4 two-control baseline and bounded A0.4→A0.5 adapter; fresh ownership probes, raw evidence, and Method Ψ DEVELOPMENT result preserve NO_GO and do not score.
 - `mono-ci-b0-psi-delta-a5-v1/` — separate draft A0.4→A0.5 B0/Ψ readiness package, 18-row UNKNOWN applicability inventory, nine-pair semantic dossier, proposed cost protocol, current method identity, Ukrainian handoff, and explicit NO_GO; `tooling/mono_ci_b0_psi_delta_a5.py` verifies local bytes and fails closed without running either arm or scoring.
+- `mono-ci-b0-psi-delta-a5-owner-authorized-v1/` — separate owner-authorized exploratory calibration/transition lane; it does not upgrade official readiness, applicability, G1 or G4.
 - `tooling/mono_ci_psi_transition.py` — additive one-transition A0.3→A0.4 Method P DEVELOPMENT execution and verified archive; keeps method runtime isolated from repository/Git/network access and leaves official NO_GO/NOT_READY gates intact.
 - `tooling/mono_ci_psi_a05.py` — transition-specific adapter over the existing isolated runner; V4 bundles include a replayable negative source patch, exact modified bytes, deterministic local-only probe identity, raw evaluator streams, and outcome-neutral three-state detection readback. V1/V2/V3 archive contracts remain readable.
 - `tooling/mono_ci_psi_evidence.py` — fresh A1 evaluator observations, V1-compatible / V2 source-scope evidence projection, source-inventory fact readback, and a run-local TEST_ONLY evidence trust context; it does not supply normative authority or semantic adequacy.
@@ -61,6 +62,10 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - `P_GOVERNED_ADAPTATION_V1.md`
 - `P_EXECUTABLE_CANDIDATE_V1.json` — source/configuration byte identity for the DEVELOPMENT review candidate; does not freeze or authorize Method P
 - `README.md`
+
+
+- mono-ci-b0-psi-delta-a5-owner-authorized-v1/ — separately versioned researcher-authorized exploratory DEVELOPMENT execution and calibration; its direct conversation authorization is not independent review, G1, G4, scorer authority, or coverage approval.
+- tooling/mono_ci_psi_owner_authorized.py and tooling/mono_ci_psi_owner_authorized_analysis.py — frozen one-shot evaluator calibration and existing isolated A0.5 DEVELOPMENT transition repetitions, verified raw archives, descriptive tables and Ukrainian handoff; no official gate is changed.
 
 ## Established conventions
 

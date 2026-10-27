@@ -1,0 +1,172 @@
+{
+  "authorization": {
+    "identity_independently_verified": false,
+    "provenance": "DIRECT_USER_CONVERSATION_INSTRUCTION",
+    "signature_artifact": null
+  },
+  "baseline": {
+    "approval": "NOT_APPROVED",
+    "identity": "PROSPECTIVE_RECONSTRUCTION_NOT_HISTORICAL",
+    "path": "experiments/execution/mono-ci-b0-psi-execution-a05-v1/RECONSTRUCTED_B0_A04_V1.json",
+    "sha256": "9a8c15fabc41ec6e079b3ec708a60dcc0320fa5e7370e1416123e9ec4f64643d"
+  },
+  "calibration": {
+    "archive": {
+      "archive_name": "calibration.zip",
+      "archive_sha256": "d4851c292497728b98af5a75aa8f01883541eb5672274896cf6065cd0c612d27",
+      "member_count": 279,
+      "verification_status": "PASS"
+    },
+    "attempted_calls": 66,
+    "classification": "DEVELOPMENT_CALIBRATION",
+    "failed_calls": 33,
+    "measured_calls": 33,
+    "not_run_calls": 0,
+    "planned_calls": 66,
+    "record_sha256": "94870fce4a47230e8eef4886040a05c9bb17ee1776c7d7dfba2c592176005be5",
+    "wall_duration_ms": 15352.934
+  },
+  "classification": "RESEARCH_OWNER_AUTHORIZED_EXPLORATORY_DEVELOPMENT",
+  "freeze_commit": "1bc90aab8f1973a274381685dbd5309f95dd1837",
+  "freeze_record_sha256": "ff1a995b85f891b57530c2b9dde2391250c4378298ea4394d79176b6d6c97ec5",
+  "gates": {
+    "G1": "INCOMPLETE",
+    "G4": "NOT_AUTHORIZED",
+    "P_ALGORITHM_STATUS": "NOT_READY",
+    "coverage": "UNKNOWN",
+    "reference": "NOT_READY",
+    "scoring": "NOT_EXECUTED",
+    "study_readiness": "NO_GO_WITH_EXPLICIT_BLOCKERS"
+  },
+  "historical_probe_replay": {
+    "application_tree_sha": "5f0f8d9ebd4334556c583dabc300e5eb3db1900f",
+    "changed_paths": [
+      "app/modules/tasks/repository.py"
+    ],
+    "classification": "HISTORICAL_PROBE_REPLAYED_FOR_NEW_CALIBRATION",
+    "historical_archive_sha256": "6e1b39df457d3053487a3123ab4f29e78467515c0925a58a36bb2dea26f7c563",
+    "manifest_sha256": "61e3dd738e05ef999a7a093f3bc6b34368c505c85dde69c87db901cb496f5649",
+    "patch_sha256": "ca614f99c800cd16feea7d18c6344a8f326570b3677801c4ac2d8499d9be65cd",
+    "repository_tree_sha": "bf7385c577eafd42a4670ad70cfec81e91aeb2f7",
+    "source_commit_sha": "5ace86095bda794c9576047c80b9267e70cd0f26",
+    "status": "PASS"
+  },
+  "interpretation_boundary": {
+    "architecture_level_units": 1,
+    "candidate_application": "NOT_PERFORMED_BY_THIS_STUDY",
+    "independent_validation": "NOT_PERFORMED",
+    "technical_repetitions": 3
+  },
+  "protocol_sha256": "6c0a05b55fd1cf963b7141ec0edb4abbebd25b046664c13cb149dbffe8398eca",
+  "runner_identity": {
+    "architecture": "x86_64",
+    "cpu_count": 4,
+    "hostname_recorded": false,
+    "network_isolation_binary": "/usr/bin/bwrap",
+    "operating_system": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
+    "peak_rss_per_process": "NOT_AVAILABLE",
+    "python_implementation": "CPython",
+    "python_version": "3.12.15",
+    "runner_class": "Linux",
+    "runner_image_os": "ubuntu24",
+    "runner_image_version": "20261026.354.1",
+    "uv_version": "uv 0.13.6 (x86_64-unknown-linux-gnu)"
+  },
+  "schema_version": "MONO_CI_PSI_OWNER_AUTHORIZED_EXECUTION_V1",
+  "source_identities": {
+    "a04_application_tree": "007196f68652bc13f6798805793ffdfae96f95f7",
+    "a04_commit": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9",
+    "a04_repository_tree": "2b436e0aaf09403ea516d73d20a466a122f86592",
+    "a05_application_tree": "007196f68652bc13f6798805793ffdfae96f95f7",
+    "a05_commit": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+    "a05_repository_tree": "97c060cc26313a879f0940a178d42e422cc4d188"
+  },
+  "study_id": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V1",
+  "transition_runs": [
+    {
+      "classification": "EXPLORATORY_DEVELOPMENT",
+      "cpu_system_seconds": 0.935654,
+      "cpu_user_seconds": 2.978327,
+      "error": {
+        "message": "MONO_CI_PSI_TRANSITION_METHOD_EXECUTION_FAILED: bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted\n",
+        "type": "ProtocolError"
+      },
+      "execution_id": "DEV_PSI_TRANSITION_OADEV_DELTA_A5_20261027_WARMUP_00",
+      "full_transition_duration_ms": 3877.026,
+      "index": 0,
+      "measured": false,
+      "outcome": null,
+      "role": "WARMUP",
+      "run_archive": "transition-warmup.zip",
+      "run_archive_sha256": null,
+      "run_archive_verification": null,
+      "run_status": "FAILED"
+    },
+    {
+      "classification": "EXPLORATORY_DEVELOPMENT",
+      "cpu_system_seconds": 0.913775,
+      "cpu_user_seconds": 3.057553,
+      "error": {
+        "message": "MONO_CI_PSI_TRANSITION_METHOD_EXECUTION_FAILED: bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted\n",
+        "type": "ProtocolError"
+      },
+      "execution_id": "DEV_PSI_TRANSITION_OADEV_DELTA_A5_20261027_MEASURED_01",
+      "full_transition_duration_ms": 3934.486,
+      "index": 1,
+      "measured": true,
+      "outcome": null,
+      "role": "MEASURED",
+      "run_archive": "transition-01.zip",
+      "run_archive_sha256": null,
+      "run_archive_verification": null,
+      "run_status": "FAILED"
+    },
+    {
+      "classification": "EXPLORATORY_DEVELOPMENT",
+      "cpu_system_seconds": 0.927386,
+      "cpu_user_seconds": 3.061571,
+      "error": {
+        "message": "MONO_CI_PSI_TRANSITION_METHOD_EXECUTION_FAILED: bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted\n",
+        "type": "ProtocolError"
+      },
+      "execution_id": "DEV_PSI_TRANSITION_OADEV_DELTA_A5_20261027_MEASURED_02",
+      "full_transition_duration_ms": 3952.292,
+      "index": 2,
+      "measured": true,
+      "outcome": null,
+      "role": "MEASURED",
+      "run_archive": "transition-02.zip",
+      "run_archive_sha256": null,
+      "run_archive_verification": null,
+      "run_status": "FAILED"
+    },
+    {
+      "classification": "EXPLORATORY_DEVELOPMENT",
+      "cpu_system_seconds": 0.940207,
+      "cpu_user_seconds": 3.035289,
+      "error": {
+        "message": "MONO_CI_PSI_TRANSITION_METHOD_EXECUTION_FAILED: bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted\n",
+        "type": "ProtocolError"
+      },
+      "execution_id": "DEV_PSI_TRANSITION_OADEV_DELTA_A5_20261027_MEASURED_03",
+      "full_transition_duration_ms": 3939.107,
+      "index": 3,
+      "measured": true,
+      "outcome": null,
+      "role": "MEASURED",
+      "run_archive": "transition-03.zip",
+      "run_archive_sha256": null,
+      "run_archive_verification": null,
+      "run_status": "FAILED"
+    }
+  ],
+  "transition_summary": {
+    "architecture_level_units": 1,
+    "completed_runs": 0,
+    "failed_runs": 4,
+    "not_run_runs": 0,
+    "planned_runs": 4,
+    "technical_repetitions": 3,
+    "wall_duration_ms": 15706.424
+  }
+}

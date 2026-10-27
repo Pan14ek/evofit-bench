@@ -1,0 +1,11 @@
+{
+  "command": "python -m experiments.execution.tooling.mono_ci_psi_a05 replay-probe --repository <checkout> --run <verified-run> --output <new-checkout>",
+  "expected_parent_application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+  "expected_parent_commit_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+  "expected_parent_repository_tree_sha": "97c060cc26313a879f0940a178d42e422cc4d188",
+  "modified_source_path": "source-files/app/modules/tasks/repository.py",
+  "patch_path": "source.patch",
+  "production_database_access": "NOT_USED_SOURCE_LEVEL_STATIC_EVALUATION_ONLY",
+  "remote_probe_commit_required": false,
+  "schema_version": "MONO_CI_PSI_A05_PROBE_REPRODUCTION_V1"
+}
