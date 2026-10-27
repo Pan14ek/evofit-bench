@@ -1281,6 +1281,7 @@ def test_ci_runs_v2_preflight_and_study_only_on_the_dedicated_push() -> None:
     ci = yaml.safe_load((ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8"))
     preflight = ci["jobs"]["delta-a5-v2-sandbox-preflight"]
     study = ci["jobs"]["owner-authorized-delta-a5-v2"]
+    assert "V2 PRE-RUN FREEZE" in preflight["if"]
     assert preflight["runs-on"] == "ubuntu-24.04"
     assert any(
         "docker pull --platform linux/amd64" in step.get("run", "") for step in preflight["steps"]

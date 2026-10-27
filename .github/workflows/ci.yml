@@ -187,7 +187,10 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   delta-a5-v2-sandbox-preflight:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/codex/pr59-delta-a5-v2'
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/codex/pr59-delta-a5-v2' &&
+      contains(github.event.head_commit.message, 'V2 PRE-RUN FREEZE')
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
