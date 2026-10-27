@@ -105,6 +105,13 @@
       "status": "FAILED_WITH_ZERO_CHECKS_OR_JOBS",
       "measurement_status": "NOT_STARTED",
       "study_observations": false
+    },
+    {
+      "freeze_commit": "d20e0f698bf1b0ccdba949b30d04102673c0a74a",
+      "workflow_run_id": 40496123688,
+      "status": "FAILED_WITH_ZERO_JOBS",
+      "measurement_status": "NOT_STARTED",
+      "study_observations": false
     }
   ],
   "gates": {

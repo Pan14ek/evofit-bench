@@ -255,6 +255,10 @@ def test_ci_runs_owner_authorized_study_only_on_its_branch_push() -> None:
     assert study["needs"] == "development-quality"
     assert study["runs-on"] == "ubuntu-24.04"
     assert study["permissions"] == {"contents": "write"}
+    assert study["env"] == {
+        "UV_CACHE_DIR": "/tmp/evofit-owner-authorized-a5-uv-cache",
+        "UV_PROJECT_ENVIRONMENT": "/tmp/evofit-owner-authorized-a5-venv",
+    }
     assert not study.get("uses")
     step_names = {step.get("name") for step in study["steps"]}
     assert "Execute preregistered calibration and B0/Ψ DEVELOPMENT repetitions" in step_names

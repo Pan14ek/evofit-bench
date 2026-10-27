@@ -46,8 +46,8 @@ jobs:
     permissions:
       contents: write
     env:
-      UV_CACHE_DIR: ${{ runner.temp }}/uv-cache
-      UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/evofit-owner-authorized-a5-venv
+      UV_CACHE_DIR: /tmp/evofit-owner-authorized-a5-uv-cache
+      UV_PROJECT_ENVIRONMENT: /tmp/evofit-owner-authorized-a5-venv
     steps:
       - uses: actions/checkout@v4
         with:
@@ -160,16 +160,18 @@ jobs:
         run: |
           set -euo pipefail
           RELEASE_URL="https://github.com/$GITHUB_REPOSITORY/releases/tag/$RELEASE_TAG"
-          echo "## Owner-authorized ΔA5 DEVELOPMENT evidence" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Study: MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V1" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Classification: DEVELOPMENT_CALIBRATION / EXPLORATORY_DEVELOPMENT" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Protocol freeze: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Durable prerelease evidence: $RELEASE_URL" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Actions artifact upload step: $ARTIFACT_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
-          if [[ -n "$ARTIFACT_URL" ]]; then
-            echo "- 90-day Actions artifact: $ARTIFACT_URL" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "- Actions artifact URL unavailable; the persistent prerelease archive is the durable copy." >> "$GITHUB_STEP_SUMMARY"
-          fi
-          echo "- Outer archive SHA-256: $(cut -d ' ' -f 1 "$OUTER_ARCHIVE.sha256")" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Official gates remain P_ALGORITHM_STATUS=NOT_READY, G1=INCOMPLETE, G4=NOT_AUTHORIZED, scoring=NOT_EXECUTED, coverage=UNKNOWN." >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "## Owner-authorized ΔA5 DEVELOPMENT evidence"
+            echo "- Study: MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V1"
+            echo "- Classification: DEVELOPMENT_CALIBRATION / EXPLORATORY_DEVELOPMENT"
+            echo "- Protocol freeze: $GITHUB_SHA"
+            echo "- Durable prerelease evidence: $RELEASE_URL"
+            echo "- Actions artifact upload step: $ARTIFACT_OUTCOME"
+            if [[ -n "$ARTIFACT_URL" ]]; then
+              echo "- 90-day Actions artifact: $ARTIFACT_URL"
+            else
+              echo "- Actions artifact URL unavailable; the persistent prerelease archive is the durable copy."
+            fi
+            echo "- Outer archive SHA-256: $(cut -d ' ' -f 1 "$OUTER_ARCHIVE.sha256")"
+            echo "- Official gates remain P_ALGORITHM_STATUS=NOT_READY, G1=INCOMPLETE, G4=NOT_AUTHORIZED, scoring=NOT_EXECUTED, coverage=UNKNOWN."
+          } >> "$GITHUB_STEP_SUMMARY"
