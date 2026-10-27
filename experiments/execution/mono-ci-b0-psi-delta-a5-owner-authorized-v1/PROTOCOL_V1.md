@@ -57,6 +57,10 @@ Use only machine-readable records from the raw calibration and transition archiv
 
 The calibration archive uses a member-digest manifest and SHA-256 sidecar. Each full-run archive uses the existing V4 transition packer/verifier and readback. The final evidence manifest binds archive and sidecar digests, source identities, run IDs, outputs and analysis inputs. Preserve historical PR #56 evidence as a separately labeled reference; do not merge its observations into the new sample counts.
 
+## Activation history
+
+The initial pre-run freeze commit `500bc94d5914ef84c5796d8833e9b233955124d3` produced GitHub Actions run `40491096266`, which ended with zero jobs. No evaluator calibration or B0/Ψ transition started, and that attempt produced no study observations. The run is retained as an activation failure; the job-level admission condition was removed, and a new freeze is required before execution.
+
 ## Stop and reporting rules
 
 If a source/config/method pin, clean-checkout check, archived-probe replay, network-isolation requirement, archive verifier, or declared time budget fails, do not bypass it. Record the error and continue only with independent activities still permitted. Preserve actual HOLD, empty operation plans, unmaterialized candidates, and failed/missing measurements. The protocol is not an approval of the proposed B0, applicability, semantic mappings, evaluator validity, or cost model.

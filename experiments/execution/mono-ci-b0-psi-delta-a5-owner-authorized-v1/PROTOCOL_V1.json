@@ -83,6 +83,15 @@
     "architecture_level_n": 1,
     "coverage_percentage": "NOT_COMPUTED"
   },
+  "activation_history": [
+    {
+      "freeze_commit": "500bc94d5914ef84c5796d8833e9b233955124d3",
+      "workflow_run_id": 40491096266,
+      "status": "FAILED_WITH_ZERO_JOBS",
+      "measurement_status": "NOT_STARTED",
+      "study_observations": false
+    }
+  ],
   "gates": {
     "P_ALGORITHM_STATUS": "NOT_READY",
     "G1": "INCOMPLETE",

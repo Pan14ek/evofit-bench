@@ -24,7 +24,6 @@ permissions:
 
 jobs:
   authorized-development-run:
-    if: github.event.created == true && contains(toJson(github.event.commits), 'PRE_RUN_FREEZE.json')
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
