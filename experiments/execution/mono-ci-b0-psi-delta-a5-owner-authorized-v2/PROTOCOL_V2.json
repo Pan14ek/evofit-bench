@@ -49,6 +49,16 @@
     "scoring": "NOT_EXECUTED",
     "coverage": "UNKNOWN"
   },
+  "post_execution_readback_retry": {
+    "prior_workflow_run_id": 40574090499,
+    "prior_freeze_commit": "490350858d64d4d80e4c52dc096ee7972c1b1729",
+    "prior_wrapper_status": "FAILED_AFTER_METHOD_EXECUTION",
+    "raw_method_observations_preserved": true,
+    "retry_reason": "Persisted development_run.json contains evaluator_observations omitted by the compact wrapper return; analysis must read the sealed partial-archive manifest and candidate-validation evidence.",
+    "retry_policy": "Rerun the complete frozen V2 calibration and transition plan after the readback implementation changes; preserve the prior release and do not pool its timings or transition attempts with the retry.",
+    "historical_release_sha256": "11f4ec5aa1a399c2b4314c9785e256d9c894b61923c5748796d77ac1f0cf3e64",
+    "retry_freeze_required": true
+  },
   "timing": {
     "evaluator_process_boundary": "Existing run_fresh_evaluator subprocess interval",
     "scope_verification_boundary": "Outer interval around source-bound evaluator and complete-scope readback",

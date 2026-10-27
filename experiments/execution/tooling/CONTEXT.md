@@ -102,9 +102,9 @@ This is a selected list (21 direct tracked files), not a complete source invento
 
 - mono_ci_psi_owner_authorized.py — preregistration freeze verifier, randomized repeated A1 evaluator calibration, existing A0.5 isolated DEVELOPMENT runner, calibration archive readback, and V4 per-run archive packing; owner-authorized exploratory lane only.
 - mono_ci_psi_owner_authorized_analysis.py — deterministic descriptive analysis from verified raw archives, CSV tables, SVG timing figure, and Ukrainian monograph handoff; no score, coverage percentage, or inferential test.
-- mono_ci_psi_owner_authorized_v2.py — additive V2 hosted Docker isolation preflight, write-once freeze verification, exact-source V1 evaluator raw-output replay, same-runner preflight binding, V2 DEVELOPMENT execution, partial-evidence archive/readback, and release-bundle verification; it does not call the official entrypoint or advance G1/G4.
+- mono_ci_psi_owner_authorized_v2.py — additive V2 hosted Docker isolation preflight, write-once freeze verification, exact-source V1 evaluator raw-output replay, same-runner preflight binding, persisted transition-record readback, partial-evidence archive/readback, and release-bundle verification; it does not call the official entrypoint or advance G1/G4.
 - `mono_ci_psi_owner_authorized_v2.py` validates the reconstructed A0.4 baseline through `mono_ci_psi_a05._validate_a04_proposal`; the legacy transition proposal validator is not interchangeable. Technical-preflight failures preserve their actual pre-measurement diagnostics and input identities without creating calibration or transition records.
-- mono_ci_psi_owner_authorized_v2_analysis.py — deterministic descriptive V1/V2 comparison tables, SVG, and Ukrainian monograph insertion map from verified archives; no scoring, compliance inference from process exit codes, or inferential statistics.
+- mono_ci_psi_owner_authorized_v2_analysis.py — deterministic descriptive V1/V2 comparison tables, SVG, and Ukrainian monograph insertion map from verified complete/partial archives, including method and candidate observations from partial manifests; no scoring, compliance inference from process exit codes, or inferential statistics.
 
 ## Established conventions
 

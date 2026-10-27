@@ -17,6 +17,8 @@ CI workflow YAML: uv, Python and disposable PostgreSQL.
 
 The owner-authorized ΔA5 V2 jobs are defined directly in `ci.yml`, gated to pushes on the dedicated branch, and wait for `development-quality`. The study requires a commit that changes only `PRE_RUN_FREEZE.json` after the tested implementation commit. A standalone hosted capability preflight gates the job; the study job then repeats that freeze-checked preflight on its own runner and uses the resulting identity-bound record for calibration and transitions. It uploads complete raw bundles and separately preserved early technical-preflight failure evidence before deriving tables with the dashboard's locked plotting dependencies, then verifies the final bundle and prerelease readback. The durable release is explicitly exploratory DEVELOPMENT evidence, not an approval or official result.
 
+The V2 outer-archive SHA-256 sidecar must name the archive by basename so it can be checked against the downloaded release asset from a different directory. The readback step verifies the downloaded bytes with `sha256sum --check` before inspecting the ZIP.
+
 ## Established conventions
 
 Keep actions aligned with Makefile and pyproject.toml.

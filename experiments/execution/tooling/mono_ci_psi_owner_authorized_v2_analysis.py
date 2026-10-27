@@ -123,11 +123,16 @@ def _complete_transition(
         "method_process_status": method_process.get("status", "NOT_OBSERVED"),
         "method_process_exit_code": method_process.get("exit_code"),
         "method_decision": outcome["Psi"]["decision"],
+        "governance_reason_codes": outcome["Psi"]["reason_codes"],
         "operation_plan": outcome["Psi"]["operation_plan"],
         "hold_reasons": outcome["Psi"]["operation_hold_reasons"],
         "candidate_state": outcome["Psi"]["candidate_state"],
+        "candidate_configuration_sha256": outcome["Psi"]["candidate_sha256"],
         "candidate_evaluators": candidate_evaluators,
-        "candidate_verification_status": candidate_verification.get("status", "NOT_REPORTED"),
+        "candidate_verification_status": candidate_verification.get(
+            "status",
+            candidate_verification.get("method_candidate_validation_status", "NOT_REPORTED"),
+        ),
         "candidate_validation_cost_ms": cost.get("candidate_validation_total_ms"),
         "estimated_additional_ci_execution_ms_per_build": cost.get(
             "estimated_additional_ci_execution_ms_per_build"
@@ -172,18 +177,39 @@ def _read_partial_archive_row(bundle: Path, row: Mapping[str, Any]) -> dict[str,
                 name = f"run/{relative}"
                 return zipped.read(name) if name in names else None
 
+            archive_manifest = json.loads(zipped.read("PARTIAL_EVIDENCE_MANIFEST.json"))
             partial = read_member("partial-execution.json") or {}
+            if not partial:
+                partial = {
+                    "phase_status": archive_manifest.get("phase_status", {}),
+                    "source_identities": archive_manifest.get("source_identities", {}),
+                    "error": archive_manifest.get("error"),
+                }
             run_prefix = "run/"
             available = {
                 name.removeprefix(run_prefix) for name in names if name.startswith(run_prefix)
             }
-            method_process = partial.get("method_subprocess") or {}
-            method_observation = partial.get("method_observation") or {}
+            method_process = (
+                partial.get("method_subprocess") or archive_manifest.get("method_subprocess") or {}
+            )
+            method_observation = (
+                partial.get("method_observation")
+                or archive_manifest.get("method_observation")
+                or {}
+            )
+            record = read_member("development_run.json") or {}
+            extension = {}
+            extension_path = record.get("a05_extension", {}).get("path")
+            if isinstance(extension_path, str):
+                extension = read_member(extension_path) or {}
+            candidate_verification = extension.get("candidate_verification", {})
             return _partial_transition_summary(
                 row,
                 partial,
                 method_process,
                 method_observation,
+                candidate_verification,
+                record,
                 read_member,
                 read_member_bytes,
                 available,
@@ -201,11 +227,42 @@ def _read_partial_archive_row(bundle: Path, row: Mapping[str, Any]) -> dict[str,
 
         partial = read_member("partial-execution.json") or {}
         available = {path.relative_to(raw).as_posix() for path in raw.rglob("*") if path.is_file()}
+        record = read_member("development_run.json") or {}
+        method_process = partial.get("method_subprocess") or {}
+        method_observation = partial.get("method_observation") or {}
+        extension = {}
+        extension_path = record.get("a05_extension", {}).get("path")
+        if isinstance(extension_path, str):
+            extension = read_member(extension_path) or {}
+        if record and not method_process:
+            psi = record.get("psi", {})
+            method_process = {
+                "status": psi.get("status", "NOT_OBSERVED"),
+                "exit_code": 0 if psi.get("status") == "DEVELOPMENT_METHOD_EXECUTED" else None,
+                "execution_duration_ms": psi.get("execution_duration_ms"),
+            }
+            method_result = read_member(psi.get("raw_result_path", "")) or {}
+            governance = method_result.get("governance", {})
+            plan = method_result.get("operation_plan", {})
+            candidate = method_result.get("candidate")
+            method_observation = {
+                "governance_decision": governance.get("result"),
+                "governance_reason_codes": governance.get("reason_codes", []),
+                "operations": plan.get("operations", []),
+                "operation_hold_reasons": plan.get("hold_reasons", []),
+                "candidate_state": "NOT_MATERIALIZED"
+                if candidate is None
+                else "MATERIALIZED_UNAPPLIED",
+                "candidate_sha256": method_result.get("candidate_sha256"),
+                "raw_result_sha256": psi.get("raw_result_sha256"),
+            }
         return _partial_transition_summary(
             row,
             partial,
-            partial.get("method_subprocess") or {},
-            partial.get("method_observation") or {},
+            method_process,
+            method_observation,
+            extension.get("candidate_verification", {}),
+            record,
             read_member,
             read_member_bytes,
             available,
@@ -218,6 +275,8 @@ def _partial_transition_summary(
     partial: Mapping[str, Any],
     method_process: Mapping[str, Any],
     method_observation: Mapping[str, Any],
+    candidate_verification: Mapping[str, Any],
+    record: Mapping[str, Any],
     read_member: Any,
     read_member_bytes: Any,
     available: set[str],
@@ -261,6 +320,21 @@ def _partial_transition_summary(
                     else None,
                 }
             )
+    cost = candidate_verification.get("execution_cost", {})
+    candidate_evaluators = [
+        {
+            "representation_id": item.get("representation_id"),
+            "candidate_positive": item.get("candidate_positive_outcome"),
+            "candidate_negative": item.get("candidate_negative_outcome"),
+            "positive_outcome_parity": item.get("positive_outcome_parity"),
+            "negative_outcome_parity": item.get("negative_outcome_parity"),
+        }
+        for item in candidate_verification.get("outcome_comparisons", [])
+    ]
+    source_identities = partial.get("source_identities", {})
+    source_identity_status = source_identities.get("verification_status")
+    if source_identity_status is None and source_identities:
+        source_identity_status = "SOURCE_IDENTITIES_PRESERVED"
     return {
         "execution_id": row["execution_id"],
         "run_role": row["role"],
@@ -271,22 +345,29 @@ def _partial_transition_summary(
         "method_process_status": method_process.get("status", "NOT_OBSERVED"),
         "method_process_exit_code": method_process.get("exit_code"),
         "method_decision": method_observation.get("governance_decision"),
+        "governance_reason_codes": method_observation.get("governance_reason_codes"),
         "operation_plan": method_observation.get("operations"),
         "hold_reasons": method_observation.get("operation_hold_reasons"),
         "candidate_state": method_observation.get("candidate_state", "NOT_OBSERVED"),
-        "candidate_evaluators": [],
-        "candidate_verification_status": "NOT_OBSERVED",
-        "candidate_validation_cost_ms": None,
-        "estimated_additional_ci_execution_ms_per_build": None,
+        "candidate_configuration_sha256": method_observation.get("candidate_sha256"),
+        "candidate_evaluators": candidate_evaluators,
+        "candidate_verification_status": candidate_verification.get(
+            "method_candidate_validation_status", "NOT_OBSERVED"
+        ),
+        "candidate_validation_cost_ms": cost.get("candidate_validation_total_ms"),
+        "estimated_additional_ci_execution_ms_per_build": cost.get(
+            "estimated_additional_ci_execution_ms_per_build"
+        ),
         "full_transition_duration_ms": row.get("full_transition_duration_ms"),
         "method_execution_duration_ms": method_process.get("execution_duration_ms"),
         "evidence_digest": row.get("evidence_sha256") or row.get("raw_preservation_digest"),
         "evidence_classification": row.get("evidence_classification"),
         "error_or_hold_reasons": partial.get("error") or row.get("error"),
-        "source_identity_status": partial.get("source_identities", {}).get("verification_status"),
+        "source_identity_status": source_identity_status,
         "phase_status": partial.get("phase_status", {}),
         "raw_method_result_sha256": method_observation.get("raw_result_sha256"),
         "partial_archive_member_count": len(available),
+        "source_revision_sha": record.get("source_revision_sha"),
     }
 
 
@@ -334,6 +415,103 @@ def _statistics_row(label: str, values: list[float]) -> dict[str, Any]:
     return {"measure": label, **analysis_v1.descriptive_statistics(values)}
 
 
+def _scientific_conclusion(transitions: list[Mapping[str, Any]]) -> str:
+    decisions = Counter(
+        str(row.get("method_decision"))
+        for row in transitions
+        if row.get("method_decision") is not None
+    )
+    parsed_b0 = sum(row.get("b0_execution_status") == "ALL_OUTPUTS_PARSED" for row in transitions)
+    observed = sum(row.get("method_process_exit_code") == 0 for row in transitions)
+    operations = [row.get("operation_plan") for row in transitions if row.get("method_decision")]
+    hold_reasons = sorted(
+        {
+            str(reason)
+            for row in transitions
+            for reason in [
+                *(row.get("governance_reason_codes") or []),
+                *(row.get("hold_reasons") or []),
+            ]
+        }
+    )
+    candidate_rows = [
+        candidate for row in transitions for candidate in row.get("candidate_evaluators", [])
+    ]
+    parity_count = sum(
+        candidate.get("positive_outcome_parity") is True
+        and candidate.get("negative_outcome_parity") is True
+        for candidate in candidate_rows
+    )
+    parity_total = len(candidate_rows)
+    decision_text = ", ".join(
+        f"{decision}: {count}" for decision, count in sorted(decisions.items())
+    )
+    if decisions and set(decisions) == {"HOLD"} and all(plan == [] for plan in operations):
+        adaptation = (
+            "Method Ψ фактично сформував кандидат і запустив його валідацію, але рішення HOLD "
+            "залишило конфігурацію MATERIALIZED_UNAPPLIED; застосованої адаптації не було."
+        )
+    elif any(plan for plan in operations if isinstance(plan, list)):
+        adaptation = "Окремо звірити фактичний operation plan і стан застосування з raw result кожної спроби."
+    else:
+        adaptation = "Результат адаптації обмежити фактичним candidate/operation status у таблиці; відсутнє не домислювати."
+    if parity_total and parity_count == parity_total:
+        candidate_effect = (
+            f"У наявних candidate controls parity з реконструйованим B0 становила "
+            f"{parity_count}/{parity_total}; у межах цих перевірок поліпшення detection capability "
+            "не зафіксовано."
+        )
+    elif parity_total:
+        candidate_effect = (
+            f"Candidate evaluator parity зафіксовано у {parity_count}/{parity_total} доступних "
+            "порівнянь; висновок про покращення поза цими точковими controls не робити."
+        )
+    else:
+        candidate_effect = (
+            "Candidate evaluator outcomes відсутні або неповні; detection effect невідомий."
+        )
+    reasons = ", ".join(hold_reasons) if hold_reasons else "не зафіксовані"
+    return (
+        f"У цьому owner-authorized exploratory DEVELOPMENT запуску B0 зберіг "
+        f"розібрані виходи у {parsed_b0}/{len(transitions)} переходах; Method Ψ завершився з "
+        f"exit code 0 у {observed}/{len(transitions)} спробах і повернув {decision_text or 'NOT_OBSERVED'}. "
+        f"Фактичні блокувальні reason codes: {reasons}. {adaptation} {candidate_effect} "
+        "Одна пара станів A0.4→A0.5 і три технічні повтори не встановлюють загальної "
+        "ефективності методу, verified mandatory coverage, runtime architectural quality, "
+        "статистичної переваги або G1/G4; coverage залишається UNKNOWN, G1 INCOMPLETE, "
+        "G4 NOT_AUTHORIZED, scoring NOT_EXECUTED."
+    )
+
+
+def _read_preserved_postexecution_readback_failure(bundle: Path) -> dict[str, Any] | None:
+    """Verify the prior frozen V2 attempt record without reclassifying its archived run."""
+    protocol = bundle / "protocol-snapshot"
+    record_path = protocol / study_v2.POSTEXECUTION_READBACK_FAILURE.name
+    sidecar_path = protocol / study_v2.POSTEXECUTION_READBACK_FAILURE_SIDECAR.name
+    freeze_path = protocol / study_v2.PREVIOUS_FREEZE.name
+    freeze_sidecar_path = protocol / study_v2.PREVIOUS_FREEZE_SIDECAR.name
+    present = [
+        path.is_file() for path in (record_path, sidecar_path, freeze_path, freeze_sidecar_path)
+    ]
+    if not any(present):
+        return None
+    if not all(present):
+        raise ContractValidationError("OWNER_AUTHORIZED_V2_PRIOR_READBACK_EVIDENCE_INCOMPLETE")
+    record_digest = sha256_file(record_path)
+    if sidecar_path.read_text(encoding="ascii").strip() != f"{record_digest}  {record_path.name}":
+        raise ContractValidationError("OWNER_AUTHORIZED_V2_PRIOR_READBACK_SIDECAR_MISMATCH")
+    record = _read_json(record_path)
+    validate_payload(study_v2.POSTEXECUTION_FAILURE_SCHEMA, record)
+    freeze_digest = sha256_file(freeze_path)
+    if (
+        freeze_digest != record.get("previous_freeze_sha256")
+        or freeze_sidecar_path.read_text(encoding="ascii").strip()
+        != f"{freeze_digest}  {freeze_path.name}"
+    ):
+        raise ContractValidationError("OWNER_AUTHORIZED_V2_PRIOR_FREEZE_READBACK_MISMATCH")
+    return {**record, "_record_sha256": record_digest}
+
+
 def _handoff(
     *,
     execution: Mapping[str, Any],
@@ -346,6 +524,8 @@ def _handoff(
     v1_calibration_archive_sha256: str,
     v1_readback: Mapping[str, Any],
     premeasurement_failures: list[Mapping[str, Any]],
+    postexecution_readback_failures: list[Mapping[str, Any]],
+    transition_failures: list[Mapping[str, Any]],
 ) -> str:
     v1_by = {
         (row["source_condition"], row["evaluator_id"]): row
@@ -375,7 +555,8 @@ def _handoff(
         b0 = (
             "; ".join(
                 f"{item.get('architecture_state')}:{item.get('evaluator_id')}="
-                f"{item.get('compliance') or item.get('execution_status') or 'NOT_OBSERVED'}"
+                f"{item.get('compliance') or item.get('execution_status') or 'NOT_OBSERVED'} "
+                f"(exit={item.get('exit_code')}, scope={item.get('inspection_status') or 'UNKNOWN'})"
                 for item in row.get("b0_evaluator_outcomes", [])
             )
             or "NOT_OBSERVED"
@@ -383,12 +564,25 @@ def _handoff(
         decision = row.get("method_decision") or "NOT_OBSERVED"
         operations = row.get("operation_plan")
         operation_text = _json_field(operations) if operations is not None else "NOT_OBSERVED"
+        candidate_text = (
+            f"{row.get('candidate_state')} / {row.get('candidate_verification_status')} / "
+            f"{row.get('candidate_configuration_sha256') or 'NO_DIGEST'}"
+        )
+        validation_text = _json_field(row.get("candidate_evaluators", []))
+        reasons = {
+            "governance": row.get("governance_reason_codes"),
+            "operation_hold": row.get("hold_reasons"),
+        }
         transition_rows.append(
             f"| {row.get('execution_id')} | {row.get('run_role')} | "
             f"{row.get('b0_execution_status')} | {b0} | "
             f"{row.get('method_process_status')} | {decision} | {operation_text} | "
-            f"{row.get('candidate_state')} | {row.get('full_transition_duration_ms') or '—'} | "
-            f"{row.get('method_execution_duration_ms') or '—'} | {row.get('evidence_digest') or '—'} |"
+            f"{_json_field(reasons)} | {candidate_text} | {validation_text} | "
+            f"{row.get('candidate_validation_cost_ms') or '—'} | "
+            f"{row.get('estimated_additional_ci_execution_ms_per_build') if row.get('estimated_additional_ci_execution_ms_per_build') is not None else '—'} | "
+            f"{row.get('full_transition_duration_ms') or '—'} | "
+            f"{row.get('method_execution_duration_ms') or '—'} | "
+            f"{_json_field(row.get('error_or_hold_reasons'))} | {row.get('evidence_digest') or '—'} |"
         )
     completed = execution.get("transition_summary", {}).get("completed_runs", 0)
     failed = execution.get("transition_summary", {}).get("failed_runs", 0)
@@ -451,7 +645,8 @@ def _handoff(
         )
     v2_timing_text = "\n".join(v2_timing_rows) or "| — | — | 0 | 0 | — | — | — | — | — |"
     v2_transition_text = (
-        "\n".join(transition_rows) or "| — | — | — | — | — | — | — | — | — | — | — |"
+        "\n".join(transition_rows)
+        or "| — | — | — | — | — | — | — | — | — | — | — | — | — | — | — | — |"
     )
     comparison_text = "\n".join(compare_rows) or "| — | — | 0 | 0 | — | 0 | 0 | — |"
     premeasurement_text = (
@@ -465,6 +660,68 @@ def _handoff(
         or "| — | — | 0 | 0 | — | — | — |"
     )
     release_run = execution.get("workflow_run_id", "NOT_RECORDED")
+    measured_transitions = [row for row in transitions if row.get("measured")]
+    b0_times = [
+        item["duration_ms"]
+        for row in measured_transitions
+        for item in row.get("b0_evaluator_outcomes", [])
+        if item.get("duration_ms") is not None
+    ]
+    measured_costs = [
+        row["candidate_validation_cost_ms"]
+        for row in measured_transitions
+        if row.get("candidate_validation_cost_ms") is not None
+    ]
+    method_times = [
+        row["method_execution_duration_ms"]
+        for row in measured_transitions
+        if row.get("method_execution_duration_ms") is not None
+    ]
+    transition_times = [
+        row["full_transition_duration_ms"]
+        for row in measured_transitions
+        if row.get("full_transition_duration_ms") is not None
+    ]
+    timing_rows = []
+    for label, values, expected in (
+        (
+            "B0 evaluator process time (all states/evaluators)",
+            b0_times,
+            len(measured_transitions) * 4,
+        ),
+        ("Method Ψ subprocess", method_times, len(measured_transitions)),
+        ("Candidate evaluator validation", measured_costs, len(measured_transitions)),
+        ("Full transition orchestration", transition_times, len(measured_transitions)),
+    ):
+        stats_row = analysis_v1.descriptive_statistics(values)
+        timing_rows.append(
+            f"| {label} | {stats_row['n']} | {expected - stats_row['n']} | "
+            f"{stats_row['mean_ms'] if stats_row['mean_ms'] is not None else '—'} | "
+            f"{stats_row['median_ms'] if stats_row['median_ms'] is not None else '—'} | "
+            f"{stats_row['sample_standard_deviation_ms'] if stats_row['sample_standard_deviation_ms'] is not None else '—'} | "
+            f"{stats_row['minimum_ms'] if stats_row['minimum_ms'] is not None else '—'}–"
+            f"{stats_row['maximum_ms'] if stats_row['maximum_ms'] is not None else '—'} | "
+            f"{stats_row['p90_nearest_rank_ms'] if stats_row['p90_nearest_rank_ms'] is not None else '—'} |"
+        )
+    timing_text = "\n".join(timing_rows)
+    prior_attempt_rows = []
+    for prior in postexecution_readback_failures:
+        for attempt in prior.get("transition_attempts", []):
+            prior_attempt_rows.append(
+                f"| {prior.get('workflow_run_id')} | {attempt.get('execution_id')} | "
+                f"{attempt.get('wrapper_run_status')} | {attempt.get('method_process_status')} | "
+                f"{attempt.get('method_decision')} | {attempt.get('candidate_validation_status')} | "
+                f"{attempt.get('wrapper_error')} | {attempt.get('partial_archive_sha256')} |"
+            )
+    prior_attempt_text = "\n".join(prior_attempt_rows) or "| — | — | — | — | — | — | — | — |"
+    technical_failure_rows = []
+    for failure in transition_failures:
+        technical_failure_rows.append(
+            f"| {failure.get('execution_id')} | {failure.get('run_status')} | "
+            f"{_json_field(failure.get('error_or_hold_reasons'))} | "
+            f"{failure.get('evidence_classification')} | {failure.get('evidence_digest')} |"
+        )
+    technical_failure_text = "\n".join(technical_failure_rows) or "| — | — | — | — | — |"
     return f"""# Власницьки авторизоване DEVELOPMENT-дослідження ΔA5 — V2
 
 ## Класифікація і межі
@@ -496,11 +753,19 @@ V2 числові рядки відтворюються зі study `{execution["
 
 ## Перехід: фактичні B0 та Method Ψ
 
-| Execution ID | Роль | B0 status | B0 outcomes | Ψ process | Ψ decision | Operations | Candidate | Transition ms | Ψ ms | Evidence SHA-256 |
-|---|---|---|---|---|---|---|---|---:|---:|---|
+| Execution ID | Роль | B0 status | B0 outcomes (exit/scope) | Ψ process | Ψ decision | Operations | Ψ reasons | Candidate state/status/digest | Candidate outcomes/parity | Candidate cost ms | Estimated added CI ms/build | Transition ms | Ψ ms | Error | Evidence SHA-256 |
+|---|---|---|---|---|---|---|---|---|---|---:|---:|---:|---:|---|---|
 {v2_transition_text}
 
 Повні дані кожної спроби, включно з candidate evaluator checks, додатковою вартістю перевірки кандидата, помилками, B0 raw streams і фазами, наведені в `transition-run-table.csv` та `analysis-summary.json`. Повні архіви перевірено чинним V4 verifier-ом; невдалі спроби перевірено окремою схемою PARTIAL_EXECUTION_EVIDENCE. Кожний рядок прив'язаний до digest окремого архіву або raw partial inventory.
+
+### Часові та обчислювальні витрати трьох виміряних технічних повторів
+
+| Показник | n | Missing | Mean ms | Median ms | Sample SD ms | Min–max ms | p90 ms |
+|---|---:|---:|---:|---:|---:|---:|---:|
+{timing_text}
+
+Ці повтори належать одній парі архітектурних станів; це описові технічні виміри. Вартість candidate validation — фактично виміряна перевірка кандидатних evaluators. Estimated added CI ms/build із рядків кандидата є окремою оцінкою, а не виміром повного CI.
 
 ## Технічні помилки і пропущені дані
 
@@ -512,7 +777,17 @@ V1 зафіксував чотири bubblewrap-помилки `Failed RTM_NEWAD
 |---:|---|---:|---:|---|---|---|
 {premeasurement_text}
 
+Окремо збережено перший post-measurement V2 запуск (run `40574090499`) та його заморожені partial archives. Усі чотири wrapper rows лишилися `FAILED` через `KeyError: 'evaluator_observations'`, але raw release readback показав завершений B0 та фактичний Ψ `HOLD` у кожній спробі, валідований, materialized-but-unapplied кандидат і parity із реконструйованим B0 на двох наявних candidate controls. Цей запуск не переписано; наступний freeze/run є окремою версіонованою спробою. Попередній release ZIP підтверджено локально за GitHub asset digest (`{postexecution_readback_failures[0].get("release", {}).get("outer_archive_sha256") if postexecution_readback_failures else "NOT_RECORDED"}`), однак його `.sha256` посилався на абсолютний шлях runner temp і не давав portable `sha256sum --check` після завантаження. Новий workflow виправляє sidecar і перевіряє саме downloaded bytes.
+
+| Попередній workflow run | Execution ID | Wrapper status | Raw Ψ process | Actual decision | Candidate validation | Wrapper error | Partial archive SHA-256 |
+|---:|---|---|---|---|---|---|---|
+{prior_attempt_text}
+
 У V2 невиміряні, не запущені, помилкові та частково збережені фази збережено окремо у `technical-failures.csv`; інфраструктурна помилка не інтерпретується як HOLD. Якщо Method Ψ не видав валідний result, статус — NOT_OBSERVED. Якщо фактичне рішення було HOLD, його reason codes і raw digest збережені без змін.
+
+| Спроба цього freeze | Run status | Помилка / причина | Evidence class | Evidence SHA-256 |
+|---|---|---|---|---|
+{technical_failure_text}
 
 ## Обмеження інтерпретації
 
@@ -520,11 +795,12 @@ V1 зафіксував чотири bubblewrap-помилки `Failed RTM_NEWAD
 
 ## Запропонований висновок
 
-Робоче формулювання має описувати лише фактичний B0 статус, фактичний Method Ψ process і governance decision у таблиці вище. Адаптацію можна вказати як таку, що відбулася, лише якщо raw output містить фактичний candidate; її ефект слід обмежити зафіксованими candidate evaluator observations. Якщо Ψ видав HOLD або execution failure, це негативний/обмежений результат для цього exploratory DEVELOPMENT запуску, а не підтвердження чи спростування методу загалом. Наявні результати не обґрунтовують твердження про наукову перевагу.
+{_scientific_conclusion(transitions)}
 
 ## Трасування доказів
 
 - V1: study `{v1_execution["study_id"]}`, run `40499692594`, release [evidence release](https://github.com/Pan14ek/evofit-bench/releases/tag/mono-ci-psi-a05-owner-authorized-40499692594-1), calibration archive SHA-256 `{v1_calibration_archive_sha256}`, analysis inputs `historical-v1/calibration.zip` і `POST_RUN_PROBE_READBACK.json`.
+- Попередня спроба V2: run `40574090499`, release [перша V2 evidence release](https://github.com/Pan14ek/evofit-bench/releases/tag/mono-ci-psi-a05-owner-authorized-v2-40574090499-1), outer archive SHA-256 `{postexecution_readback_failures[0].get("release", {}).get("outer_archive_sha256") if postexecution_readback_failures else "NOT_RECORDED"}`, frozen `study-execution.json` SHA-256 `{postexecution_readback_failures[0].get("study_execution_sha256") if postexecution_readback_failures else "NOT_RECORDED"}`, readback-record SHA-256 `{postexecution_readback_failures[0].get("_record_sha256") if postexecution_readback_failures else "NOT_RECORDED"}`. Оригінальні wrapper failures і raw HOLD/candidate observations лишаються відокремленими від нового запуску.
 - V2: study `{execution["study_id"]}`, frozen commit `{execution["freeze_commit"]}`, workflow run `{release_run}`, calibration archive SHA-256 `{calibration_archive_sha256}`; перехідні архіви й partial-evidence digests наведені у `transition-run-table.csv`.
 - Обробка: `{study_v2.__name__}` і `analysis-summary.json`; descriptive mean/median/sample SD/min/max/nearest-rank p90; без об'єднання V1/V2, без inferential significance і без coverage percentage.
 """
@@ -595,6 +871,10 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
     execution = _read_json(bundle / "study-execution.json")
     premeasurement_failure = _read_preserved_premeasurement_failure(bundle)
     premeasurement_failures = [premeasurement_failure] if premeasurement_failure else []
+    prior_readback_failure = _read_preserved_postexecution_readback_failure(bundle)
+    postexecution_readback_failures = (
+        [prior_readback_failure] if prior_readback_failure is not None else []
+    )
     v2_calibration_verified = owner.verify_calibration_archive(bundle / "calibration.zip")
     v2_calibration_rows = (
         owner._read_jsonl(bundle / "calibration.zip")
@@ -752,9 +1032,11 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
             "method_process_status",
             "method_process_exit_code",
             "method_decision",
+            "governance_reason_codes",
             "operation_plan",
             "hold_reasons",
             "candidate_state",
+            "candidate_configuration_sha256",
             "candidate_evaluators",
             "candidate_verification_status",
             "candidate_validation_cost_ms",
@@ -775,6 +1057,31 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
     failures = [row for row in transitions if row.get("run_status") != "COMPLETED"]
     technical_failures = [
         *failures,
+        *[
+            {
+                "execution_id": row["execution_id"],
+                "workflow_run_id": prior["workflow_run_id"],
+                "run_role": row["role"],
+                "run_status": row["wrapper_run_status"],
+                "b0_execution_status": row["b0_execution_status"],
+                "method_process_status": row["method_process_status"],
+                "method_decision": row["method_decision"],
+                "error_or_hold_reasons": row["wrapper_error"],
+                "evidence_classification": "PARTIAL_EXECUTION_EVIDENCE",
+                "evidence_digest": row["partial_archive_sha256"],
+                "failure_stage": "POSTEXECUTION_READBACK",
+                "archive_readback_status": "PASS_IN_PRIOR_RELEASE",
+                "calibration_calls_started": prior["calibration"]["measured_calls"],
+                "transition_attempts_started": 1,
+                "candidate_state": row["candidate_state"],
+                "candidate_validation_status": row["candidate_validation_status"],
+                "candidate_validation_cost_ms": row["candidate_validation_cost_ms"],
+                "method_execution_duration_ms": row["method_execution_duration_ms"],
+                "method_result_sha256": row["method_result_sha256"],
+            }
+            for prior in postexecution_readback_failures
+            for row in prior["transition_attempts"]
+        ],
         *[
             {
                 "execution_id": f"workflow-{row['workflow_run_id']}-premeasurement",
@@ -813,6 +1120,11 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
             "archive_readback_status",
             "calibration_calls_started",
             "transition_attempts_started",
+            "candidate_state",
+            "candidate_validation_status",
+            "candidate_validation_cost_ms",
+            "method_execution_duration_ms",
+            "method_result_sha256",
         ],
     )
     v2_timing = [
@@ -881,6 +1193,7 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
             "premeasurement_failures": premeasurement_failures,
             "calibration_archive_sha256": v2_calibration_verified["archive_sha256"],
         },
+        "previous_v2_postexecution_readback_attempt": postexecution_readback_failures,
         "v1_v2_samples_pooled": False,
     }
     summary = {
@@ -905,6 +1218,7 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
         "transition_failures": failures,
         "technical_failures": technical_failures,
         "premeasurement_failures": premeasurement_failures,
+        "postexecution_readback_failures": postexecution_readback_failures,
         "gates": execution["gates"],
         "statistical_interpretation": {
             "architecture_level_units": 1,
@@ -933,6 +1247,8 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
             v1_calibration_archive_sha256=v1_calibration_verified["archive_sha256"],
             v1_readback=v1_readback,
             premeasurement_failures=premeasurement_failures,
+            postexecution_readback_failures=postexecution_readback_failures,
+            transition_failures=failures,
         ),
         encoding="utf-8",
     )
@@ -946,7 +1262,7 @@ def analyze_bundle(bundle_root: Path, repository: Path, output_root: Path) -> di
 
 ## Результати дослідження
 
-Вставити V1/V2 таблицю повноти, V2 transition table, evaluator timing table і SVG фігуру з `OWNER_AUTHORIZED_RESULTS_UK_V2.md`, `transition-run-table.csv`, `evaluator-samples.csv` та `evaluator-time-distributions.svg`. Для кожного числового рядка зберегти study `{execution["study_id"]}`, workflow run `{execution.get("workflow_run_id")}`, calibration archive SHA-256 `{v2_calibration_verified["archive_sha256"]}` або відповідний evidence digest і процедуру обробки з `analysis-summary.json`. У V1 частині посилатися на run 40499692594 та archive SHA-256 `{v1_calibration_verified["archive_sha256"]}`.
+Вставити V1/V2 таблицю повноти, V2 таблицю фактичних B0/Ψ результатів, таблицю часу й candidate-validation cost, технічні помилки та SVG фігуру з `OWNER_AUTHORIZED_RESULTS_UK_V2.md`, `transition-run-table.csv`, `technical-failures.csv`, `evaluator-samples.csv` і `evaluator-time-distributions.svg`. Окремо зазначити попередній run 40574090499 як wrapper readback failure із збереженими raw HOLD результатами, не об'єднуючи його повтори з новим freeze. Для кожного числового рядка зберегти study `{execution["study_id"]}`, workflow run `{execution.get("workflow_run_id")}`, calibration archive SHA-256 `{v2_calibration_verified["archive_sha256"]}` або відповідний evidence digest і процедуру обробки з `analysis-summary.json`. У V1 частині посилатися на run 40499692594 та archive SHA-256 `{v1_calibration_verified["archive_sha256"]}`.
 
 ## Обговорення
 

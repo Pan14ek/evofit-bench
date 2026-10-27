@@ -8,6 +8,7 @@ import socket
 import subprocess
 import sys
 import zipfile
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -501,6 +502,442 @@ def test_v2_preserves_a_partial_record_when_transition_fails_before_creating_out
         assert partial["error"]["message"] == "fixture precondition failure"
 
 
+def test_v2_transition_readback_uses_persisted_record_when_wrapper_summary_is_compact(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    subject = tmp_path / "subject"
+    subject.mkdir()
+    output = tmp_path / "run-output"
+    artifacts = tmp_path / "artifacts"
+
+    def execute_with_compact_return(
+        _subject: Path,
+        run_root: Path,
+        execution_id: str,
+        **_kwargs: Any,
+    ) -> dict[str, Any]:
+        run_root.mkdir(parents=True)
+        (run_root / "development_run.json").write_text(
+            json.dumps(
+                {
+                    "execution_id": execution_id,
+                    "evaluator_observations": [{"evaluator_id": "AC_PUBLIC_API"}],
+                }
+            ),
+            encoding="utf-8",
+        )
+        return {"execution_id": execution_id}
+
+    def transition_outcome(_run_root: Path, record: dict[str, Any]) -> dict[str, Any]:
+        assert record["evaluator_observations"] == [{"evaluator_id": "AC_PUBLIC_API"}]
+        return {
+            "Psi": {
+                "decision": "HOLD",
+                "method_duration_ms": 12.5,
+                "operation_plan": [],
+                "candidate_state": "MATERIALIZED_UNAPPLIED",
+            }
+        }
+
+    def pack_archive(
+        _run_root: Path, archive_path: Path, *_args: Any, **_kwargs: Any
+    ) -> dict[str, str]:
+        archive_path.write_bytes(b"complete archive fixture")
+        return {"archive_sha256": "a" * 64}
+
+    monkeypatch.setattr(v2, "run_a05_transition", execute_with_compact_return)
+    monkeypatch.setattr(owner, "_transition_outcome", transition_outcome)
+    monkeypatch.setattr(v2, "pack_psi_transition_archive", pack_archive)
+    monkeypatch.setattr(
+        v2,
+        "verify_psi_transition_archive",
+        lambda *_args, **_kwargs: {"verification_status": "PASS"},
+    )
+
+    records, summary = v2._run_transitions(
+        repository=tmp_path,
+        subject=subject,
+        output_root=output,
+        artifact_root=artifacts,
+        uv_version="uv fixture",
+        sandbox_preflight_id="b" * 64,
+    )
+
+    assert summary["completed_runs"] == 4
+    assert all(row["run_status"] == "COMPLETED" for row in records)
+    assert all(row["method_decision"] == "HOLD" for row in records)
+    assert all(row["method_execution_duration_ms"] == 12.5 for row in records)
+
+
+@pytest.mark.parametrize(
+    ("failure_stage", "phase_status", "method_subprocess", "method_observation", "expected_phase"),
+    [
+        (
+            "AFTER_B0_BEFORE_PSI",
+            {
+                "source_identity": "COMPLETED",
+                "baseline_identity": "COMPLETED",
+                "b0_evaluator_matrix": "COMPLETED",
+                "method_input_bundle": "NOT_EXECUTED",
+                "method_execution": "NOT_OBSERVED",
+                "candidate_validation": "NOT_EXECUTED",
+                "complete_transition_verification": "NOT_EXECUTED",
+            },
+            None,
+            None,
+            "b0_evaluator_matrix",
+        ),
+        (
+            "SANDBOX_CREATION",
+            {
+                "source_identity": "COMPLETED",
+                "baseline_identity": "COMPLETED",
+                "b0_evaluator_matrix": "COMPLETED",
+                "method_input_bundle": "COMPLETED",
+                "method_execution": "NOT_OBSERVED",
+                "candidate_validation": "NOT_EXECUTED",
+                "complete_transition_verification": "NOT_EXECUTED",
+            },
+            {"status": "SANDBOX_CREATE_FAILED", "exit_code": None},
+            None,
+            "method_execution",
+        ),
+        (
+            "PSI_EXECUTION",
+            {
+                "source_identity": "COMPLETED",
+                "baseline_identity": "COMPLETED",
+                "b0_evaluator_matrix": "COMPLETED",
+                "method_input_bundle": "COMPLETED",
+                "method_execution": "IN_PROGRESS",
+                "candidate_validation": "NOT_EXECUTED",
+                "complete_transition_verification": "NOT_EXECUTED",
+            },
+            {"status": "PROCESS_FAILED", "exit_code": 1},
+            None,
+            "method_execution",
+        ),
+        (
+            "CANDIDATE_VALIDATION",
+            {
+                "source_identity": "COMPLETED",
+                "baseline_identity": "COMPLETED",
+                "b0_evaluator_matrix": "COMPLETED",
+                "method_input_bundle": "COMPLETED",
+                "method_execution": "OBSERVED",
+                "candidate_validation": "FAILED",
+                "complete_transition_verification": "NOT_EXECUTED",
+            },
+            {"status": "PROCESS_COMPLETED", "exit_code": 0},
+            {
+                "governance_decision": "HOLD",
+                "operations": [],
+                "operation_hold_reasons": ["UNKNOWN_MANDATORY_LINK_PREVENTS_TRANSITION"],
+                "candidate_state": "MATERIALIZED_UNAPPLIED",
+                "raw_result_sha256": "f" * 64,
+            },
+            "candidate_validation",
+        ),
+    ],
+)
+def test_transition_stage_failures_preserve_completed_phases_and_raw_marker(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    failure_stage: str,
+    phase_status: dict[str, str],
+    method_subprocess: dict[str, Any] | None,
+    method_observation: dict[str, Any] | None,
+    expected_phase: str,
+) -> None:
+    subject = tmp_path / "subject"
+    subject.mkdir()
+    output = tmp_path / "run-output"
+    artifacts = tmp_path / "artifacts"
+    marker = b"authentic stage evidence\n"
+
+    def fail_after_stage(
+        _subject: Path,
+        run_root: Path,
+        execution_id: str,
+        **_kwargs: Any,
+    ) -> dict[str, Any]:
+        run_root.mkdir(parents=True)
+        marker_path = run_root / "PSI/evaluator-observations/before/AC_PUBLIC_API/stdout.bin"
+        marker_path.parent.mkdir(parents=True)
+        marker_path.write_bytes(marker)
+        partial = {
+            "schema_version": "MONO_CI_PSI_PARTIAL_TRANSITION_V1",
+            "classification": "PARTIAL_EXECUTION_EVIDENCE",
+            "execution_id": execution_id,
+            "started_at_utc": "2026-10-27T12:00:00+00:00",
+            "ended_at_utc": "2026-10-27T12:00:01+00:00",
+            "source_identities": {"verification_status": "PASS"},
+            "phase_status": phase_status,
+            "method_subprocess": method_subprocess,
+            "method_observation": method_observation,
+            "scientific_status": {
+                "method_decision": "OBSERVED" if method_observation else "NOT_OBSERVED",
+                "operation_plan": "OBSERVED" if method_observation else "NOT_OBSERVED",
+                "candidate": "OBSERVED" if method_observation else "NOT_OBSERVED",
+                "official_measurement_status": "NOT_EXECUTED",
+                "g1": "INCOMPLETE",
+                "g4": "NOT_AUTHORIZED",
+            },
+            "error": {"type": "ProtocolError", "message": f"fixture {failure_stage}"},
+            "available_artifacts": [
+                {
+                    "path": marker_path.relative_to(run_root).as_posix(),
+                    "sha256": hashlib.sha256(marker).hexdigest(),
+                }
+            ],
+        }
+        (run_root / "partial-execution.json").write_text(json.dumps(partial), encoding="utf-8")
+        raise ProtocolError(f"fixture {failure_stage}")
+
+    monkeypatch.setattr(v2, "run_a05_transition", fail_after_stage)
+    records, summary = v2._run_transitions(
+        repository=tmp_path,
+        subject=subject,
+        output_root=output,
+        artifact_root=artifacts,
+        uv_version="uv fixture",
+        sandbox_preflight_id="b" * 64,
+    )
+
+    assert summary["partial_archives"] == 4
+    for row in records:
+        with zipfile.ZipFile(artifacts / row["evidence_archive"]) as zipped:
+            manifest = json.loads(zipped.read("PARTIAL_EVIDENCE_MANIFEST.json"))
+            assert (
+                zipped.read("run/PSI/evaluator-observations/before/AC_PUBLIC_API/stdout.bin")
+                == marker
+            )
+        assert manifest["phase_status"][expected_phase] == phase_status[expected_phase]
+        assert manifest["error"]["message"] == f"fixture {failure_stage}"
+        if method_observation:
+            assert manifest["method_observation"]["governance_decision"] == "HOLD"
+        else:
+            assert manifest["method_observation"] is None
+
+
+def test_postrun_wrapper_failure_is_sealed_with_actual_method_observation(
+    tmp_path: Path,
+) -> None:
+    run_root = tmp_path / "run"
+    method_path = run_root / "PSI/raw/method-result.json"
+    method_path.parent.mkdir(parents=True)
+    method_path.write_text(
+        json.dumps(
+            {
+                "governance": {"result": "HOLD", "reason_codes": ["APPLICABILITY_UNKNOWN"]},
+                "operation_plan": {
+                    "operations": [],
+                    "hold_reasons": ["MANDATORY_APPLICABILITY_UNKNOWN"],
+                },
+                "candidate": {"changes": []},
+                "candidate_sha256": "a" * 64,
+            }
+        ),
+        encoding="utf-8",
+    )
+    sandbox_path = run_root / "PSI/raw/sandbox-execution.json"
+    sandbox_path.parent.mkdir(parents=True, exist_ok=True)
+    sandbox_path.write_text(
+        json.dumps({"status": "DEVELOPMENT_METHOD_EXECUTED", "exit_code": 0}),
+        encoding="utf-8",
+    )
+    extension_path = run_root / "diagnostics/a05-experiment-evidence.json"
+    extension_path.parent.mkdir(parents=True)
+    extension_path.write_text(
+        json.dumps({"candidate_verification": {"method_candidate_validation_status": "valid"}}),
+        encoding="utf-8",
+    )
+    record: dict[str, Any] = {
+        "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_MEASURED_01",
+        "transition": {
+            "before_commit_sha": "b" * 40,
+            "before_repository_tree_sha": "c" * 40,
+            "before_application_tree_sha": "d" * 40,
+            "after_commit_sha": "e" * 40,
+            "after_repository_tree_sha": "f" * 40,
+            "after_application_tree_sha": "0" * 40,
+        },
+        "psi": {
+            "status": "DEVELOPMENT_METHOD_EXECUTED",
+            "execution_duration_ms": 1875.0,
+            "raw_result_path": "PSI/raw/method-result.json",
+        },
+        "a05_extension": {"path": "diagnostics/a05-experiment-evidence.json"},
+    }
+    (run_root / "development_run.json").write_text(json.dumps(record), encoding="utf-8")
+
+    v2._write_postrun_failure_progress(
+        run_root,
+        error=KeyError("evaluator_observations"),
+        started_at=datetime(2026, 10, 27, 12, 0, tzinfo=UTC),
+        complete_archive_verification="PASS",
+    )
+    archive = tmp_path / "postrun-partial.zip"
+    owner.pack_partial_execution_archive(
+        run_root,
+        archive,
+        study_id=v2.STUDY_ID,
+        execution_id=record["execution_id"],
+        run_role="MEASURED",
+        sandbox_preflight_id="b" * 64,
+    )
+    assert owner.verify_partial_execution_archive(archive)["verification_status"] == "PASS"
+    with zipfile.ZipFile(archive) as zipped:
+        manifest = json.loads(zipped.read("PARTIAL_EVIDENCE_MANIFEST.json"))
+
+    assert manifest["error"] == {
+        "type": "KeyError",
+        "message": "'evaluator_observations'",
+    }
+    assert manifest["method_observation"]["governance_decision"] == "HOLD"
+    assert manifest["method_observation"]["operations"] == []
+    assert manifest["method_observation"]["candidate_state"] == "MATERIALIZED_UNAPPLIED"
+    assert manifest["method_subprocess"]["exit_code"] == 0
+    assert manifest["phase_status"]["candidate_validation"] == "COMPLETED"
+    assert manifest["phase_status"]["complete_transition_verification"] == "PASS"
+
+
+def test_partial_archive_analysis_reads_method_and_candidate_observations(
+    tmp_path: Path,
+) -> None:
+    run_root = tmp_path / "run"
+    method_path = run_root / "PSI/raw/method-result.json"
+    method_path.parent.mkdir(parents=True)
+    method_path.write_text(
+        json.dumps(
+            {
+                "governance": {
+                    "result": "HOLD",
+                    "reason_codes": ["APPLICABILITY_UNKNOWN"],
+                },
+                "operation_plan": {
+                    "operations": [],
+                    "hold_reasons": ["MANDATORY_APPLICABILITY_UNKNOWN"],
+                },
+                "candidate": {"changes": []},
+                "candidate_sha256": "a" * 64,
+            }
+        ),
+        encoding="utf-8",
+    )
+    extension_path = run_root / "diagnostics/a05-experiment-evidence.json"
+    extension_path.parent.mkdir(parents=True)
+    extension_path.write_text(
+        json.dumps(
+            {
+                "candidate_verification": {
+                    "method_candidate_validation_status": "valid",
+                    "execution_cost": {
+                        "candidate_validation_total_ms": 644.012,
+                        "estimated_additional_ci_execution_ms_per_build": 0,
+                    },
+                    "outcome_comparisons": [
+                        {
+                            "representation_id": "REP_TEST",
+                            "candidate_positive_outcome": "COMPLIANT",
+                            "candidate_negative_outcome": "COMPLIANT",
+                            "positive_outcome_parity": True,
+                            "negative_outcome_parity": True,
+                        }
+                    ],
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    for state_dir in ("before", "after"):
+        for evaluator_id in ("AC_PUBLIC_API", "AC_MODULE_GRAPH"):
+            evaluator_root = run_root / "PSI/evaluator-observations" / state_dir / evaluator_id
+            evaluator_root.mkdir(parents=True)
+            (evaluator_root / "process-execution.json").write_text(
+                json.dumps(
+                    {
+                        "status": "OUTPUT_PARSED",
+                        "exit_code": 0,
+                        "stdout_sha256": "b" * 64,
+                        "stderr_sha256": "c" * 64,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (evaluator_root / "evaluator-output.json").write_text(
+                json.dumps(
+                    {
+                        "result": {"execution_status": "COMPLETED", "compliance": "COMPLIANT"},
+                        "architecture": {"target_source_sha": "d" * 40},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (evaluator_root / "inspection-coverage.json").write_text(
+                json.dumps({"source_inspection_status": "COMPLETE"}),
+                encoding="utf-8",
+            )
+    record: dict[str, Any] = {
+        "execution_id": "DEV_PSI_TRANSITION_FIXTURE_MEASURED_01",
+        "source_revision_sha": "d" * 40,
+        "a05_extension": {"path": "diagnostics/a05-experiment-evidence.json"},
+        "transition": {
+            "before_commit_sha": "a" * 40,
+            "before_repository_tree_sha": "b" * 40,
+            "before_application_tree_sha": "c" * 40,
+            "after_commit_sha": "d" * 40,
+            "after_repository_tree_sha": "e" * 40,
+            "after_application_tree_sha": "f" * 40,
+        },
+        "psi": {
+            "status": "DEVELOPMENT_METHOD_EXECUTED",
+            "execution_duration_ms": 1918.254,
+            "raw_result_path": "PSI/raw/method-result.json",
+        },
+    }
+    (run_root / "development_run.json").write_text(json.dumps(record), encoding="utf-8")
+    archive = tmp_path / "partial.zip"
+    owner.pack_partial_execution_archive(
+        run_root,
+        archive,
+        study_id=v2.STUDY_ID,
+        execution_id=record["execution_id"],
+        run_role="MEASURED",
+        sandbox_preflight_id="e" * 64,
+    )
+    digest = v2._sha256(archive)
+    bundle = tmp_path / "bundle"
+    bundle.mkdir()
+    archive_copy = bundle / "partial.zip"
+    archive_copy.write_bytes(archive.read_bytes())
+    Path(f"{archive_copy}.sha256").write_text(f"{digest}  {archive_copy.name}\n", encoding="ascii")
+
+    observed = analysis._read_partial_archive_row(
+        bundle,
+        {
+            "execution_id": record["execution_id"],
+            "role": "MEASURED",
+            "measured": True,
+            "run_status": "FAILED",
+            "evidence_archive": "partial.zip",
+            "evidence_sha256": digest,
+            "evidence_classification": "PARTIAL_EXECUTION_EVIDENCE",
+        },
+    )
+
+    assert observed["b0_execution_status"] == "ALL_OUTPUTS_PARSED"
+    assert observed["method_process_status"] == "DEVELOPMENT_METHOD_EXECUTED"
+    assert observed["method_decision"] == "HOLD"
+    assert observed["governance_reason_codes"] == ["APPLICABILITY_UNKNOWN"]
+    assert observed["hold_reasons"] == ["MANDATORY_APPLICABILITY_UNKNOWN"]
+    assert observed["operation_plan"] == []
+    assert observed["candidate_state"] == "MATERIALIZED_UNAPPLIED"
+    assert observed["candidate_verification_status"] == "valid"
+    assert observed["candidate_validation_cost_ms"] == 644.012
+    assert observed["candidate_evaluators"][0]["positive_outcome_parity"] is True
+
+
 def test_evaluator_invalid_output_preserves_exit_stdout_and_stderr(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -661,6 +1098,36 @@ def test_analysis_verifies_preserved_premeasurement_attempt_zip(tmp_path: Path) 
         analysis._read_preserved_premeasurement_failure(tmp_path / "bundle")
 
 
+def test_analysis_verifies_preserved_first_postexecution_readback_failure(
+    tmp_path: Path,
+) -> None:
+    protocol_snapshot = tmp_path / "bundle/protocol-snapshot"
+    protocol_snapshot.mkdir(parents=True)
+    for source in (
+        v2.POSTEXECUTION_READBACK_FAILURE,
+        v2.POSTEXECUTION_READBACK_FAILURE_SIDECAR,
+        v2.PREVIOUS_FREEZE,
+        v2.PREVIOUS_FREEZE_SIDECAR,
+    ):
+        (protocol_snapshot / source.name).write_bytes((ROOT / source).read_bytes())
+
+    verified = analysis._read_preserved_postexecution_readback_failure(tmp_path / "bundle")
+
+    assert verified is not None
+    assert verified["workflow_run_id"] == 40574090499
+    assert len(verified["transition_attempts"]) == 4
+    assert all(row["wrapper_run_status"] == "FAILED" for row in verified["transition_attempts"])
+    assert all(row["method_decision"] == "HOLD" for row in verified["transition_attempts"])
+    assert all(
+        row["candidate_validation_status"] == "valid" for row in verified["transition_attempts"]
+    )
+
+    preserved_freeze = protocol_snapshot / v2.PREVIOUS_FREEZE.name
+    preserved_freeze.write_bytes(preserved_freeze.read_bytes() + b"tamper")
+    with pytest.raises(ContractValidationError, match="PRIOR_FREEZE_READBACK_MISMATCH"):
+        analysis._read_preserved_postexecution_readback_failure(tmp_path / "bundle")
+
+
 def test_docker_container_command_is_locked_to_isolation_contract(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -775,3 +1242,10 @@ def test_ci_runs_v2_preflight_and_study_only_on_the_dedicated_push() -> None:
     )
     assert "early-failure-evidence/" in raw_upload["with"]["path"]
     assert any("release download" in step.get("run", "") for step in study["steps"])
+    assemble = next(
+        step
+        for step in study["steps"]
+        if step.get("name") == "Assemble durable outer evidence archive"
+    )
+    assert 'sha256sum "$OUTER_ARCHIVE_NAME"' in assemble["run"]
+    assert 'sha256sum "$OUTER_ARCHIVE" > "$OUTER_ARCHIVE.sha256"' not in assemble["run"]

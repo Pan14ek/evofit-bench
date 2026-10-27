@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_psi_v2_postexecution_readback_failure_v1.schema.json",
+  "title": "Preserved V2 post-execution readback failure",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "classification",
+    "study_id",
+    "workflow_run_id",
+    "freeze_commit",
+    "previous_freeze_sha256",
+    "release",
+    "study_execution_sha256",
+    "calibration",
+    "transition_attempts"
+  ],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_PSI_V2_POSTEXECUTION_READBACK_FAILURE_V1"},
+    "classification": {"const": "POSTEXECUTION_READBACK_FAILURE_PRESERVED_PRIOR_ATTEMPT"},
+    "study_id": {"const": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V2"},
+    "workflow_run_id": {"const": 40574090499},
+    "freeze_commit": {"const": "490350858d64d4d80e4c52dc096ee7972c1b1729"},
+    "previous_freeze_sha256": {"$ref": "#/$defs/sha256"},
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "asset_name", "outer_archive_sha256", "github_asset_digest_match", "sidecar_status"],
+      "properties": {
+        "url": {"const": "https://github.com/Pan14ek/evofit-bench/releases/tag/mono-ci-psi-a05-owner-authorized-v2-40574090499-1"},
+        "asset_name": {"const": "mono-ci-psi-a05-owner-authorized-v2-40574090499-1.zip"},
+        "outer_archive_sha256": {"const": "11f4ec5aa1a399c2b4314c9785e256d9c894b61923c5748796d77ac1f0cf3e64"},
+        "github_asset_digest_match": {"const": true},
+        "sidecar_status": {"const": "ABSOLUTE_RUNNER_TEMP_PATH_NOT_PORTABLE"}
+      }
+    },
+    "study_execution_sha256": {"$ref": "#/$defs/sha256"},
+    "calibration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["planned_calls", "measured_calls", "failed_calls", "archive_sha256"],
+      "properties": {
+        "planned_calls": {"const": 66},
+        "measured_calls": {"const": 66},
+        "failed_calls": {"const": 0},
+        "archive_sha256": {"const": "4d552a8111e591e9f7148c096117675453e9512e8d0016e582e1af1c2de833b1"}
+      }
+    },
+    "transition_attempts": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "execution_id", "role", "wrapper_run_status", "wrapper_error",
+          "partial_archive_sha256", "development_run_sha256", "method_result_sha256",
+          "b0_execution_status", "b0_evaluator_count", "method_process_status",
+          "method_exit_code", "method_decision", "governance_reason_codes",
+          "operation_plan", "operation_hold_reasons", "candidate_state",
+          "candidate_configuration_sha256", "candidate_validation_status",
+          "candidate_validation_cost_ms", "candidate_outcome_parity",
+          "full_transition_duration_ms", "method_execution_duration_ms"
+        ],
+        "properties": {
+          "execution_id": {"type": "string", "pattern": "^DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_(?:WARMUP_00|MEASURED_0[1-3])$"},
+          "role": {"enum": ["WARMUP", "MEASURED"]},
+          "wrapper_run_status": {"const": "FAILED"},
+          "wrapper_error": {"const": "KeyError: 'evaluator_observations'"},
+          "partial_archive_sha256": {"$ref": "#/$defs/sha256"},
+          "development_run_sha256": {"$ref": "#/$defs/sha256"},
+          "method_result_sha256": {"$ref": "#/$defs/sha256"},
+          "b0_execution_status": {"const": "ALL_OUTPUTS_PARSED"},
+          "b0_evaluator_count": {"const": 4},
+          "method_process_status": {"const": "DEVELOPMENT_METHOD_EXECUTED"},
+          "method_exit_code": {"const": 0},
+          "method_decision": {"const": "HOLD"},
+          "governance_reason_codes": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+          "operation_plan": {"type": "array", "maxItems": 0},
+          "operation_hold_reasons": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+          "candidate_state": {"const": "MATERIALIZED_UNAPPLIED"},
+          "candidate_configuration_sha256": {"$ref": "#/$defs/sha256"},
+          "candidate_validation_status": {"const": "valid"},
+          "candidate_validation_cost_ms": {"type": "number", "exclusiveMinimum": 0},
+          "candidate_outcome_parity": {"const": true},
+          "full_transition_duration_ms": {"type": "number", "exclusiveMinimum": 0},
+          "method_execution_duration_ms": {"type": "number", "exclusiveMinimum": 0}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  }
+}

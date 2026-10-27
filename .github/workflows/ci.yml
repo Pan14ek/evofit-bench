@@ -321,7 +321,8 @@ jobs:
           RELEASE_TAG="mono-ci-psi-a05-owner-authorized-v2-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
           OUTER_ARCHIVE="$RUNNER_TEMP/$RELEASE_TAG.zip"
           (cd "$RUN_OUTPUT/artifact-bundle" && zip -0 -q -r "$OUTER_ARCHIVE" .)
-          sha256sum "$OUTER_ARCHIVE" > "$OUTER_ARCHIVE.sha256"
+          OUTER_ARCHIVE_NAME="$(basename "$OUTER_ARCHIVE")"
+          (cd "$(dirname "$OUTER_ARCHIVE")" && sha256sum "$OUTER_ARCHIVE_NAME") > "$OUTER_ARCHIVE.sha256"
           echo "RELEASE_TAG=$RELEASE_TAG" >> "$GITHUB_ENV"
           echo "OUTER_ARCHIVE=$OUTER_ARCHIVE" >> "$GITHUB_ENV"
       - name: Publish durable V2 evidence release

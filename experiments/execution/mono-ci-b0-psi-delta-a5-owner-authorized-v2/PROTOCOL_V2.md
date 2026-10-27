@@ -13,6 +13,10 @@ The only architecture-level unit remains the exact transition `A0_4_REPORT_QUERY
 3. **Mandatory preflight:** a bridge-network control container must reach a test-only host canary. The constrained sandbox must then start the pinned interpreter, read its required input, write only its permitted output, fail to read protected canaries and repository history, and fail to reach both the test canary and an external test target. The host identity, inspect record, stdout/stderr, results, and checksums are preserved. A failed preflight ends the run before any calibration or transition measurement.
 4. **Partial retention:** every attempted transition retains its raw run tree. A successful transition uses the unchanged complete V4 archive validator. An incomplete run uses the new, strictly typed `PARTIAL_EXECUTION_EVIDENCE` archive and validator. The partial manifest reports source identity verification, each phase, method-process status, any parseable raw method observation, errors, and checksums. Archive failure leaves the raw tree available for the outer evidence bundle. Infrastructure failures are never recorded as Method Ψ HOLD.
 
+5. **Post-execution readback and retry:** V2 run `40574090499` completed all 66 calibration calls and started all four transition attempts after the hosted Docker isolation preflight passed. Each transition wrote B0 results, completed the unchanged Method Ψ process, materialized and validated a candidate, and was preserved in a checksum-verified partial archive. The wrapper then raised `KeyError: 'evaluator_observations'` because it passed the compact return value to outcome readback instead of the persisted `development_run.json`; consequently its four wrapper rows were marked `FAILED`. Raw readback establishes actual Ψ `HOLD` in all four attempts, empty operation plans, and a `valid`, `MATERIALIZED_UNAPPLIED` candidate whose two evaluator controls matched reconstructed B0 on the recorded positive and negative inputs. These parity checks did not demonstrate improved detection capability. This is a post-method reporting defect, not an infrastructure failure or a Method Ψ failure. The prior freeze, failure record, and published release remain preserved and separately identified. After correcting the wrapper and partial-analysis readers, the complete V2 calibration and transition plan is repeated under a new freeze; samples and transition attempts from the two runs are kept separate.
+
+The first V2 release archive bytes matched GitHub's published asset digest and passed ZIP/bundle verification. Its `.sha256` sidecar contained the runner's absolute temporary path, however, so it could not independently verify the downloaded asset by basename. The retry workflow writes a portable basename-only sidecar and checks it against the downloaded release bytes.
+
 The first frozen V2 workflow attempt (run `40569757224`, freeze commit
 `c8eebe96edf3166111c408cc4287b6b78ff0fe89`) passed both hosted sandbox
 preflights and stopped at technical preflight with
@@ -26,6 +30,14 @@ SHA-256 in `PREMEASUREMENT_FAILURE_40569757224.json` and
 as a technical failure and is not counted as a transition or Method Ψ result.
 The corrected V2 preflight uses the existing A0.4 proposal validator; a new
 freeze is required before the retry.
+
+The first post-measurement V2 run and its method observations are recorded in
+`POSTEXECUTION_READBACK_FAILURE_40574090499.json`, with its old freeze copied
+byte-for-byte to `PRE_RUN_FREEZE_40574090499.json`. The freeze for the corrected
+retry is regenerated only after its tests, analysis, protocol, and hosted
+preflight evidence are fixed. The new analysis reports the prior run as a
+separate technical readback failure and never upgrades its wrapper rows or
+combines its timing samples with the retry.
 
 ## Frozen measurement plan
 

@@ -48,6 +48,10 @@ PRE_RUN_PREFLIGHT_SIDECAR = Path(f"{PRE_RUN_PREFLIGHT}.sha256")
 PREMEASUREMENT_FAILURE = PROTOCOL_ROOT / "PREMEASUREMENT_FAILURE_40569757224.json"
 PREMEASUREMENT_ARTIFACT = PROTOCOL_ROOT / "PREMEASUREMENT_PREFLIGHT_ARTIFACT_40569757224.zip"
 PREMEASUREMENT_ARTIFACT_SIDECAR = Path(f"{PREMEASUREMENT_ARTIFACT}.sha256")
+POSTEXECUTION_READBACK_FAILURE = PROTOCOL_ROOT / "POSTEXECUTION_READBACK_FAILURE_40574090499.json"
+POSTEXECUTION_READBACK_FAILURE_SIDECAR = Path(f"{POSTEXECUTION_READBACK_FAILURE}.sha256")
+PREVIOUS_FREEZE = PROTOCOL_ROOT / "PRE_RUN_FREEZE_40574090499.json"
+PREVIOUS_FREEZE_SIDECAR = Path(f"{PREVIOUS_FREEZE}.sha256")
 HISTORICAL_PROBE_ROOT = owner.HISTORICAL_PROBE_ROOT
 V1_EXECUTION = (
     Path("experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v1")
@@ -71,6 +75,7 @@ FREEZE_SCHEMA = "mono_ci_psi_owner_authorized_pre_run_freeze_v2.schema.json"
 EXECUTION_SCHEMA = "mono_ci_psi_owner_authorized_execution_v2.schema.json"
 PREFLIGHT_SCHEMA = "mono_ci_psi_docker_isolation_preflight_v1.schema.json"
 PARTIAL_ARCHIVE_SCHEMA = "mono_ci_psi_partial_execution_archive_v1.schema.json"
+POSTEXECUTION_FAILURE_SCHEMA = "mono_ci_psi_v2_postexecution_readback_failure_v1.schema.json"
 TRANSITION_WARMUPS = 1
 TRANSITION_REPETITIONS = 3
 CALIBRATION_WARMUPS = 1
@@ -175,6 +180,10 @@ def _freeze_input_paths(repository: Path) -> list[str]:
             PREMEASUREMENT_FAILURE.as_posix(),
             PREMEASUREMENT_ARTIFACT.as_posix(),
             PREMEASUREMENT_ARTIFACT_SIDECAR.as_posix(),
+            POSTEXECUTION_READBACK_FAILURE.as_posix(),
+            POSTEXECUTION_READBACK_FAILURE_SIDECAR.as_posix(),
+            PREVIOUS_FREEZE.as_posix(),
+            PREVIOUS_FREEZE_SIDECAR.as_posix(),
             PRE_RUN_PREFLIGHT.as_posix(),
             PRE_RUN_PREFLIGHT_SIDECAR.as_posix(),
             "experiments/execution/tooling/mono_ci_psi_owner_authorized.py",
@@ -193,6 +202,7 @@ def _freeze_input_paths(repository: Path) -> list[str]:
             f"experiments/execution/schemas/{EXECUTION_SCHEMA}",
             f"experiments/execution/schemas/{PREFLIGHT_SCHEMA}",
             f"experiments/execution/schemas/{PARTIAL_ARCHIVE_SCHEMA}",
+            f"experiments/execution/schemas/{POSTEXECUTION_FAILURE_SCHEMA}",
             "experiments/execution/schemas/mono_ci_psi_transition_run_v4.schema.json",
             "experiments/execution/schemas/mono_ci_psi_transition_archive_v4.schema.json",
             V1_EXECUTION.as_posix(),
@@ -583,6 +593,118 @@ def _copy_partial_raw(run_root: Path, destination: Path) -> tuple[list[dict[str,
     return rows, _tree_digest(rows)
 
 
+def _write_postrun_failure_progress(
+    run_root: Path,
+    *,
+    error: Exception,
+    started_at: datetime,
+    complete_archive_verification: str,
+) -> None:
+    """Seal post-run wrapper errors alongside a persisted transition record."""
+    progress_path = run_root / "partial-execution.json"
+    record_path = run_root / "development_run.json"
+    if progress_path.exists() or not record_path.is_file() or record_path.is_symlink():
+        return
+    record = _json(record_path)
+    psi = record.get("psi", {})
+    method_path = run_root / str(psi.get("raw_result_path", ""))
+    method: dict[str, Any] = {}
+    if method_path.is_file() and not method_path.is_symlink():
+        try:
+            parsed_method = _json(method_path)
+            if isinstance(parsed_method, dict):
+                method = parsed_method
+        except (OSError, json.JSONDecodeError):
+            method = {}
+    governance = method.get("governance", {})
+    operation_plan = method.get("operation_plan", {})
+    candidate = method.get("candidate")
+    observation = None
+    if method:
+        observation = {
+            "raw_result_path": psi.get("raw_result_path"),
+            "raw_result_sha256": _sha256(method_path),
+            "governance_decision": governance.get("result"),
+            "governance_reason_codes": governance.get("reason_codes", []),
+            "operations": operation_plan.get("operations", []),
+            "operation_hold_reasons": operation_plan.get("hold_reasons", []),
+            "candidate_state": "NOT_MATERIALIZED"
+            if candidate is None
+            else "MATERIALIZED_UNAPPLIED",
+            "candidate_sha256": method.get("candidate_sha256"),
+            "parse_status": "JSON_READBACK_ONLY",
+        }
+    extension_path = record.get("a05_extension", {}).get("path")
+    extension_path = run_root / extension_path if isinstance(extension_path, str) else None
+    extension: dict[str, Any] = {}
+    if extension_path and extension_path.is_file() and not extension_path.is_symlink():
+        try:
+            parsed_extension = _json(extension_path)
+            if isinstance(parsed_extension, dict):
+                extension = parsed_extension
+        except (OSError, json.JSONDecodeError):
+            extension = {}
+    candidate_validation = extension.get("candidate_verification", {}).get(
+        "method_candidate_validation_status"
+    )
+    transition_record = record.get("transition", {})
+    source_keys = (
+        "before_commit_sha",
+        "before_repository_tree_sha",
+        "before_application_tree_sha",
+        "after_commit_sha",
+        "after_repository_tree_sha",
+        "after_application_tree_sha",
+    )
+    source_identities = {key: transition_record.get(key) for key in source_keys}
+    source_identities = {key: value for key, value in source_identities.items() if value}
+    sandbox_path = run_root / "PSI/raw/sandbox-execution.json"
+    method_subprocess = _json(sandbox_path) if sandbox_path.is_file() else None
+    method_observed = observation is not None and observation.get("governance_decision") is not None
+    candidate_phase = (
+        "NOT_EXECUTED"
+        if candidate is None
+        else "COMPLETED"
+        if candidate_validation == "valid"
+        else "FAILED"
+    )
+    artifacts = [
+        {"path": path.relative_to(run_root).as_posix(), "sha256": _sha256(path)}
+        for path in sorted(run_root.rglob("*"))
+        if path.is_file() and not path.is_symlink()
+    ]
+    partial = {
+        "schema_version": "MONO_CI_PSI_PARTIAL_TRANSITION_V1",
+        "classification": "PARTIAL_EXECUTION_EVIDENCE",
+        "execution_id": record.get("execution_id"),
+        "started_at_utc": started_at.isoformat(),
+        "ended_at_utc": datetime.now(UTC).isoformat(),
+        "source_identities": source_identities,
+        "phase_status": {
+            "source_identity": "COMPLETED",
+            "baseline_identity": "COMPLETED",
+            "b0_evaluator_matrix": "COMPLETED",
+            "method_input_bundle": "COMPLETED",
+            "method_execution": "OBSERVED" if method_observed else "NOT_OBSERVED",
+            "candidate_validation": candidate_phase,
+            "complete_transition_verification": complete_archive_verification,
+        },
+        "method_subprocess": method_subprocess,
+        "method_observation": observation,
+        "scientific_status": {
+            "method_decision": "OBSERVED" if method_observed else "NOT_OBSERVED",
+            "operation_plan": "OBSERVED" if method_observed else "NOT_OBSERVED",
+            "candidate": "NOT_PRODUCED" if candidate is None else "OBSERVED",
+            "official_measurement_status": "NOT_EXECUTED",
+            "g1": "INCOMPLETE",
+            "g4": "NOT_AUTHORIZED",
+        },
+        "error": {"type": type(error).__name__, "message": str(error)[:2000]},
+        "available_artifacts": artifacts,
+    }
+    _write_json_new(progress_path, partial)
+
+
 def _run_transitions(
     *,
     repository: Path,
@@ -645,8 +767,9 @@ def _run_transitions(
         before = owner._usage_snapshot()
         started_at = datetime.now(UTC)
         started = time.perf_counter()
+        complete_archive_verification = "NOT_EXECUTED"
         try:
-            run_record = run_a05_transition(
+            run_a05_transition(
                 subject,
                 run_root,
                 execution_id,
@@ -654,6 +777,15 @@ def _run_transitions(
                 preserve_partial_evidence=True,
                 sandbox_preflight_id=sandbox_preflight_id,
             )
+            persisted_record_path = run_root / "development_run.json"
+            if not persisted_record_path.is_file() or persisted_record_path.is_symlink():
+                raise ProtocolError("OWNER_AUTHORIZED_V2_PERSISTED_TRANSITION_RECORD_MISSING")
+            persisted_record = _json(persisted_record_path)
+            if (
+                not isinstance(persisted_record, dict)
+                or persisted_record.get("execution_id") != execution_id
+            ):
+                raise ProtocolError("OWNER_AUTHORIZED_V2_PERSISTED_TRANSITION_RECORD_MISMATCH")
             ended = time.perf_counter()
             after = owner._usage_snapshot()
             packed = pack_psi_transition_archive(
@@ -675,8 +807,12 @@ def _run_transitions(
                 uv_version,
                 execution_origin="HOSTED_CI" if os.environ.get("GITHUB_RUN_ID") else "LOCAL",
             )
+            complete_archive_verification = "FAILED"
             verified = verify_psi_transition_archive(archive_path, repository=subject)
-            outcome = owner._transition_outcome(run_root, run_record)
+            complete_archive_verification = verified["verification_status"]
+            # run_a05_transition returns a compact wrapper summary; the sealed
+            # development_run.json is the source of evaluator observations.
+            outcome = owner._transition_outcome(run_root, persisted_record)
             row.update(
                 {
                     "run_status": "COMPLETED",
@@ -703,25 +839,6 @@ def _run_transitions(
                     "outcome": outcome,
                 }
             )
-            if (run_root / "development_run.json").is_file():
-                try:
-                    successful_record = _json(run_root / "development_run.json")
-                    observed = owner._transition_outcome(run_root, successful_record)
-                    row.update(
-                        {
-                            "method_process_status": "COMPLETED",
-                            "method_decision": observed["Psi"]["decision"],
-                            "method_execution_duration_ms": observed["Psi"]["method_duration_ms"],
-                            "operation_plan": observed["Psi"]["operation_plan"],
-                            "candidate_state": observed["Psi"]["candidate_state"],
-                            "outcome": observed,
-                        }
-                    )
-                except Exception as readback_error:
-                    row["method_readback_error"] = {
-                        "type": type(readback_error).__name__,
-                        "message": str(readback_error)[:1000],
-                    }
         except Exception as error:  # Retain authentic raw data before returning a failure row.
             after = owner._usage_snapshot()
             row.update(
@@ -776,6 +893,12 @@ def _run_transitions(
                 try:
                     partial_root.mkdir(parents=True, exist_ok=True)
                     raw_destination = partial_root / execution_id
+                    _write_postrun_failure_progress(
+                        run_root,
+                        error=error,
+                        started_at=started_at,
+                        complete_archive_verification=complete_archive_verification,
+                    )
                     member_rows, raw_digest = _copy_partial_raw(run_root, raw_destination)
                     row.update(
                         {
@@ -807,20 +930,17 @@ def _run_transitions(
                             "evidence_verification": verified_partial["verification_status"],
                         }
                     )
-                    progress = (
-                        _json(raw_destination / "partial-execution.json")
-                        if (raw_destination / "partial-execution.json").is_file()
-                        else {}
-                    )
-                    row["method_process_status"] = (progress.get("method_subprocess") or {}).get(
+                    with zipfile.ZipFile(partial_path, "r") as partial_zip:
+                        manifest = json.loads(partial_zip.read("PARTIAL_EVIDENCE_MANIFEST.json"))
+                    row["method_process_status"] = (manifest.get("method_subprocess") or {}).get(
                         "status", "NOT_OBSERVED"
                     )
-                    observation = progress.get("method_observation") or {}
+                    observation = manifest.get("method_observation") or {}
                     row["method_decision"] = observation.get("governance_decision")
                     row["operation_plan"] = observation.get("operations")
                     row["candidate_state"] = observation.get("candidate_state", "NOT_OBSERVED")
                     row["method_execution_duration_ms"] = (
-                        progress.get("method_subprocess") or {}
+                        manifest.get("method_subprocess") or {}
                     ).get("execution_duration_ms")
                 except Exception as archive_error:
                     row["partial_archive_error"] = {
