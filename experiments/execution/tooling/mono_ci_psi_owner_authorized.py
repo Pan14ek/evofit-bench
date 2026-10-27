@@ -771,7 +771,7 @@ def _run_transitions(
     records: list[dict[str, Any]] = []
     budget_start = time.perf_counter()
     for planned in schedule:
-        execution_id = f"OADEV_DELTA_A5_20261027_{planned['role']}_{planned['index']:02d}"
+        execution_id = _transition_execution_id(planned["role"], planned["index"])
         run_root = raw_root / execution_id
         archive_path = artifact_root / (
             "transition-warmup.zip"
@@ -861,6 +861,10 @@ def _run_transitions(
         "architecture_level_units": 1,
     }
     return records, summary
+
+
+def _transition_execution_id(role: str, index: int) -> str:
+    return f"DEV_PSI_TRANSITION_OADEV_DELTA_A5_20261027_{role}_{index:02d}"
 
 
 def run_study(

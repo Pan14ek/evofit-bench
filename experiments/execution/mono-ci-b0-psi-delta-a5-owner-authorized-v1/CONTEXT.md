@@ -14,6 +14,7 @@ This versioned, researcher-authorized exploratory protocol records actual DEVELO
 - OWNER_AUTHORIZED_RESULTS_UK_V1.md — generated Ukrainian handoff; values derive from raw records.
 - evidence/ — raw measurements and verified archive receipts.
 - analysis/ — deterministic CSV/JSON tables and SVG figure from the raw archives.
+- EXECUTION_ATTEMPT_*_INCIDENT.json — append-only post-run records for failed or unarchived attempts; these do not amend protocol V1 or count as retained measurement datasets.
 - inputs/historical-probe/ — unchanged PR #56 negative-probe bytes replayed for calibration only; excluded from Ψ input.
 
 The protocol, freeze, execution index, and calibration archive manifest are validated by the four matching owner-authorized schemas in `experiments/execution/schemas/`. This DEVELOPMENT path invokes the existing isolated A0.5 transition adapter only and never changes the official ΔA5 study entrypoint or G1/G4 state.

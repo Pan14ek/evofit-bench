@@ -15,6 +15,7 @@ from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError
 from experiments.execution.tooling.mono_ci_psi_owner_authorized import (
     _method_outcome,
+    _transition_execution_id,
     pack_calibration_archive,
     verify_analysis_checksums,
     verify_calibration_archive,
@@ -26,6 +27,7 @@ from experiments.execution.tooling.mono_ci_psi_owner_authorized_analysis import 
     nearest_rank,
     resource_statistics,
 )
+from experiments.execution.tooling.mono_ci_psi_transition import RUN_ID_PATTERN
 
 PROTOCOL = Path(
     "experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v1/PROTOCOL_V1.json"
@@ -258,9 +260,28 @@ def test_ci_runs_owner_authorized_study_only_on_its_branch_push() -> None:
     assert set(study["env"]) == {"UV_CACHE_DIR", "UV_PROJECT_ENVIRONMENT"}
     assert all("runner.temp" not in value for value in study["env"].values())
     assert not study.get("uses")
-    step_names = {step.get("name") for step in study["steps"]}
+    steps = study["steps"]
+    step_names = {step.get("name") for step in steps}
     assert "Execute preregistered calibration and B0/Ψ DEVELOPMENT repetitions" in step_names
+    raw_upload_index = next(
+        index
+        for index, step in enumerate(steps)
+        if step.get("name") == "Preserve raw study bundle before analysis"
+    )
+    analysis_index = next(
+        index
+        for index, step in enumerate(steps)
+        if step.get("name") == "Derive monograph tables, figure, and Ukrainian handoff"
+    )
+    assert raw_upload_index < analysis_index
+    analysis_command = steps[analysis_index]["run"]
+    assert "--with-requirements research_dashboard/requirements.lock" in analysis_command
     assert "Verify published release readback" in step_names
+
+
+def test_transition_execution_ids_match_the_existing_adapter_contract() -> None:
+    for role, index in (("WARMUP", 0), ("MEASURED", 1), ("MEASURED", 3)):
+        assert RUN_ID_PATTERN.fullmatch(_transition_execution_id(role, index))
 
 
 def test_execution_schema_requires_actual_run_statuses_and_preserves_gate_states() -> None:
