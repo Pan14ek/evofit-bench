@@ -15,9 +15,7 @@ CI workflow YAML: uv, Python and disposable PostgreSQL.
 - `mono-ci-psi-a05-development.yml` — separate canonical A0.4→committed A0.5 Method Ψ DEVELOPMENT run with focused/historical regressions, archive readback, and artifact/private-prerelease retention.
 
 
-- `mono-ci-psi-owner-authorized.yml` — reusable, freeze-checked run called by `ci.yml` only after development-quality passes on the dedicated branch; executes preregistered DEVELOPMENT calibration and full A0.5 adapter repetitions, verifies readback, and publishes a 90-day Actions artifact plus a persistent prerelease archive. This repository is public, so both evidence URLs are public. The workflow preserves official NO_GO/NOT_READY/G1/G4/reference/scoring/coverage states and is separate from the G4 measured-study path.
-
-The owner-authorized ΔA5 reusable workflow requires the commit to change only PRE_RUN_FREEZE.json after the implementation commit. The existing CI workflow calls it only on a push to the dedicated branch and waits for development-quality. It uses the existing isolated A0.5 DEVELOPMENT adapter, writes raw run archives and calibration data, derives tables from those archives, then verifies both Actions artifact inputs and release readback. Its runner verifies the exact freeze commit before study execution. The durable release is explicitly a researcher-authorized DEVELOPMENT archive, not an approval or official result.
+The owner-authorized ΔA5 study job is defined directly in `ci.yml`, gated to a push on its dedicated branch, and waits for `development-quality`. It requires a commit that changes only `PRE_RUN_FREEZE.json` after the tested implementation commit. The job uses the existing isolated A0.5 DEVELOPMENT adapter, writes raw run archives and calibration data, derives tables from those archives, then verifies the Actions artifact and release readback. The runner verifies the exact freeze commit before study execution. The durable release is explicitly a researcher-authorized DEVELOPMENT archive, not an approval or official result.
 
 ## Established conventions
 

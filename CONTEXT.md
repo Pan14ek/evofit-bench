@@ -13,6 +13,7 @@ Project-level scope: a controlled evolutionary-architecture fitness-function res
 - experiments/pilots/mono_e1_ci_evidence_v1/ — reproducible, derived CI-only tables/report/figures for canonical evaluator observations and a separate synthetic Method P track; not official MONO-E1/B0/P evidence.
 - experiments/execution/mono-ci-b0-psi-v1/ — separate draft monograph CI-only B0/Ψ study preparation; current status NO_GO, no measured arm/evaluator/scorer execution.
 - experiments/execution/mono-ci-b0-psi-execution-a05-v1/ — prospective two-control A0.4 baseline for the DEVELOPMENT A0.4→A0.5 Ψ transition; not historical or approved.
+- experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v1/ — separate researcher-authorized exploratory DEVELOPMENT protocol for real A0.4→A0.5 observations; it does not independently validate B0, references, or official G1/G4 gates.
 
 - `.dockerignore`
 - `.env.example`
