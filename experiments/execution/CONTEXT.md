@@ -67,6 +67,7 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - mono-ci-b0-psi-delta-a5-owner-authorized-v1/ — separately versioned researcher-authorized exploratory DEVELOPMENT execution and calibration; its direct conversation authorization is not independent review, G1, G4, scorer authority, or coverage approval.
 - tooling/mono_ci_psi_owner_authorized.py and tooling/mono_ci_psi_owner_authorized_analysis.py — frozen one-shot evaluator calibration and existing isolated A0.5 DEVELOPMENT transition repetitions, verified raw archives, descriptive tables and Ukrainian handoff; no official gate is changed.
 - mono-ci-b0-psi-delta-a5-owner-authorized-v2/ and tooling/mono_ci_psi_owner_authorized_v2.py — separately frozen DEVELOPMENT correction with hosted Docker isolation preflight, source-bound evaluator replay, complete/partial evidence preservation, and release readback; V1 remains historical and official readiness/G1/G4 do not change.
+- mono-ci-b0-psi-delta-a5-positive-add-v1/ and tooling/mono_ci_psi_a05_positive_add_study.py — bounded TEST_ONLY C0/C1 experiment, exact V2 release reuse, frozen A0.4/A0.5 identities, candidate-exercise criterion, Ukrainian results/insertion report and archive readback; not a measured DA01 comparison or readiness change.
 - tooling/mono_ci_psi_owner_authorized_v2_analysis.py — derives descriptive V1/V2 comparison tables and Ukrainian monograph handoff only from verified archived evidence; no score or coverage percentage.
 
 ## Established conventions

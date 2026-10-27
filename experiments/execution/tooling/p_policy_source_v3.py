@@ -816,10 +816,41 @@ def verify_method_bundle_v3(
     if method_id == "P":
         required_roles.add("traceability")
     observed_roles = {str(record.get("role")) for record in files}
-    if observed_roles != required_roles and observed_roles != required_roles | {
-        "approval_evidence"
-    }:
+    positive_add_roles = {"evaluator_artifact", "study_profile"}
+    allowed_role_sets = {
+        frozenset(required_roles),
+        frozenset(required_roles | {"approval_evidence"}),
+        frozenset(required_roles | positive_add_roles),
+        frozenset(required_roles | positive_add_roles | {"approval_evidence"}),
+    }
+    if frozenset(observed_roles) not in allowed_role_sets:
         raise ProtocolError("V3 method bundle roles differ from the candidate profile")
+    if observed_roles & positive_add_roles:
+        role_paths = {
+            str(record.get("role")): str(record.get("path"))
+            for record in files
+            if record.get("role") in positive_add_roles
+        }
+        if role_paths != {
+            "evaluator_artifact": (
+                "PSI/evaluator-observations/implementation/AC_DATA_OWNERSHIP/source-manifest.json"
+            ),
+            "study_profile": "evidence/POSITIVE_ADD_PROFILE_V1.json",
+        }:
+            raise ProtocolError("V3 TEST_ONLY study profile roles are not allowlisted")
+        capabilities = _read_json_object(
+            root / "fitness/evaluator-capabilities.json", "evaluator capabilities"
+        )
+        profile = capabilities.get("positive_add_test_only_profile_v1")
+        if (
+            not isinstance(profile, Mapping)
+            or profile.get("profile_id") != "MONO_CI_A05_POSITIVE_ADD_TEST_ONLY_PROFILE_V1"
+            or profile.get("selected_obligation_id") != "AC_DATA_OWNERSHIP"
+            or profile.get("evaluator_artifact_path") != role_paths["evaluator_artifact"]
+            or profile.get("study_profile_sha256")
+            != declared[role_paths["study_profile"]].get("sha256")
+        ):
+            raise ProtocolError("V3 TEST_ONLY study profile capability binding is invalid")
     snapshot_bytes = (root / P_INPUT_SNAPSHOT_PATH).read_bytes()
     if sha256_bytes(snapshot_bytes) != manifest.get("common_snapshot_sha256"):
         raise ProtocolError("COMMON_PROJECTION_MISMATCH: V3 Snapshot digest differs")
@@ -862,6 +893,16 @@ def _verify_v3_path_role(path: PurePosixPath, role: str, method_id: PolicyMethod
     if relative in extra_paths:
         if extra_paths[relative] != role:
             raise ProtocolError(f"V3 path/role mismatch: {relative}")
+        return
+    positive_add_paths = {
+        (
+            "PSI/evaluator-observations/implementation/AC_DATA_OWNERSHIP/source-manifest.json"
+        ): "evaluator_artifact",
+        "evidence/POSITIVE_ADD_PROFILE_V1.json": "study_profile",
+    }
+    if relative in positive_add_paths:
+        if positive_add_paths[relative] != role or method_id != "P":
+            raise ProtocolError(f"V3 TEST_ONLY study profile path/role mismatch: {relative}")
         return
     from experiments.execution.tooling.p_input_export_v2 import _verify_v2_path_role
 

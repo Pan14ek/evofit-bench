@@ -1,0 +1,202 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_psi_positive_add_profile_v1.schema.json",
+  "title": "TEST_ONLY scoped positive ADD DEVELOPMENT profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "profile_id",
+    "classification",
+    "evaluation_as_of",
+    "scope",
+    "selected_obligation",
+    "canonical_mandatory_projection",
+    "author_declared_exact_pair_semantics",
+    "candidate_template",
+    "stage_contract",
+    "cost_rule",
+    "comparison",
+    "research_boundaries"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "profile_id": {"const": "MONO_CI_A05_POSITIVE_ADD_TEST_ONLY_PROFILE_V1"},
+    "classification": {"const": "TEST_ONLY_AUTHOR_DECLARED_SCOPED_INPUT"},
+    "evaluation_as_of": {"type": "string", "format": "date-time"},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "architecture_state"],
+      "properties": {
+        "id": {"const": "application"},
+        "architecture_state": {"const": "A0_5_MODULE_DATA_OWNERSHIP"}
+      }
+    },
+    "selected_obligation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "criterion", "mandatory", "author_rationale"],
+      "properties": {
+        "id": {"const": "AC_DATA_OWNERSHIP"},
+        "criterion": {"const": "architecture_compliance"},
+        "mandatory": {"const": true},
+        "author_rationale": {"type": "string", "minLength": 20}
+      }
+    },
+    "canonical_mandatory_projection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "selected_obligation_is_true",
+        "all_other_catalog_rows_are_false_only_within_this_test_scope",
+        "other_applicability_status",
+        "global_denominator_or_coverage_claim"
+      ],
+      "properties": {
+        "selected_obligation_is_true": {"const": true},
+        "all_other_catalog_rows_are_false_only_within_this_test_scope": {"const": true},
+        "other_applicability_status": {"const": "UNKNOWN"},
+        "global_denominator_or_coverage_claim": {"const": false}
+      }
+    },
+    "author_declared_exact_pair_semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trust_scope", "independent_verification", "positive_control_pairs"],
+      "properties": {
+        "trust_scope": {"const": "TEST_ONLY"},
+        "independent_verification": {"const": false},
+        "positive_control_pairs": {
+          "const": [
+            {"evaluator_id": "AC_PUBLIC_API", "obligation_id": "AC_PUBLIC_API"},
+            {"evaluator_id": "AC_MODULE_GRAPH", "obligation_id": "AC_MODULE_GRAPH"},
+            {"evaluator_id": "AC_DATA_OWNERSHIP", "obligation_id": "AC_DATA_OWNERSHIP"}
+          ]
+        }
+      }
+    },
+    "candidate_template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "representation_id",
+        "criterion",
+        "stage_label",
+        "method_stage_token",
+        "evaluator_id",
+        "covers",
+        "applicability_scope_id",
+        "configuration_path",
+        "artifact_kind"
+      ],
+      "properties": {
+        "representation_id": {"const": "REP_POSITIVE_ADD_AC_DATA_OWNERSHIP"},
+        "criterion": {"const": "architecture_compliance"},
+        "stage_label": {"const": "CI_TEST"},
+        "method_stage_token": {"const": "ci_test"},
+        "evaluator_id": {"const": "AC_DATA_OWNERSHIP"},
+        "covers": {"const": ["AC_DATA_OWNERSHIP"]},
+        "applicability_scope_id": {"const": "application"},
+        "configuration_path": {"const": "architecture/acceptance/a1/data_ownership_v1.yaml"},
+        "artifact_kind": {"const": "A1 evaluator source-manifest bytes"}
+      }
+    },
+    "stage_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["obligation_id", "required_method_stage"],
+      "properties": {
+        "obligation_id": {"const": "AC_DATA_OWNERSHIP"},
+        "required_method_stage": {"const": "ci_test"}
+      }
+    },
+    "cost_rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unit",
+        "historical_source",
+        "historical_source_sha256",
+        "historical_sample_status",
+        "evaluator_id",
+        "conditions",
+        "condition_source_commits",
+        "warmups_excluded",
+        "historical_measured_calls",
+        "historical_max_process_duration_ms",
+        "margin_fraction",
+        "round_up_increment_ms",
+        "fixed_max_incremental_cost_ms",
+        "fixed_max_search_nodes",
+        "candidate_cost_binding"
+      ],
+      "properties": {
+        "unit": {"const": "elapsed wall-clock milliseconds per added evaluator invocation"},
+        "historical_source": {"const": "V2_RELEASE_ASSET:analysis/evaluator-samples.csv"},
+        "historical_source_sha256": {"const": "2bbff33702491cd0238271fa4c718316378586f5f7eb6af0271cf7baef25e7a7"},
+        "historical_sample_status": {"const": "MEASURED"},
+        "evaluator_id": {"const": "AC_DATA_OWNERSHIP"},
+        "conditions": {"const": ["A0_5_CLEAN", "EXISTING_NEGATIVE_PROBE"]},
+        "condition_source_commits": {
+          "type": "object", "additionalProperties": false,
+          "required": ["A0_5_CLEAN", "EXISTING_NEGATIVE_PROBE"],
+          "properties": {
+            "A0_5_CLEAN": {"const": "a349d19fb89b577e6799e9736ed4ce0acc572166"},
+            "EXISTING_NEGATIVE_PROBE": {"const": "5ace86095bda794c9576047c80b9267e70cd0f26"}
+          }
+        },
+        "warmups_excluded": {"const": true},
+        "historical_measured_calls": {"const": 20},
+        "historical_max_process_duration_ms": {"const": 177.215},
+        "margin_fraction": {"const": 0.25},
+        "round_up_increment_ms": {"const": 25},
+        "fixed_max_incremental_cost_ms": {"const": 225},
+        "fixed_max_search_nodes": {"const": 2},
+        "candidate_cost_binding": {"const": "evaluator source-manifest SHA-256"}
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["c0_reference", "c1_repetitions", "warmup_repetitions", "same_clean_source_and_existing_negative_probe", "candidate_is_exercised_only_if_method_materializes_it"],
+      "properties": {
+        "c0_reference": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["study_id", "execution_id", "decision", "operation_plan", "candidate_state", "outer_archive_sha256", "inner_transition_archive_sha256", "source_revision_sha", "negative_probe_source_revision_sha", "release"],
+          "properties": {
+            "study_id": {"const": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V2"},
+            "execution_id": {"const": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_MEASURED_01"},
+            "decision": {"const": "HOLD"},
+            "operation_plan": {"const": []},
+            "candidate_state": {"const": "MATERIALIZED_UNAPPLIED"},
+            "outer_archive_sha256": {"const": "ef44cf280807e414b4027d846a8db05de74b555c60803500a97d074b666db0d2"},
+            "inner_transition_archive_sha256": {"const": "76024640bf1a5bfc8771f91a7c9c113c7486f44e28f6290b56dafb32867ae890"},
+            "source_revision_sha": {"const": "a349d19fb89b577e6799e9736ed4ce0acc572166"},
+            "negative_probe_source_revision_sha": {"const": "5ace86095bda794c9576047c80b9267e70cd0f26"},
+            "release": {"const": "https://github.com/Pan14ek/evofit-bench/releases/tag/mono-ci-psi-a05-owner-authorized-v2-40579333932-1"}
+          }
+        },
+        "c1_repetitions": {"const": 3},
+        "warmup_repetitions": {"const": 1},
+        "same_clean_source_and_existing_negative_probe": {"const": true},
+        "candidate_is_exercised_only_if_method_materializes_it": {"const": true}
+      }
+    },
+    "research_boundaries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canonical_catalog_modified", "frozen_v2_inputs_modified", "method_algorithm_modified", "measured_da01_authorized", "g1", "g4", "p_algorithm_status"],
+      "properties": {
+        "canonical_catalog_modified": {"const": false},
+        "frozen_v2_inputs_modified": {"const": false},
+        "method_algorithm_modified": {"const": false},
+        "measured_da01_authorized": {"const": false},
+        "g1": {"const": "INCOMPLETE"},
+        "g4": {"const": "NOT_AUTHORIZED"},
+        "p_algorithm_status": {"const": "NOT_READY"}
+      }
+    }
+  }
+}

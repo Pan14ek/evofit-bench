@@ -28,6 +28,7 @@ DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_mono_ci_psi_coverage.py \
 	tests/unit/test_mono_ci_psi_evidence.py \
 	tests/unit/test_mono_ci_b0_psi_delta_a5.py \
+	tests/unit/test_mono_ci_psi_a05_positive_add.py \
 	tests/unit/test_mono_e1_a03_fitness_candidate.py \
 	tests/unit/test_mono_e1_a03_dev_fitness_config.py \
 	tests/unit/test_architecture_stage_checks.py \
@@ -52,7 +53,7 @@ DEVELOPMENT_PROTECTED_TESTS = \
 	tests/unit/test_da01_execution.py \
 	tests/unit/test_research_schema_foundation.py
 
-.PHONY: install run test test-unit test-integration development-regression-test development-lint development-typecheck development-quality lint typecheck security architecture-test quality migration-test db-upgrade seed seed-fingerprint reset wait-ready load-smoke load-baseline exp01-smoke experiment-reset export-metrics metadata research-dashboard research-figures test-research-dashboard test-monograph-evidence test-mono-ci-b0-psi test-mono-ci-b0-psi-execution test-mono-ci-psi-transition test-mono-ci-psi-a05 test-mono-ci-psi-delta-a5 test-mono-ci-psi-owner-authorized test-mono-ci-psi-owner-authorized-v2
+.PHONY: install run test test-unit test-integration development-regression-test development-lint development-typecheck development-quality lint typecheck security architecture-test quality migration-test db-upgrade seed seed-fingerprint reset wait-ready load-smoke load-baseline exp01-smoke experiment-reset export-metrics metadata research-dashboard research-figures test-research-dashboard test-monograph-evidence test-mono-ci-b0-psi test-mono-ci-b0-psi-execution test-mono-ci-psi-transition test-mono-ci-psi-a05 test-mono-ci-psi-a05-positive-add test-mono-ci-psi-delta-a5 test-mono-ci-psi-owner-authorized test-mono-ci-psi-owner-authorized-v2
 
 install:
 	$(UV) sync --extra dev
@@ -89,6 +90,9 @@ test-mono-ci-psi-transition:
 
 test-mono-ci-psi-a05:
 	$(UV) run --frozen --extra dev python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_mono_ci_psi_a05.py tests/unit/test_a05_data_ownership.py tests/unit/test_architecture_stage_checks.py tests/unit/test_mono_ci_psi_coverage.py tests/architecture/a1/test_evaluators.py
+
+test-mono-ci-psi-a05-positive-add:
+	$(UV) run --frozen --extra dev python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_mono_ci_psi_a05_positive_add.py
 
 test-mono-ci-psi-delta-a5:
 	$(UV) run --frozen --extra dev python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_mono_ci_b0_psi_delta_a5.py

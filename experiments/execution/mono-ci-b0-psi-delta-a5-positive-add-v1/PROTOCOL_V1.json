@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "study_id": "MONO_CI_A05_POSITIVE_ADD_TEST_ONLY_V1",
+  "classification": "RESEARCH_OWNER_AUTHORIZED_EXPLORATORY_DEVELOPMENT",
+  "base_revision": "e27a6d0bd01841eb33ace0ecd275cf3265fa2f53",
+  "transition": {
+    "before_state": "A0_4_REPORT_QUERY_PORT",
+    "after_state": "A0_5_MODULE_DATA_OWNERSHIP",
+    "method": "P_GOVERNED_ADAPTATION_DEVELOPMENT_V1",
+    "algorithm_changes": false
+  },
+  "control": {
+    "source": "V2_ARCHIVED_MEASURED_REFERENCE",
+    "repetitions": 1,
+    "rerun": false,
+    "execution_id": "DEV_PSI_TRANSITION_OADEV_V2_DELTA_A5_20261027_MEASURED_01",
+      "archive_sha256": "ef44cf280807e414b4027d846a8db05de74b555c60803500a97d074b666db0d2",
+      "inner_transition_archive_sha256": "76024640bf1a5bfc8771f91a7c9c113c7486f44e28f6290b56dafb32867ae890",
+      "source_revision_sha": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+      "negative_probe_source_revision_sha": "5ace86095bda794c9576047c80b9267e70cd0f26"
+  },
+  "positive_condition": {
+    "obligation_id": "AC_DATA_OWNERSHIP",
+    "scope": "application",
+    "stage_label": "CI_TEST",
+    "stage_token": "ci_test",
+    "mandatory": true,
+    "other_catalog_applicability": "UNKNOWN",
+    "forced_operation": false
+  },
+  "evaluators": ["AC_PUBLIC_API", "AC_MODULE_GRAPH", "AC_DATA_OWNERSHIP"],
+  "negative_condition": "EXISTING_FOREIGN_TABLE_ACCESS_PROBE",
+  "repetitions": {"warmup": 1, "measured": 3},
+  "cost_model": {
+    "unit": "elapsed wall-clock milliseconds per added evaluator invocation",
+    "historical_source_path": "V2_RELEASE_ASSET:analysis/evaluator-samples.csv",
+    "historical_source_sha256": "2bbff33702491cd0238271fa4c718316378586f5f7eb6af0271cf7baef25e7a7",
+    "condition_count": 2,
+    "condition_source_commits": {
+      "A0_5_CLEAN": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+      "EXISTING_NEGATIVE_PROBE": "5ace86095bda794c9576047c80b9267e70cd0f26"
+    },
+    "measured_calls": 20,
+    "max_observed_ms": 177.215,
+    "margin_fraction": 0.25,
+    "round_up_increment_ms": 25,
+    "max_incremental_cost": 225,
+    "max_search_nodes": 2,
+    "bound_by": "candidate evaluator source-manifest SHA-256",
+    "sensitivity_ms": {"0_percent": 178, "25_percent": 222, "50_percent": 266}
+  },
+  "execution": {
+    "isolation_image": "python:3.12.15-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70",
+    "platform": "linux/amd64",
+    "network": "none",
+    "method_input_mount": "read-only",
+    "method_output_mounts": 1,
+    "candidate_evaluation": "only-after-method-materialization"
+  },
+  "official_boundary": {
+    "study_readiness": "NO_GO",
+    "measurement_status": "DEVELOPMENT_ONLY",
+    "p_algorithm_status": "NOT_READY",
+    "g1": "INCOMPLETE",
+    "g4": "NOT_AUTHORIZED",
+    "reference": "NOT_READY",
+    "scoring": "NOT_EXECUTED"
+  }
+}

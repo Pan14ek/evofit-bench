@@ -193,6 +193,35 @@ the existing transition archive command verifies its V3 archive. These
 DEVELOPMENT checks establish static evaluator behavior and source-bound method
 execution only; they are not an authorized B0/Ψ comparison.
 
+## ΔA5 controlled TEST_ONLY positive ADD study
+
+The bounded follow-up uses the unchanged A0.4→A0.5 Ψ adapter, one author-scoped
+`AC_DATA_OWNERSHIP` input profile, the archived V2 C0 transition, and one hosted
+warmup plus three measured technical repetitions. It does not modify the
+canonical obligation catalog or score outcomes. The positive ADD criterion
+requires an emitted representation ADD, candidate validation, and completed
+owner evaluator inspections on both clean and controlled negative source. A
+materialized candidate without those observations remains unexercised.
+
+| Requirement | Expected behavior | Test owner | Status |
+| --- | --- | --- | --- |
+| MONO-CI-A05-PA-01 | Only the scoped ownership obligation is declared active; other canonical applicability remains `UNKNOWN`, global denominator/coverage claims are rejected, and no operation is forced | `test_positive_add_profile_schema_accepts_the_frozen_scope`, `test_positive_add_profile_rejects_global_denominator_expansion`, `test_positive_add_profile_rejects_unknown_other_obligations_as_false` | TEST_ONLY profile contract |
+| MONO-CI-A05-PA-02 | V3 accepts the exact P-only profile and evaluator artifact paths and rejects role, path, or method substitution | `test_positive_add_v3_roles_accept_only_the_two_exact_p_paths`, `test_positive_add_v3_roles_reject_path_role_or_method_substitution` | Method-input boundary regression |
+| MONO-CI-A05-PA-03 | The study profile digest and evaluator source/configuration bindings are checked before P input use; an altered profile digest fails closed | `test_positive_add_bundle_rejects_an_unpinned_study_profile` | Source-bound profile contract |
+| MONO-CI-A05-PA-04 | An ADD is counted only for the selected representation; an exercised candidate additionally needs valid materialization, an active owner evaluator, and complete clean plus negative evaluations | `test_positive_add_counts_only_a_valid_owner_add_with_both_candidate_evaluations`, `test_positive_add_does_not_count_a_different_representation_add`, `test_positive_add_rejects_candidate_exercise_without_complete_inspection` | Synthetic decision logic checks |
+| MONO-CI-A05-PA-05 | A materialized candidate without an emitted selected ADD is not described as exercised or as a positive result | `test_positive_add_does_not_count_a_materialized_candidate_without_an_add` | Candidate-state negative check |
+| MONO-CI-A05-PA-06 | Exact A0.4/A0.5 source and state-manifest identities, evaluator bytes, cost/search bounds, Docker image, and host preflight are frozen before C1; any hold or reject is preserved | Freeze and run schemas; hosted study runner | Source-bound hosted freeze; no readiness promotion |
+| MONO-CI-A05-PA-07 | C0 is reused from the pinned V2 release; outer/inner checksums, archived HOLD/empty plan, 20 measured owner calls, source revision, and inner archive readback must match | `mono_ci_psi_a05_positive_add_study.verify-control`; hosted release readback | Source-verified historical control; not rerun |
+| MONO-CI-A05-PA-08 | Each C1 run and the outer study archive bind raw outputs, candidate diagnostics, evaluator scopes, sidecars, and Ukrainian report/insertion text; extracted release bytes are reverified | `test_positive_add_transition_readback_includes_only_the_scoped_owner_obligation`, `mono_ci_psi_a05_positive_add_study.verify_study_bundle`; hosted release readback | Hosted archive integrity check |
+| MONO-CI-A05-PA-09 | `P_ALGORITHM_STATUS=NOT_READY`, G1 incomplete, G4 unauthorized, reference not ready, scoring not executed, and study readiness NO_GO remain unchanged | Freeze, run and archive schemas; `mono_ci_psi_a05_positive_add_study.verify_study_bundle` | Contract guard only; no official scientific gate advanced |
+
+Focused synthetic regressions run with `make test-mono-ci-psi-a05-positive-add`.
+The hosted workflow also runs `make test-mono-ci-psi-a05` and
+`make development-quality` before its Docker preflight and single study run.
+These checks describe one TEST_ONLY input profile and one transition; they do
+not establish independent policy authority, sensitivity/specificity, global
+coverage, a generalizable method result, G1/G4, or measured DA01 readiness.
+
 `architecture-test` stores Import Linter's cache under `.import_linter_cache`
 by default. Set `IMPORT_LINTER_CACHE_DIR` to a writable external path when
 running from a restricted worktree.
