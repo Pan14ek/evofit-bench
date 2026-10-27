@@ -118,6 +118,87 @@ def test_protocol_schema_freezes_v2_scope_and_runner_comparison_rule(
     assert v2._calibration_source_conditions(host_identity) == expected
 
 
+def test_freeze_schema_accepts_generated_timestamp_and_v1_runtime_comparison(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    repository = tmp_path / "repository"
+    protocol_path = repository / v2.PROTOCOL_JSON
+    protocol_path.parent.mkdir(parents=True)
+    protocol_path.write_bytes((PROTOCOL_ROOT / "PROTOCOL_V2.json").read_bytes())
+
+    preflight = _preflight_record()
+    artifact = tmp_path / "preflight-artifact"
+    artifact.mkdir()
+    artifact_record = artifact / "sandbox-preflight.json"
+    digest = _write_preflight(artifact_record, preflight)
+    preserved_record = repository / v2.PRE_RUN_PREFLIGHT
+    preserved_record.parent.mkdir(parents=True, exist_ok=True)
+    preserved_record.write_bytes(artifact_record.read_bytes())
+    Path(f"{preserved_record}.sha256").write_text(
+        f"{digest}  {preserved_record.name}\n", encoding="ascii"
+    )
+
+    baseline = repository / owner.B0_RELATIVE
+    baseline.parent.mkdir(parents=True)
+    baseline.write_text("synthetic baseline fixture\n", encoding="utf-8")
+    probe_root = repository / owner.HISTORICAL_PROBE_ROOT
+    probe_manifest = probe_root / "probe-manifest.json"
+    probe_source = probe_root / "source-files/app/modules/tasks/repository.py"
+    probe_manifest.parent.mkdir(parents=True)
+    probe_source.parent.mkdir(parents=True)
+    probe_manifest.write_text("{}\n", encoding="utf-8")
+    (probe_root / "source.patch").write_text("synthetic patch fixture\n", encoding="utf-8")
+    probe_source.write_text("synthetic source fixture\n", encoding="utf-8")
+
+    analysis_path = repository / (
+        "experiments/execution/tooling/mono_ci_psi_owner_authorized_v2_analysis.py"
+    )
+    analysis_path.parent.mkdir(parents=True)
+    analysis_path.write_text("synthetic analysis fixture\n", encoding="utf-8")
+    v1_execution = repository / "fixtures/v1-execution.json"
+    v1_execution.parent.mkdir(parents=True)
+    host_identity = preflight["host_identity"]
+    v1_execution.write_text(
+        json.dumps(
+            {
+                "runner_identity": {
+                    prior: host_identity[current]
+                    for current, prior in v2.V1_RUNNER_COMPARISON_FIELDS
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(v2, "V1_EXECUTION", v1_execution)
+    monkeypatch.setattr(
+        v2,
+        "_freeze_input_paths",
+        lambda _repository: [
+            v2.PROTOCOL_JSON.as_posix(),
+            v2.PRE_RUN_PREFLIGHT.as_posix(),
+            v2.PRE_RUN_PREFLIGHT_SIDECAR.as_posix(),
+        ],
+    )
+
+    def fake_git(_repository: Path, *arguments: str) -> str:
+        if arguments == ("status", "--porcelain"):
+            return ""
+        if arguments == ("rev-parse", "HEAD"):
+            return "b" * 40
+        raise AssertionError(f"Unexpected git command: {arguments}")
+
+    monkeypatch.setattr(owner, "_git", fake_git)
+    freeze = v2.create_freeze(repository, artifact)
+
+    assert freeze["freeze_created_at_utc"]
+    assert freeze["implementation_commit"] == "b" * 40
+    assert freeze["evaluator_runtime_comparison_to_v1"] == {
+        "fields_compared": [current for current, _ in v2.V1_RUNNER_COMPARISON_FIELDS],
+        "differences": [],
+        "same_evaluator_runtime": True,
+    }
+
+
 def _run_one_calibration(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, *, complete: bool
 ) -> tuple[list[dict[str, Any]], list[Path]]:

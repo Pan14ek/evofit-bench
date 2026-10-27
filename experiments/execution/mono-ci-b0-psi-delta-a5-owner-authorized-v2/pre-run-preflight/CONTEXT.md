@@ -4,7 +4,7 @@
 
 ## Responsibility
 
-Preserve the raw inputs, outputs, and process streams from the hosted V2 isolation preflight. The top-level `PRE_RUN_SANDBOX_PREFLIGHT.json` and its checksum sidecar are the canonical preflight record; this directory retains the underlying canary and runner evidence.
+Preserve the raw inputs, outputs, and process streams from the hosted V2 isolation preflight. The top-level `PRE_RUN_SANDBOX_PREFLIGHT.json` and its checksum sidecar are the canonical repository record; the copied sidecar names that top-level file, while this directory retains the original `sandbox-preflight.json` and its byte-matched raw sidecar with the underlying canary and runner evidence.
 
 ## Landmarks and handling
 
