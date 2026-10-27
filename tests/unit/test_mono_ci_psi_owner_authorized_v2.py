@@ -526,6 +526,8 @@ def test_ci_runs_v2_preflight_and_study_only_on_the_dedicated_push() -> None:
         "preflight --repository" in step.get("run", "") and "--freeze" in step.get("run", "")
         for step in study["steps"]
     )
+    assert any('PREFLIGHT_OUTPUT="$RUNNER_TEMP/' in step.get("run", "") for step in study["steps"])
+    assert any('RUN_OUTPUT="$RUNNER_TEMP/' in step.get("run", "") for step in study["steps"])
     assert any(
         "measurement-preflight" in step.get("with", {}).get("name", "") for step in study["steps"]
     )

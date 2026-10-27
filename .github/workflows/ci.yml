@@ -249,8 +249,6 @@ jobs:
     env:
       UV_CACHE_DIR: /tmp/evofit-owner-authorized-a5-v2-uv-cache
       UV_PROJECT_ENVIRONMENT: /tmp/evofit-owner-authorized-a5-v2-venv
-      RUN_OUTPUT: ${{ runner.temp }}/evofit-owner-authorized-a5-v2-${{ github.run_id }}-${{ github.run_attempt }}
-      PREFLIGHT_OUTPUT: ${{ runner.temp }}/evofit-delta-a5-v2-preflight-${{ github.run_id }}-${{ github.run_attempt }}
       V2_PROTOCOL_ROOT: experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v2
     steps:
       - uses: actions/checkout@v4
@@ -269,6 +267,8 @@ jobs:
       - name: Verify sandbox capabilities on the measurement runner
         run: |
           set -euo pipefail
+          PREFLIGHT_OUTPUT="$RUNNER_TEMP/evofit-delta-a5-v2-preflight-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          echo "PREFLIGHT_OUTPUT=$PREFLIGHT_OUTPUT" >> "$GITHUB_ENV"
           uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_owner_authorized_v2 \
             preflight --repository "$GITHUB_WORKSPACE" --output "$PREFLIGHT_OUTPUT" \
             --freeze "$GITHUB_WORKSPACE/$V2_PROTOCOL_ROOT/PRE_RUN_FREEZE.json"
@@ -285,6 +285,8 @@ jobs:
       - name: Execute frozen owner-authorized V2 DEVELOPMENT repetitions
         run: |
           set -euo pipefail
+          RUN_OUTPUT="$RUNNER_TEMP/evofit-owner-authorized-a5-v2-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          echo "RUN_OUTPUT=$RUN_OUTPUT" >> "$GITHUB_ENV"
           uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_owner_authorized_v2 \
             run --repository "$GITHUB_WORKSPACE" --output "$RUN_OUTPUT" \
             --frozen-revision "$GITHUB_SHA" --uv-version "$(uv --version)" \
