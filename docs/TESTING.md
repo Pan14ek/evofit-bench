@@ -603,3 +603,21 @@ uv run python -m pytest -q --no-cov -p no:cacheprovider \
 
 These checks validate reporting and scorer integrity. They do not execute
 Method P or establish scientific validity, readiness, or authorization.
+
+
+## MONO CI-only B0 versus Ψ ΔA5 readiness package
+
+The A0.4→A0.5 package verifies source objects, manifest bytes, baseline digest, evaluator inventory and Method Ψ code/schema digests. Its applicability contract requires missing, conflicting, incomplete, stale, outdated or unauthorized inputs to remain UNKNOWN. It cannot run B0, Ψ, evaluators, or scoring and cannot promote readiness.
+
+| Requirement | Expected behavior | Test owner | Status boundary |
+| --- | --- | --- | --- |
+| DA5-PKG-01 | Exact A0.4/A0.5 Git trees, manifest bytes, baseline and method source/schema digests match repository objects. | `tests/unit/test_mono_ci_b0_psi_delta_a5.py::test_delta_a5_package_schema_and_repository_pins_verify_without_scoring` | Read-only technical identity only |
+| DA5-APP-01 | All 18 catalog rows are present; unapproved profile keeps applicability, mandatory status and lifecycle status UNKNOWN. | `test_applicability_proposal_keeps_all_unapproved_rows_unknown` | No denominator authorization |
+| DA5-APP-02 | Missing catalog row, conflict, open/incomplete closure, outdated evidence, or unauthorized ACTIVE claim cannot become INACTIVE or scoreable. | `test_missing_catalog_row_remains_unknown_and_blocks_denominator`; `test_conflicting_applicability_facts_remain_unknown`; `test_open_or_incomplete_catalog_cannot_support_active_or_inactive`; `test_outdated_profile_is_downgraded_to_unknown`; `test_unauthorized_active_claim_cannot_become_applicable` | Fail-closed unit contract; synthetic inputs are not approvals |
+| DA5-APP-03 | Fully reviewed valid fixture exercises the resolved path only when explicit external verifier booleans are supplied. | `test_fully_reviewed_synthetic_profile_exercises_resolved_path_only` | Synthetic mechanics only; no real authority is recorded |
+| DA5-SEM-01 | Nine exact representation-obligation cells remain UNKNOWN pending independent pair review. | Package schema/readback test plus semantic matrix in `DELTA_A5_READINESS_V1.json` | No semantic certification |
+| DA5-COST-01 | Unit and proposed timer boundaries are explicit; missing calibration/authority preserves COST_MODEL_UNRESOLVED. | Package schema/readback test; historic single-run samples cited by archive digests | No approved threshold |
+| DA5-GATE-01 | P NOT_READY, G1 incomplete, G4 not authorized, scoring NOT_EXECUTED and overall NO_GO are protected. | `test_delta_a5_package_schema_and_repository_pins_verify_without_scoring` | Package verifier refuses status promotion |
+| DA5-ISO-01 | Historical runtime isolation evidence is identified separately from not-yet-created future arm bundles. | Package readback and archived run provenance | No future comparison run |
+
+Run the focused checks with `make test-mono-ci-psi-delta-a5`. This is package and applicability-contract verification only, not a B0/Ψ rehearsal or scientific result. The existing hosted A0.5 DEVELOPMENT archive was independently read back before this package was authored; this new command does not redownload the external GitHub artifact.
