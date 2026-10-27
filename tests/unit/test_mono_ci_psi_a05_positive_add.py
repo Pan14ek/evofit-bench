@@ -11,6 +11,7 @@ from typing import Any, cast
 
 import pytest
 
+import experiments.execution.tooling.mono_ci_psi_a05_positive_add_study as positive_add_study
 from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError, ProtocolError
 from experiments.execution.tooling.hashing import sha256_file
@@ -40,6 +41,37 @@ PROFILE_PATH = (
 
 def _profile() -> dict[str, Any]:
     return cast(dict[str, Any], json.loads(PROFILE_PATH.read_text(encoding="utf-8")))
+
+
+def test_docker_preflight_failure_emits_record_and_returns_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    record = {
+        "verification_status": "FAIL",
+        "probes": {"runtime_started": False},
+        "error": {"type": "ProtocolError", "message": "probe failure detail"},
+    }
+    monkeypatch.setattr(
+        positive_add_study,
+        "run_preflight",
+        lambda repository, output: record,
+    )
+
+    status = positive_add_study.main(
+        ["preflight", "--repository", str(ROOT), "--output", str(tmp_path / "preflight")]
+    )
+
+    assert status == 1
+    assert json.loads(capsys.readouterr().out) == record
+
+
+def test_hosted_study_pulls_pinned_runtime_before_preflight() -> None:
+    workflow = (ROOT / ".github/workflows/mono-ci-psi-a05-positive-add.yml").read_text(
+        encoding="utf-8"
+    )
+    image_pull = "docker pull --platform linux/amd64 python:3.12.15-slim-bookworm@sha256:"
+
+    assert workflow.index(image_pull) < workflow.index("Run same-runner Docker isolation preflight")
 
 
 def test_positive_add_profile_schema_accepts_the_frozen_scope() -> None:

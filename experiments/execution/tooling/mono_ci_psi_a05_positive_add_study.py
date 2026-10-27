@@ -317,10 +317,7 @@ def _read_preflight(preflight_root: Path) -> dict[str, Any]:
 
 def run_preflight(repository: Path, output_root: Path) -> dict[str, Any]:
     """Run the repository's pinned Docker capability preflight on this runner."""
-    result = transition.run_docker_isolation_preflight(repository.resolve(strict=True), output_root)
-    if result.get("verification_status") != "PASS" or not all(result.get("probes", {}).values()):
-        raise ProtocolError("POSITIVE_ADD_STUDY_DOCKER_PREFLIGHT_FAILED")
-    return result
+    return transition.run_docker_isolation_preflight(repository.resolve(strict=True), output_root)
 
 
 def _make_freeze(
@@ -1346,6 +1343,10 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
     print(json.dumps(result, sort_keys=True, indent=2))
+    if args.command == "preflight" and (
+        result.get("verification_status") != "PASS" or not all(result.get("probes", {}).values())
+    ):
+        return 1
     return 0
 
 

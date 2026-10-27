@@ -78,6 +78,8 @@ jobs:
         run: >-
           uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_a05_positive_add_study
           verify-control --repository "$GITHUB_WORKSPACE" --release-root "$CONTROL_ROOT"
+      - name: Pull the digest-pinned isolated method runtime
+        run: docker pull --platform linux/amd64 python:3.12.15-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70
       - name: Run same-runner Docker isolation preflight
         run: >-
           uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_a05_positive_add_study
@@ -113,6 +115,7 @@ jobs:
             ${{ runner.temp }}/mono-ci-a05-positive-add-${{ github.run_id }}-${{ github.run_attempt }}.zip
             ${{ runner.temp }}/mono-ci-a05-positive-add-${{ github.run_id }}-${{ github.run_attempt }}.zip.sha256
             ${{ runner.temp }}/positive-add-run-${{ github.run_id }}-${{ github.run_attempt }}/evidence/**
+            ${{ runner.temp }}/positive-add-preflight-${{ github.run_id }}-${{ github.run_attempt }}/**
           if-no-files-found: warn
           retention-days: 90
           compression-level: 0
