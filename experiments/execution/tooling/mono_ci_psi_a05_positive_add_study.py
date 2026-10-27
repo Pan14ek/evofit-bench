@@ -265,8 +265,7 @@ def _verify_control_release(
         raise ContractValidationError("POSITIVE_ADD_STUDY_C0_ARCHIVE_READBACK_FAILED")
 
     receipt = {
-        "study_id": STUDY_ID,
-        "control_study_id": expected["study_id"],
+        "study_id": expected["study_id"],
         "release_url": expected["release"],
         "outer_archive_sha256": outer_sha,
         "inner_transition_archive_sha256": sha256_bytes(inner_bytes),

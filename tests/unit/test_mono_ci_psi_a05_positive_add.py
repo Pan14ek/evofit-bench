@@ -16,7 +16,10 @@ from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError, ProtocolError
 from experiments.execution.tooling.hashing import sha256_file
 from experiments.execution.tooling.mono_ci_psi_a05_positive_add import (
+    PROFILE_ID,
+    SCOPE_EVIDENCE_ID,
     TEMPLATE_ARTIFACT_PATH,
+    _validate_policy_claim_scope,
     _validate_profile_binding,
     _validate_static_profile,
 )
@@ -27,6 +30,7 @@ from experiments.execution.tooling.mono_ci_psi_transition import (
     RUNTIME_SOURCE,
     _expected_evidence_obligation_ids,
 )
+from experiments.execution.tooling.p_input_validation import SourceReference
 from experiments.execution.tooling.p_operations import template_descriptor_sha256
 from experiments.execution.tooling.p_policy_source_v3 import (
     _verify_v3_path_role,
@@ -72,6 +76,80 @@ def test_hosted_study_pulls_pinned_runtime_before_preflight() -> None:
     image_pull = "docker pull --platform linux/amd64 python:3.12.15-slim-bookworm@sha256:"
 
     assert workflow.index(image_pull) < workflow.index("Run same-runner Docker isolation preflight")
+
+
+def _policy_scope_validation_fixture(
+    *, registry_schema_version: str = "1.2", registry_version: str = PROFILE_ID
+) -> tuple[dict[str, Any], dict[str, SourceReference], dict[str, Any]]:
+    claim_ids = ["PILOT02_TEST_ONLY_CLOSURE_BEFORE", "PILOT02_TEST_ONLY_CLOSURE_AFTER"]
+    claims = [
+        {
+            "id": claim_id,
+            "kind": "AUTHORITATIVE_POLICY_REGISTRY",
+            "fact_type": "obligation:AC_DATA_OWNERSHIP",
+            "scope": "application",
+            "evidence_source_ids": [SCOPE_EVIDENCE_ID],
+        }
+        for claim_id in claim_ids
+    ]
+    registry_bytes = json.dumps(
+        {"schema_version": registry_schema_version, "registry_version": registry_version}
+    ).encode("utf-8")
+    declaration_bytes = json.dumps(
+        {
+            "profile_id": PROFILE_ID,
+            "selected_obligation_id": "AC_DATA_OWNERSHIP",
+            "global_denominator_or_coverage_claim": False,
+            "claims": [{"claim_id": claim_id} for claim_id in claim_ids],
+        }
+    ).encode("utf-8")
+    sources = {
+        "REGISTRY": SourceReference(
+            source_id="REGISTRY",
+            kind="policy_registry",
+            path="fitness/policy/registry.json",
+            sha256=hashlib.sha256(registry_bytes).hexdigest(),
+            content=registry_bytes,
+        ),
+        SCOPE_EVIDENCE_ID: SourceReference(
+            source_id=SCOPE_EVIDENCE_ID,
+            kind="completeness_evidence",
+            path="fitness/policy/evidence/POSITIVE_ADD_SCOPE_DECLARATION.json",
+            sha256=hashlib.sha256(declaration_bytes).hexdigest(),
+            content=declaration_bytes,
+        ),
+    }
+    snapshot = {
+        "policy_registry": {
+            "source_id": "REGISTRY",
+            "closure": "CLAIMED_CLOSED",
+            "registry_version": PROFILE_ID,
+        },
+        "completeness_claims": claims,
+    }
+    return snapshot, sources, _profile()
+
+
+def test_policy_scope_accepts_normalized_v12_registry_projection() -> None:
+    snapshot, sources, profile = _policy_scope_validation_fixture()
+
+    _validate_policy_claim_scope(snapshot, sources, profile)
+
+
+@pytest.mark.parametrize(
+    ("registry_schema_version", "registry_version"),
+    [("1.1", PROFILE_ID), ("1.2", "UNEXPECTED_REGISTRY_VERSION")],
+)
+def test_policy_scope_rejects_wrong_source_registry_contract(
+    registry_schema_version: str, registry_version: str
+) -> None:
+    snapshot, sources, profile = _policy_scope_validation_fixture(
+        registry_schema_version=registry_schema_version,
+        registry_version=registry_version,
+    )
+
+    with pytest.raises(ContractValidationError, match="POSITIVE_ADD_POLICY_SCOPE_NOT_BOUNDED"):
+        _validate_policy_claim_scope(snapshot, sources, profile)
 
 
 def test_positive_add_profile_schema_accepts_the_frozen_scope() -> None:

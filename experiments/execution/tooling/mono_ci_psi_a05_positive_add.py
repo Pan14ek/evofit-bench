@@ -874,14 +874,31 @@ def _validate_policy_claim_scope(
 ) -> None:
     registry = snapshot.get("policy_registry", {})
     claims = snapshot.get("completeness_claims", [])
+    registry_source_id = registry.get("source_id")
+    registry_source = (
+        sources.get(registry_source_id) if isinstance(registry_source_id, str) else None
+    )
+    if registry_source is None or registry_source.content is None:
+        raise ContractValidationError("POSITIVE_ADD_POLICY_REGISTRY_SOURCE_MISSING")
+    try:
+        registry_artifact = json.loads(registry_source.content)
+    except (json.JSONDecodeError, UnicodeDecodeError) as error:
+        raise ContractValidationError("POSITIVE_ADD_POLICY_REGISTRY_SOURCE_INVALID") from error
+    selected_obligation = profile.get("selected_obligation")
+    selected_obligation_id = (
+        selected_obligation.get("id") if isinstance(selected_obligation, dict) else None
+    )
     if (
         registry.get("closure") != "CLAIMED_CLOSED"
-        or registry.get("schema_version") != "1.2"
+        or registry.get("registry_version") != PROFILE_ID
+        or registry_artifact.get("schema_version") != "1.2"
+        or registry_artifact.get("registry_version") != PROFILE_ID
+        or registry_source.kind != "policy_registry"
         or profile.get("canonical_mandatory_projection", {}).get(
             "global_denominator_or_coverage_claim"
         )
         is not False
-        or profile.get("selected_obligation_id") != OBLIGATION_ID
+        or selected_obligation_id != OBLIGATION_ID
         or len(claims) != 2
         or any(
             not isinstance(claim, dict)
