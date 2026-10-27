@@ -4031,6 +4031,80 @@ def _write_sandbox_record(path: Path, payload: dict[str, Any]) -> None:
     path.write_bytes(pretty_json_bytes(payload))
 
 
+def _docker_isolation_preflight_program() -> str:
+    """Return the fixed program run inside the disposable preflight container."""
+    return """
+import json
+import os
+import socket
+import sys
+
+input_path, output_path, expected, host, port, repo_git, scorer, other = sys.argv[1:]
+result = {
+    "python_version": sys.version.split()[0],
+    "implementation": sys.implementation.name,
+}
+with open(input_path, encoding="utf-8") as stream:
+    result["input_value"] = stream.read().strip()
+output_probe_path = output_path + ".probe"
+with open(output_probe_path, "w", encoding="utf-8") as stream:
+    stream.write("writable\\n")
+with open(output_probe_path, encoding="utf-8") as stream:
+    result["output_value"] = stream.read().strip()
+
+def denied(path):
+    try:
+        with open(path, "rb") as stream:
+            stream.read(1)
+        return False
+    except OSError:
+        return True
+
+result["protected"] = {
+    "repo_git": denied(repo_git),
+    "scorer": denied(scorer),
+    "other_arm": denied(other),
+}
+result["sensitive_environment_absent"] = not any(
+    name in os.environ
+    for name in (
+        "GITHUB_TOKEN",
+        "GH_TOKEN",
+        "ACTIONS_RUNTIME_TOKEN",
+        "DOCKER_HOST",
+        "DOCKER_CONFIG",
+    )
+)
+
+def network_denied(target, target_port):
+    try:
+        connection = socket.create_connection((target, int(target_port)), timeout=1)
+        connection.close()
+        return {"denied": False}
+    except OSError as error:
+        return {"denied": True, "error": type(error).__name__, "errno": error.errno}
+
+result["network"] = {
+    "host_canary": network_denied(host, port),
+    "external_test_target": network_denied("1.1.1.1", 443),
+}
+with open(output_path, "w", encoding="utf-8") as stream:
+    json.dump(result, stream, sort_keys=True)
+print(json.dumps(result, sort_keys=True))
+ok = (
+    result["python_version"] == "3.12.15"
+    and result["implementation"] == "cpython"
+    and result["input_value"] == expected
+    and result["output_value"] == "writable"
+    and all(result["protected"].values())
+    and result["sensitive_environment_absent"]
+    and result["network"]["host_canary"]["denied"]
+    and result["network"]["external_test_target"]["denied"]
+)
+raise SystemExit(0 if ok else 23)
+""".lstrip()
+
+
 def run_docker_isolation_preflight(
     repository: Path,
     output_root: Path,
@@ -4201,73 +4275,7 @@ def run_docker_isolation_preflight(
             "isolated_attempt_expected": "DENIED",
         }
 
-        script = """
-import json
-import os
-import socket
-import sys
-
-input_path, output_path, expected, host, port, repo_git, scorer, other = sys.argv[1:]
-result = {
-    "python_version": sys.version.split()[0],
-    "implementation": sys.implementation.name,
-}
-with open(input_path, encoding="utf-8") as stream:
-    result["input_value"] = stream.read().strip()
-with open(output_path, "w", encoding="utf-8") as stream:
-    stream.write("writable\\n")
-with open(output_path, encoding="utf-8") as stream:
-    result["output_value"] = stream.read().strip()
-
-def denied(path):
-    try:
-        with open(path, "rb") as stream:
-            stream.read(1)
-        return False
-    except OSError:
-        return True
-
-result["protected"] = {
-    "repo_git": denied(repo_git),
-    "scorer": denied(scorer),
-    "other_arm": denied(other),
-}
-result["sensitive_environment_absent"] = not any(
-    name in os.environ
-    for name in (
-        "GITHUB_TOKEN",
-        "GH_TOKEN",
-        "ACTIONS_RUNTIME_TOKEN",
-        "DOCKER_HOST",
-        "DOCKER_CONFIG",
-    )
-)
-
-def network_denied(target, target_port):
-    try:
-        connection = socket.create_connection((target, int(target_port)), timeout=1)
-        connection.close()
-        return {"denied": False}
-    except OSError as error:
-        return {"denied": True, "error": type(error).__name__, "errno": error.errno}
-
-result["network"] = {
-    "host_canary": network_denied(host, port),
-    "external_test_target": network_denied("1.1.1.1", 443),
-}
-print(json.dumps(result, sort_keys=True))
-ok = (
-    result["python_version"] == "3.12.15"
-    and result["implementation"] == "cpython"
-    and result["input_value"] == expected
-    and result["output_value"] == "writable"
-    and all(result["protected"].values())
-    and result["sensitive_environment_absent"]
-    and result["network"]["host_canary"]["denied"]
-    and result["network"]["external_test_target"]["denied"]
-)
-raise SystemExit(0 if ok else 23)
-""".lstrip()
+        script = _docker_isolation_preflight_program()
         mounts = [
             (input_path, "/canary/required-input.json", True),
             (output_mount, "/canary-output", False),

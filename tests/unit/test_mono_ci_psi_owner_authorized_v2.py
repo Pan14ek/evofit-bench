@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import socket
 import subprocess
+import sys
 import zipfile
 from pathlib import Path
 from types import SimpleNamespace
@@ -495,6 +497,52 @@ def test_docker_container_command_is_locked_to_isolation_contract(
         assert flag in args
     assert any("target=/input.json,readonly" in value for value in args)
     assert any("target=/output" in value and "readonly" not in value for value in args)
+
+
+def test_preflight_program_writes_structured_result_after_output_probe(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    input_path = tmp_path / "required-input.json"
+    output_path = tmp_path / "preflight-result.json"
+    input_path.write_text('{"probe":"readable"}\n', encoding="utf-8")
+
+    def deny_network(*_args: Any, **_kwargs: Any) -> None:
+        raise OSError(101, "blocked by fixture")
+
+    monkeypatch.setattr(socket, "create_connection", deny_network)
+    monkeypatch.setattr(sys, "version", "3.12.15 (fixture)")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "preflight-probe",
+            str(input_path),
+            str(output_path),
+            '{"probe":"readable"}',
+            "127.0.0.1",
+            "1",
+            str(tmp_path / "repository/.git/config"),
+            str(tmp_path / "scorer.json"),
+            str(tmp_path / "other-arm.json"),
+        ],
+    )
+    for name in (
+        "GITHUB_TOKEN",
+        "GH_TOKEN",
+        "ACTIONS_RUNTIME_TOKEN",
+        "DOCKER_HOST",
+        "DOCKER_CONFIG",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    program = transition._docker_isolation_preflight_program()
+    with pytest.raises(SystemExit) as exit_result:
+        exec(compile(program, "<docker-isolation-preflight>", "exec"), {})  # noqa: S102
+    assert exit_result.value.code == 0
+    result = json.loads(output_path.read_text(encoding="utf-8"))
+    assert result["output_value"] == "writable"
+    assert Path(f"{output_path}.probe").read_text(encoding="utf-8") == "writable\n"
+    assert result["network"]["host_canary"]["denied"] is True
+    assert result["network"]["external_test_target"]["denied"] is True
 
 
 def test_analysis_counts_parsed_observations_without_inferring_compliance() -> None:
