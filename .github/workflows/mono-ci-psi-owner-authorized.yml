@@ -1,23 +1,7 @@
 name: Owner-authorized ΔA5 exploratory DEVELOPMENT study
 
 on:
-  push:
-    branches:
-      - codex/research-owner-authorized-delta-a5
-    paths:
-      - .github/workflows/mono-ci-psi-owner-authorized.yml
-      - Makefile
-      - pyproject.toml
-      - uv.lock
-      - experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v1/**
-      - experiments/execution/tooling/mono_ci_psi_owner_authorized.py
-      - experiments/execution/tooling/mono_ci_psi_owner_authorized_analysis.py
-      - experiments/execution/tooling/mono_ci_psi_a05.py
-      - experiments/execution/tooling/mono_ci_psi_transition.py
-      - experiments/execution/tooling/mono_ci_psi_evidence.py
-      - experiments/execution/tooling/mono_ci_psi_coverage.py
-      - experiments/execution/tooling/mono_ci_b0_psi_archive.py
-      - experiments/execution/schemas/mono_ci_psi_*.schema.json
+  workflow_call:
 
 permissions:
   contents: write

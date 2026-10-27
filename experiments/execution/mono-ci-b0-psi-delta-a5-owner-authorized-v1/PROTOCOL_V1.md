@@ -59,7 +59,7 @@ The calibration archive uses a member-digest manifest and SHA-256 sidecar. Each 
 
 ## Activation history
 
-The initial pre-run freeze commit `500bc94d5914ef84c5796d8833e9b233955124d3` produced GitHub Actions run `40491096266`, which ended with zero jobs. No evaluator calibration or B0/Ψ transition started, and that attempt produced no study observations. The run is retained as an activation failure; the job-level admission condition was removed, and a new freeze is required before execution.
+The initial pre-run freeze commit `500bc94d5914ef84c5796d8833e9b233955124d3` produced GitHub Actions run `40491096266`, which ended with zero jobs. The refreshed freeze commit `a2db859248236bcb6acf8860080ce5b5b89d2b41` produced run `40493480973`, also with zero jobs. Neither attempt started evaluator calibration or a B0/Ψ transition, and neither produced study observations. Both are retained as activation failures. The existing `ci.yml` workflow now calls the owner-authorized study as a reusable workflow after development-quality succeeds; a fresh freeze is required before execution.
 
 ## Stop and reporting rules
 

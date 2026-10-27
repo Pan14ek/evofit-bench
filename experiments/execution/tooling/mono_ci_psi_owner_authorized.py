@@ -164,6 +164,7 @@ def create_freeze(repository: Path) -> dict[str, Any]:
             "inputs/historical-probe/source-files/app/modules/tasks/repository.py",
             "experiments/execution/tooling/mono_ci_psi_owner_authorized.py",
             "experiments/execution/tooling/mono_ci_psi_owner_authorized_analysis.py",
+            ".github/workflows/ci.yml",
             ".github/workflows/mono-ci-psi-owner-authorized.yml",
             "experiments/execution/schemas/mono_ci_psi_owner_authorized_protocol_v1.schema.json",
             "experiments/execution/schemas/mono_ci_psi_owner_authorized_"

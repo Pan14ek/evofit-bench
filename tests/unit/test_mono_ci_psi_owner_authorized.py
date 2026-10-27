@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml
 
 from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError
@@ -241,6 +242,26 @@ def test_protocol_schema_rejects_gate_promotion_and_unapproved_baseline() -> Non
     protocol["baseline"]["approval"] = "APPROVED"
     with pytest.raises(ContractValidationError):
         validate_payload("mono_ci_psi_owner_authorized_protocol_v1.schema.json", protocol)
+
+
+def test_ci_calls_owner_authorized_reusable_workflow_only_on_its_branch_push() -> None:
+    ci = yaml.safe_load(Path(".github/workflows/ci.yml").read_text(encoding="utf-8"))
+    reusable = yaml.safe_load(
+        Path(".github/workflows/mono-ci-psi-owner-authorized.yml").read_text(encoding="utf-8")
+    )
+    caller = ci["jobs"]["owner-authorized-delta-a5"]
+    reusable_events = reusable.get("on", reusable.get(True, {}))
+
+    assert caller["if"] == (
+        "github.event_name == 'push' && "
+        "github.ref == 'refs/heads/codex/research-owner-authorized-delta-a5'"
+    )
+    assert caller["needs"] == "development-quality"
+    assert caller["uses"] == "./.github/workflows/mono-ci-psi-owner-authorized.yml"
+    assert caller["permissions"] == {"contents": "write"}
+    assert "workflow_call" in reusable_events
+    assert "push" not in reusable_events
+    assert "if" not in reusable["jobs"]["authorized-development-run"]
 
 
 def test_execution_schema_requires_actual_run_statuses_and_preserves_gate_states() -> None:

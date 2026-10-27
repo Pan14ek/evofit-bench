@@ -37,3 +37,10 @@ jobs:
           python-version: "3.12"
       - run: uv sync --frozen --extra dev
       - run: make development-quality
+
+  owner-authorized-delta-a5:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/codex/research-owner-authorized-delta-a5'
+    needs: development-quality
+    permissions:
+      contents: write
+    uses: ./.github/workflows/mono-ci-psi-owner-authorized.yml
