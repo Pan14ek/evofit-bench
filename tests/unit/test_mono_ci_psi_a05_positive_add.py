@@ -106,7 +106,7 @@ def _policy_scope_validation_fixture(
     sources = {
         "REGISTRY": SourceReference(
             source_id="REGISTRY",
-            kind="policy_registry",
+            kind="POLICY_REGISTRY",
             path="fitness/policy/registry.json",
             sha256=hashlib.sha256(registry_bytes).hexdigest(),
             content=registry_bytes,

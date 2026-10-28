@@ -893,7 +893,7 @@ def _validate_policy_claim_scope(
         or registry.get("registry_version") != PROFILE_ID
         or registry_artifact.get("schema_version") != "1.2"
         or registry_artifact.get("registry_version") != PROFILE_ID
-        or registry_source.kind != "policy_registry"
+        or registry_source.kind != "POLICY_REGISTRY"
         or profile.get("canonical_mandatory_projection", {}).get(
             "global_denominator_or_coverage_claim"
         )
