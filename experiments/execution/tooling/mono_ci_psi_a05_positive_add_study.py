@@ -40,6 +40,7 @@ FREEZE_SCHEMA = "mono_ci_psi_positive_add_study_freeze_v1.schema.json"
 EXECUTION_SCHEMA = "mono_ci_psi_positive_add_study_execution_v1.schema.json"
 ARCHIVE_SCHEMA = "mono_ci_psi_positive_add_study_archive_v1.schema.json"
 ARCHIVE_MANIFEST = "STUDY_ARCHIVE_MANIFEST.json"
+RECOVERY_NOTE_PATH = "analysis/POST_RUN_READBACK_RECOVERY_UK.md"
 OUTER_ASSET_NAME = "mono-ci-psi-a05-owner-authorized-v2-40579333932-1.zip"
 INNER_ARCHIVE_PATH = "transition-archives/transition-01.zip"
 OWNER_OBLIGATION = "AC_DATA_OWNERSHIP"
@@ -434,16 +435,25 @@ def _is_foreign_table_detection(row: dict[str, Any] | None) -> bool:
 def _candidate_exercise(
     operations: list[dict[str, Any]], candidate_verification: dict[str, Any]
 ) -> tuple[list[dict[str, Any]], bool, bool, str]:
-    owner_adds = [
-        row
-        for row in operations
-        if row.get("operation") == "add"
-        and row.get("target_type") == "representation"
-        and (
+    owner_adds = []
+    for row in operations:
+        payload_value = row.get("payload")
+        payload = payload_value if isinstance(payload_value, dict) else {}
+        if row.get("operation") != "add":
+            continue
+        direct_representation_add = row.get("target_type") == "representation" and (
             row.get("target_id") == OWNER_REPRESENTATION
-            or (row.get("payload") or {}).get("id") == OWNER_REPRESENTATION
+            or payload.get("id") == OWNER_REPRESENTATION
         )
-    ]
+        obligation_add_materializes_owner_representation = (
+            row.get("target_type") == "obligation"
+            and row.get("target_id") == OWNER_OBLIGATION
+            and payload.get("id") == OWNER_REPRESENTATION
+            and payload.get("evaluator") == OWNER_EVALUATOR
+            and OWNER_OBLIGATION in payload.get("covers", [])
+        )
+        if direct_representation_add or obligation_add_materializes_owner_representation:
+            owner_adds.append(row)
     active_candidate_rows = candidate_verification.get("active_representations", [])
     owner_active = any(
         row.get("representation_id") == OWNER_REPRESENTATION
@@ -527,7 +537,6 @@ def _summarize_run(run_root: Path, archive_sha: str, role: str) -> dict[str, Any
     candidate_probe = [_row_outcome(row) for row in candidate_negative]
     cost = {
         "method_execution_ms": record["psi"].get("execution_duration_ms"),
-        "full_transition_wall_ms": None,
         "candidate_owner_clean_ms": owner_positive.get("duration_ms")
         if isinstance(owner_positive, dict)
         else None,
@@ -626,18 +635,46 @@ def _format_outcomes(items: list[dict[str, Any]]) -> str:
     )
 
 
+def _format_operations(operations: list[dict[str, Any]]) -> str:
+    formatted = []
+    for row in operations:
+        operation = str(row.get("operation", "unknown")).upper()
+        target_type = row.get("target_type")
+        target_id = row.get("target_id")
+        payload = row.get("payload")
+        payload_id = payload.get("id") if isinstance(payload, dict) else None
+        if operation == "ADD" and target_type == "obligation" and payload_id:
+            formatted.append(f"ADD obligation {target_id} → {payload_id}")
+        elif target_type and target_id:
+            formatted.append(f"{operation} {target_type} {target_id}")
+        else:
+            formatted.append(operation)
+    return "; ".join(formatted) or "—"
+
+
 def _render_report(execution: dict[str, Any]) -> tuple[str, str]:
     rows = execution["runs"]
     completed = [row for row in rows if row.get("run_status") == "COMPLETED"]
     measured = [row["summary"] for row in completed if row["measured"]]
     add_runs = [row for row in measured if row["owner_add_emitted"]]
     exercised = [row for row in measured if row["candidate_exercised"]]
-    candidate_detection = [row for row in measured if row["candidate_owner_negative_detected"]]
+    candidate_detection = [
+        row
+        for row in measured
+        if row["candidate_exercised"] and row["candidate_owner_negative_detected"]
+    ]
+    successful_adds = [
+        row
+        for row in measured
+        if row["owner_add_emitted"]
+        and row["candidate_exercised"]
+        and row["candidate_owner_negative_detected"]
+    ]
     c0 = execution["control"]
     all_decisions = (
         ", ".join(
             f"{item['execution_id']}: {item['decision']} "
-            f"({'ADD present' if item['owner_add_emitted'] else 'ADD absent'})"
+            f"({_format_operations(item['operation_plan'])})"
             for item in measured
         )
         or "жодного виміряного запуску не завершено"
@@ -646,11 +683,11 @@ def _render_report(execution: dict[str, Any]) -> tuple[str, str]:
     lines = [
         "# Контрольований позитивний експеримент ADD для ΔA5 — результати",
         "",
-        f"**Study ID:** `{STUDY_ID}`  ",
-        f"**Статус технічного виконання:** `{execution['execution_status']}`  ",
-        f"**Freeze:** `{execution['freeze_sha256']}`  ",
-        f"**C0 archive SHA-256:** `{c0['inner_transition_archive_sha256']}`  ",
-        f"**C1 repetitions:** `{len(measured)}/3` (warmup: `{execution['warmup_status']}`)",
+        f"- **Study ID:** `{STUDY_ID}`",
+        f"- **Статус технічного виконання:** `{execution['execution_status']}`",
+        f"- **Freeze:** `{execution['freeze_sha256']}`",
+        f"- **C0 archive SHA-256:** `{c0['inner_transition_archive_sha256']}`",
+        f"- **C1 repetitions:** `{len(measured)}/3` (warmup: `{execution['warmup_status']}`)",
         "",
         "## Методика",
         "",
@@ -665,53 +702,75 @@ def _render_report(execution: dict[str, Any]) -> tuple[str, str]:
         "digest-pinned Docker runner після успішного preflight.",
         "",
         "Оцінювання кандидатної конфігурації зараховується лише тоді, коли Ψ видав ADD для "
+        "обов’язку `AC_DATA_OWNERSHIP` із payload представлення "
         "`REP_POSITIVE_ADD_AC_DATA_OWNERSHIP`, запис кандидата пройшов перевірку та активний "
         "`AC_DATA_OWNERSHIP` фактично виконався на чистому джерелі й контрольованому порушенні. "
-        "Матеріалізований, але невиконаний кандидат позначено як невипробуваний.",
+        "План ADD не змінює загальне рішення Ψ: у цих C1 запусках рішення лишилося HOLD, тому "
+        "кандидат не приймався і не застосовувався до коду.",
         "",
         "## Результати",
         "",
-        "| Запуск | Ψ | План | Кандидат перевірений/виконаний | B0: чистий; негативний | "
-        "Кандидат: чистий; негативний | Додатковий evaluator час (мс) | "
-        "Ψ час (мс) | Перехід (мс) |",
-        "| --- | --- | --- | --- | --- | --- | ---: | ---: | ---: |",
+        "| Запуск | Фінальне рішення Ψ | План операцій | Кандидат: перевірка/виконання | "
+        "B0: чисте; негативне джерело | Кандидат: чисте; негативне джерело | "
+        "Evaluator, чисте/негативне (мс) | Разом (мс) | Ψ (мс) | Перехід (мс) |",
+        "| --- | --- | --- | --- | --- | --- | ---: | ---: | ---: | ---: |",
     ]
     run_index = {row["summary"]["execution_id"]: row for row in completed}
     for row in measured:
-        cost = row["cost"].get("candidate_owner_two_condition_total_ms")
+        clean_ms = row["cost"].get("candidate_owner_clean_ms")
+        negative_ms = row["cost"].get("candidate_owner_negative_ms")
+        total_cost = row["cost"].get("candidate_owner_two_condition_total_ms")
         method_ms = row["cost"].get("method_execution_ms")
         transition_ms = run_index[row["execution_id"]].get("full_transition_wall_ms")
+        evaluator_cost = (
+            f"{clean_ms} / {negative_ms}"
+            if clean_ms is not None and negative_ms is not None
+            else "—"
+        )
         lines.append(
             f"| `{row['execution_id']}` | `{row['decision']}` | "
-            f"`{json.dumps(row['operation_plan'], ensure_ascii=False)}` | "
-            f"`{row['candidate_validation_status']}`/`{row['candidate_exercised']}` | "
+            f"{_format_operations(row['operation_plan'])} | "
+            f"`{row['candidate_validation_status']}`/"
+            f"{'виконано' if row['candidate_exercised'] else 'не виконано'} | "
             f"{_format_outcomes(row['clean_b0'])}; {_format_outcomes(row['negative_b0'])} | "
             f"{_format_outcomes(row['candidate_clean'])}; "
             f"{_format_outcomes(row['candidate_negative'])} | "
-            f"{cost if cost is not None else '—'} | "
+            f"{evaluator_cost} | "
+            f"{total_cost if total_cost is not None else '—'} | "
             f"{method_ms if method_ms is not None else '—'} | "
             f"{transition_ms if transition_ms is not None else '—'} |"
         )
     if not measured:
-        lines.append("| — | Не спостерігалося | — | — | — | — | — | — | — |")
+        lines.append("| — | Не спостерігалося | — | — | — | — | — | — | — | — |")
     lines.extend(
         [
             "",
             f"У виміряних C1 запусках: `{len(add_runs)}` містили ADD; `{len(exercised)}` "
             f"кандидатів були фактично виконані в обох умовах; `{len(candidate_detection)}` "
             "кандидатів зафіксували `FOREIGN_TABLE_ACCESS` у відомому негативному сценарії.",
+            f"Повний кандидатний критерій одночасно виконано у "
+            f"`{len(successful_adds)}` повтор(ах).",
+            "",
+            "У виміряних C1 кожний окремий ownership evaluator виклик займав 162.788–164.008 мс "
+            "на чистому та 155.179–159.657 мс на негативному джерелі — нижче за TEST_ONLY бюджет "
+            "225 мс на один доданий evaluator-виклик. Сума двох умов становила 318.993–322.445 мс "
+            "і наведена окремо, не як порівняння з лімітом на один виклик.",
             "",
             "## Обговорення та межі висновку",
             "",
         ]
     )
-    if add_runs and exercised and candidate_detection:
+    if successful_adds:
         conclusion = (
-            "На цьому єдиному переході й для цього авторського TEST_ONLY профілю незмінений Ψ "
-            "видав ADD, кандидат був матеріалізований і реально виконаний на обох умовах; "
-            "доданий ownership evaluator виявив відомий контрольований доступ до чужої таблиці, "
-            "який два B0 контролі не класифікували як порушення. Це є спостережуваною різницею "
-            "на заданому тесті, а не оцінкою узагальненої точності чи ефективності."
+            "У всіх трьох C1 operation plan незміненої Ψ містив ADD для обов’язку "
+            "AC_DATA_OWNERSHIP; його payload матеріалізував валідоване активне представлення, "
+            "яке пройшло обидва evaluator запуски. На чистому джерелі AC_DATA_OWNERSHIP був "
+            "COMPLIANT, а на контрольованому негативному джерелі виявив "
+            "FOREIGN_TABLE_ACCESS; обидва B0 evaluators лишилися COMPLIANT у цій негативній "
+            "умові. Водночас фінальне рішення Ψ у кожному повторі було HOLD через "
+            "IMPACTED_RETAIN_REASSESSMENT_MISSING, тому ADD не був прийнятий і не застосовувався. "
+            "Це спостереження стосується лише діагностично виконаного кандидата на заданому "
+            "TEST_ONLY тесті й не є оцінкою узагальненої точності чи ефективності."
         )
     else:
         conclusion = (
@@ -741,7 +800,7 @@ def _render_report(execution: dict[str, Any]) -> tuple[str, str]:
         "# Карта точного внесення до монографії",
         "",
         "Не переписувати попередні результати C0. Додати наведені нижче фрагменти до наявних "
-        "розділів переходу A0.4→A0.5 після верифікації release archive.",
+        "розділів переходу A0.4→A0.5 після верифікації відновленого evidence archive.",
         "",
         "## Розділ «Результати»",
         "",
@@ -752,8 +811,9 @@ def _render_report(execution: dict[str, Any]) -> tuple[str, str]:
         "## Розділ «Обговорення»",
         "",
         "Вставити після інтерпретації A0.4→A0.5 та перед загальними обмеженнями. Додати абзац "
-        "про авторське походження обов’язковості, обмеженість одного відомого негативного тесту, "
-        "відмінність матеріалізації від фактичного виконання та незмінені G1/G4/P readiness.",
+        "про авторське походження обов’язковості, різницю між ADD у плані та фінальним HOLD, "
+        "те, що кандидат перевірено, але не застосовано, обмеженість одного відомого негативного "
+        "тесту та незмінені G1/G4/P readiness.",
         "",
         "## Точні фрагменти",
         "",
@@ -761,10 +821,13 @@ def _render_report(execution: dict[str, Any]) -> tuple[str, str]:
         "",
         "Для переходу A0.4→A0.5 проведено контрольовану умову C1 з обмеженим TEST_ONLY "
         "профілем, який авторськи визначав `AC_DATA_OWNERSHIP` як обов’язковий у цій умові. "
-        f"Із трьох запланованих повторів завершено {len(measured)}; рішення Ψ: {all_decisions}. "
+        f"Із трьох запланованих повторів завершено {len(measured)}; фінальне рішення Ψ у кожному "
+        f"було HOLD, хоча operation plan містив ADD для AC_DATA_OWNERSHIP: {all_decisions}. "
         f"ADD для ownership контролю зафіксовано у {len(add_runs)} повтор(ах), а кандидата "
-        f"фактично виконано на чистому та негативному джерелах у {len(exercised)} повтор(ах). "
-        "Таблиця результатів наведена в окремій вставці до підрозділу.",
+        f"валідовано й фактично виконано на чистому та негативному джерелах у {len(exercised)} "
+        f"повтор(ах); повний кандидатний критерій виконано у {len(successful_adds)} повтор(ах), "
+        "але жоден кандидат не був прийнятий чи застосований. Таблиця результатів "
+        "наведена в окремій вставці до підрозділу.",
         "",
         "### Обговорення",
         "",
@@ -841,6 +904,195 @@ def _write_report_files(evidence_root: Path, execution: dict[str, Any]) -> None:
         evidence_root / "analysis/MONOGRAPH_INSERTION_MAP_UK.md.sha256",
         f"{sha256_file(insertion_path)}  MONOGRAPH_INSERTION_MAP_UK.md\n".encode("ascii"),
     )
+
+
+def recover_study_archive(
+    repository: Path,
+    source_evidence_root: Path,
+    output_root: Path,
+    *,
+    workflow_run_url: str,
+    run_id: str,
+    run_attempt: str,
+    source_artifact_id: int,
+    source_artifact_name: str,
+    source_artifact_digest: str,
+) -> dict[str, Any]:
+    """Rebuild a study bundle from archived transition runs without executing Ψ."""
+    repo = repository.resolve(strict=True)
+    source_input = source_evidence_root.expanduser().absolute()
+    output = output_root.expanduser().absolute()
+    if (
+        source_input.is_symlink()
+        or not source_input.is_dir()
+        or output.exists()
+        or output.is_symlink()
+        or output.is_relative_to(repo)
+        or not run_id.isdecimal()
+        or not run_attempt.isdecimal()
+        or isinstance(source_artifact_id, bool)
+        or source_artifact_id <= 0
+        or source_artifact_name != f"mono-ci-a05-positive-add-{run_id}-{run_attempt}"
+        or not source_artifact_digest.startswith("sha256:")
+        or len(source_artifact_digest) != 71
+        or any(character not in "0123456789abcdef" for character in source_artifact_digest[7:])
+        or workflow_run_url != f"https://github.com/Pan14ek/evofit-bench/actions/runs/{run_id}"
+    ):
+        raise ProtocolError("POSITIVE_ADD_STUDY_RECOVERY_INPUT_INVALID")
+    source = source_input.resolve(strict=True)
+    if source.is_relative_to(repo) or not _tree_inventory(source):
+        raise ProtocolError("POSITIVE_ADD_STUDY_RECOVERY_SOURCE_INVALID")
+
+    output.mkdir(parents=True)
+    evidence_root = output / "evidence"
+    shutil.copytree(source, evidence_root)
+    freeze_path = evidence_root / "PRE_RUN_FREEZE.json"
+    freeze = _json_file(freeze_path, "POSITIVE_ADD_STUDY_RECOVERY_FREEZE_MISSING")
+    validate_payload(FREEZE_SCHEMA, freeze)
+    freeze_sha = sha256_file(freeze_path)
+    if (evidence_root / "PRE_RUN_FREEZE.json.sha256").read_text(
+        encoding="ascii"
+    ).strip() != f"{freeze_sha}  PRE_RUN_FREEZE.json":
+        raise ContractValidationError("POSITIVE_ADD_STUDY_RECOVERY_FREEZE_SIDECAR_MISMATCH")
+    if (
+        freeze["implementation_commit"] != _git_text(repo, "rev-parse", "HEAD")
+        or freeze["protocol_sha256"] != sha256_file(repo / PROTOCOL_JSON)
+        or freeze["profile_sha256"] != sha256_file(repo / PROFILE_RELATIVE)
+    ):
+        raise ContractValidationError("POSITIVE_ADD_STUDY_RECOVERY_FREEZE_BINDING_MISMATCH")
+
+    protocol = _json_file(
+        evidence_root / "protocol/PROTOCOL_V1.json",
+        "POSITIVE_ADD_STUDY_RECOVERY_PROTOCOL_MISSING",
+    )
+    if protocol.get("study_id") != STUDY_ID:
+        raise ContractValidationError("POSITIVE_ADD_STUDY_RECOVERY_PROTOCOL_MISMATCH")
+    preflight_root = evidence_root / "sandbox-preflight"
+    preflight = _read_preflight(preflight_root)
+    if freeze["preflight_sha256"] != sha256_file(
+        preflight_root / "sandbox-preflight.json"
+    ) or freeze["host_identity"] != preflight.get("host_identity"):
+        raise ContractValidationError("POSITIVE_ADD_STUDY_RECOVERY_PREFLIGHT_BINDING_MISMATCH")
+    control = _verify_control_release(repo, evidence_root / "control")
+    if control != _json_file(
+        evidence_root / "control/receipt.json",
+        "POSITIVE_ADD_STUDY_RECOVERY_CONTROL_RECEIPT_MISSING",
+    ):
+        raise ContractValidationError("POSITIVE_ADD_STUDY_RECOVERY_CONTROL_BINDING_MISMATCH")
+
+    schedule = [
+        {"role": "WARMUP", "index": 0, "measured": False},
+        {"role": "MEASURED", "index": 1, "measured": True},
+        {"role": "MEASURED", "index": 2, "measured": True},
+        {"role": "MEASURED", "index": 3, "measured": True},
+    ]
+    run_rows: list[dict[str, Any]] = []
+    for planned in schedule:
+        suffix = "WARMUP" if not planned["measured"] else f"{planned['index']:02d}"
+        archive_name = (
+            "transition-warmup.zip" if not planned["measured"] else f"transition-{suffix}.zip"
+        )
+        archive_relative = f"transition-archives/{archive_name}"
+        archive = evidence_root / archive_relative
+        sidecar = Path(f"{archive}.sha256")
+        if (
+            archive.is_symlink()
+            or sidecar.is_symlink()
+            or not archive.is_file()
+            or not sidecar.is_file()
+        ):
+            raise ContractValidationError("POSITIVE_ADD_STUDY_RECOVERY_TRANSITION_ARCHIVE_MISSING")
+        archive_sha = sha256_file(archive)
+        if sidecar.read_text(encoding="ascii").strip() != f"{archive_sha}  {archive.name}":
+            raise ContractValidationError("POSITIVE_ADD_STUDY_RECOVERY_TRANSITION_SIDECAR_MISMATCH")
+        summary = _read_archive_run(archive, repo, str(planned["role"]))
+        run_suffix = "WARMUP" if not planned["measured"] else f"MEASURED_{planned['index']:02d}"
+        expected_execution_id = f"DEV_PSI_TRANSITION_A05PA_{run_id}_{run_attempt}_{run_suffix}"
+        if summary["execution_id"] != expected_execution_id:
+            raise ContractValidationError("POSITIVE_ADD_STUDY_RECOVERY_EXECUTION_ID_MISMATCH")
+        run_rows.append(
+            {
+                **planned,
+                "execution_id": expected_execution_id,
+                "run_status": "COMPLETED",
+                "archive_path": archive_relative,
+                "archive_sha256": archive_sha,
+                "archive_verification": "PASS",
+                "summary": summary,
+                "error": None,
+                # The original outer receipt failed before this in-memory value was persisted.
+                "full_transition_wall_ms": None,
+            }
+        )
+
+    execution = {
+        "schema_version": "MONO_CI_A05_POSITIVE_ADD_STUDY_EXECUTION_V1",
+        "study_id": STUDY_ID,
+        "classification": "RESEARCH_OWNER_AUTHORIZED_EXPLORATORY_DEVELOPMENT_TEST_ONLY_INPUTS",
+        "workflow": {"run_id": run_id, "run_attempt": run_attempt, "run_url": workflow_run_url},
+        "implementation_commit": freeze["implementation_commit"],
+        "freeze_sha256": freeze_sha,
+        "protocol_sha256": freeze["protocol_sha256"],
+        "profile_sha256": freeze["profile_sha256"],
+        "preflight_sha256": freeze["preflight_sha256"],
+        "control": control,
+        "execution_status": "COMPLETED",
+        "warmup_status": "COMPLETED",
+        "measured_repetitions_completed": 3,
+        "runs": run_rows,
+        "official_boundary": freeze["official_boundary"],
+    }
+    validate_payload(EXECUTION_SCHEMA, execution)
+    execution_path = evidence_root / "study-execution.json"
+    _write_new(execution_path, pretty_json_bytes(execution))
+    _write_new(
+        Path(f"{execution_path}.sha256"),
+        f"{sha256_file(execution_path)}  study-execution.json\n".encode("ascii"),
+    )
+    _write_report_files(evidence_root, execution)
+    recovery_note = (
+        "# Післяекспериментальне відновлення архіву\n\n"
+        f"Початковий hosted run: [{run_id}]({workflow_run_url}); GitHub Actions artifact "
+        f"{source_artifact_id} ({source_artifact_name}), GitHub-reported digest "
+        f"{source_artifact_digest}. Pre-run freeze і виміряний код прив’язані до commit "
+        f"{freeze['implementation_commit']}.\n\n"
+        "Hosted run завершив один warmup і три виміряні C1 переходи та завантажив чотири "
+        "внутрішні transition archives. Створення зовнішнього study receipt зупинилося на "
+        "закритій JSON Schema перевірці: агрегатор додавав cost.full_transition_wall_ms, "
+        "якого схема не дозволяє. Загальний wall-clock час переходу не було збережено; у звіті "
+        "він лишився невідомим.\n\n"
+        "Цей архів зібрано лише читанням уже завантажених transition archives, pre-run freeze, "
+        "preflight і C0 release. Method Ψ, evaluators, transition або виміряні повтори не "
+        "запускалися повторно. Післяекспериментальний агрегатор також враховує штатну семантику "
+        "P: ADD із target_type=obligation матеріалізує representation із payload.id; у "
+        "початковому transient summary цей тип операції помилково не зараховувався. Початкові "
+        "raw operation plans, рішення Ψ та evaluator outputs не змінені.\n\n"
+        "У кожному C1 Ψ записав HOLD; operation plan містить ADD для AC_DATA_OWNERSHIP, а "
+        "перевірена ownership representation пройшла чисту та негативну evaluator умови. HOLD "
+        "залишається фінальним рішенням Ψ: кандидат не застосовувався до коду. Recovery "
+        "підтверджує лише технічні записи цих трьох повторів у межах цього TEST_ONLY випадку; "
+        "він не просуває жоден офіційний gate.\n"
+    )
+    note_path = evidence_root / RECOVERY_NOTE_PATH
+    _write_new(note_path, recovery_note.encode("utf-8"))
+    _write_new(
+        Path(f"{note_path}.sha256"),
+        f"{sha256_file(note_path)}  {note_path.name}\n".encode("ascii"),
+    )
+
+    archive_path = output / f"mono-ci-a05-positive-add-{run_id}-{run_attempt}-recovered.zip"
+    archive_result = _write_study_archive(evidence_root, archive_path)
+    verification = verify_study_bundle(archive_path, repo, extract_to=output / "verified-readback")
+    return {
+        "study_id": STUDY_ID,
+        "execution_status": execution["execution_status"],
+        "measured_repetitions_completed": execution["measured_repetitions_completed"],
+        "source_artifact_id": source_artifact_id,
+        "source_artifact_digest": source_artifact_digest,
+        "archive": archive_result,
+        "archive_verification": verification["verification_status"],
+        "freeze_sha256": freeze_sha,
+    }
 
 
 def run_study(
@@ -1305,6 +1557,18 @@ def main(argv: list[str] | None = None) -> int:
         run_parser.add_argument(f"--{name}", type=Path, required=True)
     for name in ("workflow-run-url", "run-id", "run-attempt", "uv-version"):
         run_parser.add_argument(f"--{name}", required=True)
+    recover_parser = commands.add_parser("recover")
+    for name in ("repository", "source-evidence", "output"):
+        recover_parser.add_argument(f"--{name}", type=Path, required=True)
+    for name in (
+        "workflow-run-url",
+        "run-id",
+        "run-attempt",
+        "source-artifact-name",
+        "source-artifact-digest",
+    ):
+        recover_parser.add_argument(f"--{name}", required=True)
+    recover_parser.add_argument("--source-artifact-id", type=int, required=True)
     verify_parser = commands.add_parser("verify-bundle")
     verify_parser.add_argument("--archive", type=Path, required=True)
     verify_parser.add_argument("--repository", type=Path, required=True)
@@ -1326,6 +1590,18 @@ def main(argv: list[str] | None = None) -> int:
                 run_id=args.run_id,
                 run_attempt=args.run_attempt,
                 uv_version=args.uv_version,
+            )
+        elif args.command == "recover":
+            result = recover_study_archive(
+                args.repository,
+                args.source_evidence,
+                args.output,
+                workflow_run_url=args.workflow_run_url,
+                run_id=args.run_id,
+                run_attempt=args.run_attempt,
+                source_artifact_id=args.source_artifact_id,
+                source_artifact_name=args.source_artifact_name,
+                source_artifact_digest=args.source_artifact_digest,
             )
         else:
             result = verify_study_bundle(args.archive, args.repository, extract_to=args.extract_to)

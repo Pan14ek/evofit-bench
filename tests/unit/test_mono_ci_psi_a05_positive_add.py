@@ -485,6 +485,53 @@ def test_positive_add_counts_only_a_valid_owner_add_with_both_candidate_evaluati
     assert state == "MATERIALIZED_AND_EXERCISED"
 
 
+def test_positive_add_counts_obligation_add_that_materializes_the_owner_representation() -> None:
+    operations = [
+        {
+            "operation": "add",
+            "target_type": "obligation",
+            "target_id": "AC_DATA_OWNERSHIP",
+            "payload": {
+                "id": "REP_POSITIVE_ADD_AC_DATA_OWNERSHIP",
+                "evaluator": "AC_DATA_OWNERSHIP",
+                "covers": ["AC_DATA_OWNERSHIP"],
+            },
+        }
+    ]
+
+    owner_adds, owner_active, exercised, state = _candidate_exercise(
+        operations, _candidate_verification()
+    )
+
+    assert owner_adds == operations
+    assert owner_active is True
+    assert exercised is True
+    assert state == "MATERIALIZED_AND_EXERCISED"
+
+
+def test_positive_add_does_not_count_an_unrelated_obligation_add() -> None:
+    operations = [
+        {
+            "operation": "add",
+            "target_type": "obligation",
+            "target_id": "AC_PUBLIC_API",
+            "payload": {
+                "id": "REP_POSITIVE_ADD_AC_DATA_OWNERSHIP",
+                "evaluator": "AC_DATA_OWNERSHIP",
+                "covers": ["AC_DATA_OWNERSHIP"],
+            },
+        }
+    ]
+
+    owner_adds, _owner_active, exercised, state = _candidate_exercise(
+        operations, _candidate_verification(present=False)
+    )
+
+    assert owner_adds == []
+    assert exercised is False
+    assert state == "NOT_MATERIALIZED"
+
+
 def test_positive_add_does_not_count_a_materialized_candidate_without_an_add() -> None:
     owner_adds, owner_active, exercised, state = _candidate_exercise([], _candidate_verification())
 
@@ -492,6 +539,127 @@ def test_positive_add_does_not_count_a_materialized_candidate_without_an_add() -
     assert owner_active is True
     assert exercised is False
     assert state == "MATERIALIZED_NOT_EXERCISED"
+
+
+def test_positive_add_summary_cost_uses_only_schema_declared_fields(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    record = {
+        "schema_version": "MONO_CI_PSI_TRANSITION_RUN_V5",
+        "execution_id": "DEV_PSI_TRANSITION_A05PA_40612830900_1_MEASURED_01",
+        "a05_extension": {"path": "diagnostics/a05-evidence.json"},
+        "evaluator_observations": [],
+        "psi": {
+            "decision": "HOLD",
+            "execution_duration_ms": 123.0,
+            "raw_result_sha256": "a" * 64,
+            "scoring": "NOT_EXECUTED",
+        },
+        "method_input": {"bundle_sha256": "b" * 64},
+        "method_implementation": {"sha256": "c" * 64},
+        "study_readiness": "NO_GO",
+        "measurement_status": "NOT_EXECUTED",
+        "p_algorithm_status": "NOT_READY",
+        "g1": "INCOMPLETE",
+        "g4": "NOT_AUTHORIZED",
+        "reference_gate": "NOT_READY",
+    }
+    extension = {
+        "candidate_verification": {"candidate_present": False},
+        "negative_condition": {"evaluators": []},
+    }
+    baseline: dict[str, Any] = {"representations": []}
+
+    def fake_json_file(path: Path, _code: str) -> dict[str, Any]:
+        if path.name == "development_run.json":
+            return record
+        if path.name == "a05-evidence.json":
+            return extension
+        if path.name == "reconstructed-b0-proposal.json":
+            return baseline
+        raise AssertionError(path)
+
+    monkeypatch.setattr(positive_add_study, "_json_file", fake_json_file)
+    monkeypatch.setattr(
+        positive_add_study,
+        "_method_result_from_run",
+        lambda _run_root, _record: {
+            "operation_plan": {"operations": [], "hold_reasons": []},
+            "governance": {"reason_codes": []},
+        },
+    )
+
+    summary = positive_add_study._summarize_run(tmp_path, "d" * 64, "MEASURED")
+
+    assert set(summary["cost"]) == {
+        "method_execution_ms",
+        "candidate_owner_clean_ms",
+        "candidate_owner_negative_ms",
+        "candidate_owner_two_condition_total_ms",
+    }
+
+
+def test_positive_add_report_requires_full_criterion_in_the_same_run() -> None:
+    def measured_row(
+        execution_id: str,
+        *,
+        owner_add_emitted: bool,
+        candidate_exercised: bool,
+        candidate_owner_negative_detected: bool,
+    ) -> dict[str, Any]:
+        return {
+            "role": "MEASURED",
+            "index": 1,
+            "measured": True,
+            "execution_id": execution_id,
+            "run_status": "COMPLETED",
+            "full_transition_wall_ms": None,
+            "summary": {
+                "execution_id": execution_id,
+                "decision": "HOLD",
+                "operation_plan": [],
+                "owner_add_emitted": owner_add_emitted,
+                "candidate_exercised": candidate_exercised,
+                "candidate_owner_negative_detected": candidate_owner_negative_detected,
+                "candidate_validation_status": "valid",
+                "clean_b0": [],
+                "negative_b0": [],
+                "candidate_clean": [],
+                "candidate_negative": [],
+                "cost": {},
+            },
+        }
+
+    report, _insertion = positive_add_study._render_report(
+        {
+            "runs": [
+                measured_row(
+                    "RUN_ADD_ONLY",
+                    owner_add_emitted=True,
+                    candidate_exercised=False,
+                    candidate_owner_negative_detected=False,
+                ),
+                measured_row(
+                    "RUN_EXERCISED_ONLY",
+                    owner_add_emitted=False,
+                    candidate_exercised=True,
+                    candidate_owner_negative_detected=True,
+                ),
+            ],
+            "control": {
+                "decision": "HOLD",
+                "operation_plan": [],
+                "candidate_state": "MATERIALIZED_UNAPPLIED",
+                "inner_transition_archive_sha256": "a" * 64,
+            },
+            "execution_status": "COMPLETED",
+            "freeze_sha256": "b" * 64,
+            "warmup_status": "COMPLETED",
+        }
+    )
+
+    assert "Повний кандидатний критерій одночасно виконано у `0` повтор(ах)." in report
+    assert "Критерій успішного позитивного ADD не виконано" in report
 
 
 def test_positive_add_does_not_count_a_different_representation_add() -> None:
