@@ -707,12 +707,17 @@ def _run_positive_input_evaluator(
         "classification": "ACTUAL_A1_EVALUATOR_OUTPUT_USED_AS_TEST_ONLY_METHOD_INPUT",
     }
     (run_root / "diagnostics").mkdir(exist_ok=True)
+    evaluator_run = {
+        name: value for name, value in run.items() if name not in {"raw_stdout", "raw_stderr"}
+    }
     (run_root / "diagnostics/positive-add-input-evaluator.json").write_bytes(
         pretty_json_bytes(
             {
                 "schema_version": "MONO_CI_A05_POSITIVE_ADD_INPUT_EVALUATOR_V1",
                 "classification": summary["classification"],
-                "evaluator_run": run,
+                # Raw streams are already retained at their digest-bound paths.
+                # Keep their in-memory bytes out of this JSON diagnostic.
+                "evaluator_run": evaluator_run,
                 "inspection_coverage": coverage,
                 "summary": summary,
             }

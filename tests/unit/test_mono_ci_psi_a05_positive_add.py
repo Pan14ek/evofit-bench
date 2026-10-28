@@ -11,7 +11,9 @@ from typing import Any, cast
 
 import pytest
 
+import experiments.execution.tooling.mono_ci_psi_a05_positive_add as positive_add
 import experiments.execution.tooling.mono_ci_psi_a05_positive_add_study as positive_add_study
+import experiments.execution.tooling.mono_ci_psi_transition as psi_transition
 from experiments.execution.tooling.contracts import validate_payload
 from experiments.execution.tooling.errors import ContractValidationError, ProtocolError
 from experiments.execution.tooling.hashing import sha256_file
@@ -26,6 +28,7 @@ from experiments.execution.tooling.mono_ci_psi_a05_positive_add import (
 from experiments.execution.tooling.mono_ci_psi_a05_positive_add_study import (
     _candidate_exercise,
 )
+from experiments.execution.tooling.mono_ci_psi_evidence import evaluator_source_artifacts
 from experiments.execution.tooling.mono_ci_psi_transition import (
     RUNTIME_SOURCE,
     _expected_evidence_obligation_ids,
@@ -76,6 +79,128 @@ def test_hosted_study_pulls_pinned_runtime_before_preflight() -> None:
     image_pull = "docker pull --platform linux/amd64 python:3.12.15-slim-bookworm@sha256:"
 
     assert workflow.index(image_pull) < workflow.index("Run same-runner Docker isolation preflight")
+
+
+def test_isolated_runtime_creates_optional_package_parent_directories(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(psi_transition, "RUNTIME_MODULES", ())
+    monkeypatch.setattr(psi_transition, "RUNTIME_SCHEMAS", ())
+    monkeypatch.setattr(psi_transition, "RUNTIME_VENDOR_PACKAGES", ())
+    runtime_root = tmp_path / "method-runtime"
+
+    inventory = psi_transition._build_isolated_runtime(ROOT, runtime_root)
+
+    assert (runtime_root / "experiments/pilots/__init__.py").is_file()
+    assert (runtime_root / "experiments/pilots/pilot02_testonly_execution.py").is_file()
+    assert inventory["files"]
+
+
+def test_positive_input_diagnostic_keeps_raw_streams_at_digest_bound_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import experiments.execution.tooling.mono_ci_psi_coverage as coverage_module
+
+    run_root = tmp_path
+    source_rows, source_manifest_bytes, source_digest = evaluator_source_artifacts(ROOT)
+    implementation_root = run_root / "PSI/evaluator-observations/implementation/AC_DATA_OWNERSHIP"
+    source_root = implementation_root / "source"
+    source_root.mkdir(parents=True)
+    (implementation_root / "source-manifest.json").write_bytes(source_manifest_bytes)
+    for row in source_rows:
+        source = ROOT / "architecture/acceptance/a1" / row["path"]
+        destination = source_root / row["path"]
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(source.read_bytes())
+    configuration = ROOT / positive_add.CONFIGURATION_PATH
+    configuration_destination = implementation_root / configuration.name
+    configuration_destination.write_bytes(configuration.read_bytes())
+    template_artifact = run_root / positive_add.TEMPLATE_ARTIFACT_PATH
+    template_artifact.parent.mkdir(parents=True, exist_ok=True)
+    template_artifact.write_bytes(source_manifest_bytes)
+
+    raw_stdout = b'{"raw":"evaluator stdout"}\n'
+    raw_stderr = b"raw evaluator stderr\n"
+    evidence = {
+        "architecture": {
+            "state": "A0_5_MODULE_DATA_OWNERSHIP",
+            "target_source_sha": "a" * 40,
+            "manifest_state_status": "MATCHED",
+            "source_sha_status": "MATCHED",
+        },
+        "source_scope": {"modules": []},
+        "evaluator": {"id": "AC_DATA_OWNERSHIP"},
+        "result": {"compliance": "COMPLIANT", "execution_status": "COMPLETED"},
+        "applicability": "ACTIVE",
+    }
+
+    def fake_run_fresh_evaluator(**kwargs: Any) -> dict[str, Any]:
+        output_directory = kwargs["output_directory"]
+        output_directory.mkdir(parents=True)
+        output_path = output_directory / "evaluator-output.json"
+        stdout_path = output_directory / "stdout.bin"
+        stderr_path = output_directory / "stderr.bin"
+        output_path.write_text(json.dumps(evidence), encoding="utf-8")
+        stdout_path.write_bytes(raw_stdout)
+        stderr_path.write_bytes(raw_stderr)
+
+        def relative(path: Path) -> str:
+            return path.relative_to(run_root).as_posix()
+
+        return {
+            "evaluator_id": "AC_DATA_OWNERSHIP",
+            "architecture_state": "A0_5_MODULE_DATA_OWNERSHIP",
+            "source_commit_sha": "a" * 40,
+            "source_tree_sha": "b" * 40,
+            "target_application_tree_sha": "c" * 40,
+            "evaluator_source_sha256": source_digest,
+            "configuration_sha256": sha256_file(configuration),
+            "output_path": relative(output_path),
+            "stdout_path": relative(stdout_path),
+            "stderr_path": relative(stderr_path),
+            "stdout_sha256": hashlib.sha256(raw_stdout).hexdigest(),
+            "stderr_sha256": hashlib.sha256(raw_stderr).hexdigest(),
+            "execution_status": "COMPLETED",
+            "compliance": "COMPLIANT",
+            "duration_ms": 1.0,
+            "evidence": evidence,
+            "raw_stdout": raw_stdout,
+            "raw_stderr": raw_stderr,
+        }
+
+    inspection_coverage = {
+        "evaluator_id": "AC_DATA_OWNERSHIP",
+        "architecture_state": "A0_5_MODULE_DATA_OWNERSHIP",
+        "source_inspection_status": "COMPLETE",
+        "counts": {"inspected_count": 1},
+        "expected_subjects": ["app/modules/audit/model.py"],
+        "inspected_subjects": ["app/modules/audit/model.py"],
+        "inspection_unit": "file",
+    }
+    monkeypatch.setattr(positive_add, "run_fresh_evaluator", fake_run_fresh_evaluator)
+    monkeypatch.setattr(
+        coverage_module,
+        "verify_inspection_coverage",
+        lambda **_kwargs: inspection_coverage,
+    )
+    monkeypatch.setattr(
+        positive_add,
+        "build_inspection_scope_artifact",
+        lambda *_args: {"schema_version": 1, "scope": "TEST_ONLY"},
+    )
+
+    positive_add._run_positive_input_evaluator(ROOT, run_root, "a" * 40)
+
+    diagnostic = json.loads(
+        (run_root / "diagnostics/positive-add-input-evaluator.json").read_text(encoding="utf-8")
+    )
+    evaluator_run = diagnostic["evaluator_run"]
+    assert "raw_stdout" not in evaluator_run
+    assert "raw_stderr" not in evaluator_run
+    assert (run_root / evaluator_run["stdout_path"]).read_bytes() == raw_stdout
+    assert (run_root / evaluator_run["stderr_path"]).read_bytes() == raw_stderr
+    assert evaluator_run["stdout_sha256"] == hashlib.sha256(raw_stdout).hexdigest()
+    assert evaluator_run["stderr_sha256"] == hashlib.sha256(raw_stderr).hexdigest()
 
 
 def _policy_scope_validation_fixture(

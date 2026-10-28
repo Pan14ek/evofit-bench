@@ -3959,6 +3959,7 @@ def _build_isolated_runtime(repository: Path, runtime_root: Path) -> dict[str, A
         runtime_root / "experiments/pilots/__init__.py",
         package_root / "__init__.py",
     ):
+        package_path.parent.mkdir(parents=True, exist_ok=True)
         package_path.write_bytes(b'"""Isolated Method P runtime package."""\n')
     shutil.copyfile(
         repository / "experiments/pilots/pilot02_testonly_execution.py",
