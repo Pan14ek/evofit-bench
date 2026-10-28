@@ -36,10 +36,15 @@ semantic validation. C2 V2 does not advance `P_ALGORITHM_STATUS`, G1, G4,
 reference readiness, or scoring. Technical repetitions are not independent
 architecture transitions.
 
-The hosted warmup exposed a runtime packaging defect: the isolated method
-runtime's schema allowlist omitted `candidate_configuration.schema.json`.
-Preserve that frozen failure. It is not a Ψ `HOLD` or `REJECT`, and no
-post-result method/input change is part of this run.
+Two hosted warmups exposed sequential runtime packaging defects: the isolated
+method runtime's schema allowlist first omitted
+`candidate_configuration.schema.json`, then `prediction.schema.json` after
+the first post-run fix. Both partial artifacts are preserved unchanged and
+neither is a serialized Ψ `HOLD`, `REJECT`, or `ACCEPT`; the second traceback
+reached an ACCEPT-only source branch, which supports an inference but not a
+verified or persisted decision. No measured repetitions ran. The current
+post-run allowlist includes both existing schemas; that repair does not amend
+either freeze or authorize another hosted C2 run.
 
 ## Validation
 

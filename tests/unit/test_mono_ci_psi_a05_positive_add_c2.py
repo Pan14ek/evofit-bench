@@ -102,6 +102,8 @@ def test_c2_method_runtime_keeps_c1_profile_capability_backward_compatible() -> 
     assert c2_study.PROFILE_SCHEMA_V2 in RUNTIME_SCHEMAS
     assert "candidate_configuration.schema.json" in RUNTIME_SCHEMAS
     assert (ROOT / "experiments/execution/schemas/candidate_configuration.schema.json").is_file()
+    assert "prediction.schema.json" in RUNTIME_SCHEMAS
+    assert (ROOT / "experiments/execution/schemas/prediction.schema.json").is_file()
 
 
 def test_c2_v2_uses_a_distinct_transition_schema_and_adapter_identity() -> None:

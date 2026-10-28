@@ -153,6 +153,7 @@ RUNTIME_SCHEMAS = (
     "p_operation_plan_v1.schema.json",
     "p_pair_assessment_v1.schema.json",
     "policy_source_v3.schema.json",
+    "prediction.schema.json",
 )
 RUNTIME_VENDOR_PACKAGES = (
     ("yaml", "PyYAML"),
