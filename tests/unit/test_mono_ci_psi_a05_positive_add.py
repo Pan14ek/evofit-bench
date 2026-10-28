@@ -85,7 +85,6 @@ def test_isolated_runtime_creates_optional_package_parent_directories(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(psi_transition, "RUNTIME_MODULES", ())
-    monkeypatch.setattr(psi_transition, "RUNTIME_SCHEMAS", ())
     monkeypatch.setattr(psi_transition, "RUNTIME_VENDOR_PACKAGES", ())
     runtime_root = tmp_path / "method-runtime"
 
@@ -93,6 +92,11 @@ def test_isolated_runtime_creates_optional_package_parent_directories(
 
     assert (runtime_root / "experiments/pilots/__init__.py").is_file()
     assert (runtime_root / "experiments/pilots/pilot02_testonly_execution.py").is_file()
+    profile_schema = "mono_ci_psi_positive_add_profile_v1.schema.json"
+    assert profile_schema in psi_transition.RUNTIME_SCHEMAS
+    assert (runtime_root / "experiments/execution/schemas" / profile_schema).read_bytes() == (
+        ROOT / "experiments/execution/schemas" / profile_schema
+    ).read_bytes()
     assert inventory["files"]
 
 

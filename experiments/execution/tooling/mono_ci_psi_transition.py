@@ -135,6 +135,7 @@ RUNTIME_SCHEMAS = (
     "evaluator_evidence.schema.json",
     "method_input_v2.schema.json",
     "method_input_v3_candidate.schema.json",
+    "mono_ci_psi_positive_add_profile_v1.schema.json",
     "p_adaptation_evidence_v1.schema.json",
     "p_adaptation_evidence_v2.schema.json",
     "p_adaptation_trace_v1.schema.json",
