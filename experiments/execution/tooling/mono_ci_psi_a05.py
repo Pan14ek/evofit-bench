@@ -597,15 +597,34 @@ def run_a05_transition(
     preserve_partial_evidence: bool = False,
     sandbox_preflight_id: str | None = None,
     positive_add_profile_path: Path | None = None,
+    positive_add_study_id: str | None = None,
 ) -> dict[str, Any]:
     """Execute the existing isolated P runner against the pinned ΔA5 transition."""
     repo = repository.resolve(strict=True)
     _validate_a04_proposal(repo)
+    profile_id = None
+    if positive_add_profile_path is not None:
+        try:
+            profile_id = json.loads(positive_add_profile_path.read_bytes()).get("profile_id")
+        except (OSError, json.JSONDecodeError) as error:
+            raise ContractValidationError("MONO_CI_PSI_A05_POSITIVE_PROFILE_INVALID") from error
+    expected_study_id = (
+        "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_V1"
+        if profile_id == "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V1"
+        else "MONO_CI_A05_POSITIVE_ADD_TEST_ONLY_V1"
+    )
+    if positive_add_profile_path is not None and positive_add_study_id not in {
+        None,
+        expected_study_id,
+    }:
+        raise ContractValidationError("MONO_CI_PSI_A05_POSITIVE_STUDY_ID_PROFILE_MISMATCH")
     with a05_transition_context(
         repo,
         extension_builder=_build_a05_extension,
         run_schema_version=(
-            "MONO_CI_PSI_TRANSITION_RUN_V5"
+            "MONO_CI_PSI_TRANSITION_RUN_V6"
+            if profile_id == "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V1"
+            else "MONO_CI_PSI_TRANSITION_RUN_V5"
             if positive_add_profile_path is not None
             else "MONO_CI_PSI_TRANSITION_RUN_V4"
         ),

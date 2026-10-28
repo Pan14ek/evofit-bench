@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_psi_positive_add_c2_protocol_v1.schema.json",
+  "title": "C2 TEST_ONLY experiment protocol",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "protocol_id", "classification", "condition", "transition", "method", "conditions", "repetitions", "cost_rule", "measurements", "stop_rule", "official_boundary", "c1_recovery_reference"],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_A05_POSITIVE_ADD_C2_PROTOCOL_V1"},
+    "protocol_id": {"const": "MONO_CI_A05_POSITIVE_ADD_C2_PROTOCOL_V1"},
+    "classification": {"const": "TEST_ONLY_AUTHOR_DECLARED_DEVELOPMENT"},
+    "condition": {"const": "C2_ACTIVE_BOUNDED_RETAINS_AND_POSITIVE_ADD"},
+    "transition": {"type": "object", "additionalProperties": false, "required": ["before_state", "before_commit_sha", "after_state", "after_application_tree_sha"], "properties": {
+      "before_state": {"const": "A0_4_REPORT_QUERY_PORT"}, "before_commit_sha": {"const": "d3101c0d3aa9b7b709253b6ec7518416f05f65b9"},
+      "after_state": {"const": "A0_5_MODULE_DATA_OWNERSHIP"}, "after_application_tree_sha": {"const": "007196f68652bc13f6798805793ffdfae96f95f7"}
+    }},
+    "method": {"type": "object", "additionalProperties": false, "required": ["id", "algorithm_changed", "image", "platform", "network", "method_input_mount", "writable_output_mounts"], "properties": {
+      "id": {"const": "P_GOVERNED_ADAPTATION_DEVELOPMENT_V1"}, "algorithm_changed": {"const": false},
+      "image": {"const": "python:3.12.15-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70"},
+      "platform": {"const": "linux/amd64"}, "network": {"const": "none"}, "method_input_mount": {"const": "read-only"}, "writable_output_mounts": {"const": 1}
+    }},
+    "conditions": {"type": "object", "additionalProperties": false, "required": ["active_mandatory_test_only", "positive_add_target", "retain_targets", "all_other_catalog_applicability", "independent_authority", "independent_semantic_validation"], "properties": {
+      "active_mandatory_test_only": {"const": ["AC_DATA_OWNERSHIP", "AC_MODULE_GRAPH", "AC_PUBLIC_API"]},
+      "positive_add_target": {"const": "AC_DATA_OWNERSHIP"}, "retain_targets": {"const": ["AC_MODULE_GRAPH", "AC_PUBLIC_API"]},
+      "all_other_catalog_applicability": {"const": "UNKNOWN"}, "independent_authority": {"const": false}, "independent_semantic_validation": {"const": false}
+    }},
+    "repetitions": {"type": "object", "additionalProperties": false, "required": ["warmup", "measured"], "properties": {"warmup": {"const": 1}, "measured": {"const": 3}}},
+    "cost_rule": {"type": "object", "additionalProperties": false, "required": ["unit", "incremental_evaluator_id", "fixed_max_incremental_cost_ms", "max_search_nodes", "source", "source_sha256"], "properties": {
+      "unit": {"const": "elapsed wall-clock milliseconds per added evaluator invocation"}, "incremental_evaluator_id": {"const": "AC_DATA_OWNERSHIP"},
+      "fixed_max_incremental_cost_ms": {"const": 225}, "max_search_nodes": {"const": 2},
+      "source": {"const": "pinned V2_RELEASE_ASSET:analysis/evaluator-samples.csv"},
+      "source_sha256": {"const": "2bbff33702491cd0238271fa4c718316378586f5f7eb6af0271cf7baef25e7a7"}
+    }},
+    "measurements": {"const": ["actual_operation_plan", "final_governance_decision_and_reasons", "candidate_validation", "candidate_acceptance_or_rejection", "accepted_configuration_application_if_accepted", "clean_and_ownership_negative_detection", "incremental_evaluator_cost", "method_psi_execution_time", "full_transition_time"]},
+    "stop_rule": {"const": "stop after failed preflight or first failed transition; preserve partial raw evidence"},
+    "official_boundary": {"type": "object", "additionalProperties": false, "required": ["study_readiness", "measurement_status", "P_ALGORITHM_STATUS", "G1", "G4", "reference", "scoring"], "properties": {
+      "study_readiness": {"const": "NO_GO"}, "measurement_status": {"const": "NOT_EXECUTED"}, "P_ALGORITHM_STATUS": {"const": "NOT_READY"}, "G1": {"const": "INCOMPLETE"}, "G4": {"const": "NOT_AUTHORIZED"}, "reference": {"const": "NOT_READY"}, "scoring": {"const": "NOT_EXECUTED"}
+    }},
+    "c1_recovery_reference": {"type": "object", "additionalProperties": false, "required": ["release", "archive_sha256", "original_workflow_run", "original_workflow_conclusion"], "properties": {
+      "release": {"const": "https://github.com/Pan14ek/evofit-bench/releases/tag/mono-ci-a05-positive-add-recovery-40612830900-1"},
+      "archive_sha256": {"const": "3c3aaaa0ab675ec33158cebba9eae565bacab973a09e98ba5e48273952c760a2"},
+      "original_workflow_run": {"const": "https://github.com/Pan14ek/evofit-bench/actions/runs/40612830900"}, "original_workflow_conclusion": {"const": "FAILURE"}
+    }}
+  }
+}

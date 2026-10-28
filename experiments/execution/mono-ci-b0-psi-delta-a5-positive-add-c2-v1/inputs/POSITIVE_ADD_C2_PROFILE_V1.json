@@ -1,0 +1,126 @@
+{
+  "schema_version": 2,
+  "profile_id": "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V1",
+  "classification": "TEST_ONLY_AUTHOR_DECLARED_SCOPED_INPUT",
+  "evaluation_as_of": "2026-10-28T00:00:00Z",
+  "scope": {
+    "id": "application",
+    "architecture_state": "A0_5_MODULE_DATA_OWNERSHIP"
+  },
+  "selected_obligation": {
+    "id": "AC_DATA_OWNERSHIP",
+    "criterion": "architecture_compliance",
+    "mandatory": true,
+    "author_rationale": "The pinned A0.5 state manifest declares persistence ownership; this remains the one positive ADD target in the bounded TEST_ONLY condition."
+  },
+  "additional_retain_obligations": [
+    {
+      "id": "AC_MODULE_GRAPH",
+      "mandatory": true,
+      "representation_id": "REP_RECON_B0_A04_MODULE_GRAPH_CI_V1",
+      "evaluator_id": "AC_MODULE_GRAPH",
+      "configuration_path": "architecture/acceptance/a1/module_graph_v1.yaml",
+      "configuration_sha256": "1abae6871a477ff2a07685ad645a70defa2f1ac6745598ae4cdc35aab4e95bf6",
+      "evaluator_source_manifest_sha256": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
+      "source_commit_sha": "37176a42cc099f1f159dc137b85fe3e32b8290d5",
+      "application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+      "c1_pair_status": "VALID_TEST_ONLY",
+      "c1_compliance": "COMPLIANT",
+      "c1_process_exit_code": 0,
+      "c1_inspection_status": "COMPLETE",
+      "c1_expected_inspection_count": 31,
+      "c1_inspected_count": 31,
+      "adequacy_authority": "AUTHOR_DECLARED_TEST_ONLY_NOT_INDEPENDENT"
+    },
+    {
+      "id": "AC_PUBLIC_API",
+      "mandatory": true,
+      "representation_id": "REP_RECON_B0_A04_PUBLIC_API_CI_V1",
+      "evaluator_id": "AC_PUBLIC_API",
+      "configuration_path": "architecture/acceptance/a1/public_api_v1.yaml",
+      "configuration_sha256": "8853c3a933b23f698c7ba7c5b6e511f292e8d9285dc0de4378741c53e466f7bb",
+      "evaluator_source_manifest_sha256": "5c17373ba8896ef0c443d826bd0064168ec7c5759c7973f9602b6c2c715b169c",
+      "source_commit_sha": "37176a42cc099f1f159dc137b85fe3e32b8290d5",
+      "application_tree_sha": "007196f68652bc13f6798805793ffdfae96f95f7",
+      "c1_pair_status": "VALID_TEST_ONLY",
+      "c1_compliance": "COMPLIANT",
+      "c1_process_exit_code": 0,
+      "c1_inspection_status": "COMPLETE",
+      "c1_expected_inspection_count": 31,
+      "c1_inspected_count": 31,
+      "adequacy_authority": "AUTHOR_DECLARED_TEST_ONLY_NOT_INDEPENDENT"
+    }
+  ],
+  "canonical_mandatory_projection": {
+    "selected_obligation_is_true": true,
+    "only_selected_rows_are_mandatory_within_test_scope": true,
+    "additional_test_only_active_obligations": ["AC_MODULE_GRAPH", "AC_PUBLIC_API"],
+    "other_applicability_status": "UNKNOWN",
+    "global_denominator_or_coverage_claim": false
+  },
+  "author_declared_exact_pair_semantics": {
+    "trust_scope": "TEST_ONLY",
+    "independent_verification": false,
+    "positive_control_pairs": [
+      {"evaluator_id": "AC_PUBLIC_API", "obligation_id": "AC_PUBLIC_API"},
+      {"evaluator_id": "AC_MODULE_GRAPH", "obligation_id": "AC_MODULE_GRAPH"},
+      {"evaluator_id": "AC_DATA_OWNERSHIP", "obligation_id": "AC_DATA_OWNERSHIP"}
+    ]
+  },
+  "candidate_template": {
+    "representation_id": "REP_POSITIVE_ADD_AC_DATA_OWNERSHIP",
+    "criterion": "architecture_compliance",
+    "stage_label": "CI_TEST",
+    "method_stage_token": "ci_test",
+    "evaluator_id": "AC_DATA_OWNERSHIP",
+    "covers": ["AC_DATA_OWNERSHIP"],
+    "applicability_scope_id": "application",
+    "configuration_path": "architecture/acceptance/a1/data_ownership_v1.yaml",
+    "artifact_kind": "A1 evaluator source-manifest bytes"
+  },
+  "stage_contract": {
+    "obligations": {
+      "AC_DATA_OWNERSHIP": ["ci_test"],
+      "AC_MODULE_GRAPH": ["ci_test"],
+      "AC_PUBLIC_API": ["ci_test"]
+    }
+  },
+  "cost_rule": {
+    "unit": "elapsed wall-clock milliseconds per added evaluator invocation",
+    "historical_source": "V2_RELEASE_ASSET:analysis/evaluator-samples.csv",
+    "historical_source_sha256": "2bbff33702491cd0238271fa4c718316378586f5f7eb6af0271cf7baef25e7a7",
+    "historical_sample_status": "MEASURED",
+    "evaluator_id": "AC_DATA_OWNERSHIP",
+    "conditions": ["A0_5_CLEAN", "EXISTING_NEGATIVE_PROBE"],
+    "condition_source_commits": {
+      "A0_5_CLEAN": "a349d19fb89b577e6799e9736ed4ce0acc572166",
+      "EXISTING_NEGATIVE_PROBE": "5ace86095bda794c9576047c80b9267e70cd0f26"
+    },
+    "warmups_excluded": true,
+    "historical_measured_calls": 20,
+    "historical_max_process_duration_ms": 177.215,
+    "margin_fraction": 0.25,
+    "round_up_increment_ms": 25,
+    "fixed_max_incremental_cost_ms": 225,
+    "fixed_max_search_nodes": 2,
+    "candidate_cost_binding": "evaluator source-manifest SHA-256"
+  },
+  "comparison": {
+    "c0_reference": "experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v1",
+    "c1_recovery_release": "https://github.com/Pan14ek/evofit-bench/releases/tag/mono-ci-a05-positive-add-recovery-40612830900-1",
+    "c1_recovery_archive_sha256": "3c3aaaa0ab675ec33158cebba9eae565bacab973a09e98ba5e48273952c760a2",
+    "warmup_repetitions": 1,
+    "c2_repetitions": 3,
+    "same_clean_source_and_existing_negative_probe": true,
+    "candidate_is_exercised_only_if_method_materializes_it": true
+  },
+  "research_boundaries": {
+    "canonical_catalog_modified": false,
+    "frozen_v2_inputs_modified": false,
+    "method_algorithm_modified": false,
+    "measured_da01_authorized": false,
+    "g1": "INCOMPLETE",
+    "g4": "NOT_AUTHORIZED",
+    "p_algorithm_status": "NOT_READY"
+  }
+}

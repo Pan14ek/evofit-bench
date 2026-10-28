@@ -33,6 +33,14 @@ on:
       - tests/unit/test_mono_ci_psi_evidence.py
       - tests/unit/CONTEXT.md
   workflow_dispatch:
+    inputs:
+      study_condition:
+        description: TEST_ONLY study condition to execute
+        required: true
+        type: choice
+        options:
+          - C2
+        default: C2
 
 permissions:
   contents: write
@@ -187,6 +195,6 @@ jobs:
           echo "- Source revision: \`$GITHUB_SHA\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Boundary: study readiness NO_GO; measurement NOT_EXECUTED; P_ALGORITHM_STATUS NOT_READY; G1 INCOMPLETE; G4 NOT_AUTHORIZED; reference gate NOT_READY; scoring NOT_EXECUTED." >> "$GITHUB_STEP_SUMMARY"
 
-  positive-add-study:
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/codex/mono-ci-a05-positive-add'
-    uses: ./.github/workflows/mono-ci-psi-a05-positive-add.yml
+  positive-add-c2-study:
+    if: github.event_name == 'workflow_dispatch' && inputs.study_condition == 'C2' && github.ref == 'refs/heads/codex/mono-ci-a05-positive-add'
+    uses: ./.github/workflows/mono-ci-psi-a05-positive-add-c2.yml

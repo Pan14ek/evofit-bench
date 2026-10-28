@@ -1,0 +1,141 @@
+name: MONO CI ΔA5 C2 TEST_ONLY bounded retain and positive ADD
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  c2-study:
+    name: Freeze, run and verify the bounded C2 study
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: evofit_test
+          POSTGRES_USER: evofit
+          POSTGRES_PASSWORD: evofit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U evofit -d evofit_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      ARCHITECTURE_STAGE: A0_5_MODULE_DATA_OWNERSHIP
+      DATABASE_URL: postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test
+      TEST_DATABASE_URL: postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install frozen dependencies
+        run: uv sync --frozen --extra dev
+      - name: Install the isolated test runner dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bubblewrap
+      - name: Run C2 and C1 contract regressions
+        run: make test-mono-ci-psi-a05-positive-add-c2
+      - name: Run existing A0.5 and evaluator regressions
+        run: make test-mono-ci-psi-a05
+      - name: Run development quality gates
+        run: make development-quality
+      - name: Set unique C2 evidence paths
+        shell: bash
+        run: |
+          echo "PREFLIGHT_ROOT=${RUNNER_TEMP}/positive-add-c2-preflight-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "RUN_OUTPUT=${RUNNER_TEMP}/positive-add-c2-run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "WORKFLOW_RUN_URL=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >> "$GITHUB_ENV"
+      - name: Pull the digest-pinned isolated method runtime
+        run: docker pull --platform linux/amd64 python:3.12.15-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70
+      - name: Run same-runner Docker isolation preflight
+        run: >-
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_a05_positive_add_c2
+          preflight --repository "$GITHUB_WORKSPACE" --output "$PREFLIGHT_ROOT"
+      - name: Execute one warmup and three measured C2 repetitions
+        id: c2
+        continue-on-error: true
+        run: >-
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_a05_positive_add_c2
+          run --repository "$GITHUB_WORKSPACE"
+          --output "$RUN_OUTPUT"
+          --preflight "$PREFLIGHT_ROOT"
+          --workflow-run-url "$WORKFLOW_RUN_URL"
+          --run-id "$GITHUB_RUN_ID"
+          --run-attempt "$GITHUB_RUN_ATTEMPT"
+          --uv-version "$(uv --version)"
+      - name: Verify the C2 raw evidence bundle
+        id: c2_verify
+        if: always()
+        continue-on-error: true
+        shell: bash
+        run: |
+          if [[ ! -d "$RUN_OUTPUT/evidence" ]]; then
+            echo "No C2 evidence directory was created." >&2
+            exit 1
+          fi
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_a05_positive_add_c2 \
+            verify --evidence "$RUN_OUTPUT/evidence" --repository "$GITHUB_WORKSPACE"
+      - name: Upload C2 freeze, raw archives and verification inventory
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mono-ci-a05-positive-add-c2-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/positive-add-c2-run-${{ github.run_id }}-${{ github.run_attempt }}/evidence/**
+            ${{ runner.temp }}/positive-add-c2-preflight-${{ github.run_id }}-${{ github.run_attempt }}/**
+          if-no-files-found: warn
+          retention-days: 90
+          compression-level: 0
+      - name: Record C2 outcomes
+        if: always()
+        env:
+          EVIDENCE_ROOT: ${{ runner.temp }}/positive-add-c2-run-${{ github.run_id }}-${{ github.run_attempt }}/evidence
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          import os
+          from pathlib import Path
+          path = Path(os.environ["EVIDENCE_ROOT"], "C2_RESULTS.json")
+          print("### ΔA5 C2 TEST_ONLY study")
+          if not path.is_file():
+              print("- No complete results manifest was produced; see the uploaded preflight/partial evidence.")
+          else:
+              data = json.loads(path.read_text())
+              print(f"- Execution status: `{data['execution_status']}`")
+              print(f"- Completed measured repetitions: `{data['measured_repetitions_completed']}/3`")
+              for row in data["runs"]:
+                  if row.get("measured") and row.get("summary"):
+                      summary = row["summary"]
+                      ops = ", ".join(f"{op.get('operation')}:{op.get('target_id')}" for op in summary["operation_plan"])
+                      print(f"- `{summary['execution_id']}`: Ψ `{summary['decision']}`; operations `{ops or 'none'}`; reasons `{', '.join(summary['governance_reasons']) or 'none'}`")
+              print("- Official gates remain: `NO_GO`, `P_ALGORITHM_STATUS=NOT_READY`, `G1=INCOMPLETE`, `G4=NOT_AUTHORIZED`, reference `NOT_READY`, scoring `NOT_EXECUTED`.")
+          PY
+      - name: Require three verified C2 measurements
+        if: always()
+        shell: bash
+        run: |
+          if [[ "${{ steps.c2.outcome }}" != "success" || "${{ steps.c2_verify.outcome }}" != "success" ]]; then
+            echo "The C2 study did not complete and verify successfully; raw evidence was retained when available." >&2
+            exit 1
+          fi
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          path = Path(os.environ["RUN_OUTPUT"], "evidence/C2_RESULTS.json")
+          data = json.loads(path.read_text())
+          if data["execution_status"] != "COMPLETED" or data["measured_repetitions_completed"] != 3:
+              raise SystemExit("C2 did not complete all three measured repetitions.")
+          PY

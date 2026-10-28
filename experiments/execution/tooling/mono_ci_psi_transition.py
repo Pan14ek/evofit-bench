@@ -92,6 +92,7 @@ TRANSITION_SCHEMA_V2 = "mono_ci_psi_transition_run_v2.schema.json"
 TRANSITION_SCHEMA_V3 = "mono_ci_psi_transition_run_v3.schema.json"
 TRANSITION_SCHEMA_V4 = "mono_ci_psi_transition_run_v4.schema.json"
 TRANSITION_SCHEMA_V5 = "mono_ci_psi_transition_run_v5.schema.json"
+TRANSITION_SCHEMA_V6 = "mono_ci_psi_transition_run_v6.schema.json"
 INSPECTION_COVERAGE_SCHEMA = "mono_ci_psi_inspection_coverage_v1.schema.json"
 ADAPTATION_NECESSITY_SCHEMA_V1 = "mono_ci_psi_adaptation_necessity_v1.schema.json"
 ADAPTATION_NECESSITY_SCHEMA_V2 = "mono_ci_psi_adaptation_necessity_v2.schema.json"
@@ -136,6 +137,7 @@ RUNTIME_SCHEMAS = (
     "method_input_v2.schema.json",
     "method_input_v3_candidate.schema.json",
     "mono_ci_psi_positive_add_profile_v1.schema.json",
+    "mono_ci_psi_positive_add_c2_profile_v1.schema.json",
     "p_adaptation_evidence_v1.schema.json",
     "p_adaptation_evidence_v2.schema.json",
     "p_adaptation_trace_v1.schema.json",
@@ -182,8 +184,9 @@ result_path = Path(sys.argv[4]).resolve()
 ledger, ledger_summary = build_source_inventory_fact_ledger(bundle_path)
 trust_context = TestOnlyEvidenceTrustContext(key_path.read_bytes())
 capabilities = json.loads((bundle_path / "fitness/evaluator-capabilities.json").read_text())
-positive_add_input = (
-    isinstance(capabilities, dict) and "positive_add_test_only_profile_v1" in capabilities
+positive_add_input = isinstance(capabilities, dict) and any(
+    key in capabilities
+    for key in ("positive_add_test_only_profile_v1", "positive_add_test_only_profile_v2")
 )
 if positive_add_input:
     from experiments.execution.tooling.mono_ci_psi_a05_positive_add import (
@@ -313,7 +316,7 @@ def run_transition(
                 obligation_catalog_sha256=sha256_file(
                     repo / "fitness/catalog/architectural-obligations.yaml"
                 ),
-                policy_source_revision="MONO_CI_A05_POSITIVE_ADD_TEST_ONLY_V1",
+                policy_source_revision=str(profile["profile_id"]),
             )
         else:
             policy = package_policy_source_v3(
@@ -507,12 +510,20 @@ def run_transition(
         _write_new_file(adaptation_assessment_path, pretty_json_bytes(adaptation_assessment))
         record = {
             "schema_version": (
-                "MONO_CI_PSI_TRANSITION_RUN_V5" if positive_add else TRANSITION_RUN_SCHEMA_VERSION
+                "MONO_CI_PSI_TRANSITION_RUN_V6"
+                if positive_add
+                and profile.get("profile_id") == "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V1"
+                else "MONO_CI_PSI_TRANSITION_RUN_V5"
+                if positive_add
+                else TRANSITION_RUN_SCHEMA_VERSION
             ),
             "execution_id": execution_id,
             "source_revision_sha": _git_text(repo, "rev-parse", "HEAD").strip(),
             "study_id": (
-                "MONO_CI_A05_POSITIVE_ADD_TEST_ONLY_V1"
+                "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_V1"
+                if positive_add
+                and profile.get("profile_id") == "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V1"
+                else "MONO_CI_A05_POSITIVE_ADD_TEST_ONLY_V1"
                 if positive_add
                 else "MONO_CI_B0_PSI_DEVELOPMENT_TECHNICAL_VALIDATION"
             ),
@@ -609,12 +620,18 @@ def run_transition(
         }
         if positive_add:
             record["positive_add_profile"] = {
-                "profile_id": "MONO_CI_A05_POSITIVE_ADD_TEST_ONLY_PROFILE_V1",
+                "profile_id": str(profile["profile_id"]),
                 "path": "provenance/positive-add-study-profile.json",
                 "sha256": sha256_file(root / "provenance/positive-add-study-profile.json"),
                 "classification": "TEST_ONLY_AUTHOR_DECLARED_SCOPED_INPUT",
                 "selected_obligation_id": "AC_DATA_OWNERSHIP",
             }
+            if profile.get("profile_id") == "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V1":
+                record["positive_add_profile"]["selected_obligation_ids"] = [
+                    "AC_DATA_OWNERSHIP",
+                    "AC_MODULE_GRAPH",
+                    "AC_PUBLIC_API",
+                ]
             record["output_checksums"]["provenance/positive-add-study-profile.json"] = record[
                 "positive_add_profile"
             ]["sha256"]
@@ -803,6 +820,7 @@ def verify_transition_run(run_root: Path, *, repository: Path | None = None) -> 
         "MONO_CI_PSI_TRANSITION_RUN_V3",
         "MONO_CI_PSI_TRANSITION_RUN_V4",
         "MONO_CI_PSI_TRANSITION_RUN_V5",
+        "MONO_CI_PSI_TRANSITION_RUN_V6",
     } and (
         AFTER_STATE != "A0_5_MODULE_DATA_OWNERSHIP"
         or (repository is not None and REPOSITORY_ROOT.resolve() != repository.resolve())
@@ -828,6 +846,7 @@ def verify_transition_run(run_root: Path, *, repository: Path | None = None) -> 
         "MONO_CI_PSI_TRANSITION_RUN_V3": TRANSITION_SCHEMA_V3,
         "MONO_CI_PSI_TRANSITION_RUN_V4": TRANSITION_SCHEMA_V4,
         "MONO_CI_PSI_TRANSITION_RUN_V5": TRANSITION_SCHEMA_V5,
+        "MONO_CI_PSI_TRANSITION_RUN_V6": TRANSITION_SCHEMA_V6,
     }.get(record.get("schema_version"))
     if schema_name is None:
         raise ContractValidationError("MONO_CI_PSI_TRANSITION_SCHEMA_UNSUPPORTED")
@@ -874,13 +893,17 @@ def verify_transition_run(run_root: Path, *, repository: Path | None = None) -> 
         "MONO_CI_PSI_TRANSITION_RUN_V3",
         "MONO_CI_PSI_TRANSITION_RUN_V4",
         "MONO_CI_PSI_TRANSITION_RUN_V5",
+        "MONO_CI_PSI_TRANSITION_RUN_V6",
     }:
         _verify_adaptation_necessity_report(root, record, raw)
     if record["schema_version"] == "MONO_CI_PSI_TRANSITION_RUN_V3":
         _verify_a05_experiment_extension(root, record)
     elif record["schema_version"] == "MONO_CI_PSI_TRANSITION_RUN_V4":
         _verify_a05_experiment_extension_v2(root, record, repository or REPOSITORY_ROOT)
-    elif record["schema_version"] == "MONO_CI_PSI_TRANSITION_RUN_V5":
+    elif record["schema_version"] in {
+        "MONO_CI_PSI_TRANSITION_RUN_V5",
+        "MONO_CI_PSI_TRANSITION_RUN_V6",
+    }:
         _verify_a05_experiment_extension_v2(root, record, repository or REPOSITORY_ROOT)
     if (
         record["other_arms_or_case_outputs_used"] is not False
@@ -984,6 +1007,35 @@ def verify_transition_run(run_root: Path, *, repository: Path | None = None) -> 
         ):
             raise ContractValidationError(
                 "MONO_CI_PSI_TRANSITION_POSITIVE_PROFILE_BINDING_MISMATCH"
+            )
+    elif record["schema_version"] == "MONO_CI_PSI_TRANSITION_RUN_V6":
+        selected = policy_registry.get("policies", [])
+        profile_path = root / record["positive_add_profile"]["path"]
+        profile = (
+            json.loads(profile_path.read_text(encoding="utf-8")) if profile_path.is_file() else {}
+        )
+        expected_obligations = {"AC_DATA_OWNERSHIP", "AC_MODULE_GRAPH", "AC_PUBLIC_API"}
+        observed_obligations = {
+            str(obligation_id)
+            for row in selected
+            if isinstance(row, dict)
+            for obligation_id in row.get("obligation_ids", [])
+        }
+        if (
+            policy_registry.get("closure") != "CLAIMED_CLOSED"
+            or len(selected) != 3
+            or observed_obligations != expected_obligations
+            or any(row.get("normative_status") != "APPROVED" for row in selected)
+            or record["policy_source"].get("authority_status")
+            != "TEST_ONLY_AUTHOR_DECLARED_SCOPED_PROFILE"
+            or profile.get("profile_id") != record["positive_add_profile"].get("profile_id")
+            or record["positive_add_profile"].get("selected_obligation_ids")
+            != sorted(expected_obligations)
+            or not profile_path.is_file()
+            or sha256_file(profile_path) != record["positive_add_profile"].get("sha256")
+        ):
+            raise ContractValidationError(
+                "MONO_CI_PSI_TRANSITION_TEST_ONLY_C2_POLICY_SCOPE_INVALID"
             )
     elif policy_registry.get("closure") != "OPEN" or any(
         row.get("normative_status") != "DRAFT"
@@ -3271,7 +3323,10 @@ def _verify_evidence_backed_run(
     manifest: dict[str, Any],
     method_result: dict[str, Any],
 ) -> None:
-    positive_add = record.get("schema_version") == "MONO_CI_PSI_TRANSITION_RUN_V5"
+    positive_add = record.get("schema_version") in {
+        "MONO_CI_PSI_TRANSITION_RUN_V5",
+        "MONO_CI_PSI_TRANSITION_RUN_V6",
+    }
     positive_context = None
     if positive_add:
         from experiments.execution.tooling.mono_ci_psi_a05_positive_add import (

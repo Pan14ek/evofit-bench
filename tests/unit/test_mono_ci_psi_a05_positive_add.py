@@ -332,7 +332,10 @@ def test_v3_schema_rejects_positive_add_file_roles() -> None:
 
 
 def test_isolated_runtime_selects_the_profile_builder_from_v3_capabilities() -> None:
-    assert '"positive_add_test_only_profile_v1" in capabilities' in RUNTIME_SOURCE
+    assert (
+        '"positive_add_test_only_profile_v1", "positive_add_test_only_profile_v2"' in RUNTIME_SOURCE
+    )
+    assert '"positive_add_test_only_profile_v1" in capabilities' not in RUNTIME_SOURCE
     assert "evidence/POSITIVE_ADD_PROFILE_V1.json" not in RUNTIME_SOURCE
 
 
