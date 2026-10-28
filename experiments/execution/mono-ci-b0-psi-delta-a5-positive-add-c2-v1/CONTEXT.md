@@ -11,11 +11,12 @@ Define a second TEST_ONLY A0.4→A0.5 input condition that makes the existing `A
 - `PROTOCOL_C2_V1.md` and `.json` — frozen C2 scope, runtime, cost limits, repetition count, and stop behavior.
 - `inputs/POSITIVE_ADD_C2_PROFILE_V1.json` — author-declared applicability plus the pinned evidence basis for two bounded retain controls and one ADD template.
 - `TRACEABILITY_C2_V1.md` — C2 requirement-to-contract, test, and archive verification map.
-- `RESULTS_C2_UK.md` — post-run Ukrainian handoff, populated only after verified C2 archives are available.
+- `RESULTS_C2_UK.md` — completed-study handoff, populated only after verified C2 transition archives are available.
+- `POST_RUN_ASSESSMENT_UK.md` — C2 V1 warmup-only failure assessment; it records raw artifact verification and does not claim a completed C2 result.
 
 ## Boundaries
 
-C2 is TEST_ONLY and author-declared. It does not make the pilot policy authoritative, convert remaining UNKNOWN obligations or invariants, modify C0/C1 evidence, change Method Ψ, or advance DA01/G1/G4. C1's recovered archive remains immutable. C2 is one transition with one warmup and three technical repetitions; it cannot support statistical or generalized effectiveness claims.
+C2 is TEST_ONLY and author-declared. It does not make the pilot policy authoritative, convert remaining UNKNOWN obligations or invariants, modify C0/C1 evidence, change Method Ψ, or advance DA01/G1/G4. C1's recovered archive remains immutable. C2 V1 stopped after one warmup when its bounded applicability closure remained UNKNOWN and V6/results receipt schemas rejected the output; no measured repetitions or verified transition archive were produced. The partial raw evidence and exact blockers are recorded in `POST_RUN_ASSESSMENT_UK.md`. A future C2 condition requires a versioned solution that preserves UNKNOWN for obligations outside its bounded scope. A completed single-transition study still cannot support statistical or generalized effectiveness claims.
 
 ## Validation
 
