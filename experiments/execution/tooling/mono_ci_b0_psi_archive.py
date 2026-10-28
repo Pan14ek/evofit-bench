@@ -32,6 +32,7 @@ TRANSITION_ARCHIVE_SCHEMA_V1 = "mono_ci_psi_transition_archive_v1.schema.json"
 TRANSITION_ARCHIVE_SCHEMA_V2 = "mono_ci_psi_transition_archive_v2.schema.json"
 TRANSITION_ARCHIVE_SCHEMA_V3 = "mono_ci_psi_transition_archive_v3.schema.json"
 TRANSITION_ARCHIVE_SCHEMA_V4 = "mono_ci_psi_transition_archive_v4.schema.json"
+TRANSITION_ARCHIVE_SCHEMA_V5 = "mono_ci_psi_transition_archive_v5.schema.json"
 ARCHIVE_MANIFEST_NAME = "ARCHIVE_MANIFEST.json"
 WORKFLOW_URL_PATTERN = re.compile(
     r"^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/actions/runs/[0-9]+$"
@@ -216,15 +217,22 @@ def pack_psi_transition_archive(
         }
         for relative in _run_member_paths(run_directory)
     ]
-    is_a05_v4 = run.get("schema_version") == "MONO_CI_PSI_TRANSITION_RUN_V4"
+    is_a05_v5 = run.get("schema_version") == "MONO_CI_PSI_TRANSITION_RUN_V5"
+    is_a05_v4 = run.get("schema_version") in {
+        "MONO_CI_PSI_TRANSITION_RUN_V4",
+        "MONO_CI_PSI_TRANSITION_RUN_V5",
+    }
     is_a05 = run.get("schema_version") in {
         "MONO_CI_PSI_TRANSITION_RUN_V3",
         "MONO_CI_PSI_TRANSITION_RUN_V4",
+        "MONO_CI_PSI_TRANSITION_RUN_V5",
     }
     evidence_binding = _transition_evidence_binding(run, run_directory)
     manifest = {
         "schema_version": (
-            "MONO_CI_PSI_TRANSITION_ARCHIVE_V4"
+            "MONO_CI_PSI_TRANSITION_ARCHIVE_V5"
+            if is_a05_v5
+            else "MONO_CI_PSI_TRANSITION_ARCHIVE_V4"
             if is_a05_v4
             else "MONO_CI_PSI_TRANSITION_ARCHIVE_V3"
             if is_a05
@@ -263,6 +271,12 @@ def pack_psi_transition_archive(
                     if not is_a05
                     else "experiments.execution.tooling.mono_ci_psi_a05 --repository <checkout> "
                     "--output <new-path> --execution-id DEV_PSI_TRANSITION_A05_<unique>"
+                    + (
+                        " --positive-add-profile "
+                        "experiments/execution/mono-ci-b0-psi-delta-a5-positive-add-v1/inputs/POSITIVE_ADD_PROFILE_V1.json"
+                        if is_a05_v5
+                        else ""
+                    )
                 )
             ),
             *(
@@ -280,7 +294,9 @@ def pack_psi_transition_archive(
     if is_a05_v4:
         manifest["execution_origin"] = execution_origin
     validate_payload(
-        TRANSITION_ARCHIVE_SCHEMA_V4
+        TRANSITION_ARCHIVE_SCHEMA_V5
+        if is_a05_v5
+        else TRANSITION_ARCHIVE_SCHEMA_V4
         if is_a05_v4
         else TRANSITION_ARCHIVE_SCHEMA_V3
         if is_a05
@@ -348,7 +364,11 @@ def verify_psi_transition_archive(
             manifest = _decode_manifest(zipped.read(ARCHIVE_MANIFEST_NAME))
             validate_payload(_transition_archive_schema(manifest), manifest)
             if (
-                manifest.get("schema_version") == "MONO_CI_PSI_TRANSITION_ARCHIVE_V4"
+                manifest.get("schema_version")
+                in {
+                    "MONO_CI_PSI_TRANSITION_ARCHIVE_V4",
+                    "MONO_CI_PSI_TRANSITION_ARCHIVE_V5",
+                }
                 and repository is None
             ):
                 raise ContractValidationError(
@@ -412,7 +432,10 @@ def _transition_evidence_binding(run: dict[str, Any], run_root: Path) -> dict[st
         "adaptation_sidecar_sha256": run["adaptation_evidence"]["sha256"],
         "adaptation_trust_scope": run["adaptation_evidence"]["trust_scope"],
     }
-    if run.get("schema_version") == "MONO_CI_PSI_TRANSITION_RUN_V4":
+    if run.get("schema_version") in {
+        "MONO_CI_PSI_TRANSITION_RUN_V4",
+        "MONO_CI_PSI_TRANSITION_RUN_V5",
+    }:
         extension_ref = run["a05_extension"]
         extension = json.loads((run_root / extension_ref["path"]).read_text(encoding="utf-8"))
         transition = extension["transition"]
@@ -424,6 +447,8 @@ def _transition_evidence_binding(run: dict[str, Any], run_root: Path) -> dict[st
                 "probe_source_sha256": transition["probe_source_sha256"],
             }
         )
+    if run.get("schema_version") == "MONO_CI_PSI_TRANSITION_RUN_V5":
+        evidence["positive_add_profile_sha256"] = run["positive_add_profile"]["sha256"]
     return evidence
 
 
@@ -437,6 +462,8 @@ def _transition_archive_schema(manifest: dict[str, Any]) -> str:
         return TRANSITION_ARCHIVE_SCHEMA_V3
     if version == "MONO_CI_PSI_TRANSITION_ARCHIVE_V4":
         return TRANSITION_ARCHIVE_SCHEMA_V4
+    if version == "MONO_CI_PSI_TRANSITION_ARCHIVE_V5":
+        return TRANSITION_ARCHIVE_SCHEMA_V5
     raise ContractValidationError("MONO_CI_PSI_TRANSITION_ARCHIVE_SCHEMA_UNSUPPORTED")
 
 
@@ -458,6 +485,7 @@ def _verify_transition_archive_manifest_binding(
                 "MONO_CI_PSI_TRANSITION_ARCHIVE_V2",
                 "MONO_CI_PSI_TRANSITION_ARCHIVE_V3",
                 "MONO_CI_PSI_TRANSITION_ARCHIVE_V4",
+                "MONO_CI_PSI_TRANSITION_ARCHIVE_V5",
             }
             and manifest.get("evidence") != _transition_evidence_binding(run, run_root)
         )

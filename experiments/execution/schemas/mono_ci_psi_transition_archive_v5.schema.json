@@ -1,0 +1,420 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_psi_transition_archive_v5.schema.json",
+  "title": "TEST_ONLY scoped positive ADD A0.4 to A0.5 Method P DEVELOPMENT archive",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "archive_purpose",
+    "execution_id",
+    "workflow",
+    "source_revision_sha",
+    "execution_record_sha256",
+    "run_inventory_sha256",
+    "structural_manifest_path",
+    "baseline",
+    "authorization_boundary",
+    "transition",
+    "evidence",
+    "environment",
+    "reproduction_commands",
+    "members",
+    "execution_origin"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "MONO_CI_PSI_TRANSITION_ARCHIVE_V5"
+    },
+    "archive_purpose": {
+      "const": "DEVELOPMENT_METHOD_RAW_EXECUTION_ONLY"
+    },
+    "execution_id": {
+      "type": "string",
+      "pattern": "^DEV_PSI_TRANSITION_[A-Za-z0-9_-]{1,48}$"
+    },
+    "workflow": {
+      "$ref": "#/$defs/workflow"
+    },
+    "source_revision_sha": {
+      "$ref": "#/$defs/sha1"
+    },
+    "execution_record_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "run_inventory_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "structural_manifest_path": {
+      "const": "architecture/states/A0_5_MODULE_DATA_OWNERSHIP.yaml"
+    },
+    "baseline": {
+      "$ref": "#/$defs/baseline"
+    },
+    "authorization_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "study_readiness",
+        "measurement_status",
+        "p_algorithm_status",
+        "g1",
+        "g4",
+        "reference_gate",
+        "psi_status",
+        "psi_decision",
+        "scoring"
+      ],
+      "properties": {
+        "study_readiness": {
+          "const": "NO_GO"
+        },
+        "measurement_status": {
+          "const": "NOT_EXECUTED"
+        },
+        "p_algorithm_status": {
+          "const": "NOT_READY"
+        },
+        "g1": {
+          "const": "INCOMPLETE"
+        },
+        "g4": {
+          "const": "NOT_AUTHORIZED"
+        },
+        "reference_gate": {
+          "const": "NOT_READY"
+        },
+        "psi_status": {
+          "const": "DEVELOPMENT_METHOD_EXECUTED"
+        },
+        "psi_decision": {
+          "enum": [
+            "HOLD",
+            "REJECT",
+            "ACCEPT"
+          ]
+        },
+        "scoring": {
+          "const": "NOT_EXECUTED"
+        }
+      }
+    },
+    "transition": {
+      "$ref": "#/$defs/transition"
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input_bundle_sha256",
+        "method_implementation_sha256",
+        "evaluator_source_sha256",
+        "adaptation_sidecar_sha256",
+        "adaptation_trust_scope",
+        "a05_extension_sha256",
+        "probe_manifest_sha256",
+        "probe_patch_sha256",
+        "probe_source_sha256",
+        "positive_add_profile_sha256"
+      ],
+      "properties": {
+        "input_bundle_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "method_implementation_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "evaluator_source_sha256": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "adaptation_sidecar_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "adaptation_trust_scope": {
+          "const": "TEST_ONLY"
+        },
+        "a05_extension_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "probe_manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "probe_patch_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "probe_source_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "positive_add_profile_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "environment": {
+      "$ref": "#/$defs/environment"
+    },
+    "reproduction_commands": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "members": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/member"
+      }
+    },
+    "execution_origin": {
+      "enum": [
+        "HOSTED_CI",
+        "LOCAL"
+      ]
+    }
+  },
+  "$defs": {
+    "sha1": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_url",
+        "artifact_name",
+        "retention_days"
+      ],
+      "properties": {
+        "run_url": {
+          "anyOf": [
+            {
+              "const": "LOCAL_EXECUTION_NO_WORKFLOW"
+            },
+            {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https://github\\.com/.+/actions/runs/[0-9]+$"
+            }
+          ]
+        },
+        "artifact_name": {
+          "type": "string",
+          "pattern": "^mono-ci-(?:psi-transition|psi-a05)-[A-Za-z0-9_-]+$"
+        },
+        "retention_days": {
+          "enum": [
+            0,
+            90
+          ]
+        }
+      }
+    },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "configuration_id",
+        "configuration_sha256",
+        "identity_status",
+        "approval_status",
+        "method_input_authorized"
+      ],
+      "properties": {
+        "configuration_id": {
+          "const": "MONO_CI_RECONSTRUCTED_B0_A04_V1"
+        },
+        "configuration_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "identity_status": {
+          "const": "PROSPECTIVE_RECONSTRUCTION_NOT_HISTORICAL"
+        },
+        "approval_status": {
+          "const": "NOT_APPROVED"
+        },
+        "method_input_authorized": {
+          "const": false
+        }
+      }
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "before_state",
+        "after_state",
+        "before_commit_sha",
+        "after_commit_sha",
+        "before_repository_tree_sha",
+        "after_repository_tree_sha",
+        "before_application_tree_sha",
+        "after_application_tree_sha",
+        "before_state_manifest_sha256",
+        "after_state_manifest_sha256",
+        "state_manifest_path"
+      ],
+      "properties": {
+        "before_state": {
+          "const": "A0_4_REPORT_QUERY_PORT"
+        },
+        "after_state": {
+          "const": "A0_5_MODULE_DATA_OWNERSHIP"
+        },
+        "before_commit_sha": {
+          "$ref": "#/$defs/sha1"
+        },
+        "after_commit_sha": {
+          "$ref": "#/$defs/sha1"
+        },
+        "before_repository_tree_sha": {
+          "$ref": "#/$defs/sha1"
+        },
+        "after_repository_tree_sha": {
+          "$ref": "#/$defs/sha1"
+        },
+        "before_application_tree_sha": {
+          "$ref": "#/$defs/sha1"
+        },
+        "after_application_tree_sha": {
+          "$ref": "#/$defs/sha1"
+        },
+        "before_state_manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "after_state_manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "state_manifest_path": {
+          "const": "provenance/transition-state-manifests.json"
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "python_version",
+        "operating_system",
+        "architecture",
+        "uv_version"
+      ],
+      "properties": {
+        "python_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "operating_system": {
+          "type": "string",
+          "minLength": 1
+        },
+        "architecture": {
+          "type": "string",
+          "minLength": 1
+        },
+        "uv_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "size_bytes",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.git(?:/|$))(?!.*(?:scorer|scoring|oracle|reference|expected_outputs|ground_truth|groundtruth|eval01|eval02|evaluator_control_expectations)(?:/|$)).+$"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "execution_origin": {
+            "const": "LOCAL"
+          }
+        },
+        "required": [
+          "execution_origin"
+        ]
+      },
+      "then": {
+        "properties": {
+          "workflow": {
+            "properties": {
+              "run_url": {
+                "const": "LOCAL_EXECUTION_NO_WORKFLOW"
+              },
+              "artifact_name": {
+                "pattern": "^mono-ci-psi-a05-local-[A-Za-z0-9_-]{1,64}$"
+              },
+              "retention_days": {
+                "const": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "execution_origin": {
+            "const": "HOSTED_CI"
+          }
+        },
+        "required": [
+          "execution_origin"
+        ]
+      },
+      "then": {
+        "properties": {
+          "workflow": {
+            "properties": {
+              "run_url": {
+                "type": "string",
+                "format": "uri",
+                "pattern": "^https://github\\.com/.+/actions/runs/[0-9]+$"
+              },
+              "retention_days": {
+                "const": 90
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

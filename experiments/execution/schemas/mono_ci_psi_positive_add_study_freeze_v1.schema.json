@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_psi_positive_add_study_freeze_v1.schema.json",
+  "title": "Pre-run freeze for the TEST_ONLY A0.4 to A0.5 positive ADD study",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "study_id", "classification", "implementation_commit",
+    "protocol_sha256", "profile_sha256", "control", "source_identities",
+    "baseline_sha256", "evaluator", "docker", "preflight_sha256", "host_identity",
+    "uv_version", "repetitions", "budget", "official_boundary"
+  ],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_A05_POSITIVE_ADD_STUDY_FREEZE_V1"},
+    "study_id": {"const": "MONO_CI_A05_POSITIVE_ADD_TEST_ONLY_V1"},
+    "classification": {"const": "PRE_RUN_FREEZE_TEST_ONLY_AUTHOR_DECLARED_DEVELOPMENT"},
+    "implementation_commit": {"$ref": "#/$defs/sha1"},
+    "protocol_sha256": {"$ref": "#/$defs/sha256"},
+    "profile_sha256": {"$ref": "#/$defs/sha256"},
+    "control": {
+      "type": "object", "additionalProperties": false,
+      "required": ["outer_archive_sha256", "inner_archive_sha256", "source_revision_sha", "negative_probe_source_revision_sha", "timing_csv_sha256", "release_url"],
+      "properties": {
+        "outer_archive_sha256": {"const": "ef44cf280807e414b4027d846a8db05de74b555c60803500a97d074b666db0d2"},
+        "inner_archive_sha256": {"const": "76024640bf1a5bfc8771f91a7c9c113c7486f44e28f6290b56dafb32867ae890"},
+        "source_revision_sha": {"const": "a349d19fb89b577e6799e9736ed4ce0acc572166"},
+        "negative_probe_source_revision_sha": {"const": "5ace86095bda794c9576047c80b9267e70cd0f26"},
+        "timing_csv_sha256": {"const": "2bbff33702491cd0238271fa4c718316378586f5f7eb6af0271cf7baef25e7a7"},
+        "release_url": {"const": "https://github.com/Pan14ek/evofit-bench/releases/tag/mono-ci-psi-a05-owner-authorized-v2-40579333932-1"}
+      }
+    },
+    "source_identities": {
+      "type": "object", "additionalProperties": false,
+      "required": ["before_commit_sha", "after_commit_sha", "before_repository_tree_sha", "after_repository_tree_sha", "before_application_tree_sha", "after_application_tree_sha", "before_state_manifest_sha256", "after_state_manifest_sha256"],
+      "properties": {
+        "before_commit_sha": {"$ref": "#/$defs/sha1"},
+        "after_commit_sha": {"$ref": "#/$defs/sha1"},
+        "before_repository_tree_sha": {"$ref": "#/$defs/sha1"},
+        "after_repository_tree_sha": {"$ref": "#/$defs/sha1"},
+        "before_application_tree_sha": {"$ref": "#/$defs/sha1"},
+        "after_application_tree_sha": {"$ref": "#/$defs/sha1"},
+        "before_state_manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "after_state_manifest_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "baseline_sha256": {"$ref": "#/$defs/sha256"},
+    "evaluator": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "source_manifest_sha256", "configuration_sha256", "source_manifest_sha256_is_bound_to_cost", "source_files", "source_manifest_bytes_sha256"],
+      "properties": {
+        "id": {"const": "AC_DATA_OWNERSHIP"},
+        "source_manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "configuration_sha256": {"$ref": "#/$defs/sha256"},
+        "source_manifest_sha256_is_bound_to_cost": {"const": true},
+        "source_manifest_bytes_sha256": {"$ref": "#/$defs/sha256"},
+        "source_files": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/sourceFile"}}
+      }
+    },
+    "docker": {
+      "type": "object", "additionalProperties": false,
+      "required": ["image", "platform", "network", "method_input_mount", "writable_output_mounts"],
+      "properties": {
+        "image": {"const": "python:3.12.15-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70"},
+        "platform": {"const": "linux/amd64"},
+        "network": {"const": "none"},
+        "method_input_mount": {"const": "read-only"},
+        "writable_output_mounts": {"const": 1}
+      }
+    },
+    "preflight_sha256": {"$ref": "#/$defs/sha256"},
+    "host_identity": {"type": "object", "minProperties": 1},
+    "uv_version": {"type": "string", "minLength": 1},
+    "repetitions": {
+      "type": "object", "additionalProperties": false,
+      "required": ["warmup", "measured"],
+      "properties": {"warmup": {"const": 1}, "measured": {"const": 3}}
+    },
+    "budget": {
+      "type": "object", "additionalProperties": false,
+      "required": ["max_incremental_cost_ms", "max_search_nodes", "unavailable_or_exceeded_behavior"],
+      "properties": {
+        "max_incremental_cost_ms": {"const": 225},
+        "max_search_nodes": {"const": 2},
+        "unavailable_or_exceeded_behavior": {"const": "HOLD_AND_DO_NOT_SELECT_TEMPLATE"}
+      }
+    },
+    "official_boundary": {"$ref": "#/$defs/gates"}
+  },
+  "$defs": {
+    "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "sourceFile": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {"path": {"type": "string", "minLength": 1}, "sha256": {"$ref": "#/$defs/sha256"}}
+    },
+    "gates": {
+      "type": "object", "additionalProperties": false,
+      "required": ["study_readiness", "measurement_status", "P_ALGORITHM_STATUS", "G1", "G4", "reference", "scoring"],
+      "properties": {
+        "study_readiness": {"const": "NO_GO"},
+        "measurement_status": {"const": "NOT_EXECUTED"},
+        "P_ALGORITHM_STATUS": {"const": "NOT_READY"},
+        "G1": {"const": "INCOMPLETE"},
+        "G4": {"const": "NOT_AUTHORIZED"},
+        "reference": {"const": "NOT_READY"},
+        "scoring": {"const": "NOT_EXECUTED"}
+      }
+    }
+  }
+}

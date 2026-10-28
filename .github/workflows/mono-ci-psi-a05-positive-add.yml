@@ -1,0 +1,194 @@
+name: MONO CI ΔA5 controlled TEST_ONLY positive ADD study
+
+on:
+  workflow_call:
+
+permissions:
+  contents: write
+
+jobs:
+  positive-add-study:
+    name: Freeze, run and archive the bounded C1 study
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: evofit_test
+          POSTGRES_USER: evofit
+          POSTGRES_PASSWORD: evofit
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U evofit -d evofit_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      ARCHITECTURE_STAGE: A0_5_MODULE_DATA_OWNERSHIP
+      DATABASE_URL: postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test
+      TEST_DATABASE_URL: postgresql+psycopg://evofit:evofit@localhost:5432/evofit_test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install frozen dependencies
+        run: uv sync --frozen --extra dev
+      - name: Install the isolated test runner dependency
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bubblewrap
+      - name: Run positive ADD profile regressions
+        run: make test-mono-ci-psi-a05-positive-add
+      - name: Run existing A0.5 and evaluator regressions
+        run: make test-mono-ci-psi-a05
+      - name: Run development quality gates
+        run: make development-quality
+      - name: Set unique evidence paths
+        shell: bash
+        run: |
+          echo "CONTROL_ROOT=${RUNNER_TEMP}/positive-add-c0-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "PREFLIGHT_ROOT=${RUNNER_TEMP}/positive-add-preflight-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "RUN_OUTPUT=${RUNNER_TEMP}/positive-add-run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "ARCHIVE_PATH=${RUNNER_TEMP}/mono-ci-a05-positive-add-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.zip" >> "$GITHUB_ENV"
+          echo "VERIFY_OUTPUT=${RUNNER_TEMP}/positive-add-verified-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "RELEASE_TAG=mono-ci-a05-positive-add-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "RELEASE_ROOT=${RUNNER_TEMP}/positive-add-release-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "RELEASE_VERIFY=${RUNNER_TEMP}/positive-add-release-verified-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "WORKFLOW_RUN_URL=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >> "$GITHUB_ENV"
+      - name: Download the pinned V2 C0 release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          mkdir -p "$CONTROL_ROOT"
+          gh release download mono-ci-psi-a05-owner-authorized-v2-40579333932-1 \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "mono-ci-psi-a05-owner-authorized-v2-40579333932-1.zip" \
+            --pattern "mono-ci-psi-a05-owner-authorized-v2-40579333932-1.zip.sha256" \
+            --dir "$CONTROL_ROOT"
+      - name: Verify and replay the pinned C0 archive
+        run: >-
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_a05_positive_add_study
+          verify-control --repository "$GITHUB_WORKSPACE" --release-root "$CONTROL_ROOT"
+      - name: Pull the digest-pinned isolated method runtime
+        run: docker pull --platform linux/amd64 python:3.12.15-slim-bookworm@sha256:6a0e06f5ba0b373d051aabd3fffb9b873f27f9a2a3a14bcbe37dee6f0e3bbc70
+      - name: Run same-runner Docker isolation preflight
+        run: >-
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_a05_positive_add_study
+          preflight --repository "$GITHUB_WORKSPACE" --output "$PREFLIGHT_ROOT"
+      - name: Execute one warmup and three measured C1 repetitions
+        id: study
+        continue-on-error: true
+        run: >-
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_a05_positive_add_study
+          run --repository "$GITHUB_WORKSPACE"
+          --output "$RUN_OUTPUT"
+          --archive "$ARCHIVE_PATH"
+          --release-root "$CONTROL_ROOT"
+          --preflight "$PREFLIGHT_ROOT"
+          --workflow-run-url "$WORKFLOW_RUN_URL"
+          --run-id "$GITHUB_RUN_ID"
+          --run-attempt "$GITHUB_RUN_ATTEMPT"
+          --uv-version "$(uv --version)"
+      - name: Verify the generated archive before publication
+        id: bundle_verify
+        if: always()
+        continue-on-error: true
+        run: >-
+          test -f "$ARCHIVE_PATH" &&
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_a05_positive_add_study
+          verify-bundle --archive "$ARCHIVE_PATH" --repository "$GITHUB_WORKSPACE"
+      - name: Upload the archive and retained raw evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mono-ci-a05-positive-add-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/mono-ci-a05-positive-add-${{ github.run_id }}-${{ github.run_attempt }}.zip
+            ${{ runner.temp }}/mono-ci-a05-positive-add-${{ github.run_id }}-${{ github.run_attempt }}.zip.sha256
+            ${{ runner.temp }}/positive-add-run-${{ github.run_id }}-${{ github.run_attempt }}/evidence/**
+            ${{ runner.temp }}/positive-add-preflight-${{ github.run_id }}-${{ github.run_attempt }}/**
+          if-no-files-found: warn
+          retention-days: 90
+          compression-level: 0
+      - name: Create prerelease with verified study archive
+        id: release
+        if: steps.bundle_verify.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          archive_sha="$(sha256sum "$ARCHIVE_PATH" | cut -d ' ' -f 1)"
+          notes_file="${RUNNER_TEMP}/${RELEASE_TAG}-notes.md"
+          cat > "$notes_file" <<EOF
+          Controlled TEST_ONLY positive ADD study for ΔA5.
+
+          - Workflow run: ${WORKFLOW_RUN_URL}
+          - Source revision: ${GITHUB_SHA}
+          - Archive SHA-256: ${archive_sha}
+          - Scope: one A0.4→A0.5 transition; three measured repetitions plus one warmup
+          - Official boundary: NO_GO; P_ALGORITHM_STATUS=NOT_READY; G1=INCOMPLETE; G4=NOT_AUTHORIZED; reference=NOT_READY; scoring=NOT_EXECUTED
+          EOF
+          gh release create "$RELEASE_TAG" "$ARCHIVE_PATH" "$ARCHIVE_PATH.sha256" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "ΔA5 TEST_ONLY positive ADD ${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --notes-file "$notes_file" \
+            --prerelease
+      - name: Download and verify release readback
+        id: release_readback
+        if: steps.release.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          mkdir -p "$RELEASE_ROOT"
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --dir "$RELEASE_ROOT"
+          archive_name="$(basename "$ARCHIVE_PATH")"
+          (cd "$RELEASE_ROOT" && sha256sum --check "${archive_name}.sha256")
+          uv run --frozen --extra dev python -m experiments.execution.tooling.mono_ci_psi_a05_positive_add_study \
+            verify-bundle \
+            --archive "${RELEASE_ROOT}/${archive_name}" \
+            --repository "$GITHUB_WORKSPACE" \
+            --extract-to "$RELEASE_VERIFY"
+      - name: Record study result and preserve actual method decision
+        if: steps.release_readback.outcome == 'success'
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          import os
+          from pathlib import Path
+          data = json.loads(Path(os.environ["RELEASE_VERIFY"], "study-execution.json").read_text())
+          measured = [row["summary"] for row in data["runs"] if row["measured"] and row["summary"]]
+          print("### ΔA5 TEST_ONLY positive ADD study")
+          print(f"- Execution status: `{data['execution_status']}`")
+          print(f"- Completed measured repetitions: `{data['measured_repetitions_completed']}/3`")
+          print("- Ψ decisions: " + ", ".join(f"`{row['execution_id']}: {row['decision']}`" for row in measured))
+          print(f"- Release: {os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}/releases/tag/{os.environ['RELEASE_TAG']}")
+          print("- Official gates remain: `NO_GO`, `P_ALGORITHM_STATUS=NOT_READY`, `G1=INCOMPLETE`, `G4=NOT_AUTHORIZED`, reference `NOT_READY`, scoring `NOT_EXECUTED`.")
+          PY
+      - name: Require a complete three-repetition study
+        if: always()
+        shell: bash
+        run: |
+          if [[ "${{ steps.study.outcome }}" != "success" || "${{ steps.bundle_verify.outcome }}" != "success" || "${{ steps.release.outcome }}" != "success" || "${{ steps.release_readback.outcome }}" != "success" ]]; then
+            echo "The verified study archive was not published and read back successfully." >&2
+            exit 1
+          fi
+          python - <<'PY'
+          import os
+          import json
+          from pathlib import Path
+          data = json.loads(Path(os.environ["RELEASE_VERIFY"], "study-execution.json").read_text())
+          if data["execution_status"] != "COMPLETED" or data["measured_repetitions_completed"] != 3:
+              raise SystemExit("The verified archive was released, but the study did not complete all three measured repetitions.")
+          PY

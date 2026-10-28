@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_psi_positive_add_study_execution_v1.schema.json",
+  "title": "TEST_ONLY positive ADD ΔA5 hosted execution receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "study_id", "classification", "workflow", "implementation_commit", "freeze_sha256", "protocol_sha256", "profile_sha256", "preflight_sha256", "control", "execution_status", "warmup_status", "measured_repetitions_completed", "runs", "official_boundary"],
+  "properties": {
+    "schema_version": {"const": "MONO_CI_A05_POSITIVE_ADD_STUDY_EXECUTION_V1"},
+    "study_id": {"const": "MONO_CI_A05_POSITIVE_ADD_TEST_ONLY_V1"},
+    "classification": {"const": "RESEARCH_OWNER_AUTHORIZED_EXPLORATORY_DEVELOPMENT_TEST_ONLY_INPUTS"},
+    "workflow": {
+      "type": "object", "additionalProperties": false,
+      "required": ["run_id", "run_attempt", "run_url"],
+      "properties": {
+        "run_id": {"type": "string", "pattern": "^[0-9]+$"},
+        "run_attempt": {"type": "string", "pattern": "^[0-9]+$"},
+        "run_url": {"type": "string", "format": "uri", "pattern": "^https://github\\.com/.+/actions/runs/[0-9]+$"}
+      }
+    },
+    "implementation_commit": {"$ref": "#/$defs/sha1"},
+    "freeze_sha256": {"$ref": "#/$defs/sha256"},
+    "protocol_sha256": {"$ref": "#/$defs/sha256"},
+    "profile_sha256": {"$ref": "#/$defs/sha256"},
+    "preflight_sha256": {"$ref": "#/$defs/sha256"},
+    "control": {
+      "type": "object", "additionalProperties": false,
+      "required": ["study_id", "release_url", "outer_archive_sha256", "inner_transition_archive_sha256", "source_revision_sha", "negative_probe_source_revision_sha", "execution_id", "decision", "operation_plan", "candidate_state", "timing_csv_sha256", "historical_owner_calls", "historical_max_process_duration_ms", "inner_archive_verification"],
+      "properties": {
+        "study_id": {"const": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V2"},
+        "release_url": {"type": "string", "format": "uri"},
+        "outer_archive_sha256": {"$ref": "#/$defs/sha256"},
+        "inner_transition_archive_sha256": {"$ref": "#/$defs/sha256"},
+        "source_revision_sha": {"$ref": "#/$defs/sha1"},
+        "negative_probe_source_revision_sha": {"const": "5ace86095bda794c9576047c80b9267e70cd0f26"},
+        "execution_id": {"type": "string", "minLength": 1},
+        "decision": {"const": "HOLD"},
+        "operation_plan": {"const": []},
+        "candidate_state": {"const": "MATERIALIZED_UNAPPLIED"},
+        "timing_csv_sha256": {"$ref": "#/$defs/sha256"},
+        "historical_owner_calls": {"const": 20},
+        "historical_max_process_duration_ms": {"const": 177.215},
+        "inner_archive_verification": {"const": "PASS"}
+      }
+    },
+    "execution_status": {"enum": ["COMPLETED", "PARTIAL"]},
+    "warmup_status": {"enum": ["COMPLETED", "FAILED", "NOT_RUN_AFTER_PRIOR_FAILURE"]},
+    "measured_repetitions_completed": {"type": "integer", "minimum": 0, "maximum": 3},
+    "runs": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "items": {"$ref": "#/$defs/run"}
+    },
+    "official_boundary": {"$ref": "#/$defs/gates"}
+  },
+  "$defs": {
+    "sha1": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "run": {
+      "type": "object", "additionalProperties": false,
+      "required": ["role", "index", "measured", "execution_id", "run_status", "archive_path", "archive_sha256", "archive_verification", "summary", "error"],
+      "properties": {
+        "role": {"enum": ["WARMUP", "MEASURED"]},
+        "index": {"type": "integer", "minimum": 0, "maximum": 3},
+        "measured": {"type": "boolean"},
+        "execution_id": {"type": "string", "pattern": "^DEV_PSI_TRANSITION_[A-Za-z0-9_-]{1,48}$"},
+        "run_status": {"enum": ["NOT_STARTED", "NOT_RUN_AFTER_PRIOR_FAILURE", "FAILED", "COMPLETED"]},
+        "archive_path": {"type": "string", "pattern": "^transition-archives/transition-(?:warmup|0[1-3])\\.zip$"},
+        "archive_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+        "archive_verification": {"oneOf": [{"const": "PASS"}, {"type": "null"}]},
+        "full_transition_wall_ms": {"type": ["number", "null"], "minimum": 0},
+        "summary": {"oneOf": [{"$ref": "#/$defs/summary"}, {"type": "null"}]},
+        "error": {"oneOf": [{"$ref": "#/$defs/error"}, {"type": "null"}]},
+        "partial_raw_inventory": {"type": "array", "items": {"$ref": "#/$defs/member"}}
+      }
+    },
+    "summary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["role", "execution_id", "archive_sha256", "decision", "operation_plan", "owner_add_emitted", "owner_add_operations", "candidate_state", "candidate_configuration_sha256", "candidate_validation_status", "candidate_owner_active", "candidate_exercised", "candidate_owner_negative_detected", "candidate_verification_status", "baseline_active_evaluators", "candidate_active_evaluators", "clean_b0", "negative_b0", "candidate_clean", "candidate_negative", "cost", "raw_result_sha256", "method_input_bundle_sha256", "method_implementation_sha256", "candidate_record_path", "candidate_record_sha256", "candidate_clean_detected", "psi_reason_codes", "hold_reasons", "gates"],
+      "properties": {
+        "role": {"enum": ["WARMUP", "MEASURED"]},
+        "execution_id": {"type": "string", "minLength": 1},
+        "archive_sha256": {"$ref": "#/$defs/sha256"},
+        "decision": {"enum": ["HOLD", "REJECT", "ACCEPT"]},
+        "operation_plan": {"type": "array", "items": {"type": "object"}},
+        "owner_add_emitted": {"type": "boolean"},
+        "owner_add_operations": {"type": "array", "items": {"type": "object"}},
+        "candidate_state": {"enum": ["NOT_MATERIALIZED", "MATERIALIZED_NOT_EXERCISED", "MATERIALIZED_AND_EXERCISED"]},
+        "candidate_configuration_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+        "candidate_validation_status": {"type": "string", "minLength": 1},
+        "candidate_owner_active": {"type": "boolean"},
+        "candidate_exercised": {"type": "boolean"},
+        "candidate_owner_negative_detected": {"type": "boolean"},
+        "candidate_verification_status": {"type": "string", "minLength": 1},
+        "baseline_active_evaluators": {"type": "array", "items": {"type": "string"}},
+        "candidate_active_evaluators": {"type": "array", "items": {"type": ["string", "null"]}},
+        "clean_b0": {"type": "array", "items": {"$ref": "#/$defs/outcome"}},
+        "negative_b0": {"type": "array", "items": {"$ref": "#/$defs/outcome"}},
+        "candidate_clean": {"type": "array", "items": {"$ref": "#/$defs/outcome"}},
+        "candidate_negative": {"type": "array", "items": {"$ref": "#/$defs/outcome"}},
+        "cost": {"$ref": "#/$defs/cost"},
+        "raw_result_sha256": {"$ref": "#/$defs/sha256"},
+        "method_input_bundle_sha256": {"$ref": "#/$defs/sha256"},
+        "method_implementation_sha256": {"$ref": "#/$defs/sha256"},
+        "candidate_record_path": {"oneOf": [{"type": "string"}, {"type": "null"}]},
+        "candidate_record_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+        "candidate_clean_detected": {"type": "boolean"},
+        "psi_reason_codes": {"type": "array", "items": {"type": "string"}},
+        "hold_reasons": {"type": "array", "items": {"type": "string"}},
+        "gates": {"$ref": "#/$defs/gates"}
+      }
+    },
+    "outcome": {
+      "type": "object", "additionalProperties": false,
+      "required": ["evaluator_id", "representation_id", "execution_status", "compliance", "inspection_status", "finding_codes", "duration_ms", "source_commit_sha", "source_tree_sha", "inspection_scope_path", "inspection_scope_sha256", "output_path", "output_sha256"],
+      "properties": {
+        "evaluator_id": {"type": ["string", "null"]},
+        "representation_id": {"type": ["string", "null"]},
+        "execution_status": {"type": ["string", "null"]},
+        "compliance": {"type": ["string", "null"]},
+        "inspection_status": {"type": ["string", "null"]},
+        "finding_codes": {"type": "array", "items": {"type": "string"}},
+        "duration_ms": {"type": ["number", "null"], "minimum": 0},
+        "source_commit_sha": {"type": ["string", "null"]},
+        "source_tree_sha": {"type": ["string", "null"]},
+        "inspection_scope_path": {"type": ["string", "null"]},
+        "inspection_scope_sha256": {"type": ["string", "null"]},
+        "output_path": {"type": ["string", "null"]},
+        "output_sha256": {"type": ["string", "null"]}
+      }
+    },
+    "cost": {
+      "type": "object", "additionalProperties": false,
+      "required": ["method_execution_ms", "candidate_owner_clean_ms", "candidate_owner_negative_ms", "candidate_owner_two_condition_total_ms"],
+      "properties": {
+        "method_execution_ms": {"type": ["number", "null"], "minimum": 0},
+        "candidate_owner_clean_ms": {"type": ["number", "null"], "minimum": 0},
+        "candidate_owner_negative_ms": {"type": ["number", "null"], "minimum": 0},
+        "candidate_owner_two_condition_total_ms": {"type": ["number", "null"], "minimum": 0}
+      }
+    },
+    "error": {
+      "type": "object", "additionalProperties": false,
+      "required": ["type", "message"],
+      "properties": {"type": {"type": "string", "minLength": 1}, "message": {"type": "string"}}
+    },
+    "member": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "size_bytes", "sha256"],
+      "properties": {"path": {"type": "string", "minLength": 1}, "size_bytes": {"type": "integer", "minimum": 0}, "sha256": {"$ref": "#/$defs/sha256"}}
+    },
+    "gates": {
+      "type": "object", "additionalProperties": false,
+      "required": ["study_readiness", "measurement_status", "P_ALGORITHM_STATUS", "G1", "G4", "reference", "scoring"],
+      "properties": {
+        "study_readiness": {"const": "NO_GO"}, "measurement_status": {"const": "NOT_EXECUTED"},
+        "P_ALGORITHM_STATUS": {"const": "NOT_READY"}, "G1": {"const": "INCOMPLETE"},
+        "G4": {"const": "NOT_AUTHORIZED"}, "reference": {"const": "NOT_READY"}, "scoring": {"const": "NOT_EXECUTED"}
+      }
+    }
+  }
+}

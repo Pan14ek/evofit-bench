@@ -596,11 +596,43 @@ def run_a05_transition(
     isolation_backend: str | None = None,
     preserve_partial_evidence: bool = False,
     sandbox_preflight_id: str | None = None,
+    positive_add_profile_path: Path | None = None,
+    positive_add_study_id: str | None = None,
 ) -> dict[str, Any]:
     """Execute the existing isolated P runner against the pinned ΔA5 transition."""
     repo = repository.resolve(strict=True)
     _validate_a04_proposal(repo)
-    with a05_transition_context(repo, extension_builder=_build_a05_extension):
+    profile_id = None
+    if positive_add_profile_path is not None:
+        try:
+            profile_id = json.loads(positive_add_profile_path.read_bytes()).get("profile_id")
+        except (OSError, json.JSONDecodeError) as error:
+            raise ContractValidationError("MONO_CI_PSI_A05_POSITIVE_PROFILE_INVALID") from error
+    expected_study_id = (
+        "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_V2"
+        if profile_id == "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V2"
+        else "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_V1"
+        if profile_id == "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V1"
+        else "MONO_CI_A05_POSITIVE_ADD_TEST_ONLY_V1"
+    )
+    if positive_add_profile_path is not None and positive_add_study_id not in {
+        None,
+        expected_study_id,
+    }:
+        raise ContractValidationError("MONO_CI_PSI_A05_POSITIVE_STUDY_ID_PROFILE_MISMATCH")
+    with a05_transition_context(
+        repo,
+        extension_builder=_build_a05_extension,
+        run_schema_version=(
+            "MONO_CI_PSI_TRANSITION_RUN_V7"
+            if profile_id == "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V2"
+            else "MONO_CI_PSI_TRANSITION_RUN_V6"
+            if profile_id == "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V1"
+            else "MONO_CI_PSI_TRANSITION_RUN_V5"
+            if positive_add_profile_path is not None
+            else "MONO_CI_PSI_TRANSITION_RUN_V4"
+        ),
+    ):
         return transition.run_transition(
             repo,
             output_root,
@@ -608,6 +640,7 @@ def run_a05_transition(
             isolation_backend=isolation_backend,
             preserve_partial_evidence=preserve_partial_evidence,
             sandbox_preflight_id=sandbox_preflight_id,
+            positive_add_profile_path=positive_add_profile_path,
         )
 
 
@@ -636,19 +669,17 @@ def _build_a05_extension(
     implementation_root = run_root / "PSI/evaluator-observations/implementation/AC_DATA_OWNERSHIP"
     source_rows, source_manifest_bytes, evaluator_source_sha256 = evaluator_source_artifacts(repo)
     source_manifest_path = implementation_root / "source-manifest.json"
-    transition._write_new_file(source_manifest_path, source_manifest_bytes)
+    _write_identical_or_new(source_manifest_path, source_manifest_bytes)
     for source_row in source_rows:
         source_path = repo / "architecture/acceptance/a1" / source_row["path"]
         source_bytes = source_path.read_bytes()
         if sha256_bytes(source_bytes) != source_row["sha256"]:
             raise ContractValidationError("MONO_CI_PSI_A05_EVALUATOR_SOURCE_CHANGED")
-        transition._write_new_file(
-            implementation_root / "source" / source_row["path"], source_bytes
-        )
+        _write_identical_or_new(implementation_root / "source" / source_row["path"], source_bytes)
     config_relative = "architecture/acceptance/a1/data_ownership_v1.yaml"
     config_bytes = (repo / config_relative).read_bytes()
     config_sha256 = sha256_bytes(config_bytes)
-    transition._write_new_file(implementation_root / "data_ownership_v1.yaml", config_bytes)
+    _write_identical_or_new(implementation_root / "data_ownership_v1.yaml", config_bytes)
     evaluator_config = yaml.safe_load(config_bytes)
     evaluator_version = str(evaluator_config["evaluator"]["version"])
 
@@ -1816,6 +1847,15 @@ def _git_run(repository: Path, *args: str) -> None:
         raise ProtocolError("MONO_CI_PSI_A05_PROBE_GIT_COMMAND_FAILED")
 
 
+def _write_identical_or_new(path: Path, content: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        if path.is_symlink() or not path.is_file() or path.read_bytes() != content:
+            raise ProtocolError("MONO_CI_PSI_A05_IMPLEMENTATION_ARTIFACT_CONFLICT")
+        return
+    transition._write_new_file(path, content)
+
+
 def main(argv: list[str] | None = None) -> int:
     arguments = list(sys.argv[1:] if argv is None else argv)
     if arguments and arguments[0] == "replay-probe":
@@ -1867,9 +1907,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--repository", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--execution-id", required=True)
+    parser.add_argument("--positive-add-profile", type=Path)
     args = parser.parse_args(arguments)
     try:
-        result = run_a05_transition(args.repository, args.output, args.execution_id)
+        result = run_a05_transition(
+            args.repository,
+            args.output,
+            args.execution_id,
+            positive_add_profile_path=args.positive_add_profile,
+        )
     except (ContractValidationError, ProtocolError) as error:
         print(json.dumps({"status": "FAIL", "error": str(error)}, sort_keys=True), file=sys.stderr)
         return 1
