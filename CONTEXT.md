@@ -16,7 +16,7 @@ Project-level scope: a controlled evolutionary-architecture fitness-function res
 - experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v1/ — separate researcher-authorized exploratory DEVELOPMENT protocol for real A0.4→A0.5 observations; it does not independently validate B0, references, or official G1/G4 gates.
 - experiments/execution/mono-ci-b0-psi-delta-a5-positive-add-v1/ — preserved C0/C1 TEST_ONLY positive ADD study and recovered C1 evidence; C1 remains HOLD and its hosted run remains FAILURE.
 - experiments/execution/mono-ci-b0-psi-delta-a5-positive-add-c2-v1/ — separately versioned C2 TEST_ONLY condition for bounded retain evidence plus positive ADD; author-declared and not official readiness evidence.
-- experiments/execution/mono-ci-b0-psi-delta-a5-positive-add-c2-v2/ — versioned TEST_ONLY exact-set C2 condition; its adapter verifies source-bound closure for three selected obligations while preserving source snapshot bytes and keeping the other 15 UNKNOWN.
+- experiments/execution/mono-ci-b0-psi-delta-a5-positive-add-c2-v2/ — versioned TEST_ONLY exact-set C2 condition; its single hosted attempt (Actions 40669036608) preserved a partial warmup that failed before a Ψ result because the isolated runtime schema allowlist omitted `candidate_configuration.schema.json`; no measured repetitions ran.
 
 - `.dockerignore`
 - `.env.example`

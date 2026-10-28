@@ -19,8 +19,11 @@ the canonical catalog and pinned core evaluator unchanged.
   evaluator pairs, the ownership ADD template, cost rule, and TEST_ONLY boundary.
 - `TRACEABILITY_C2_V2.md` — requirement-to-code, test, freeze, and evidence map.
 - `p_adaptation_c2_v2.py` and `p_applicability_c2_v2.py` — frozen TEST_ONLY adapter and exact-set closure hook; the legacy/global core stays byte-identical.
-- `RESULTS_C2_V2_UK.md` — Ukrainian results handoff, completed only from verified
-  raw transition archives.
+- `RESULTS_C2_V2_UK.md` — Ukrainian results handoff, completed from verified
+  raw transition archives or explicitly identified partial evidence. The sole
+  hosted attempt (Actions run 40669036608) is partial: its warmup stopped in
+  isolated candidate-schema validation before a Ψ result; no measured
+  repetitions or transition archive were produced.
 
 ## Boundaries
 
@@ -32,6 +35,11 @@ evaluator output are source-bound engineering observations, not independent
 semantic validation. C2 V2 does not advance `P_ALGORITHM_STATUS`, G1, G4,
 reference readiness, or scoring. Technical repetitions are not independent
 architecture transitions.
+
+The hosted warmup exposed a runtime packaging defect: the isolated method
+runtime's schema allowlist omitted `candidate_configuration.schema.json`.
+Preserve that frozen failure. It is not a Ψ `HOLD` or `REJECT`, and no
+post-result method/input change is part of this run.
 
 ## Validation
 

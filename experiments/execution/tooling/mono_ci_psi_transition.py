@@ -136,6 +136,7 @@ RUNTIME_SCHEMAS = (
     "applicability_ruleset_v1.schema.json",
     "architecture_policy_snapshot_v1_1.schema.json",
     "architecture_policy_snapshot_v1_2.schema.json",
+    "candidate_configuration.schema.json",
     "evaluator_evidence.schema.json",
     "method_input_v2.schema.json",
     "method_input_v3_candidate.schema.json",
