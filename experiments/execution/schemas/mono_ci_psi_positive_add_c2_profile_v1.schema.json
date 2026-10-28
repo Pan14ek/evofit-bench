@@ -113,7 +113,7 @@
       }
     },
     "comparison": {"type": "object", "additionalProperties": false, "required": ["c0_reference", "c1_recovery_release", "c1_recovery_archive_sha256", "warmup_repetitions", "c2_repetitions", "same_clean_source_and_existing_negative_probe", "candidate_is_exercised_only_if_method_materializes_it"], "properties": {
-      "c0_reference": {"const": "experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v1"},
+      "c0_reference": {"const": "experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v2/analysis/OWNER_AUTHORIZED_RESULTS_UK_V2.md"},
       "c1_recovery_release": {"const": "https://github.com/Pan14ek/evofit-bench/releases/tag/mono-ci-a05-positive-add-recovery-40612830900-1"},
       "c1_recovery_archive_sha256": {"const": "3c3aaaa0ab675ec33158cebba9eae565bacab973a09e98ba5e48273952c760a2"},
       "warmup_repetitions": {"const": 1}, "c2_repetitions": {"const": 3},

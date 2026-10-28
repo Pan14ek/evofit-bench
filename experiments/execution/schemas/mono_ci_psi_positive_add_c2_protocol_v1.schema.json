@@ -4,7 +4,7 @@
   "title": "C2 TEST_ONLY experiment protocol",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "protocol_id", "classification", "condition", "transition", "method", "conditions", "repetitions", "cost_rule", "measurements", "stop_rule", "official_boundary", "c1_recovery_reference"],
+  "required": ["schema_version", "protocol_id", "classification", "condition", "transition", "method", "conditions", "repetitions", "cost_rule", "measurements", "stop_rule", "official_boundary", "c1_recovery_reference", "c0_reference"],
   "properties": {
     "schema_version": {"const": "MONO_CI_A05_POSITIVE_ADD_C2_PROTOCOL_V1"},
     "protocol_id": {"const": "MONO_CI_A05_POSITIVE_ADD_C2_PROTOCOL_V1"},
@@ -40,6 +40,17 @@
       "release": {"const": "https://github.com/Pan14ek/evofit-bench/releases/tag/mono-ci-a05-positive-add-recovery-40612830900-1"},
       "archive_sha256": {"const": "3c3aaaa0ab675ec33158cebba9eae565bacab973a09e98ba5e48273952c760a2"},
       "original_workflow_run": {"const": "https://github.com/Pan14ek/evofit-bench/actions/runs/40612830900"}, "original_workflow_conclusion": {"const": "FAILURE"}
+    }},
+    "c0_reference": {"type": "object", "additionalProperties": false, "required": ["study_id", "workflow_run", "release", "release_archive_sha256", "results_path", "transition_summary"], "properties": {
+      "study_id": {"const": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V2"},
+      "workflow_run": {"const": "https://github.com/Pan14ek/evofit-bench/actions/runs/40579333932"},
+      "release": {"const": "https://github.com/Pan14ek/evofit-bench/releases/tag/mono-ci-psi-a05-owner-authorized-v2-40579333932-1"},
+      "release_archive_sha256": {"const": "ef44cf280807e414b4027d846a8db05de74b555c60803500a97d074b666db0d2"},
+      "results_path": {"const": "experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v2/analysis/OWNER_AUTHORIZED_RESULTS_UK_V2.md"},
+      "transition_summary": {"type": "object", "additionalProperties": false, "required": ["warmup", "measured", "decision", "operations", "candidate_state"], "properties": {
+        "warmup": {"const": 1}, "measured": {"const": 3}, "decision": {"const": "HOLD"},
+        "operations": {"const": []}, "candidate_state": {"const": "MATERIALIZED_UNAPPLIED"}
+      }}
     }}
   }
 }

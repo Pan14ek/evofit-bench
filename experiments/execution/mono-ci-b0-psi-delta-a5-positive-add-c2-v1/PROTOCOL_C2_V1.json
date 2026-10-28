@@ -61,5 +61,19 @@
     "archive_sha256": "3c3aaaa0ab675ec33158cebba9eae565bacab973a09e98ba5e48273952c760a2",
     "original_workflow_run": "https://github.com/Pan14ek/evofit-bench/actions/runs/40612830900",
     "original_workflow_conclusion": "FAILURE"
+  },
+  "c0_reference": {
+    "study_id": "MONO_CI_B0_PSI_DELTA_A5_OWNER_AUTHORIZED_DEV_V2",
+    "workflow_run": "https://github.com/Pan14ek/evofit-bench/actions/runs/40579333932",
+    "release": "https://github.com/Pan14ek/evofit-bench/releases/tag/mono-ci-psi-a05-owner-authorized-v2-40579333932-1",
+    "release_archive_sha256": "ef44cf280807e414b4027d846a8db05de74b555c60803500a97d074b666db0d2",
+    "results_path": "experiments/execution/mono-ci-b0-psi-delta-a5-owner-authorized-v2/analysis/OWNER_AUTHORIZED_RESULTS_UK_V2.md",
+    "transition_summary": {
+      "warmup": 1,
+      "measured": 3,
+      "decision": "HOLD",
+      "operations": [],
+      "candidate_state": "MATERIALIZED_UNAPPLIED"
+    }
   }
 }

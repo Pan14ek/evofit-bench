@@ -32,12 +32,14 @@ def test_c2_profile_and_protocol_are_versioned_and_fail_closed() -> None:
     validate_payload(c2_study.PROTOCOL_SCHEMA, protocol)
     assert profile["profile_id"] == "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V1"
     assert profile["canonical_mandatory_projection"]["other_applicability_status"] == "UNKNOWN"
+    assert profile["comparison"]["c0_reference"].endswith("OWNER_AUTHORIZED_RESULTS_UK_V2.md")
     assert [row["id"] for row in profile["additional_retain_obligations"]] == [
         "AC_MODULE_GRAPH",
         "AC_PUBLIC_API",
     ]
     assert protocol["repetitions"] == {"warmup": 1, "measured": 3}
     assert protocol["method"]["algorithm_changed"] is False
+    assert protocol["c0_reference"]["transition_summary"]["operations"] == []
 
 
 def test_c2_retain_profile_rejects_changed_configuration_binding() -> None:
