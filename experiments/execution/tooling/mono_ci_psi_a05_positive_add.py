@@ -65,9 +65,12 @@ POLICY_HMAC_KEY = b"pilot02-public-test-only-policy-key-v1"
 STUDY_ID = "MONO_CI_A05_POSITIVE_ADD_TEST_ONLY_V1"
 PROFILE_ID = "MONO_CI_A05_POSITIVE_ADD_TEST_ONLY_PROFILE_V1"
 PROFILE_C2_ID = "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V1"
+PROFILE_C2_V2_ID = "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V2"
 STUDY_C2_ID = "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_V1"
 PROFILE_C2_SCHEMA = "mono_ci_psi_positive_add_c2_profile_v1.schema.json"
+PROFILE_C2_V2_SCHEMA = "mono_ci_psi_positive_add_c2_profile_v2.schema.json"
 RETAIN_OBLIGATION_IDS = ("AC_MODULE_GRAPH", "AC_PUBLIC_API")
+_C2_PROFILE_IDS = frozenset({PROFILE_C2_ID, PROFILE_C2_V2_ID})
 MAX_COST_MS = 225
 MAX_SEARCH_NODES = 2
 
@@ -108,7 +111,7 @@ def create_policy_source(
     if policy_source_revision == PROFILE_ID:
         selected_ids = (OBLIGATION_ID,)
         applicability = {OBLIGATION_ID: {"before": "INACTIVE", "after": "ACTIVE"}}
-    elif policy_source_revision == PROFILE_C2_ID:
+    elif policy_source_revision in _C2_PROFILE_IDS:
         selected_ids = (OBLIGATION_ID, *RETAIN_OBLIGATION_IDS)
         applicability = {
             OBLIGATION_ID: {"before": "INACTIVE", "after": "ACTIVE"},
@@ -166,7 +169,7 @@ def create_policy_source(
 
     claims_path = source / "fitness/policy/completeness-claims.json"
     claims = json.loads(claims_path.read_bytes())
-    if policy_source_revision == PROFILE_C2_ID:
+    if policy_source_revision in _C2_PROFILE_IDS:
         expanded_claims: list[dict[str, Any]] = []
         for original in claims:
             for obligation_id in selected_ids:
@@ -189,23 +192,31 @@ def create_policy_source(
         "external_normative_authority_claimed": False,
         "independent_verification_claimed": False,
     }
-    if policy_source_revision == PROFILE_C2_ID:
+    if policy_source_revision in _C2_PROFILE_IDS:
         declaration["selected_obligation_ids"] = sorted(selected_ids)
     for claim in claims:
-        if policy_source_revision != PROFILE_C2_ID:
+        if policy_source_revision not in _C2_PROFILE_IDS:
             claim["fact_type"] = f"obligation:{OBLIGATION_ID}"
         obligation_id = str(claim["fact_type"].removeprefix("obligation:"))
         claim["method_id"] = (
             "mono_ci_a05_positive_add_test_only_scope_v1"
             if policy_source_revision == PROFILE_ID
-            else "mono_ci_a05_positive_add_c2_test_only_scope_v1"
+            else (
+                "mono_ci_a05_positive_add_c2_test_only_scope_v2"
+                if policy_source_revision == PROFILE_C2_V2_ID
+                else "mono_ci_a05_positive_add_c2_test_only_scope_v1"
+            )
         )
         claim["evidence_source_ids"] = [SCOPE_EVIDENCE_ID]
         claim["assumptions"] = [f"bounded_obligation_universe:{obligation_id}"]
         claim["procedure_ref"] = (
             "test-only://mono-ci-a05-positive-add/v1"
             if policy_source_revision == PROFILE_ID
-            else "test-only://mono-ci-a05-positive-add-c2/v1"
+            else (
+                "test-only://mono-ci-a05-positive-add-c2/v2"
+                if policy_source_revision == PROFILE_C2_V2_ID
+                else "test-only://mono-ci-a05-positive-add-c2/v1"
+            )
         )
         claim["policy_registry_version"] = registry["registry_version"]
         claim["as_of"] = evaluation_as_of
@@ -320,7 +331,9 @@ def prepare_method_inputs(
     capabilities["p_cost_model_v1"] = cost_model
     profile_id = str(profile["profile_id"])
     profile_key = (
-        "positive_add_test_only_profile_v2"
+        "positive_add_test_only_profile_v3"
+        if profile_id == PROFILE_C2_V2_ID
+        else "positive_add_test_only_profile_v2"
         if profile_id == PROFILE_C2_ID
         else "positive_add_test_only_profile_v1"
     )
@@ -409,8 +422,8 @@ def build_runtime_context(bundle_root: Path, key: bytes) -> PositiveAddRuntimeCo
             sha256_bytes(canonical_json_bytes(claim)),
             tuple(sorted((source_id, sources[source_id].sha256) for source_id in claim_source_ids)),
             (
-                "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V1"
-                if profile.get("profile_id") == PROFILE_C2_ID
+                profile.get("profile_id")
+                if profile.get("profile_id") in _C2_PROFILE_IDS
                 else "MONO_CI_A05_POSITIVE_ADD_PROFILE_V1"
             ),
             tuple(sorted(claim_source_ids)),
@@ -427,7 +440,7 @@ def build_runtime_context(bundle_root: Path, key: bytes) -> PositiveAddRuntimeCo
     summary = {
         "trust_scope": "TEST_ONLY_SOURCE_READBACK_AND_AUTHOR_DECLARATION",
         "verifier_id": (
-            profile_id if profile_id == PROFILE_C2_ID else "MONO_CI_A05_POSITIVE_ADD_PROFILE_V1"
+            profile_id if profile_id in _C2_PROFILE_IDS else "MONO_CI_A05_POSITIVE_ADD_PROFILE_V1"
         ),
         "verified_fact_ids": sorted(ledger.fact_proofs),
         "verified_policy_ids": sorted(ledger.policy_proofs),
@@ -438,7 +451,7 @@ def build_runtime_context(bundle_root: Path, key: bytes) -> PositiveAddRuntimeCo
         "independent_verification": False,
         "source_inventory_verifier_id": facts_summary["verifier_id"],
     }
-    if profile_id == PROFILE_C2_ID:
+    if profile_id in _C2_PROFILE_IDS:
         summary["selected_obligation_ids"] = list(selected_ids)
 
     def fact_verifier(fact: Any, fact_sources: Any, _snapshot: Any) -> bool | None:
@@ -873,12 +886,21 @@ def _validate_profile_binding(bundle_root: Path, manifest: dict[str, Any]) -> di
     ):
         raise ContractValidationError("POSITIVE_ADD_CAPABILITIES_INPUT_UNPINNED")
     capabilities = json.loads(capabilities_path.read_bytes())
-    profile = capabilities.get("positive_add_test_only_profile_v2")
-    expected_profile_key = "positive_add_test_only_profile_v2"
+    profile = capabilities.get("positive_add_test_only_profile_v3")
+    expected_profile_key = "positive_add_test_only_profile_v3"
+    if not isinstance(profile, dict):
+        profile = capabilities.get("positive_add_test_only_profile_v2")
+        expected_profile_key = "positive_add_test_only_profile_v2"
     if not isinstance(profile, dict):
         profile = capabilities.get("positive_add_test_only_profile_v1")
         expected_profile_key = "positive_add_test_only_profile_v1"
-    expected_profile_id = PROFILE_C2_ID if expected_profile_key.endswith("_v2") else PROFILE_ID
+    expected_profile_id = (
+        PROFILE_C2_V2_ID
+        if expected_profile_key.endswith("_v3")
+        else PROFILE_C2_ID
+        if expected_profile_key.endswith("_v2")
+        else PROFILE_ID
+    )
     if not isinstance(profile, dict) or profile.get("profile_id") != expected_profile_id:
         raise ContractValidationError("POSITIVE_ADD_TEST_ONLY_PROFILE_MISSING")
     try:
@@ -1003,7 +1025,7 @@ def _validate_policy_claim_scope(
         declaration.get("profile_id") != profile.get("profile_id")
         or declaration.get("selected_obligation_id") != OBLIGATION_ID
         or (
-            profile.get("profile_id") == PROFILE_C2_ID
+            profile.get("profile_id") in _C2_PROFILE_IDS
             and declaration.get("selected_obligation_ids") != sorted(selected_ids)
         )
         or declaration.get("global_denominator_or_coverage_claim") is not False
@@ -1041,7 +1063,7 @@ def _verify_scoped_closure_claim(
         and evidence.get("selected_obligation_id") == OBLIGATION_ID
         and (
             evidence.get("selected_obligation_ids") == sorted(_selected_obligation_ids(_profile))
-            if _profile.get("profile_id") == PROFILE_C2_ID
+            if _profile.get("profile_id") in _C2_PROFILE_IDS
             else evidence.get("selected_obligation_ids") is None
         )
         and evidence.get("global_denominator_or_coverage_claim") is False
@@ -1076,6 +1098,23 @@ def _write_identical_or_new(path: Path, content: bytes) -> None:
 
 
 def _validate_static_profile(profile: Any) -> None:
+    if isinstance(profile, dict) and profile.get("profile_id") == PROFILE_C2_V2_ID:
+        validate_payload(PROFILE_C2_V2_SCHEMA, profile)
+        selected_ids = {OBLIGATION_ID, *RETAIN_OBLIGATION_IDS}
+        if (
+            profile.get("schema_version") != 2
+            or profile.get("exact_set_applicability", {}).get("selected_obligation_ids")
+            != sorted(selected_ids)
+            or profile.get("exact_set_applicability", {}).get("outside_scope_status") != "UNKNOWN"
+            or profile.get("exact_set_applicability", {}).get("universal_or_family_closure")
+            is not False
+            or profile.get("research_boundaries", {}).get("method_algorithm_modified") is not True
+            or profile.get("research_boundaries", {}).get("canonical_catalog_modified") is not False
+            or profile.get("research_boundaries", {}).get("measured_da01_authorized") is not False
+            or set(_selected_obligation_ids(profile)) != selected_ids
+        ):
+            raise ContractValidationError("POSITIVE_ADD_C2_V2_STATIC_PROFILE_INVALID")
+        return
     if isinstance(profile, dict) and profile.get("profile_id") == PROFILE_C2_ID:
         validate_payload(PROFILE_C2_SCHEMA, profile)
         selected_ids = {OBLIGATION_ID, *RETAIN_OBLIGATION_IDS}
@@ -1124,7 +1163,7 @@ def _validate_static_profile(profile: Any) -> None:
 
 def _selected_obligation_ids(profile: dict[str, Any]) -> tuple[str, ...]:
     """Return the fixed, bounded applicability set for a supported TEST_ONLY profile."""
-    if profile.get("profile_id") == PROFILE_C2_ID:
+    if profile.get("profile_id") in _C2_PROFILE_IDS:
         return (OBLIGATION_ID, *RETAIN_OBLIGATION_IDS)
     if profile.get("profile_id") == PROFILE_ID:
         return (OBLIGATION_ID,)

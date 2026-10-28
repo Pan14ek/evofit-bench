@@ -1,0 +1,463 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://evofitbench.invalid/schemas/mono_ci_psi_positive_add_c2_results_v2.schema.json",
+  "title": "C2 V2 TEST_ONLY run results and archive references",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "study_id",
+    "classification",
+    "workflow",
+    "freeze_sha256",
+    "execution_status",
+    "warmup_status",
+    "measured_repetitions_completed",
+    "runs",
+    "official_boundary"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "MONO_CI_A05_POSITIVE_ADD_C2_RESULTS_V2"
+    },
+    "study_id": {
+      "const": "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_V2"
+    },
+    "classification": {
+      "const": "TEST_ONLY_AUTHOR_DECLARED_DEVELOPMENT"
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "run_attempt",
+        "run_url"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "run_attempt": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "run_url": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "freeze_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "execution_status": {
+      "enum": [
+        "COMPLETED",
+        "PARTIAL"
+      ]
+    },
+    "warmup_status": {
+      "enum": [
+        "COMPLETED",
+        "FAILED",
+        "NOT_RUN_AFTER_PRIOR_FAILURE"
+      ]
+    },
+    "measured_repetitions_completed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "runs": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "role",
+          "index",
+          "measured",
+          "execution_id",
+          "run_status",
+          "archive_path",
+          "archive_sha256",
+          "archive_verification",
+          "full_transition_wall_ms",
+          "summary",
+          "error"
+        ],
+        "properties": {
+          "role": {
+            "enum": [
+              "WARMUP",
+              "MEASURED"
+            ]
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "measured": {
+            "type": "boolean"
+          },
+          "execution_id": {
+            "type": "string",
+            "pattern": "^DEV_PSI_TRANSITION_[A-Za-z0-9_-]{1,48}$"
+          },
+          "run_status": {
+            "enum": [
+              "COMPLETED",
+              "FAILED",
+              "NOT_RUN_AFTER_PRIOR_FAILURE"
+            ]
+          },
+          "archive_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "archive_sha256": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/sha256"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "archive_verification": {
+            "enum": [
+              "PASS",
+              null
+            ]
+          },
+          "full_transition_wall_ms": {
+            "oneOf": [
+              {
+                "type": "number",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "summary": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/summary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "type",
+                  "message"
+                ],
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "official_boundary": {
+      "$ref": "#/$defs/official_boundary"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "execution_id",
+        "archive_sha256",
+        "decision",
+        "governance_reasons",
+        "operation_plan",
+        "hold_reasons",
+        "owner_add_emitted",
+        "retain_targets_emitted",
+        "candidate_validation_status",
+        "candidate_accepted",
+        "candidate_application_status",
+        "candidate_state",
+        "candidate_clean",
+        "candidate_negative",
+        "clean_b0",
+        "negative_b0",
+        "incremental_owner_cost_ms",
+        "method_execution_ms",
+        "method_version",
+        "before_selected_applicability",
+        "after_selected_applicability",
+        "outside_scope_applicability_counts",
+        "retained_pair_statuses",
+        "current_coverage_status",
+        "candidate_coverage_status",
+        "invariant_verdicts",
+        "cost_verdict",
+        "candidate_sha256",
+        "candidate_configuration_sha256",
+        "all_outside_scope_unknown"
+      ],
+      "properties": {
+        "execution_id": {
+          "type": "string"
+        },
+        "archive_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "decision": {
+          "enum": [
+            "ACCEPT",
+            "HOLD",
+            "REJECT"
+          ]
+        },
+        "governance_reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "operation_plan": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "hold_reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "owner_add_emitted": {
+          "type": "boolean"
+        },
+        "retain_targets_emitted": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "candidate_validation_status": {
+          "type": "string"
+        },
+        "candidate_accepted": {
+          "type": "boolean"
+        },
+        "candidate_application_status": {
+          "enum": [
+            "NOT_APPLICABLE_GOVERNANCE_NOT_ACCEPTED",
+            "APPLIED_TO_ISOLATED_CANDIDATE_EVALUATION_CONTEXT",
+            "ACCEPTED_BUT_EVALUATOR_APPLICATION_INCOMPLETE"
+          ]
+        },
+        "candidate_state": {
+          "type": "string"
+        },
+        "candidate_clean": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "candidate_negative": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "clean_b0": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "negative_b0": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "incremental_owner_cost_ms": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "method_execution_ms": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "method_version": {
+          "const": "P_GOVERNED_ADAPTATION_DEVELOPMENT_V2_TEST_ONLY_EXACT_SET"
+        },
+        "before_selected_applicability": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/applicabilityRow"
+          }
+        },
+        "after_selected_applicability": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/applicabilityRow"
+          }
+        },
+        "outside_scope_applicability_counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "retained_pair_statuses": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "current_coverage_status": {
+          "type": "string"
+        },
+        "candidate_coverage_status": {
+          "type": "string"
+        },
+        "invariant_verdicts": {
+          "type": "object",
+          "minProperties": 12,
+          "maxProperties": 12,
+          "additionalProperties": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "UNKNOWN"
+            ]
+          }
+        },
+        "cost_verdict": {
+          "type": "string"
+        },
+        "candidate_sha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "candidate_configuration_sha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "all_outside_scope_unknown": {
+          "const": true
+        }
+      }
+    },
+    "official_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "study_readiness",
+        "measurement_status",
+        "P_ALGORITHM_STATUS",
+        "G1",
+        "G4",
+        "reference",
+        "scoring"
+      ],
+      "properties": {
+        "study_readiness": {
+          "const": "NO_GO"
+        },
+        "measurement_status": {
+          "const": "NOT_EXECUTED"
+        },
+        "P_ALGORITHM_STATUS": {
+          "const": "NOT_READY"
+        },
+        "G1": {
+          "const": "INCOMPLETE"
+        },
+        "G4": {
+          "const": "NOT_AUTHORIZED"
+        },
+        "reference": {
+          "const": "NOT_READY"
+        },
+        "scoring": {
+          "const": "NOT_EXECUTED"
+        }
+      }
+    },
+    "applicabilityRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "obligation_id",
+        "status"
+      ],
+      "properties": {
+        "obligation_id": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "ACTIVE",
+            "INACTIVE",
+            "UNKNOWN"
+          ]
+        }
+      }
+    }
+  }
+}

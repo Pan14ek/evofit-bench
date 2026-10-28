@@ -609,7 +609,9 @@ def run_a05_transition(
         except (OSError, json.JSONDecodeError) as error:
             raise ContractValidationError("MONO_CI_PSI_A05_POSITIVE_PROFILE_INVALID") from error
     expected_study_id = (
-        "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_V1"
+        "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_V2"
+        if profile_id == "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V2"
+        else "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_V1"
         if profile_id == "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V1"
         else "MONO_CI_A05_POSITIVE_ADD_TEST_ONLY_V1"
     )
@@ -622,7 +624,9 @@ def run_a05_transition(
         repo,
         extension_builder=_build_a05_extension,
         run_schema_version=(
-            "MONO_CI_PSI_TRANSITION_RUN_V6"
+            "MONO_CI_PSI_TRANSITION_RUN_V7"
+            if profile_id == "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V2"
+            else "MONO_CI_PSI_TRANSITION_RUN_V6"
             if profile_id == "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V1"
             else "MONO_CI_PSI_TRANSITION_RUN_V5"
             if positive_add_profile_path is not None

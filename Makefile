@@ -97,7 +97,8 @@ test-mono-ci-psi-a05-positive-add:
 test-mono-ci-psi-a05-positive-add-c2:
 	$(UV) run --frozen --extra dev python -m pytest -q --no-cov -p no:cacheprovider \
 		tests/unit/test_mono_ci_psi_a05_positive_add.py \
-		tests/unit/test_mono_ci_psi_a05_positive_add_c2.py
+		tests/unit/test_mono_ci_psi_a05_positive_add_c2.py \
+		tests/unit/test_p_applicability_exact_test_only.py
 
 test-mono-ci-psi-delta-a5:
 	$(UV) run --frozen --extra dev python -m pytest -q --no-cov -p no:cacheprovider tests/unit/test_mono_ci_b0_psi_delta_a5.py

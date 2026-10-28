@@ -315,7 +315,10 @@
           "const": "TEST_ONLY_SOURCE_READBACK_AND_AUTHOR_DECLARATION"
         },
         "verifier_id": {
-          "const": "MONO_CI_A05_POSITIVE_ADD_PROFILE_V1"
+          "enum": [
+            "MONO_CI_A05_POSITIVE_ADD_PROFILE_V1",
+            "MONO_CI_A05_POSITIVE_ADD_C2_TEST_ONLY_PROFILE_V1"
+          ]
         },
         "verified_fact_ids": {
           "type": "array",
@@ -461,7 +464,11 @@
           "const": "AC_DATA_OWNERSHIP"
         },
         "selected_obligation_ids": {
-          "const": ["AC_DATA_OWNERSHIP", "AC_MODULE_GRAPH", "AC_PUBLIC_API"]
+          "const": [
+            "AC_DATA_OWNERSHIP",
+            "AC_MODULE_GRAPH",
+            "AC_PUBLIC_API"
+          ]
         }
       }
     }

@@ -18,6 +18,8 @@ from experiments.execution.tooling.p_policy_source_v3 import verify_policy_sourc
 ROOT = Path(__file__).resolve().parents[2]
 C2_PROFILE_PATH = ROOT / c2_study.PROFILE_PATH
 C2_PROTOCOL_PATH = ROOT / c2_study.PROTOCOL_JSON
+C2_V2_PROFILE_PATH = ROOT / c2_study.PROFILE_PATH_V2
+C2_V2_PROTOCOL_PATH = ROOT / c2_study.PROTOCOL_JSON_V2
 
 
 def _profile() -> dict[str, Any]:
@@ -84,8 +86,106 @@ def test_c2_policy_input_has_only_three_scoped_active_obligations(tmp_path: Path
 
 
 def test_c2_method_runtime_keeps_c1_profile_capability_backward_compatible() -> None:
-    from experiments.execution.tooling.mono_ci_psi_transition import RUNTIME_SCHEMAS, RUNTIME_SOURCE
+    from experiments.execution.tooling.mono_ci_psi_transition import (
+        RUNTIME_MODULES,
+        RUNTIME_SCHEMAS,
+        RUNTIME_SOURCE,
+    )
 
     assert "positive_add_test_only_profile_v1" in RUNTIME_SOURCE
     assert "positive_add_test_only_profile_v2" in RUNTIME_SOURCE
+    assert "positive_add_test_only_profile_v3" in RUNTIME_SOURCE
+    assert "run_adaptation_c2_v2" in RUNTIME_SOURCE
+    assert "p_adaptation_c2_v2.py" in RUNTIME_MODULES
+    assert "p_applicability_c2_v2.py" in RUNTIME_MODULES
     assert c2_study.PROFILE_SCHEMA in RUNTIME_SCHEMAS
+    assert c2_study.PROFILE_SCHEMA_V2 in RUNTIME_SCHEMAS
+
+
+def test_c2_v2_uses_a_distinct_transition_schema_and_adapter_identity() -> None:
+    schemas = ROOT / "experiments/execution/schemas"
+    v6 = json.loads((schemas / "mono_ci_psi_transition_run_v6.schema.json").read_text())
+    v7 = json.loads((schemas / "mono_ci_psi_transition_run_v7.schema.json").read_text())
+
+    assert v6["properties"]["study_id"]["const"] == c2_study.STUDY_ID
+    assert (
+        v6["properties"]["method_implementation"]["properties"]["source_path"]["const"]
+        == "experiments/execution/tooling/p_adaptation.py"
+    )
+    assert v7["properties"]["study_id"]["const"] == c2_study.STUDY_ID_V2
+    assert (
+        v7["properties"]["method_implementation"]["properties"]["identity"]["const"]
+        == c2_study.C2_V2.method_version
+    )
+    assert (
+        v7["properties"]["method_implementation"]["properties"]["source_path"]["const"]
+        == "experiments/execution/tooling/p_adaptation_c2_v2.py"
+    )
+
+
+def test_c2_v2_exact_set_profile_versions_changed_method_semantics() -> None:
+    profile = json.loads(C2_V2_PROFILE_PATH.read_text(encoding="utf-8"))
+    protocol = json.loads(C2_V2_PROTOCOL_PATH.read_text(encoding="utf-8"))
+
+    positive_add._validate_static_profile(profile)
+    validate_payload(c2_study.PROTOCOL_SCHEMA_V2, protocol)
+    assert profile["profile_id"] == positive_add.PROFILE_C2_V2_ID
+    assert profile["exact_set_applicability"]["outside_scope_status"] == "UNKNOWN"
+    assert profile["exact_set_applicability"]["universal_or_family_closure"] is False
+    assert profile["research_boundaries"]["method_algorithm_modified"] is True
+    assert protocol["method"]["algorithm_changed"] is True
+    assert protocol["method"]["id"] == "P_GOVERNED_ADAPTATION_DEVELOPMENT_V2_TEST_ONLY_EXACT_SET"
+
+
+def test_c2_v2_profile_rejects_missing_retain_evidence_or_expanded_scope() -> None:
+    profile = json.loads(C2_V2_PROFILE_PATH.read_text(encoding="utf-8"))
+    profile["additional_retain_obligations"].pop()
+    with pytest.raises(ContractValidationError):
+        positive_add._validate_static_profile(profile)
+
+    profile = json.loads(C2_V2_PROFILE_PATH.read_text(encoding="utf-8"))
+    profile["exact_set_applicability"]["universal_or_family_closure"] = True
+    with pytest.raises(ContractValidationError):
+        positive_add._validate_static_profile(profile)
+
+
+def test_c2_v2_results_schema_accepts_the_frozen_official_boundary_property() -> None:
+    payload = {
+        "schema_version": "MONO_CI_A05_POSITIVE_ADD_C2_RESULTS_V2",
+        "study_id": c2_study.STUDY_ID_V2,
+        "classification": "TEST_ONLY_AUTHOR_DECLARED_DEVELOPMENT",
+        "workflow": {"run_id": "1", "run_attempt": "1", "run_url": "https://example.test/run/1"},
+        "freeze_sha256": "a" * 64,
+        "execution_status": "PARTIAL",
+        "warmup_status": "FAILED",
+        "measured_repetitions_completed": 0,
+        "runs": [
+            {
+                "role": "WARMUP" if index == 0 else "MEASURED",
+                "index": index,
+                "measured": index > 0,
+                "execution_id": f"DEV_PSI_TRANSITION_TEST_{index}",
+                "run_status": "FAILED" if index == 0 else "NOT_RUN_AFTER_PRIOR_FAILURE",
+                "archive_path": f"transition-{index}.zip",
+                "archive_sha256": None,
+                "archive_verification": None,
+                "full_transition_wall_ms": None,
+                "summary": None,
+                "error": {"type": "ProtocolError", "message": "preserved failure"}
+                if index == 0
+                else None,
+            }
+            for index in range(4)
+        ],
+        "official_boundary": {
+            "study_readiness": "NO_GO",
+            "measurement_status": "NOT_EXECUTED",
+            "P_ALGORITHM_STATUS": "NOT_READY",
+            "G1": "INCOMPLETE",
+            "G4": "NOT_AUTHORIZED",
+            "reference": "NOT_READY",
+            "scoring": "NOT_EXECUTED",
+        },
+    }
+
+    validate_payload(c2_study.RESULTS_SCHEMA_V2, payload)

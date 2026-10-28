@@ -16,7 +16,8 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - `P_INPUT_V12_DEVELOPMENT.md`
 - `P_INPUT_V11_SENSITIVE_SHA256.txt`
 - `da01/P_ALGORITHM_STATUS.md`
-- `tooling/p_adaptation.py`
+- `tooling/p_adaptation.py` — byte-pinned existing DEVELOPMENT Method Ψ engine; historical identity checks depend on its unchanged source bytes.
+- `tooling/p_adaptation_c2_v2.py` and `tooling/p_applicability_c2_v2.py` — separate versioned C2 V2 TEST_ONLY adapter and exact-set closure hook over the unchanged core evaluator; the source Snapshot and registry proof remain unchanged.
 - `tooling/p_impact.py`
 - `EXP03_METHOD_INTEGRATION.md`
 - `EXP04_EVIDENCE_ADMISSION.md`
@@ -68,7 +69,7 @@ Phase A input isolation, contracts, preparation, SPEC01 validation, SPEC02 appli
 - tooling/mono_ci_psi_owner_authorized.py and tooling/mono_ci_psi_owner_authorized_analysis.py — frozen one-shot evaluator calibration and existing isolated A0.5 DEVELOPMENT transition repetitions, verified raw archives, descriptive tables and Ukrainian handoff; no official gate is changed.
 - mono-ci-b0-psi-delta-a5-owner-authorized-v2/ and tooling/mono_ci_psi_owner_authorized_v2.py — separately frozen DEVELOPMENT correction with hosted Docker isolation preflight, source-bound evaluator replay, complete/partial evidence preservation, and release readback; V1 remains historical and official readiness/G1/G4 do not change.
 - mono-ci-b0-psi-delta-a5-positive-add-v1/ and tooling/mono_ci_psi_a05_positive_add_study.py — bounded TEST_ONLY C0/C1 experiment, exact V2 release reuse, frozen A0.4/A0.5 identities, candidate-exercise criterion, Ukrainian results/insertion report and archive readback; not a measured DA01 comparison or readiness change.
-- mono-ci-b0-psi-delta-a5-positive-add-c2-v1/ and tooling/mono_ci_psi_a05_positive_add_c2.py — separately versioned C2 TEST_ONLY active scope for two source-bound retain pairs plus the existing ownership ADD candidate, with one warmup and three measured Docker-isolated technical repetitions.
+- mono-ci-b0-psi-delta-a5-positive-add-c2-v1/ and tooling/mono_ci_psi_a05_positive_add_c2.py — C2 V1 preserves the failed warmup and its receipt-schema mismatch. C2 V2 freezes a separate exact-set closure hook over the unchanged core evaluator, preserves UNKNOWN outside the three selected obligations, and uses one warmup plus three measured Docker-isolated technical repetitions.
 - tooling/mono_ci_psi_owner_authorized_v2_analysis.py — derives descriptive V1/V2 comparison tables and Ukrainian monograph handoff only from verified archived evidence; no score or coverage percentage.
 
 ## Established conventions

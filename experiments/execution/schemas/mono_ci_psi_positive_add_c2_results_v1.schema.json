@@ -20,7 +20,8 @@
       "archive_path": {"type": "string", "minLength": 1}, "archive_sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
       "archive_verification": {"enum": ["PASS", null]}, "full_transition_wall_ms": {"oneOf": [{"type": "number", "minimum": 0}, {"type": "null"}]},
       "summary": {"oneOf": [{"$ref": "#/$defs/summary"}, {"type": "null"}]}, "error": {"oneOf": [{"type": "object", "additionalProperties": false, "required": ["type", "message"], "properties": {"type": {"type": "string"}, "message": {"type": "string"}}}, {"type": "null"}]}
-    }}}
+    }}},
+    "official_boundary": {"$ref": "#/$defs/official_boundary"}
   },
   "$defs": {
     "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
