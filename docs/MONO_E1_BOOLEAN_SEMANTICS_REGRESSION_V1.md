@@ -1,6 +1,6 @@
 # MONO-E1: Boolean-confirmation regression and EvoFitBench decision parity (DEVELOPMENT)
 
-**Status:** initial focused regression CI PASS (55 tests) on 2026-11-06; two alert tests have since been added and await passing updated CI. Full development-quality CI and independent methodological approval are separate.  
+**Status:** focused regression CI PASS (57 tests; Ruff lint and format PASS) on 2026-11-06; full development-quality CI and independent methodological approval remain separate.  
 **Scope:** mathematical descriptions of monograph formulas (3), (7), (10) and Method P governance decision precedence.  
 **Source:** `Pan14ek/evofit-bench`, branch `test/binary-semantics-equivalence-monograph`.  
 **Does not change:** Method P production code, monograph data, source evidence, reference labels, policy authority, frozen experimental artifacts, or the eight-scenario results.
@@ -73,7 +73,7 @@ uv run --frozen --extra dev pytest -q tests/unit/test_monograph_boolean_semantic
 uv run --frozen --extra dev ruff check tests/unit/test_monograph_boolean_semantics_regression.py
 ```
 
-The initial [GitHub Actions regression run](https://github.com/Pan14ek/evofit-bench/actions/runs/42225689638) completed successfully: **55 passed in 0.85s**, Ruff lint passed, and Ruff format check passed. Two tests for formulas (13)–(14) have since been added; their current CI outcome must be checked separately. The broader `development-quality` workflow is a separate gate.
+The updated [focused GitHub Actions run](https://github.com/Pan14ek/evofit-bench/actions/runs/42229379790) completed successfully: **57 passed in 1.46s**, Ruff lint passed, and Ruff format check passed, including formulas (13)–(14). The broader `development-quality` workflow is a separate gate.
 
 ## Interpretation and limitations
 
