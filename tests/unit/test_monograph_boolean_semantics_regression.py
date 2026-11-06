@@ -81,16 +81,12 @@ def _read_flags(flags: tuple[bool, bool]) -> TruthValue:
 
 def _boolean_all(values: tuple[tuple[bool, bool], ...]) -> tuple[bool, bool]:
     assert values, "The existing tri_and rejects empty input"
-    return all(positive for positive, _ in values), any(
-        negative for _, negative in values
-    )
+    return all(positive for positive, _ in values), any(negative for _, negative in values)
 
 
 def _boolean_any(values: tuple[tuple[bool, bool], ...]) -> tuple[bool, bool]:
     assert values, "The existing tri_or rejects empty input"
-    return any(positive for positive, _ in values), all(
-        negative for _, negative in values
-    )
+    return any(positive for positive, _ in values), all(negative for _, negative in values)
 
 
 def _boolean_not(value: tuple[bool, bool]) -> tuple[bool, bool]:
@@ -149,13 +145,14 @@ def test_boolean_statuses_keep_missing_absent_and_conflicting_facts_distinct() -
         value=2,
     )
     unresolved = evaluate_condition(
-        "COND_DECLARED_MULTI_UNIT", "after", conflicting, compiled,
+        "COND_DECLARED_MULTI_UNIT",
+        "after",
+        conflicting,
+        compiled,
         evidence_ledger(conflicting),
     )
     assert _flags(unresolved.truth) == (False, False)
     assert "FACT_CONFLICT" in unresolved.reason_codes
-
-
 
 def _monograph_formula_3(completeness: bool, violations: int) -> tuple[str, bool | None]:
     """Meaning of the proposed (3): status separate from Boolean value."""
@@ -172,9 +169,7 @@ def test_formula_3_keeps_boolean_result_distinct_from_inspection_status(
 ) -> None:
     status, value = _monograph_formula_3(complete, violations)
     old_monograph_value = (
-        1 if complete and violations == 0
-        else 0 if complete and violations > 0
-        else "U"
+        1 if complete and violations == 0 else 0 if complete and violations > 0 else "U"
     )
     assert (1 if value is True else 0 if value is False else "U") == old_monograph_value
     assert (status == "UNKNOWN") == (not complete)
@@ -198,11 +193,7 @@ def test_formula_7_matches_existing_possible_worlds_definition_31_cases() -> Non
             # The old monograph rule returned 1/0/U; the new status is not a
             # third truth value. This tests the conceptual formula only, not
             # the implementation's policy-closure/authority decision tree.
-            legacy = (
-                1 if worlds and all(worlds)
-                else 0 if worlds and not any(worlds)
-                else "U"
-            )
+            legacy = 1 if worlds and all(worlds) else 0 if worlds and not any(worlds) else "U"
             mapping = {1: "ACTIVE", 0: "INACTIVE", "U": "UNKNOWN"}
             assert _monograph_formula_7(worlds) == mapping[legacy]
 
@@ -237,11 +228,13 @@ def _binary_governance(
     CONFIRMED REJECT has precedence over unresolved evidence. In particular,
     'not all positive' is not equivalent to a confirmed prohibition.
     """
-    hold_reasons = tuple(plan.hold_reasons) if isinstance(plan, OperationPlan) else tuple(
-        plan["hold_reasons"]
+    hold_reasons = (
+        tuple(plan.hold_reasons) if isinstance(plan, OperationPlan) else tuple(plan["hold_reasons"])
     )
-    reject_reasons = tuple(plan.reject_reasons) if isinstance(plan, OperationPlan) else tuple(
-        plan["reject_reasons"]
+    reject_reasons = (
+        tuple(plan.reject_reasons)
+        if isinstance(plan, OperationPlan)
+        else tuple(plan["reject_reasons"])
     )
     if input_status == "INVALID":
         return "INPUT_REJECTED"
@@ -346,9 +339,7 @@ def test_boolean_governance_matches_actual_decision_precedence(
         authorized = False
     else:
         authorization = _issue_governance_pipeline_authorization(**args)
-        decision = _decide_governance_authorized(
-            **args, pipeline_authorization=authorization
-        )
+        decision = _decide_governance_authorized(**args, pipeline_authorization=authorization)
         authorized = authorization is not None
 
     expected = _binary_governance(
@@ -369,14 +360,10 @@ def test_boolean_governance_matches_actual_decision_precedence(
     ("scenario_id", "repetition"),
     list(product(ARCHIVED_OUTCOMES, (1, 2, 3))),
 )
-def test_binary_governance_reproduces_archived_a1_to_d2(
-    scenario_id: str, repetition: int
-) -> None:
+def test_binary_governance_reproduces_archived_a1_to_d2(scenario_id: str, repetition: int) -> None:
     """Check all recorded repetitions; D2 keeps HOLD oracle vs REJECT observation."""
     raw = json.loads(
-        (ARCHIVE / f"{scenario_id}_method_p_rep_{repetition:02d}.json").read_text(
-            encoding="utf-8"
-        )
+        (ARCHIVE / f"{scenario_id}_method_p_rep_{repetition:02d}.json").read_text(encoding="utf-8")
     )["result"]
     governance = raw["governance"]
     verdicts: dict[str, str] = governance["invariant_verdicts"]
@@ -412,8 +399,10 @@ def test_binary_governance_reproduces_archived_a1_to_d2(
     )
     operations = raw["proposed_operations"]
     operation = (
-        operations[0] if len(operations) == 1
-        else "hold" if plan["hold_reasons"] or plan["reject_reasons"]
+        operations[0]
+        if len(operations) == 1
+        else "hold"
+        if plan["hold_reasons"] or plan["reject_reasons"]
         else "none"
     )
     expected_operation, expected_governance = ARCHIVED_OUTCOMES[scenario_id]
