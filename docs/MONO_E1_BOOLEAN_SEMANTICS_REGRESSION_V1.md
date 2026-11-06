@@ -1,6 +1,6 @@
 # MONO-E1: Boolean-confirmation regression and EvoFitBench decision parity (DEVELOPMENT)
 
-**Status:** regression contract proposed; CI run and independent methodological approval pending.  
+**Status:** focused regression CI PASS (55 tests; Ruff lint and formatting PASS) on 2026-11-06; full development-quality CI and independent methodological approval remain separate.  
 **Scope:** mathematical descriptions of monograph formulas (3), (7), (10) and Method P governance decision precedence.  
 **Source:** `Pan14ek/evofit-bench`, branch `test/binary-semantics-equivalence-monograph`.  
 **Does not change:** Method P production code, monograph data, source evidence, reference labels, policy authority, frozen experimental artifacts, or the eight-scenario results.
@@ -32,7 +32,7 @@ For monograph rule (10), only the positive conjunction is an **acceptability con
 
 ## Concrete regression checks
 
-Implementation: [tests/unit/test_monograph_boolean_semantics_regression.py](../tests/unit/test_monograph_boolean_semantics_regression.py).
+Implementation: [tests/unit/test_monograph_boolean_semantics_regression.py](../tests/unit/test_monograph_boolean_semantics_regression.py). The focused CI workflow is [monograph-boolean-semantics.yml](../.github/workflows/monograph-boolean-semantics.yml).
 
 1. **Expression logic:** all nine two-input combinations for `tri_and` and `tri_or`, plus `tri_not`; and all `3^6 = 729` combinations of six acceptance gates (rule 10).
 2. **Formula (3):** complete/incomplete inspection crossed with zero, one, and three violations. The Boolean result is established only with adequate inspection; insufficient evidence remains an assessment status.
@@ -72,7 +72,7 @@ uv run --frozen --extra dev pytest -q tests/unit/test_monograph_boolean_semantic
 uv run --frozen --extra dev ruff check tests/unit/test_monograph_boolean_semantics_regression.py
 ```
 
-The main CI workflow also runs `make development-quality` on PRs. **No test execution or green CI state is claimed by this document until the corresponding GitHub Actions check completes.**
+The focused [GitHub Actions regression run](https://github.com/Pan14ek/evofit-bench/actions/runs/42225689638) completed successfully: **55 passed in 0.85s**, Ruff lint passed, and Ruff format check passed. The broader `development-quality` workflow is a separate gate and should not be inferred from this focused result.
 
 ## Interpretation and limitations
 
