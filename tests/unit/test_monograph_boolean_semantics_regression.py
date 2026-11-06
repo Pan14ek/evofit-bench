@@ -199,6 +199,41 @@ def test_formula_7_matches_existing_possible_worlds_definition_31_cases() -> Non
             assert _monograph_formula_7(worlds) == mapping[legacy]
 
 
+
+def _confirmed_alert(active_values: tuple[int | str, ...]) -> tuple[bool, bool]:
+    """Formula (13): confirmation of violation vs confirmation of no alert."""
+    assert active_values, "An alert panel requires at least one active check"
+    positive = any(value == 0 for value in active_values)
+    negative = all(value == 1 for value in active_values)
+    assert not (positive and negative)
+    return positive, negative
+
+
+def test_formula_13_boolean_alert_matches_prior_rule_with_missing_checks() -> None:
+    """Enumerate three-check configurations and unresolved active results."""
+    for results in product((0, 1, "U"), repeat=3):
+        for enabled in product((False, True), repeat=3):
+            if not any(enabled):
+                continue
+            active = tuple(value for value, is_active in zip(results, enabled, strict=True) if is_active)
+            positive, negative = _confirmed_alert(active)
+            reconstructed = 1 if positive else 0 if negative else "U"
+            previous = (
+                1 if any(value == 0 for value in active)
+                else 0 if all(value == 1 for value in active)
+                else "U"
+            )
+            assert reconstructed == previous
+
+
+def test_formula_14_negative_probe_keeps_zero_vs_one_difference() -> None:
+    baseline = _confirmed_alert((1, 1))
+    candidate = _confirmed_alert((1, 1, 0))
+    assert baseline == (False, True)
+    assert candidate == (True, False)
+    assert int(candidate[0]) - int(baseline[0]) == 1
+
+
 def _plan(*, hold: bool = False, reject: bool = False) -> OperationPlan:
     hold_reasons = ("TEST_UNRESOLVED",) if hold else ()
     reject_reasons = ("TEST_PROVEN_PROHIBITION",) if reject else ()
