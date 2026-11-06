@@ -1,0 +1,29 @@
+name: Monograph Boolean semantics regression
+on:
+  push:
+    paths:
+      - tests/unit/test_monograph_boolean_semantics_regression.py
+      - .github/workflows/monograph-boolean-semantics.yml
+  pull_request:
+    paths:
+      - tests/unit/test_monograph_boolean_semantics_regression.py
+      - .github/workflows/monograph-boolean-semantics.yml
+
+jobs:
+  semantics-parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync --frozen --extra dev
+      - name: Run bounded semantics regression
+        run: uv run --frozen --extra dev pytest -q tests/unit/test_monograph_boolean_semantics_regression.py
+      - name: Check regression test lint and formatting
+        run: |
+          uv run --frozen --extra dev ruff check tests/unit/test_monograph_boolean_semantics_regression.py
+          uv run --frozen --extra dev ruff format --check tests/unit/test_monograph_boolean_semantics_regression.py
