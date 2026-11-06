@@ -210,7 +210,8 @@ def _confirmed_alert(active_values: tuple[int | str, ...]) -> tuple[bool, bool]:
 
 def test_formula_13_boolean_alert_matches_prior_rule_with_missing_checks() -> None:
     """Enumerate three-check configurations and unresolved active results."""
-    for results in product((0, 1, "U"), repeat=3):
+    values: tuple[int | str, ...] = (0, 1, "U")
+    for results in product(values, repeat=3):
         for enabled in product((False, True), repeat=3):
             if not any(enabled):
                 continue
