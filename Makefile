@@ -17,6 +17,7 @@ DEVELOPMENT_REGRESSION_TESTS = \
 	tests/unit/test_p_semantic_pairs_v1.py \
 	tests/unit/test_p_operations_v1.py \
 	tests/unit/test_p_candidate_governance_v1.py \
+	tests/unit/test_monograph_boolean_semantics_regression.py \
 	tests/unit/test_p_adaptation_evidence_v1.py \
 	tests/unit/test_p_executable_candidate_identity.py \
 	tests/unit/test_p_interface_readiness.py \
