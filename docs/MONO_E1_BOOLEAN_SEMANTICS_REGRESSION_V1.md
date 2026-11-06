@@ -32,7 +32,7 @@ For monograph rule (10), only the positive conjunction is an **acceptability con
 
 ## Concrete regression checks
 
-Implementation: [tests/unit/test_monograph_boolean_semantics_regression.py](../../tests/unit/test_monograph_boolean_semantics_regression.py).
+Implementation: [tests/unit/test_monograph_boolean_semantics_regression.py](../tests/unit/test_monograph_boolean_semantics_regression.py).
 
 1. **Expression logic:** all nine two-input combinations for `tri_and` and `tri_or`, plus `tri_not`; and all `3^6 = 729` combinations of six acceptance gates (rule 10).
 2. **Formula (3):** complete/incomplete inspection crossed with zero, one, and three violations. The Boolean result is established only with adequate inspection; insufficient evidence remains an assessment status.
