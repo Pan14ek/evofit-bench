@@ -154,6 +154,7 @@ def test_boolean_statuses_keep_missing_absent_and_conflicting_facts_distinct() -
     assert _flags(unresolved.truth) == (False, False)
     assert "FACT_CONFLICT" in unresolved.reason_codes
 
+
 def _monograph_formula_3(completeness: bool, violations: int) -> tuple[str, bool | None]:
     """Meaning of the proposed (3): status separate from Boolean value."""
     assert violations >= 0
