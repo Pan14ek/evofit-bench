@@ -157,6 +157,57 @@ def test_boolean_statuses_keep_missing_absent_and_conflicting_facts_distinct() -
     assert "FACT_CONFLICT" in unresolved.reason_codes
 
 
+
+def _monograph_formula_3(completeness: bool, violations: int) -> tuple[str, bool | None]:
+    """Meaning of the proposed (3): status separate from Boolean value."""
+    assert violations >= 0
+    if not completeness:
+        return "UNKNOWN", None
+    return ("COMPLIANT", True) if violations == 0 else ("NON_COMPLIANT", False)
+
+
+@pytest.mark.parametrize("complete", [False, True])
+@pytest.mark.parametrize("violations", [0, 1, 3])
+def test_formula_3_keeps_boolean_result_distinct_from_inspection_status(
+    complete: bool, violations: int
+) -> None:
+    status, value = _monograph_formula_3(complete, violations)
+    old_monograph_value = (
+        1 if complete and violations == 0
+        else 0 if complete and violations > 0
+        else "U"
+    )
+    assert (1 if value is True else 0 if value is False else "U") == old_monograph_value
+    assert (status == "UNKNOWN") == (not complete)
+
+
+def _monograph_formula_7(possible_worlds: tuple[bool, ...]) -> str:
+    """Two Boolean confirmations plus a PROCEDURAL applicability status."""
+    confirmed_active = bool(possible_worlds) and all(possible_worlds)
+    confirmed_inactive = bool(possible_worlds) and not any(possible_worlds)
+    assert not (confirmed_active and confirmed_inactive)
+    if confirmed_active:
+        return "ACTIVE"
+    if confirmed_inactive:
+        return "INACTIVE"
+    return "UNKNOWN"
+
+
+def test_formula_7_matches_existing_possible_worlds_definition_31_cases() -> None:
+    for count in range(5):
+        for worlds in product((True, False), repeat=count):
+            # The old monograph rule returned 1/0/U; the new status is not a
+            # third truth value. This tests the conceptual formula only, not
+            # the implementation's policy-closure/authority decision tree.
+            legacy = (
+                1 if worlds and all(worlds)
+                else 0 if worlds and not any(worlds)
+                else "U"
+            )
+            mapping = {1: "ACTIVE", 0: "INACTIVE", "U": "UNKNOWN"}
+            assert _monograph_formula_7(worlds) == mapping[legacy]
+
+
 def _plan(*, hold: bool = False, reject: bool = False) -> OperationPlan:
     hold_reasons = ("TEST_UNRESOLVED",) if hold else ()
     reject_reasons = ("TEST_PROVEN_PROHIBITION",) if reject else ()
@@ -248,6 +299,7 @@ def _coverage(status: str) -> Any:
         ("invalid_candidate", {"candidate": "invalid"}),
         ("candidate_not_validated", {"candidate": None}),
         ("absent_candidate", {"present": False, "candidate": None}),
+        ("absent_candidate_proven_violation", {"present": False, "candidate": None, "inv": "FAIL"}),
         ("cost_limit_exceeded", {"cost": "FAIL"}),
         ("cost_unknown", {"cost": "UNKNOWN"}),
         ("hold_plan", {"hold": True}),
