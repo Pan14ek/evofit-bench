@@ -1,6 +1,6 @@
 # MONO-E1: Boolean-confirmation regression and EvoFitBench decision parity (DEVELOPMENT)
 
-**Status:** focused regression CI PASS (55 tests; Ruff lint and formatting PASS) on 2026-11-06; full development-quality CI and independent methodological approval remain separate.  
+**Status:** initial focused regression CI PASS (55 tests) on 2026-11-06; two alert tests have since been added and await passing updated CI. Full development-quality CI and independent methodological approval are separate.  
 **Scope:** mathematical descriptions of monograph formulas (3), (7), (10) and Method P governance decision precedence.  
 **Source:** `Pan14ek/evofit-bench`, branch `test/binary-semantics-equivalence-monograph`.  
 **Does not change:** Method P production code, monograph data, source evidence, reference labels, policy authority, frozen experimental artifacts, or the eight-scenario results.
@@ -38,6 +38,7 @@ Implementation: [tests/unit/test_monograph_boolean_semantics_regression.py](../t
 2. **Formula (3):** complete/incomplete inspection crossed with zero, one, and three violations. The Boolean result is established only with adequate inspection; insufficient evidence remains an assessment status.
 3. **Formula (7):** 31 possible-world sets of sizes 0..4. The old textual `1/0/U` applicability rule maps exactly to procedural `ACTIVE/INACTIVE/UNKNOWN` in this finite domain. This does **not** prove the production policy-authority implementation enumerates worlds or is globally equivalent.
 4. **Actual applicability evidence:** a missing fact stays unresolved, proven scoped absence becomes a confirmed negative, and conflicting functional facts stay unresolved with a conflict reason.
+4a. **Formulas (13)–(14):** all active-subset combinations of three check states (COMPLIANT, NON_COMPLIANT, UNKNOWN) are evaluated for confirmed violation and confirmed no-alert; the controlled negative probe preserves the baseline 0 versus candidate 1 signal.
 5. **Governance precedence matrix:** covers authorized and unauthorized ACCEPT, invalid inputs, unresolved inputs, PASS/FAIL/UNKNOWN and missing invariant verdicts, complete/incomplete/unresolved coverage, invalid/unvalidated/absent candidates, cost fail/unknown, hold/reject plans, additional unresolved evidence, and the precedence of proved prohibition over HOLD.
 6. **Archived scenarios:** checks all three recorded repetitions of A1, A2, B1, B2, C1, C2, D1, D2 and compares the independent Boolean-decision projection with historical recorded operation and governance outcomes.
 7. **Scientific integrity:** explicitly asserts the D2 author-declared reference remains `hold/HOLD` while the recorded implementation returned `hold/REJECT`.
@@ -72,7 +73,7 @@ uv run --frozen --extra dev pytest -q tests/unit/test_monograph_boolean_semantic
 uv run --frozen --extra dev ruff check tests/unit/test_monograph_boolean_semantics_regression.py
 ```
 
-The focused [GitHub Actions regression run](https://github.com/Pan14ek/evofit-bench/actions/runs/42225689638) completed successfully: **55 passed in 0.85s**, Ruff lint passed, and Ruff format check passed. The broader `development-quality` workflow is a separate gate and should not be inferred from this focused result.
+The initial [GitHub Actions regression run](https://github.com/Pan14ek/evofit-bench/actions/runs/42225689638) completed successfully: **55 passed in 0.85s**, Ruff lint passed, and Ruff format check passed. Two tests for formulas (13)–(14) have since been added; their current CI outcome must be checked separately. The broader `development-quality` workflow is a separate gate.
 
 ## Interpretation and limitations
 
