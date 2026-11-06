@@ -49,7 +49,6 @@ from tests.unit.p_spec03_support import (
     make_valid_pair,
 )
 
-
 # These are observations in the archived experiment, not corrected oracle labels.
 ARCHIVED_OUTCOMES: dict[str, tuple[str, str]] = {
     "A1": ("retain", "ACCEPT"),
