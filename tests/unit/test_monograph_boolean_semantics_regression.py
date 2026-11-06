@@ -220,8 +220,10 @@ def test_formula_13_boolean_alert_matches_prior_rule_with_missing_checks() -> No
             positive, negative = _confirmed_alert(active)
             reconstructed = 1 if positive else 0 if negative else "U"
             previous = (
-                1 if any(value == 0 for value in active)
-                else 0 if all(value == 1 for value in active)
+                1
+                if any(value == 0 for value in active)
+                else 0
+                if all(value == 1 for value in active)
                 else "U"
             )
             assert reconstructed == previous
